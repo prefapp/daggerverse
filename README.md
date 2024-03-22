@@ -4,7 +4,7 @@
 - dagger v10.0.2
 - go 1.22+
 
-### Develop a existing dagger module
+### Develop an existing dagger module
 
 ```shell
 cd build-images
