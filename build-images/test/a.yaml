@@ -1,0 +1,13 @@
+releases: 
+  default:
+    build_args:
+      PAIS: fr
+      IDIOMA: el_que_jose_no_sabe
+    dockerfile: ./Dockerfile
+
+snapshots:
+  default:
+    build_args:
+      PAIS: fr
+      IDIOMA: el_que_jose_no_sabe
+    dockerfile: Dockerfile

@@ -24,14 +24,142 @@ import (
 type BuildImages struct{}
 
 type BuildData struct {
-	A map[string]string `yaml:"build_args,flow"`
+	Snapshots map[string]BuildDataFlavour `yaml:"snapshots,flow"`
+
+	Releases map[string]BuildDataFlavour `yaml:"releases,flow"`
+}
+
+type BuildDataFlavour struct {
+	BuildArgs map[string]string `yaml:"build_args,flow"`
 
 	Dockerfile string
 
 	Tag string
 }
 
-func (m *BuildImages) LoadInfo(ctx context.Context, yamlPath *File) string {
+func (m *BuildImages) BuildImageBatch(
+
+	ctx context.Context,
+
+	yamlPath *File,
+
+	workDir *Directory,
+
+	// +optional
+	publish bool,
+
+	// +optional
+	address string,
+
+) {
+
+}
+
+func (m *BuildImages) BuildImage(
+
+	ctx context.Context,
+
+	yamlPath *File,
+
+	// +optional
+	// +default="releases,default"
+	flavour string,
+
+	workDir *Directory,
+
+	publish bool,
+
+	address string,
+
+) []string {
+
+	containers := []string{}
+
+	buildData := loadInfo(ctx, yamlPath)
+
+	// return m.buildFlavour(ctx, workDir, "default", buildData.Releases["default"])
+
+	// for flavour, flavourData := range buildData["snapshots"] {
+
+	// 	m.BuildFlavour(workDir, flavour, flavourData)
+	// }
+
+	for flavour, flavourData := range buildData.Releases {
+
+		flav, err := m.buildFlavour(ctx, workDir, flavour, flavourData)
+
+		if err != nil {
+
+			panic(fmt.Sprintf("Building flavour: %s", flavour))
+
+		}
+
+		containers = append(
+
+			containers,
+
+			flav,
+		)
+
+	}
+
+	return containers
+
+}
+
+func (m *BuildImages) buildFlavour(
+
+	ctx context.Context,
+
+	workDir *Directory,
+
+	flavour string,
+
+	flavourData BuildDataFlavour,
+
+) (string, error) {
+
+	buildArgs := []BuildArg{}
+
+	for argName, argValue := range flavourData.BuildArgs {
+
+		buildArgs = append(buildArgs, BuildArg{Name: argName, Value: argValue})
+	}
+
+	fmt.Printf("%s", buildArgs)
+
+	flavour, error := workDir.
+		DockerBuild(DirectoryDockerBuildOpts{
+			Dockerfile: flavourData.Dockerfile,
+			BuildArgs:  buildArgs,
+			Platform:   "linux/amd64",
+		}).
+		Publish(
+			ctx,
+			"https://ttl.sh/",
+			ContainerPublishOpts{
+				ForcedCompression: Gzip,
+				MediaTypes:        Ocimediatypes,
+			})
+
+	if error != nil {
+
+		return "", error
+
+	}
+
+	return flavour, nil
+	// return dag.Container().BuildDocker(workDir, ContainerBuildOpts{
+
+	// 	Dockerfile: "./Dockerfile",
+
+	// 	Target: "",
+
+	// 	BuildArgs: buildArgs,
+	// })
+}
+
+func loadInfo(ctx context.Context, yamlPath *File) *BuildData {
 
 	val, err := yamlPath.Contents(ctx)
 
@@ -51,7 +179,7 @@ func (m *BuildImages) LoadInfo(ctx context.Context, yamlPath *File) string {
 
 		}
 
-		return fmt.Sprintf("%v", buildData)
+		return &buildData
 
 	}
 

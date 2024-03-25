@@ -1,0 +1,5 @@
+tag: "holaaaaa"
+dockerfile: "Dockerfile"
+b:
+  ARG1: arg1
+  ARG2: arg2
