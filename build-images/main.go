@@ -71,9 +71,9 @@ func (m *BuildImages) BuildImage(
 
 	address string,
 
-) []string {
+) *Container {
 
-	containers := []string{}
+	containers := []*Container{}
 
 	buildData := loadInfo(ctx, yamlPath)
 
@@ -86,24 +86,34 @@ func (m *BuildImages) BuildImage(
 
 	for flavour, flavourData := range buildData.Releases {
 
-		flav, err := m.buildFlavour(ctx, workDir, flavour, flavourData)
-
-		if err != nil {
-
-			panic(fmt.Sprintf("Building flavour: %s", flavour))
-
-		}
-
 		containers = append(
 
 			containers,
 
-			flav,
+			m.buildFlavour(ctx, workDir, flavour, flavourData),
 		)
 
 	}
 
-	return containers
+	return containers[0]
+
+}
+
+func (m *BuildImages) BuildFlavour(
+
+	ctx context.Context,
+
+	workDir *Directory,
+
+	flavour string,
+
+) *Container {
+
+	return m.buildFlavour(ctx, workDir, flavour, BuildDataFlavour{
+		BuildArgs:  map[string]string{},
+		Dockerfile: "./Dockerfile",
+		Tag:        "latest",
+	})
 
 }
 
@@ -117,7 +127,7 @@ func (m *BuildImages) buildFlavour(
 
 	flavourData BuildDataFlavour,
 
-) (string, error) {
+) *Container {
 
 	buildArgs := []BuildArg{}
 
@@ -128,35 +138,23 @@ func (m *BuildImages) buildFlavour(
 
 	fmt.Printf("%s", buildArgs)
 
-	flavour, error := workDir.
-		DockerBuild(DirectoryDockerBuildOpts{
-			Dockerfile: flavourData.Dockerfile,
-			BuildArgs:  buildArgs,
-			Platform:   "linux/amd64",
-		}).
-		Publish(
-			ctx,
-			"https://ttl.sh/",
-			ContainerPublishOpts{
-				ForcedCompression: Gzip,
-				MediaTypes:        Ocimediatypes,
-			})
+	container := workDir.DockerBuild(DirectoryDockerBuildOpts{
+		Dockerfile: "./Dockerfile",
+		BuildArgs:  buildArgs,
+		Platform:   "linux/amd64",
+	})
 
-	if error != nil {
+	// container.Export(ctx, "/tmp/c.tar", ContainerExportOpts{})
 
-		return "", error
+	// Publish(
+	// 	ctx,
+	// 	"ttl.sh/a24b56ef-d667-42a6-b2c9-651637eb1c40",
+	// 	ContainerPublishOpts{
+	// 		ForcedCompression: Gzip,
+	// 		MediaTypes:        Ocimediatypes,
+	// 	})
 
-	}
-
-	return flavour, nil
-	// return dag.Container().BuildDocker(workDir, ContainerBuildOpts{
-
-	// 	Dockerfile: "./Dockerfile",
-
-	// 	Target: "",
-
-	// 	BuildArgs: buildArgs,
-	// })
+	return container
 }
 
 func loadInfo(ctx context.Context, yamlPath *File) *BuildData {
