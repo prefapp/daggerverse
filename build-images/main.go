@@ -79,3 +79,33 @@ func (m *BuildImages) BuildImage(
 	return containers[0]
 
 }
+
+func (m *BuildImages) BuildFlavour(
+
+  ctx context.Context,
+
+  workDir *Directory,
+
+  yamlPath *File,
+
+  flavour string,
+
+) *Container {
+
+  buildData := loadInfo(ctx, yamlPath)
+
+  flavourData := getFlavour(buildData, flavour)
+
+  return m.buildFlavour(
+
+    workDir,
+
+    flavour,
+
+    flavourData
+
+  )
+
+}
+
+
