@@ -15,42 +15,44 @@
 package main
 
 import (
-    
-  "fmt"
-  "context"
+	"context"
+	"fmt"
 
-  yaml "gopkg.in/yaml.v3"
-
+	"gopkg.in/yaml.v3"
 )
 
 type BuildImages struct{}
 
 type BuildData struct {
+	A map[string]string `yaml:"build_args,flow"`
 
-  buildArgs map[string]string
+	Dockerfile string
 
-  dockerfile string
-
-  tag string
-
+	Tag string
 }
 
+func (m *BuildImages) LoadInfo(ctx context.Context, yamlPath *File) string {
 
-func (m* BuildImages) LoadInfo(ctx context.Context, yamlPath *File) string {
+	val, err := yamlPath.Contents(ctx)
 
-  val, err :=  yamlPath.Contents(ctx)
+	buildData := BuildData{}
 
-  buildData := BuildData{}
+	if err != nil {
 
-  if err != nil {
+		panic(fmt.Sprintf("Loading yaml: %s", val))
 
-    panic(fmt.Sprintf("Loading yaml: %s", val))
-  
-  }else{
+	} else {
 
-    return yaml.Unmarshall([]byte(val), &buildData)
+		err := yaml.Unmarshal([]byte(val), &buildData)
 
-  }
-    
+		if err != nil {
+
+			panic(fmt.Sprintf("cannot unmarshal data: %v", err))
+
+		}
+
+		return fmt.Sprintf("%v", buildData)
+
+	}
+
 }
-

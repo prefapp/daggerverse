@@ -8,9 +8,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.6
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
 	golang.org/x/sync v0.6.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
-require (
-	github.com/stretchr/testify v1.9.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
-)
+require github.com/stretchr/testify v1.9.0 // indirect
