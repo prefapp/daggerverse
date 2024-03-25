@@ -1,24 +1,28 @@
 package main
 
 import (
-  "context"
-  "gopkg.in/yaml.v3"
+	"context"
+	"fmt"
+	"regexp"
+	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 type BuildImages struct{}
 
 type BuildData struct {
-  Snapshots map[string]BuildDataFlavour `yaml:"snapshots,flow"`
+	Snapshots map[string]BuildDataFlavour `yaml:"snapshots,flow"`
 
-  Releases map[string]BuildDataFlavour `yaml:"releases,flow"`
+	Releases map[string]BuildDataFlavour `yaml:"releases,flow"`
 }
 
 type BuildDataFlavour struct {
-  BuildArgs map[string]string `yaml:"build_args,flow"`
+	BuildArgs map[string]string `yaml:"build_args,flow"`
 
-  Dockerfile string
+	Dockerfile string
 
-  Tag string
+	Tag string
 }
 
 func (m *BuildImages) buildFlavour(
@@ -63,27 +67,48 @@ func (m *BuildImages) buildFlavour(
 
 func loadInfo(ctx context.Context, yamlPath *File) *BuildData {
 
-  val, err := yamlPath.Contents(ctx)
+	val, err := yamlPath.Contents(ctx)
 
-  buildData := BuildData{}
+	buildData := BuildData{}
 
-  if err != nil {
+	if err != nil {
 
-    panic(fmt.Sprintf("Loading yaml: %s", val))
+		panic(fmt.Sprintf("Loading yaml: %s", val))
 
-  } else {
+	} else {
 
-    err := yaml.Unmarshal([]byte(val), &buildData)
+		err := yaml.Unmarshal([]byte(val), &buildData)
 
-    if err != nil {
+		if err != nil {
 
-      panic(fmt.Sprintf("cannot unmarshal data: %v", err))
+			panic(fmt.Sprintf("cannot unmarshal data: %v", err))
 
-    }
+		}
 
-    return &buildData
+		return &buildData
 
-  }
+	}
 
 }
 
+func getFlavour(buildData *BuildData, flavour string) BuildDataFlavour {
+
+	match, _ := regexp.Match("^(snapshot|release):([a-zA-Z0-9_-]+)", []byte(flavour))
+
+	if !match {
+		panic(fmt.Sprintf("Invalid flavour format: %s", flavour))
+	}
+
+	splitted := strings.Split(flavour, ":")
+
+	if splitted[0] == "snapshot" {
+
+		return buildData.Snapshots[splitted[1]]
+
+	} else {
+
+		return buildData.Releases[splitted[1]]
+
+	}
+
+}
