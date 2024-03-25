@@ -15,22 +15,42 @@
 package main
 
 import (
-	"context"
+    
+  "fmt"
+  "context"
+
+  yaml "gopkg.in/yaml.v3"
+
 )
 
 type BuildImages struct{}
 
-// Returns a container that echoes whatever string argument is provided
-func (m *BuildImages) ContainerEcho(stringArg string) *Container {
-	return dag.Container().From("alpine:latest").WithExec([]string{"echo", stringArg})
+type BuildData struct {
+
+  buildArgs map[string]string
+
+  dockerfile string
+
+  tag string
+
 }
 
-// Returns lines that match a pattern in the files of the provided Directory
-func (m *BuildImages) GrepDir(ctx context.Context, directoryArg *Directory, pattern string) (string, error) {
-	return dag.Container().
-		From("alpine:latest").
-		WithMountedDirectory("/mnt", directoryArg).
-		WithWorkdir("/mnt").
-		WithExec([]string{"grep", "-R", pattern, "."}).
-		Stdout(ctx)
+
+func (m* BuildImages) LoadInfo(ctx context.Context, yamlPath *File) string {
+
+  val, err :=  yamlPath.Contents(ctx)
+
+  buildData := BuildData{}
+
+  if err != nil {
+
+    panic(fmt.Sprintf("Loading yaml: %s", val))
+  
+  }else{
+
+    return yaml.Unmarshall([]byte(val), &buildData)
+
+  }
+    
 }
+
