@@ -16,6 +16,9 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"strings"
 )
 
 func (m *BuildImages) BuildImageBatch(
@@ -27,85 +30,79 @@ func (m *BuildImages) BuildImageBatch(
 	workDir *Directory,
 
 	// +optional
+	// +default="all"
+	flavours string,
+
+	// +optional
 	publish bool,
 
 	// +optional
 	address string,
 
-) {
+) string {
 
-}
+	builds := []*Container{}
 
-func (m *BuildImages) BuildImage(
-
-	ctx context.Context,
-
-	yamlPath *File,
-
-	// +optional
-	// +default="releases,default"
-	flavour string,
-
-	workDir *Directory,
-
-	publish bool,
-
-	address string,
-
-) *Container {
-
-	containers := []*Container{}
+	flavoursList := []string{}
 
 	buildData := loadInfo(ctx, yamlPath)
 
-	// return m.buildFlavour(ctx, workDir, "default", buildData.Releases["default"])
+	if flavours == "all" {
 
-	// for flavour, flavourData := range buildData["snapshots"] {
+		flavoursList = getAllFlavours(buildData)
 
-	// 	m.BuildFlavour(workDir, flavour, flavourData)
-	// }
+	} else {
 
-	for flavour, flavourData := range buildData.Releases {
-
-		containers = append(
-
-			containers,
-
-			m.buildFlavour(ctx, workDir, flavour, flavourData),
-		)
-
+		flavoursList = strings.Split(flavours, ",")
 	}
 
-	return containers[0]
+	for _, flavour := range flavoursList {
+
+		builds = append(builds, m.BuildFlavour(ctx, workDir, yamlPath, flavour))
+
+		log.Println("Built flavour: ", flavour)
+	}
+
+	if publish {
+
+		for _, image := range builds {
+
+			val, err := image.Publish(ctx, address)
+
+			if err != nil {
+
+				log.Panic(fmt.Sprintf("Error publishing image: %s", val))
+			}
+		}
+	}
+
+	return strings.Join(flavoursList, ",")
 
 }
 
 func (m *BuildImages) BuildFlavour(
 
-  ctx context.Context,
+	ctx context.Context,
 
-  workDir *Directory,
+	workDir *Directory,
 
-  yamlPath *File,
+	yamlPath *File,
 
-  flavour string,
+	flavour string,
 
 ) *Container {
 
-  buildData := loadInfo(ctx, yamlPath)
+	buildData := loadInfo(ctx, yamlPath)
 
-  flavourData := getFlavour(buildData, flavour)
+	flavourData := getFlavour(buildData, flavour)
 
-  return m.buildFlavour(
+	return m.buildFlavour(
+		ctx,
 
-    workDir,
+		workDir,
 
-    flavour,
+		flavour,
 
-    flavourData
-
-  )
+		flavourData)
 
 }
-
-

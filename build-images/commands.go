@@ -52,16 +52,6 @@ func (m *BuildImages) buildFlavour(
 		Platform:   "linux/amd64",
 	})
 
-	// container.Export(ctx, "/tmp/c.tar", ContainerExportOpts{})
-
-	// Publish(
-	// 	ctx,
-	// 	"ttl.sh/a24b56ef-d667-42a6-b2c9-651637eb1c40",
-	// 	ContainerPublishOpts{
-	// 		ForcedCompression: Gzip,
-	// 		MediaTypes:        Ocimediatypes,
-	// 	})
-
 	return container
 }
 
@@ -96,7 +86,9 @@ func getFlavour(buildData *BuildData, flavour string) BuildDataFlavour {
 	match, _ := regexp.Match("^(snapshot|release):([a-zA-Z0-9_-]+)", []byte(flavour))
 
 	if !match {
+
 		panic(fmt.Sprintf("Invalid flavour format: %s", flavour))
+
 	}
 
 	splitted := strings.Split(flavour, ":")
@@ -110,5 +102,25 @@ func getFlavour(buildData *BuildData, flavour string) BuildDataFlavour {
 		return buildData.Releases[splitted[1]]
 
 	}
+
+}
+
+func getAllFlavours(buildData *BuildData) []string {
+
+	flavours := []string{}
+
+	for flavour := range buildData.Snapshots {
+
+		flavours = append(flavours, "snapshot:"+flavour)
+
+	}
+
+	for flavour := range buildData.Releases {
+
+		flavours = append(flavours, "release:"+flavour)
+
+	}
+
+	return flavours
 
 }

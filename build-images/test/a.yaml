@@ -6,13 +6,13 @@ releases:
     dockerfile: ./Dockerfile
   d:
     build_args:
-      PAIS: fr
-      IDIOMA: el_que_jose_no_sabe
+      PAIS: ch
+      IDIOMA: el_que_jose_quiere_saber
     dockerfile: ./Dockerfile
 
 snapshots:
   default:
     build_args:
-      PAIS: fr
-      IDIOMA: el_que_jose_no_sabe
+      PAIS: es
+      IDIOMA: el_que_jose_sabe
     dockerfile: Dockerfile
