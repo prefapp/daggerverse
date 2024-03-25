@@ -1,0 +1,41 @@
+{
+  "$id": "https://github.com/prefapp/daggerverse/build-images/config-schema.json",
+  "title": "Build images configuration schema",
+  "type": "object",
+  "patternProperties": {
+    "^.*$": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {
+          "type": "object",
+          "properties": {
+            "build_args": {
+              "type": "object",
+              "patternProperties": {
+                "^.*$": {
+                  "type": "string"
+                }
+              },
+              "minProperties": 1
+            },
+            "secrets": {
+              "type": "object",
+              "patternProperties": {
+                "^.*$": {
+                  "type": "string"
+                }
+              },
+              "minProperties": 1
+            },
+            "dockerfile": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "dockerfile"
+          ]
+        }
+      }
+    }
+  }
+}
