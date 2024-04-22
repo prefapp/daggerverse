@@ -14,7 +14,14 @@
 
 package main
 
-import "fmt"
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	"gopkg.in/yaml.v3"
+)
 
 type NotifyAndHydrateState struct{}
 
@@ -31,4 +38,103 @@ func (m *NotifyAndHydrateState) Run(
 ) *Container {
 	operator := dag.Container().From(fmt.Sprintf("ghcr.io/prefapp/gitops-k8s:%s", firestarterImageTag)).WithMountedDirectory("/claims", claimsDir).WithMountedDirectory("/crs", crsDir)
 	return operator.WithExec([]string{"echo", "works"})
+}
+
+type Metadata struct {
+	Name string `yaml:"name"`
+}
+
+type CR struct {
+	Metadata Metadata
+}
+
+func (m *NotifyAndHydrateState) Foo(ctx context.Context) *Container {
+
+	return dag.Container().
+		From("alpine:latest")
+
+}
+
+func (m *NotifyAndHydrateState) CrHasOpenedPr(
+	ctx context.Context,
+	ghToken Secret,
+	// Claims Pr (e.g. "prefapp/claims#123")
+	// +optional
+	// +default="prefapp/claims#123"
+	claimsPr string,
+	cr *File,
+) (bool, error) {
+
+	content, err := cr.Contents(ctx)
+
+	if err != nil {
+
+		return false, err
+
+	}
+
+	crObj := CR{}
+
+	yaml.Unmarshal([]byte(content), &crObj)
+
+	return true, nil
+
+}
+
+type PrBranchName struct {
+	HeadRefName string `json:"headRefName"`
+}
+
+func (m *NotifyAndHydrateState) GetRepoPrsByBranchName(
+
+	ctx context.Context,
+
+	ghToken *Secret,
+
+	// Repository name (e.g. "firestartr-test/state-github")
+	ghRepo string,
+
+) ([]PrBranchName, error) {
+
+	command := strings.Join(
+
+		[]string{
+
+			"pr",
+
+			"list",
+
+			"--json",
+
+			"headRefName",
+
+			"-R",
+
+			ghRepo,
+		},
+
+		" ",
+	)
+
+	content, err := dag.
+		Gh().
+		Run(
+			ctx,
+			ghToken,
+			command,
+		)
+
+	if err != nil {
+
+		return nil, err
+	}
+
+	prs := []PrBranchName{}
+
+	json.Unmarshal(
+		[]byte(content),
+		&prs,
+	)
+
+	return prs, nil
 }

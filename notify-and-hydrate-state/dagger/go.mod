@@ -14,6 +14,7 @@ require (
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
 	golang.org/x/sync v0.6.0
 	google.golang.org/grpc v1.62.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -22,6 +23,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0 // indirect
+	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
