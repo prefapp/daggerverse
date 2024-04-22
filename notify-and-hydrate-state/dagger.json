@@ -1,0 +1,6 @@
+{
+  "name": "notify-and-hydrate-state",
+  "sdk": "go",
+  "source": "dagger",
+  "engineVersion": "v0.11.0"
+}
