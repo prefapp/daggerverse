@@ -23,32 +23,29 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type NotifyAndHydrateState struct{
-
-    FirestarterImage string
-    FirestarterImageTag string
-
+type NotifyAndHydrateState struct {
+	FirestarterImage    string
+	FirestarterImageTag string
 }
 
 func New(
 
-    // +optional
-    // +default="latest-slim"
-    firestarterImageTag string,
+	// +optional
+	// +default="latest-slim"
+	firestarterImageTag string,
 
-    // +optional
-    // +default="ghcr.io/prefapp/gitops-k8s"
-    firestarterImage string,
+	// +optional
+	// +default="ghcr.io/prefapp/gitops-k8s"
+	firestarterImage string,
 
 ) *NotifyAndHydrateState {
 
-    return &NotifyAndHydrateState{
+	return &NotifyAndHydrateState{
 
-        FirestarterImage: firestarterImage,
+		FirestarterImage: firestarterImage,
 
-        FirestarterImageTag: firestarterImageTag,
-
-    }
+		FirestarterImageTag: firestarterImageTag,
+	}
 
 }
 
@@ -165,5 +162,3 @@ func (m *NotifyAndHydrateState) GetRepoPrsByBranchName(
 
 	return prs, nil
 }
-
-
