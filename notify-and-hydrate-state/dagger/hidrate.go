@@ -12,17 +12,25 @@ func (m *NotifyAndHydrateState) CmdContainer() *Container {
 
 }
 
-func (m *NotifyAndHydrateState) CmdHidrate(
-
-    claimsDir *Dir
-    claimsRepo string,
-    crsDir string
+// Render claims into CRs
+func (m *NotifyAndHydrateState) CmdHydrate(
+	// Claims repository name
+	// +required
+	claimsRepo string,
+	// Claims directory
+	// +required
+	claimsDir *Directory,
+	// Previous CRs directory
+	// +required
+	crsDir *Directory,
 ) *Container {
 
-    cmd := m.CmdContainer()
+	cmd := m.CmdContainer().
+		WithExec(
+			[]string{},
+		)
 
-    return cmd
-
+	return cmd
 
 }
 
