@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -12,7 +13,7 @@ type Metadata struct {
 	Name string `yaml:"name"`
 }
 
-type CR struct {
+type Cr struct {
 	Metadata Metadata
 }
 
@@ -34,48 +35,65 @@ func (m *NotifyAndHydrateState) Verify(
 	// CRs to verify
 	crs *[]File,
 
-) bool {
+) (bool, error) {
 
 	currentPrNumber := strings.Split(claimsPr, "#")[1]
 
-	prs, err := m.GetRepoPrsByBranchName(ctx, ghToken, ghRepo)
+	prs, err := m.GetRepoPrs(ctx, ghToken, ghRepo)
 
 	if err != nil {
 
-		panic(err)
+		return false, fmt.Errorf("failed to get PRs: %w", err)
 
 	}
 
 	for _, cr := range *crs {
 
-		CrHasPendingPr, err := m.CrHasPendingPr(
-			ctx,
-			prs,
-			currentPrNumber,
-			ghRepo,
-			&cr,
-		)
+		crInstance, err := m.unmarshalCr(ctx, &cr)
 
 		if err != nil {
 
-			panic(err)
+			return false, fmt.Errorf("failed to get CR instance: %w", err)
 
 		}
 
-		if CrHasPendingPr {
+		crHasPendingPr, err := m.CrHasPendingPr(ctx, prs, currentPrNumber, ghRepo, &crInstance)
 
-			panic("Check your automated PRs for the CRs. There are pending PRs for the CRs.")
+		if err != nil {
+
+			return false, fmt.Errorf("failed to check if CR has pending PR: %w", err)
+
+		}
+
+		if crHasPendingPr {
+
+			return false, fmt.Errorf("The CR %s has a pending PR", crInstance.Metadata.Name)
 
 		}
 
 	}
 
-	return true
+	return true, nil
 }
 
-func (m *NotifyAndHydrateState) CrHasPendingPr(
+func (*NotifyAndHydrateState) unmarshalCr(ctx context.Context, cr *File) (Cr, error) {
 
-	ctx context.Context,
+	crInstance := Cr{}
+
+	contents, err := cr.Contents(ctx)
+
+	if err != nil {
+
+		return crInstance, fmt.Errorf("failed to get CR contents: %w", err)
+
+	}
+
+	yaml.Unmarshal([]byte(contents), &crInstance)
+
+	return crInstance, nil
+}
+
+func (m *NotifyAndHydrateState) CrHasPendingPr(ctx context.Context,
 
 	prs []PrBranchName,
 
@@ -83,45 +101,27 @@ func (m *NotifyAndHydrateState) CrHasPendingPr(
 
 	ghRepo string,
 
-	cr *File,
+	cr *Cr,
 
 ) (bool, error) {
 
-	content, err := cr.Contents(ctx)
-
-	if err != nil {
-
-		return false, err
-
-	}
-
-	crObj := CR{}
-
-	yaml.Unmarshal([]byte(content), &crObj)
-
-	crHasPendingPr := false
-
-	// Iterate the PRs to find the PR that matches the current PR number
 	for _, pr := range prs {
 
-		prExistsForCr := strings.Contains(pr.HeadRefName, crObj.Metadata.Name)
+		if strings.Contains(pr.HeadRefName, cr.Metadata.Name) {
 
-		if prExistsForCr {
-
-			// Check if the PR number matches the current PR number
-			// automated/<metadata-name>-<uuid>-<pr-number>
-			uniqueValidPr := "automated/" + crObj.Metadata.Name + "-" + currentPrNumber
+			// Pr format: automated/<metadata-name>-<uuid>-<pr-number>
+			uniqueValidPr := "automated/" + cr.Metadata.Name + "-" + currentPrNumber
 
 			if uniqueValidPr != pr.HeadRefName {
-				crHasPendingPr = true
-				break
+
+				return true, nil
 			}
 
 		}
 
 	}
 
-	return crHasPendingPr, nil
+	return false, nil
 
 }
 
@@ -129,7 +129,7 @@ type PrBranchName struct {
 	HeadRefName string `json:"headRefName"`
 }
 
-func (m *NotifyAndHydrateState) GetRepoPrsByBranchName(
+func (m *NotifyAndHydrateState) GetRepoPrs(
 
 	ctx context.Context,
 
@@ -140,29 +140,9 @@ func (m *NotifyAndHydrateState) GetRepoPrsByBranchName(
 
 ) ([]PrBranchName, error) {
 
-	command := strings.Join(
+	command := strings.Join([]string{"pr", "list", "--json", "headRefName", "-R", ghRepo}, " ")
 
-		[]string{
-			"pr",
-			"list",
-			"--json",
-			"headRefName",
-			"-R",
-			ghRepo,
-		}, " ",
-	)
-
-	content, err := dag.
-		Gh().
-		Run(
-			ctx,
-
-			ghToken,
-
-			command,
-
-			GhRunOpts{DisableCache: true},
-		)
+	content, err := dag.Gh().Run(ctx, ghToken, command, GhRunOpts{DisableCache: true})
 
 	if err != nil {
 
@@ -171,10 +151,7 @@ func (m *NotifyAndHydrateState) GetRepoPrsByBranchName(
 
 	prs := []PrBranchName{}
 
-	json.Unmarshal(
-		[]byte(content),
-		&prs,
-	)
+	json.Unmarshal([]byte(content), &prs)
 
 	return prs, nil
 }
