@@ -52,34 +52,12 @@ func New(
 
 }
 
-func (m *NotifyAndHydrateState) Run(
-	branchRef string,
-	prNumber int,
-	claimsRepo string,
-	claimsDir *Directory,
-	crsDir *Directory,
-	// Firestarter image tag
-	// +optional
-	// +default="latest"
-	firestarterImageTag string,
-) *Container {
-	operator := dag.Container().From(fmt.Sprintf("ghcr.io/prefapp/gitops-k8s:%s", firestarterImageTag)).WithMountedDirectory("/claims", claimsDir).WithMountedDirectory("/crs", crsDir)
-	return operator.WithExec([]string{"echo", "works"})
-}
-
 type Metadata struct {
 	Name string `yaml:"name"`
 }
 
 type CR struct {
 	Metadata Metadata
-}
-
-func (m *NotifyAndHydrateState) Foo(ctx context.Context) *Container {
-
-	return dag.Container().
-		From("alpine:latest")
-
 }
 
 func (m *NotifyAndHydrateState) CrHasOpenedPr(
