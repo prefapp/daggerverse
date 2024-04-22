@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"path"
+)
 
 func (m *NotifyAndHydrateState) CmdContainer() *Container {
 
@@ -21,19 +24,57 @@ func (m *NotifyAndHydrateState) CmdHydrate(
 	// Previous CRs directory
 	// +required
 	crsDir *Directory,
-) *Container {
+    // Provider to render
+    // +required
+    provider string,
+    // GitHub application ID
+    // +required
+    githubAppID string,
+    // GitHub installation ID
+    // +required
+    githubInstallationID string,
+    // Github Prefapp App installation ID
+    // +required
+    githubPrefappInstallationID string,
+    // GitHub private key
+    // +required
+    githubPrivateKey *Secret,
+    // GitHub Organization
+    // +required
+    githubOrganization string,
+) *Directory {
 
-	cmd := m.CmdContainer()
-		// .WithExec(
-		// 	[]string{
-        //         "./run.sh",
-        //         "cdk8s",
-        //         "--disableRenames",
-        //         "--globals",
-        //     },
-		// )
+    claimsTargetDir := "/claims"
+    crsTargetDir := "/crs"
+    outputDir := "/output"
 
-	return cmd
+	cmd := m.CmdContainer().
+        WithMountedDirectory(claimsTargetDir, claimsDir).
+        WithMountedDirectory(crsTargetDir, crsDir).
+        WithEnvVariable("GITHUB_APP_ID", githubAppID).
+        WithEnvVariable("GITHUB_INSTALLATION_ID", githubInstallationID).
+        WithEnvVariable("GITHUB_APP_INSTALLATION_ID_PREFAPP", githubPrefappInstallationID).
+        WithSecretVariable("GITHUB_APP_PEM_FILE", githubPrivateKey).
+        WithEnvVariable("ORG", githubOrganization).
+        WithEnvVariable("DEBUG", "firestartr-test:*").
+        WithExec(
+			[]string{
+                "./run.sh",
+                "cdk8s",
+                "--render",
+                "--disableRenames",
+                "--globals", path.Join(crsTargetDir, ".config"),
+                "--initializers", path.Join(crsTargetDir, ".config"),
+                "--claims", path.Join(claimsTargetDir, "claims"),
+                "--previousCRs", crsTargetDir,
+                "--excludePath", path.Join(crsTargetDir, ".github"),
+                "--claimsDefaults", path.Join(claimsTargetDir, ".config"),
+                "--outputCrDir", outputDir,
+                "--provider", provider,
+            },
+        )
+
+	return cmd.Directory(outputDir)
 
 }
 
