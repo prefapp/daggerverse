@@ -114,6 +114,7 @@ func (m *NotifyAndHydrateState) CrHasPendingPr(
 
 			if uniqueValidPr != pr.HeadRefName {
 				crHasPendingPr = true
+				break
 			}
 
 		}
@@ -154,14 +155,13 @@ func (m *NotifyAndHydrateState) GetRepoPrsByBranchName(
 	content, err := dag.
 		Gh().
 		Run(
-			ctx, 
-			
-			ghToken, 
-			
-			command, 
-			
-			GhRunOpts{DisableCache: true}
-		
+			ctx,
+
+			ghToken,
+
+			command,
+
+			GhRunOpts{DisableCache: true},
 		)
 
 	if err != nil {
