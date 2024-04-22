@@ -1,8 +1,6 @@
 package main
 
-import (
-    "fmt"
-)
+import "fmt"
 
 func (m *NotifyAndHydrateState) CmdContainer() *Container {
 
@@ -25,21 +23,26 @@ func (m *NotifyAndHydrateState) CmdHydrate(
 	crsDir *Directory,
 ) *Container {
 
-	cmd := m.CmdContainer().
-		WithExec(
-			[]string{},
-		)
+	cmd := m.CmdContainer()
+		// .WithExec(
+		// 	[]string{
+        //         "./run.sh",
+        //         "cdk8s",
+        //         "--disableRenames",
+        //         "--globals",
+        //     },
+		// )
 
 	return cmd
 
 }
 
-func (m *NotifyAndHydrateSt) CmdAffectedWetRepos(
+func (m *NotifyAndHydrateState) CmdAffectedWetRepos(
 
-    claimsFromMain *Dir,
-    claimsFromPr *Dir,
-    claimsDefaults *Dir,
-    wetReposConfig *File
+    claimsFromMain *Directory,
+    claimsFromPr *Directory,
+    claimsDefaults *Directory,
+    wetReposConfig *File,
 
 ) *File {
 
@@ -47,10 +50,10 @@ func (m *NotifyAndHydrateSt) CmdAffectedWetRepos(
       WithMountedDirectory("/w/main/claims", claimsFromMain).
       WithMountedDirectory("/w/claims", claimsFromPr).
       WithMountedDirectory("/w/pr/.config", claimsDefaults).
-      WithMountedDirectory("/w/pr/.config/wet-repositories-config.yaml", wetReposConfig).
+      WithMountedFile("/w/pr/.config/wet-repositories-config.yaml", wetReposConfig).
       WithExec([]string{
 
-          "./run.sh"
+          "./run.sh",
           "cdk8s",
           "--compare",
           "--disableRenames",
@@ -64,7 +67,6 @@ func (m *NotifyAndHydrateSt) CmdAffectedWetRepos(
           "/w/pr/.config/wet-repositories-config.yaml",
           "--outputComparer",
           "/w/AFFECTED_WET_REPOSITORIES.json",
-      })
-
+      }).File("/w/AFFECTED_WET_REPOSITORIES.json")
 
 }
