@@ -12,16 +12,16 @@ func (m *NotifyAndHydrateState) CmdContainer() *Container {
 
 }
 
-//func (m *NotifyAndHydrateState) Hidrate(
-//
-//    claimsDir *Dir
-//    claimsRepo string,
-//    crsDir string
-//) *Container {
-//
-//    cmd := dag.Container().From(fmt.Sprintf("%s:%s", firestarterImage, firestarterImageTag))
-//
-//    return cmd
-//
-//
-//}
+func (m *NotifyAndHydrateState) CmdHidrate(
+
+    claimsDir *Dir
+    claimsRepo string,
+    crsDir string
+) *Container {
+
+    cmd := m.CmdContainer()
+
+    return cmd
+
+
+}
