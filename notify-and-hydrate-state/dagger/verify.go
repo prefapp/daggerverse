@@ -1,3 +1,21 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"strings"
+
+	"gopkg.in/yaml.v3"
+)
+
+type Metadata struct {
+	Name string `yaml:"name"`
+}
+
+type CR struct {
+	Metadata Metadata
+}
+
 func (m *NotifyAndHydrateState) VerifyPrs(
 
 	ctx context.Context,
