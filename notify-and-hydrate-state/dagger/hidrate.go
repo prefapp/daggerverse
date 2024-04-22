@@ -4,21 +4,11 @@ import (
     "fmt"
 )
 
-func (m *NotifyAndHydrateState) CmdContainer(
-
-    // +optional
-    // +default="latest-slim"
-    firestarterImageTag string,
-
-    // +optional
-    // +default="ghcr.io/prefapp/gitops-k8s"
-    firestarterImage string,
-
-) *Container {
+func (m *NotifyAndHydrateState) CmdContainer() *Container {
 
     return dag.Container().
 
-        From(fmt.Sprintf("%s:%s", firestarterImage, firestarterImageTag))
+        From(fmt.Sprintf("%s:%s", m.FirestarterImage, m.FirestarterImageTag))
 
 }
 
