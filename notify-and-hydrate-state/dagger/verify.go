@@ -16,12 +16,14 @@ type CR struct {
 	Metadata Metadata
 }
 
-func (m *NotifyAndHydrateState) VerifyPrs(
+// This function verifies that the Open PRs for the CRs are not pending
+// automated PRs.
+func (m *NotifyAndHydrateState) Verify(
 
 	ctx context.Context,
 
 	// Github token secret
-	ghToken Secret,
+	ghToken *Secret,
 
 	// PR number ("<owner>/<repo>#<pr-number>")
 	claimsPr string,
@@ -36,7 +38,7 @@ func (m *NotifyAndHydrateState) VerifyPrs(
 
 	currentPrNumber := strings.Split(claimsPr, "#")[1]
 
-	prs, err := m.GetRepoPrsByBranchName(ctx, &ghToken, ghRepo)
+	prs, err := m.GetRepoPrsByBranchName(ctx, ghToken, ghRepo)
 
 	if err != nil {
 
@@ -62,7 +64,7 @@ func (m *NotifyAndHydrateState) VerifyPrs(
 
 		if CrHasPendingPr {
 
-			return false
+			panic("Check your automated PRs for the CRs. There are pending PRs for the CRs.")
 
 		}
 
