@@ -17,8 +17,10 @@ type Cr struct {
 	Metadata Metadata
 }
 
-// This function verifies that the Open PRs for the CRs are not pending
-// automated PRs.
+type PrBranchName struct {
+	HeadRefName string `json:"headRefName"`
+}
+
 func (m *NotifyAndHydrateState) Verify(
 
 	ctx context.Context,
@@ -57,7 +59,7 @@ func (m *NotifyAndHydrateState) Verify(
 
 		}
 
-		crHasPendingPr, err := m.CrHasPendingPr(ctx, prs, currentPrNumber, ghRepo, &crInstance)
+		crHasPendingPr, err := m.CrHasPendingPr(prs, currentPrNumber, &crInstance)
 
 		if err != nil {
 
@@ -93,13 +95,11 @@ func (*NotifyAndHydrateState) unmarshalCr(ctx context.Context, cr *File) (Cr, er
 	return crInstance, nil
 }
 
-func (m *NotifyAndHydrateState) CrHasPendingPr(ctx context.Context,
+func (*NotifyAndHydrateState) CrHasPendingPr(
 
 	prs []PrBranchName,
 
 	currentPrNumber string,
-
-	ghRepo string,
 
 	cr *Cr,
 
@@ -123,10 +123,6 @@ func (m *NotifyAndHydrateState) CrHasPendingPr(ctx context.Context,
 
 	return false, nil
 
-}
-
-type PrBranchName struct {
-	HeadRefName string `json:"headRefName"`
 }
 
 func (m *NotifyAndHydrateState) GetRepoPrs(
