@@ -14,4 +14,28 @@
 
 package main
 
-type NotifyAndHydrateState struct{}
+type NotifyAndHydrateState struct {
+	FirestarterImage    string
+	FirestarterImageTag string
+}
+
+func New(
+
+	// +optional
+	// +default="latest-slim"
+	firestarterImageTag string,
+
+	// +optional
+	// +default="ghcr.io/prefapp/gitops-k8s"
+	firestarterImage string,
+
+) *NotifyAndHydrateState {
+
+	return &NotifyAndHydrateState{
+
+		FirestarterImage: firestarterImage,
+
+		FirestarterImageTag: firestarterImageTag,
+	}
+
+}
