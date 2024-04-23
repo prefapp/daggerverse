@@ -11,13 +11,13 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	ctx context.Context,
 
-	dirA Directory,
+	local Directory,
 
-	dirB Directory,
+	remote Directory,
 
 ) string {
 
-	aEntries, err := dirA.Entries(ctx)
+	localEntries, err := local.Entries(ctx)
 
 	if err != nil {
 
@@ -25,7 +25,7 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	}
 
-	bEntries, err := dirB.Entries(ctx)
+	remoteEntries, err := remote.Entries(ctx)
 
 	if err != nil {
 
@@ -33,81 +33,91 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	}
 
-	files := []*File{}
+	addedFiles := []*File{}
 
-	for _, aEntry := range aEntries {
+    deletedFiles := []*File{}
 
-		isContained := slices.Contains(bEntries, aEntry)
+    entriesInBothDirs := []string{}
 
-		if !isContained {
+	modifiedFiles := []*File{}
 
-			files = append(files, dirA.File(aEntry))
+	for _, localEntry := range localEntries {
+
+		remoteIndex := slices.Index(remoteEntries, localEntry)
+
+		if remoteIndex != -1 {
+
+			entriesInBothDirs = append(entriesInBothDirs, localEntry)
+
+            // These two lines delete the element from the slice
+            remoteEntries[remoteIndex] = remoteEntries[len(remoteEntries) - 1]
+
+            remoteEntries = remoteEntries[:len(remoteEntries) - 1]
 
 		} else {
 
-			contentsFromDirA, err := dirA.File(aEntry).Contents(ctx)
-
-			if err != nil {
-
-				panic(err)
-
-			}
-
-			contentsFromDirB, err := dirB.File(aEntry).Contents(ctx)
-
-			if err != nil {
-
-				panic(err)
-
-			}
-
-			if contentsFromDirA != contentsFromDirB {
-
-				files = append(files, dirA.File(aEntry))
-
-			}
+			addedFiles = append(addedFiles, local.File(localEntry))
 
 		}
 
 	}
 
-	for _, bEntry := range bEntries {
+    for _, remoteEntry := range remoteEntries {
 
-		isContained := slices.Contains(aEntries, bEntry)
+        deletedFiles = append(deletedFiles, remote.File(remoteEntry))
 
-		if !isContained {
+    }
 
-			files = append(files, dirB.File(bEntry))
+	for _, entry := range entriesInBothDirs {
 
-		} else {
+        localContents, err := local.File(entry).Contents(ctx)
 
-			contentsFromDirA, err := dirA.File(bEntry).Contents(ctx)
+        if err != nil {
 
-			if err != nil {
+            panic(err)
 
-				panic(err)
+        }
 
-			}
+        remoteContents, err := remote.File(entry).Contents(ctx)
 
-			contentsFromDirB, err := dirB.File(bEntry).Contents(ctx)
+        if err != nil {
 
-			if err != nil {
+            panic(err)
 
-				panic(err)
+        }
 
-			}
+        if localContents != remoteContents {
 
-			if contentsFromDirA != contentsFromDirB {
+            modifiedFiles = append(modifiedFiles, local.File(entry))
 
-				files = append(files, dirB.File(bEntry))
-
-			}
-
-		}
+        }
 
 	}
 
-	for _, file := range files {
+    fmt.Println(" ----- ADDED ----- ")
+
+    PrintFileList(ctx, addedFiles)
+
+    fmt.Println(" ----- DELETED ----- ")
+
+    PrintFileList(ctx, deletedFiles)
+
+    fmt.Println(" ----- MODIFIED ----- ")
+
+    PrintFileList(ctx, modifiedFiles)
+
+	return ""
+}
+
+func PrintFileList(
+
+	ctx context.Context,
+
+    listToPrint []*File,
+
+) {
+
+	for _, file := range listToPrint {
 
 		contents, err := file.Contents(ctx)
 
@@ -121,5 +131,4 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	}
 
-	return ""
 }
