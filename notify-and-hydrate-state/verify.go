@@ -49,9 +49,9 @@ func (m *NotifyAndHydrateState) Verify(
 
 	}
 
-	for _, cr := range *crs {
+	for _, cr := range crs {
 
-		crInstance, err := m.unmarshalCr(ctx, &cr)
+		crInstance, err := m.unmarshalCr(ctx, cr)
 
 		if err != nil {
 
