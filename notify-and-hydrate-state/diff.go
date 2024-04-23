@@ -7,6 +7,14 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+type DiffResult struct {
+	AddedFiles []*File
+
+	DeletedFiles []*File
+
+	ModifiedFiles []*File
+}
+
 func (m *NotifyAndHydrateState) CompareDirs(
 
 	ctx context.Context,
@@ -15,7 +23,7 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	remote Directory,
 
-) string {
+) DiffResult {
 
 	localEntries, err := local.Entries(ctx)
 
@@ -33,13 +41,9 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	}
 
-	addedFiles := []*File{}
+	result := DiffResult{}
 
-    deletedFiles := []*File{}
-
-    entriesInBothDirs := []string{}
-
-	modifiedFiles := []*File{}
+	entriesInBothDirs := []string{}
 
 	for _, localEntry := range localEntries {
 
@@ -49,71 +53,71 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 			entriesInBothDirs = append(entriesInBothDirs, localEntry)
 
-            // These two lines delete the element from the slice
-            remoteEntries[remoteIndex] = remoteEntries[len(remoteEntries) - 1]
+			// These two lines delete the element from the slice
+			remoteEntries[remoteIndex] = remoteEntries[len(remoteEntries)-1]
 
-            remoteEntries = remoteEntries[:len(remoteEntries) - 1]
+			remoteEntries = remoteEntries[:len(remoteEntries)-1]
 
 		} else {
 
-			addedFiles = append(addedFiles, local.File(localEntry))
+			result.AddedFiles = append(result.AddedFiles, local.File(localEntry))
 
 		}
 
 	}
 
-    for _, remoteEntry := range remoteEntries {
+	for _, remoteEntry := range remoteEntries {
 
-        deletedFiles = append(deletedFiles, remote.File(remoteEntry))
-
-    }
-
-	for _, entry := range entriesInBothDirs {
-
-        localContents, err := local.File(entry).Contents(ctx)
-
-        if err != nil {
-
-            panic(err)
-
-        }
-
-        remoteContents, err := remote.File(entry).Contents(ctx)
-
-        if err != nil {
-
-            panic(err)
-
-        }
-
-        if localContents != remoteContents {
-
-            modifiedFiles = append(modifiedFiles, local.File(entry))
-
-        }
+		result.DeletedFiles = append(result.DeletedFiles, remote.File(remoteEntry))
 
 	}
 
-    fmt.Println(" ----- ADDED ----- ")
+	for _, entry := range entriesInBothDirs {
 
-    PrintFileList(ctx, addedFiles)
+		localContents, err := local.File(entry).Contents(ctx)
 
-    fmt.Println(" ----- DELETED ----- ")
+		if err != nil {
 
-    PrintFileList(ctx, deletedFiles)
+			panic(err)
 
-    fmt.Println(" ----- MODIFIED ----- ")
+		}
 
-    PrintFileList(ctx, modifiedFiles)
+		remoteContents, err := remote.File(entry).Contents(ctx)
 
-	return ""
+		if err != nil {
+
+			panic(err)
+
+		}
+
+		if localContents != remoteContents {
+
+			result.ModifiedFiles = append(result.ModifiedFiles, local.File(entry))
+
+		}
+
+	}
+
+	fmt.Println(" ----- ADDED ----- ")
+
+	PrintFileList(ctx, result.AddedFiles)
+
+	fmt.Println(" ----- DELETED ----- ")
+
+	PrintFileList(ctx, result.DeletedFiles)
+
+	fmt.Println(" ----- MODIFIED ----- ")
+
+	PrintFileList(ctx, result.ModifiedFiles)
+
+	return result
 }
 
 func PrintFileList(
 
 	ctx context.Context,
 
-    listToPrint []*File,
+	listToPrint []*File,
 
 ) {
 
