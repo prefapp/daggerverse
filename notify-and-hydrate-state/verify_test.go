@@ -8,7 +8,6 @@ func TestCrHasPendingPr(t *testing.T) {
 
 	m := &NotifyAndHydrateState{}
 
-	// Create new instance
 	cr := &Cr{
 		Metadata: Metadata{
 			Name: "notify-and-hydrate-state-uuid",

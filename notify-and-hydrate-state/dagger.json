@@ -7,6 +7,6 @@
       "source": "github.com/prefapp/daggerverse-aweris/gh@166afb744b163650bb9fc911c14ca5ee81c420a0"
     }
   ],
-  "source": "dagger",
+  "source": ".",
   "engineVersion": "v0.11.0"
 }
