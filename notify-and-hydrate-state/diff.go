@@ -19,9 +19,9 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	ctx context.Context,
 
-	local Directory,
+	local *Directory,
 
-	remote Directory,
+	remote *Directory,
 
 ) DiffResult {
 

@@ -14,6 +14,11 @@
 
 package main
 
+import (
+	"context"
+	"slices"
+)
+
 type NotifyAndHydrateState struct {
 	FirestarterImage    string
 	FirestarterImageTag string
@@ -37,5 +42,110 @@ func New(
 
 		FirestarterImageTag: firestarterImageTag,
 	}
+
+}
+
+func (m *NotifyAndHydrateState) Workflow(
+	ctx context.Context,
+	// Claims repository name
+	// +required
+	claimsRepo string,
+	// Wet repository name
+	// +required
+	wetRepo string,
+	// Claims directory
+	// +required
+	claimsDir *Directory,
+	// Previous CRs directory
+	// +required
+	crsDir *Directory,
+	// Provider to render
+	// +required
+	provider string,
+	// GitHub application ID
+	// +required
+	githubAppID string,
+	// GitHub installation ID
+	// +required
+	githubInstallationID string,
+	// Github Prefapp App installation ID
+	// +required
+	githubPrefappInstallationID string,
+	// GitHub private key
+	// +required
+	githubPrivateKey *Secret,
+	// GitHub Organization
+	// +required
+	githubOrganization string,
+
+	ghToken *Secret,
+
+	claimsPr string,
+) {
+
+	newCrsDir := m.CmdHydrate(
+
+		claimsRepo,
+
+		claimsDir,
+
+		crsDir,
+
+		provider,
+
+		githubAppID,
+
+		githubInstallationID,
+
+		githubPrefappInstallationID,
+
+		githubPrivateKey,
+
+		githubOrganization,
+	)
+
+	comparedResult := m.CompareDirs(ctx, crsDir, newCrsDir)
+
+	m.Verify(
+
+		ctx,
+
+		ghToken,
+
+		claimsPr,
+
+		wetRepo,
+
+		slices.Concat(
+
+			comparedResult.AddedFiles,
+
+			comparedResult.ModifiedFiles,
+
+			comparedResult.DeletedFiles,
+		),
+	)
+
+	// Git checkout -b automated/<cr-name>-<pr-number>
+
+	// Git add  per file
+
+	// Git commit -m "Automated commit for CR <cr-name>"
+
+	// Git push origin automated/<cr-name>-<pr-number>
+
+	// Github create PR automated/<cr-name>-<pr-number> to <wet-repo>
+
+	// Git checkout automated/<cr-name>-<pr-number>
+
+	// Launch cdk8s renderer to add the annotation to the CR
+
+	// Git add per file
+
+	// Git commit -m "Automated commit for CR <cr-name>"
+
+	// Git push origin automated/<cr-name>-<pr-number>
+
+	// Add comment to claims PR with the PR links in list format
 
 }

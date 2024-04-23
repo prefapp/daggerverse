@@ -35,7 +35,7 @@ func (m *NotifyAndHydrateState) Verify(
 	ghRepo string,
 
 	// CRs to verify
-	crs *[]File,
+	crs []*File,
 
 ) (bool, error) {
 
