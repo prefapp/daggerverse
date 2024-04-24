@@ -28,19 +28,6 @@ func (m *NotifyAndHydrateState) CmdHydrate(
 	provider string,
 	// GitHub application ID
 	// +required
-	githubAppID string,
-	// GitHub installation ID
-	// +required
-	githubInstallationID string,
-	// Github Prefapp App installation ID
-	// +required
-	githubPrefappInstallationID string,
-	// GitHub private key
-	// +required
-	githubPrivateKey *Secret,
-	// GitHub Organization
-	// +required
-	githubOrganization string,
 ) *Directory {
 
 	claimsTargetDir := "/claims"
@@ -50,11 +37,11 @@ func (m *NotifyAndHydrateState) CmdHydrate(
 	cmd := m.CmdContainer().
 		WithMountedDirectory(claimsTargetDir, claimsDir).
 		WithMountedDirectory(crsTargetDir, crsDir).
-		WithEnvVariable("GITHUB_APP_ID", githubAppID).
-		WithEnvVariable("GITHUB_INSTALLATION_ID", githubInstallationID).
-		WithEnvVariable("GITHUB_APP_INSTALLATION_ID_PREFAPP", githubPrefappInstallationID).
-		WithSecretVariable("GITHUB_APP_PEM_FILE", githubPrivateKey).
-		WithEnvVariable("ORG", githubOrganization).
+		WithEnvVariable("GITHUB_APP_ID", m.GithubAppID).
+		WithEnvVariable("GITHUB_INSTALLATION_ID", m.GithubInstallationID).
+		WithEnvVariable("GITHUB_APP_INSTALLATION_ID_PREFAPP", m.GithubPrefappInstallationID).
+		WithSecretVariable("GITHUB_APP_PEM_FILE", m.GithubPrivateKey).
+		WithEnvVariable("ORG", m.GithubOrganization).
 		WithEnvVariable("DEBUG", "firestartr-test:*").
 		WithExec(
 			[]string{
@@ -127,7 +114,7 @@ func (m *NotifyAndHydrateState) CmdAnnotateCRs(
 ) *Directory {
 
 	targetCrsDir := "/output"
-	
+
 	return m.CmdContainer().
 		WithMountedDirectory(targetCrsDir, crsDir).
 		WithExec([]string{

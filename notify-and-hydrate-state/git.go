@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
 )
 
@@ -19,9 +20,7 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	claimPrNumber string,
 
-	token *Secret,
-
-) *Container {
+) (string, error) {
 
 	fileName, err := file.Name(ctx)
 
@@ -49,17 +48,37 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	prBranch := "automated/" + cr.Metadata.Name + "-" + claimPrNumber
 
-	return m.ConfigGitContainer(ctx, token).
+	m.ConfigGitContainer(ctx).
 		WithMountedDirectory("/repo", wetRepositoryDir).
 		WithWorkdir("/repo").
 		WithExec([]string{"checkout", "-b", prBranch}).
 		WithExec([]string{"add", fileName}).
 		WithExec([]string{"commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
-		WithExec([]string{"push", "origin", prBranch})
+		WithExec([]string{"push", "origin", prBranch, "--force"})
 
-	command := strings.Join([]string{"pr", "create", "-H", prBranch, "-R", wetRepoName}, " ")
+	command := strings.Join([]string{
+		"pr",
 
-	dag.Gh().Run(ctx, token, command, GhRunOpts{DisableCache: true})
+		"create",
+
+		"-H",
+
+		prBranch,
+
+		"-R",
+
+		wetRepoName,
+
+		"-t",
+
+		fmt.Sprintf("\"hydrate: %s from  %s/%s#%s\"", cr.Metadata.Name, strings.Split(wetRepoName, "/")[0], "claims", claimPrNumber),
+
+		"-b",
+
+		fmt.Sprintf("\"hydrated: %s\"", cr.Metadata.Name),
+	}, " ")
+
+	return dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
 
 }
 
@@ -67,11 +86,9 @@ func (m *NotifyAndHydrateState) ConfigGitContainer(
 
 	ctx context.Context,
 
-	token *Secret,
-
 ) *Container {
 
-	plainTextToken, err := token.Plaintext(ctx)
+	plainTextToken, err := m.GhToken.Plaintext(ctx)
 
 	if err != nil {
 

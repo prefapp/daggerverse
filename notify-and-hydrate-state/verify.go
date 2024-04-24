@@ -25,9 +25,6 @@ func (m *NotifyAndHydrateState) Verify(
 
 	ctx context.Context,
 
-	// Github token secret
-	ghToken *Secret,
-
 	// PR number ("<owner>/<repo>#<pr-number>")
 	claimsPr string,
 
@@ -41,7 +38,7 @@ func (m *NotifyAndHydrateState) Verify(
 
 	currentPrNumber := strings.Split(claimsPr, "#")[1]
 
-	prs, err := m.GetRepoPrs(ctx, ghToken, ghRepo)
+	prs, err := m.GetRepoPrs(ctx, ghRepo)
 
 	if err != nil {
 
@@ -129,8 +126,6 @@ func (m *NotifyAndHydrateState) GetRepoPrs(
 
 	ctx context.Context,
 
-	ghToken *Secret,
-
 	// Repository name ("<owner>/<repo>")
 	ghRepo string,
 
@@ -138,7 +133,7 @@ func (m *NotifyAndHydrateState) GetRepoPrs(
 
 	command := strings.Join([]string{"pr", "list", "--json", "headRefName", "-R", ghRepo}, " ")
 
-	content, err := dag.Gh().Run(ctx, ghToken, command, GhRunOpts{DisableCache: true})
+	content, err := dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
 
 	if err != nil {
 

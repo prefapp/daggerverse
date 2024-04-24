@@ -16,11 +16,19 @@ package main
 
 import (
 	"context"
+
+	"slices"
 )
 
 type NotifyAndHydrateState struct {
-	FirestarterImage    string
-	FirestarterImageTag string
+	FirestarterImage            string
+	FirestarterImageTag         string
+	GithubAppID                 string
+	GithubInstallationID        string
+	GithubPrefappInstallationID string
+	GithubPrivateKey            *Secret
+	GithubOrganization          string
+	GhToken                     *Secret
 }
 
 func New(
@@ -33,6 +41,30 @@ func New(
 	// +default="ghcr.io/prefapp/gitops-k8s"
 	firestarterImage string,
 
+	// +required
+	// Github application ID
+	githubAppID string,
+
+	// +required
+	// Github installation ID
+	githubInstallationID string,
+
+	// +required
+	// Github prefapp installation ID
+	githubPrefappInstallationID string,
+
+	// +required
+	// Github private key
+	githubPrivateKey *Secret,
+
+	// +required
+	// Github organization
+	githubOrganization string,
+
+	// +required
+	// Github token
+	ghToken *Secret,
+
 ) *NotifyAndHydrateState {
 
 	return &NotifyAndHydrateState{
@@ -40,6 +72,18 @@ func New(
 		FirestarterImage: firestarterImage,
 
 		FirestarterImageTag: firestarterImageTag,
+
+		GithubAppID: githubAppID,
+
+		GithubInstallationID: githubInstallationID,
+
+		GithubPrefappInstallationID: githubPrefappInstallationID,
+
+		GithubPrivateKey: githubPrivateKey,
+
+		GithubOrganization: githubOrganization,
+
+		GhToken: ghToken,
 	}
 
 }
@@ -61,69 +105,40 @@ func (m *NotifyAndHydrateState) Workflow(
 	// Provider to render
 	// +required
 	provider string,
-	// GitHub application ID
-	// +required
-	githubAppID string,
-	// GitHub installation ID
-	// +required
-	githubInstallationID string,
-	// Github Prefapp App installation ID
-	// +required
-	githubPrefappInstallationID string,
-	// GitHub private key
-	// +required
-	githubPrivateKey *Secret,
-	// GitHub Organization
-	// +required
-	githubOrganization string,
-
-	ghToken *Secret,
 
 	claimsPr string,
 ) {
 
-	// newCrsDir := m.CmdHydrate(
+	newCrsDir := m.CmdHydrate(
 
-	// 	claimsRepo,
+		claimsRepo,
 
-	// 	claimsDir,
+		claimsDir,
 
-	// 	crsDir,
+		crsDir,
 
-	// 	provider,
+		provider,
+	)
 
-	// 	githubAppID,
+	comparedResult := m.CompareDirs(ctx, crsDir, newCrsDir)
 
-	// 	githubInstallationID,
+	m.Verify(
 
-	// 	githubPrefappInstallationID,
+		ctx,
 
-	// 	githubPrivateKey,
+		claimsPr,
 
-	// 	githubOrganization,
-	// )
+		wetRepo,
 
-	// comparedResult := m.CompareDirs(ctx, crsDir, newCrsDir)
+		slices.Concat(
 
-	// m.Verify(
+			comparedResult.AddedFiles,
 
-	// 	ctx,
+			comparedResult.ModifiedFiles,
 
-	// 	ghToken,
-
-	// 	claimsPr,
-
-	// 	wetRepo,
-
-	// 	slices.Concat(
-
-	// 		comparedResult.AddedFiles,
-
-	// 		comparedResult.ModifiedFiles,
-
-	// 		comparedResult.DeletedFiles,
-	// 	),
-	// )
+			comparedResult.DeletedFiles,
+		),
+	)
 
 	// Git checkout -b automated/<cr-name>-<pr-number>
 

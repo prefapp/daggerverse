@@ -19,9 +19,6 @@ func (m *NotifyAndHydrateState) AddPrReferences(
 	// List of PR links
 	// +required
 	prLinks []string,
-	// Github Token
-	// +required
-	githubToken *Secret,
 
 ) (string, error) {
 
@@ -37,7 +34,7 @@ Related PRs:
 	t := template.Must(template.New("description").Parse(tpl))
 	t.Execute(&buf, prLinks)
 
-	return dag.Gh().Run(ctx, githubToken, strings.Join([]string{
+	return dag.Gh().Run(ctx, m.GhToken, strings.Join([]string{
 		"issue",
 		"-R", claimsRepo,
 		"edit", claimPrNumber,
