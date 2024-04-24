@@ -16,7 +16,6 @@ package main
 
 import (
 	"context"
-	"slices"
 )
 
 type NotifyAndHydrateState struct {
@@ -83,48 +82,48 @@ func (m *NotifyAndHydrateState) Workflow(
 	claimsPr string,
 ) {
 
-	newCrsDir := m.CmdHydrate(
+	// newCrsDir := m.CmdHydrate(
 
-		claimsRepo,
+	// 	claimsRepo,
 
-		claimsDir,
+	// 	claimsDir,
 
-		crsDir,
+	// 	crsDir,
 
-		provider,
+	// 	provider,
 
-		githubAppID,
+	// 	githubAppID,
 
-		githubInstallationID,
+	// 	githubInstallationID,
 
-		githubPrefappInstallationID,
+	// 	githubPrefappInstallationID,
 
-		githubPrivateKey,
+	// 	githubPrivateKey,
 
-		githubOrganization,
-	)
+	// 	githubOrganization,
+	// )
 
-	comparedResult := m.CompareDirs(ctx, crsDir, newCrsDir)
+	// comparedResult := m.CompareDirs(ctx, crsDir, newCrsDir)
 
-	m.Verify(
+	// m.Verify(
 
-		ctx,
+	// 	ctx,
 
-		ghToken,
+	// 	ghToken,
 
-		claimsPr,
+	// 	claimsPr,
 
-		wetRepo,
+	// 	wetRepo,
 
-		slices.Concat(
+	// 	slices.Concat(
 
-			comparedResult.AddedFiles,
+	// 		comparedResult.AddedFiles,
 
-			comparedResult.ModifiedFiles,
+	// 		comparedResult.ModifiedFiles,
 
-			comparedResult.DeletedFiles,
-		),
-	)
+	// 		comparedResult.DeletedFiles,
+	// 	),
+	// )
 
 	// Git checkout -b automated/<cr-name>-<pr-number>
 
