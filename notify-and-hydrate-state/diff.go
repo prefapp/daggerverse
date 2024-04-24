@@ -19,13 +19,17 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	ctx context.Context,
 
-	local *Directory,
+	old *Directory,
 
-	remote *Directory,
+	new *Directory,
 
 ) DiffResult {
 
-	localEntries, err := local.Entries(ctx)
+	localEntries, err := old.
+		WithoutDirectory(".config").
+		WithoutDirectory(".git").
+		WithoutDirectory(".github").
+		Entries(ctx)
 
 	if err != nil {
 
@@ -33,7 +37,7 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	}
 
-	remoteEntries, err := remote.Entries(ctx)
+	remoteEntries, err := new.Entries(ctx)
 
 	if err != nil {
 
@@ -60,7 +64,7 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 		} else {
 
-			result.AddedFiles = append(result.AddedFiles, local.File(localEntry))
+			result.AddedFiles = append(result.AddedFiles, old.File(localEntry))
 
 		}
 
@@ -68,13 +72,13 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	for _, remoteEntry := range remoteEntries {
 
-		result.DeletedFiles = append(result.DeletedFiles, remote.File(remoteEntry))
+		result.DeletedFiles = append(result.DeletedFiles, new.File(remoteEntry))
 
 	}
 
 	for _, entry := range entriesInBothDirs {
 
-		localContents, err := local.File(entry).Contents(ctx)
+		oldContents, err := old.File(entry).Contents(ctx)
 
 		if err != nil {
 
@@ -82,7 +86,7 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 		}
 
-		remoteContents, err := remote.File(entry).Contents(ctx)
+		newContents, err := new.File(entry).Contents(ctx)
 
 		if err != nil {
 
@@ -90,9 +94,9 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 		}
 
-		if localContents != remoteContents {
+		if oldContents != newContents {
 
-			result.ModifiedFiles = append(result.ModifiedFiles, local.File(entry))
+			result.ModifiedFiles = append(result.ModifiedFiles, new.File(entry))
 
 		}
 

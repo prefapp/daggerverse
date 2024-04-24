@@ -17,8 +17,6 @@ package main
 import (
 	"context"
 	"strings"
-
-	"slices"
 )
 
 type NotifyAndHydrateState struct {
@@ -109,16 +107,19 @@ func (m *NotifyAndHydrateState) Workflow(
 	// Claims PR
 	// +required
 	claimsPr string,
-) {
+) DiffResult {
 
 	newCrsDir := m.CmdHydrate(claimsRepo, claimsDir, crsDir, provider)
 
-	comparedResult := m.CompareDirs(ctx, crsDir, newCrsDir)
+	diff := m.CompareDirs(ctx, crsDir, newCrsDir)
 
-	m.Verify(ctx, claimsPr, wetRepo, slices.Concat(comparedResult.AddedFiles, comparedResult.ModifiedFiles, comparedResult.DeletedFiles))
+	m.Verify(ctx, claimsPr, wetRepo, append(
+		append(diff.DeletedFiles, diff.AddedFiles...),
+		diff.ModifiedFiles...))
 
-	prs := m.CreatePrsFromDiff(ctx, &comparedResult, crsDir, wetRepo, strings.Split(claimsPr, "#")[1])
+	prs := m.CreatePrsFromDiff(ctx, &diff, crsDir, wetRepo, strings.Split(claimsPr, "#")[1])
 
 	m.AddPrReferences(ctx, claimsRepo, claimsPr, prs)
 
+	return diff
 }

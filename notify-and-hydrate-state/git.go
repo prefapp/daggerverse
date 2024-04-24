@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 )
 
 func (m *NotifyAndHydrateState) CreatePrsFromDiff(
@@ -95,9 +96,9 @@ func (m *NotifyAndHydrateState) CreatePr(
 	switch action {
 	case "create":
 	case "update":
-		wetRepositoryDir.WithFile(fileName, file)
+		wetRepositoryDir = wetRepositoryDir.WithFile(fileName, file)
 	case "delete":
-		wetRepositoryDir.WithoutFile(fileName)
+		wetRepositoryDir = wetRepositoryDir.WithoutFile(fileName)
 	}
 
 	cr, err := m.unmarshalCr(ctx, file)
@@ -113,30 +114,23 @@ func (m *NotifyAndHydrateState) CreatePr(
 	m.ConfigGitContainer(ctx).
 		WithMountedDirectory("/repo", wetRepositoryDir).
 		WithWorkdir("/repo").
+		WithEnvVariable("CACHEBUSTER", time.Now().String()).
 		WithExec([]string{"checkout", "-b", prBranch}).
 		WithExec([]string{"add", fileName}).
 		WithExec([]string{"commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
-		WithExec([]string{"push", "origin", prBranch, "--force"})
+		WithExec([]string{"push", "origin", prBranch, "--force"}).
+		Stdout(ctx)
 
 	command := strings.Join([]string{
 		"pr",
-
 		"create",
-
 		"-H",
-
 		prBranch,
-
 		"-R",
-
 		wetRepoName,
-
 		"-t",
-
 		fmt.Sprintf("\"hydrate: %s from  %s/%s#%s\"", cr.Metadata.Name, strings.Split(wetRepoName, "/")[0], "claims", claimPrNumber),
-
 		"-b",
-
 		fmt.Sprintf("\"hydrated: %s\"", cr.Metadata.Name),
 	}, " ")
 
