@@ -106,7 +106,8 @@ func (m *NotifyAndHydrateState) Workflow(
 	// Provider to render
 	// +required
 	provider string,
-
+	// Claims PR
+	// +required
 	claimsPr string,
 ) {
 
@@ -116,6 +117,8 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	m.Verify(ctx, claimsPr, wetRepo, slices.Concat(comparedResult.AddedFiles, comparedResult.ModifiedFiles, comparedResult.DeletedFiles))
 
-	m.CreatePrsFromDiff(ctx, &comparedResult, crsDir, wetRepo, strings.Split(claimsPr, "#")[1])
+	prs := m.CreatePrsFromDiff(ctx, &comparedResult, crsDir, wetRepo, strings.Split(claimsPr, "#")[1])
+
+	m.AddPrReferences(ctx, claimsRepo, claimsPr, prs)
 
 }

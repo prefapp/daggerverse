@@ -18,25 +18,53 @@ func (m *NotifyAndHydrateState) CreatePrsFromDiff(
 
 	claimPrNumber string,
 
-) {
+) []string {
+
+	createdPrs := []string{}
 
 	for _, file := range diff.AddedFiles {
 
-		m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "create", claimPrNumber)
+		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "create", claimPrNumber)
+
+		if err != nil {
+
+			panic(err)
+
+		}
+
+		createdPrs = append(createdPrs, pr)
 
 	}
 
 	for _, file := range diff.ModifiedFiles {
 
-		m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "update", claimPrNumber)
+		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "update", claimPrNumber)
+
+		if err != nil {
+
+			panic(err)
+
+		}
+
+		createdPrs = append(createdPrs, pr)
 
 	}
 
 	for _, file := range diff.DeletedFiles {
 
-		m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "delete", claimPrNumber)
+		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "delete", claimPrNumber)
+
+		if err != nil {
+
+			panic(err)
+
+		}
+
+		createdPrs = append(createdPrs, pr)
 
 	}
+
+	return createdPrs
 
 }
 
