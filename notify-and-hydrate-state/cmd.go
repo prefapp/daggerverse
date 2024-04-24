@@ -110,3 +110,30 @@ func (m *NotifyAndHydrateState) CmdAffectedWetRepos(
 		}).File("/w/AFFECTED_WET_REPOSITORIES.json")
 
 }
+
+func (m *NotifyAndHydrateState) CmdAnnotateCRs(
+	// Claims repository name
+	// +required
+	claimsRepo string,
+	// Wet repository name
+	// +required
+	wetRepo string,
+	// Wet PR number
+	// +required
+	wetPrNumber string,
+	// CRs directory
+	// +required
+	crsDir *Directory,
+) *Directory {
+
+	targetCrsDir := "/output"
+	
+	return m.CmdContainer().
+		WithMountedDirectory(targetCrsDir, crsDir).
+		WithExec([]string{
+			"./run.sh", "cdk8s",
+			"--crLocation", targetCrsDir,
+			"--lastStatePrLink", fmt.Sprintf("%s#%s", wetRepo, wetPrNumber),
+			"--lastClaimPrLink", fmt.Sprintf("%s#%s", claimsRepo, wetPrNumber),
+		}).Directory(targetCrsDir)
+}
