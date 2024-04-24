@@ -6,6 +6,40 @@ import (
 	"strings"
 )
 
+func (m *NotifyAndHydrateState) CreatePrsFromDiff(
+
+	ctx context.Context,
+
+	diff *DiffResult,
+
+	wetRepositoryDir *Directory,
+
+	wetRepoName string,
+
+	claimPrNumber string,
+
+) {
+
+	for _, file := range diff.AddedFiles {
+
+		m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "create", claimPrNumber)
+
+	}
+
+	for _, file := range diff.ModifiedFiles {
+
+		m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "update", claimPrNumber)
+
+	}
+
+	for _, file := range diff.DeletedFiles {
+
+		m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "delete", claimPrNumber)
+
+	}
+
+}
+
 func (m *NotifyAndHydrateState) CreatePr(
 
 	ctx context.Context,
@@ -119,14 +153,4 @@ func (m *NotifyAndHydrateState) ConfigGitContainer(
 			"firestartr-bot",
 		})
 
-}
-
-func (m *NotifyAndHydrateState) Test(
-
-	ctx context.Context,
-
-) *Container {
-
-	return dag.Container().
-		From("alpine/git")
 }

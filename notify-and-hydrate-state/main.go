@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"strings"
 
 	"slices"
 )
@@ -109,57 +110,12 @@ func (m *NotifyAndHydrateState) Workflow(
 	claimsPr string,
 ) {
 
-	newCrsDir := m.CmdHydrate(
-
-		claimsRepo,
-
-		claimsDir,
-
-		crsDir,
-
-		provider,
-	)
+	newCrsDir := m.CmdHydrate(claimsRepo, claimsDir, crsDir, provider)
 
 	comparedResult := m.CompareDirs(ctx, crsDir, newCrsDir)
 
-	m.Verify(
+	m.Verify(ctx, claimsPr, wetRepo, slices.Concat(comparedResult.AddedFiles, comparedResult.ModifiedFiles, comparedResult.DeletedFiles))
 
-		ctx,
-
-		claimsPr,
-
-		wetRepo,
-
-		slices.Concat(
-
-			comparedResult.AddedFiles,
-
-			comparedResult.ModifiedFiles,
-
-			comparedResult.DeletedFiles,
-		),
-	)
-
-	// Git checkout -b automated/<cr-name>-<pr-number>
-
-	// Git add  per file
-
-	// Git commit -m "Automated commit for CR <cr-name>"
-
-	// Git push origin automated/<cr-name>-<pr-number>
-
-	// Github create PR automated/<cr-name>-<pr-number> to <wet-repo>
-
-	// Git checkout automated/<cr-name>-<pr-number>
-
-	// Launch cdk8s renderer to add the annotation to the CR
-
-	// Git add per file
-
-	// Git commit -m "Automated commit for CR <cr-name>"
-
-	// Git push origin automated/<cr-name>-<pr-number>
-
-	// Add comment to claims PR with the PR links in list format
+	m.CreatePrsFromDiff(ctx, &comparedResult, crsDir, wetRepo, strings.Split(claimsPr, "#")[1])
 
 }
