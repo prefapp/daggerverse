@@ -7,8 +7,8 @@
       "source": "github.com/prefapp/daggerverse-aweris/gh@166afb744b163650bb9fc911c14ca5ee81c420a0"
     },
     {
-      "name": "git",
-      "source": "github.com/shykes/git@c9fe2b28adfa983fbd12e0cb0018b3cad3625e8f"
+      "name": "supergit",
+      "source": "github.com/shykes/daggerverse/supergit@dfb1f91fa463b779021d65011f0060f7decda0ba"
     }
   ],
   "source": ".",

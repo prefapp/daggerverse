@@ -21,7 +21,7 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	token *Secret,
 
-) *Directory {
+) *Container {
 
 	fileName, err := file.Name(ctx)
 
@@ -49,16 +49,67 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	prBranch := "automated/" + cr.Metadata.Name + "-" + claimPrNumber
 
-	// dag.Git().
-	// 	Load(wetRepositoryDir).
-	// 	WithCommand([]string{"checkout", "-b", prBranch}).
-	// 	WithCommand([]string{"add", fileName}).
-	// 	WithCommand([]string{"commit", "-m", "Update " + fileName}).
-	// 	WithCommand([]string{"push"})
+	return m.ConfigGitContainer(ctx, token).
+		WithMountedDirectory("/repo", wetRepositoryDir).
+		WithWorkdir("/repo").
+		WithExec([]string{"checkout", "-b", prBranch}).
+		WithExec([]string{"add", fileName}).
+		WithExec([]string{"commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
+		WithExec([]string{"push", "origin", prBranch})
 
 	command := strings.Join([]string{"pr", "create", "-H", prBranch, "-R", wetRepoName}, " ")
 
 	dag.Gh().Run(ctx, token, command, GhRunOpts{DisableCache: true})
 
-	return wetRepositoryDir
+}
+
+func (m *NotifyAndHydrateState) ConfigGitContainer(
+
+	ctx context.Context,
+
+	token *Secret,
+
+) *Container {
+
+	plainTextToken, err := token.Plaintext(ctx)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	gitConfigContent := "https://firestartr:" + plainTextToken + "@github.com"
+
+	return dag.Container().
+		From("alpine/git").
+		WithExec([]string{
+			"config",
+			"--global",
+			"url." + gitConfigContent + ".insteadOf",
+			"https://github.com",
+		}).
+		WithExec([]string{
+			"config",
+			"--global",
+			"user.email",
+			"firestartr-bot@firestartr.dev",
+		}).
+		WithExec([]string{
+			"config",
+			"--global",
+			"user.name",
+			"firestartr-bot",
+		})
+
+}
+
+func (m *NotifyAndHydrateState) Test(
+
+	ctx context.Context,
+
+) *Container {
+
+	return dag.Container().
+		From("alpine/git")
 }
