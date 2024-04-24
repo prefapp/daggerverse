@@ -61,5 +61,4 @@ func (m *NotifyAndHydrateState) CreatePr(
 	dag.Gh().Run(ctx, token, command, GhRunOpts{DisableCache: true})
 
 	return wetRepositoryDir
-
 }
