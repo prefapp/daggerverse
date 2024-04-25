@@ -120,12 +120,15 @@ func (m *NotifyAndHydrateState) CreatePr(
 		WithMountedDirectory("/repo", wetRepositoryDir).
 		WithWorkdir("/repo")
 
-	wetRepositoryDir = gitContainer.
+	gitContainer = gitContainer.
 		WithExec([]string{"checkout", "-b", prBranch}).
 		WithExec([]string{"add", fileName}).
 		WithExec([]string{"commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
-		WithExec([]string{"push", "origin", prBranch, "--force"}).
-		Directory("/repo")
+		WithExec([]string{"push", "origin", prBranch, "--force"})
+
+	wetRepositoryDir = gitContainer.Directory("/repo")
+
+	gitContainer.Sync(ctx)
 
 	prTitle := fmt.Sprintf("\"hydrate: %s from  %s/%s#%s\"", cr.Metadata.Name, strings.Split(wetRepoName, "/")[0], "claims", claimPrNumber)
 
