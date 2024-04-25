@@ -22,6 +22,8 @@ func (m *NotifyAndHydrateState) AddPrReferences(
 
 ) (string, error) {
 
+	//panic(claimsRepo + "---" + claimPrNumber + "---" + strings.Join(prLinks, "---"))
+
 	const tpl = `
 Related PRs:
 {{range .}}

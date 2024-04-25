@@ -118,9 +118,11 @@ func (m *NotifyAndHydrateState) Workflow(
 		append(diff.DeletedFiles, diff.AddedFiles...),
 		diff.ModifiedFiles...), prs)
 
-	allPrs := m.CreatePrsFromDiff(ctx, &diff, crsDir, wetRepo, strings.Split(claimsPr, "#")[1], prs)
+	prNumber := strings.Split(claimsPr, "#")[1]
 
-	m.AddPrReferences(ctx, claimsRepo, claimsPr, allPrs)
+	allPrs := m.CreatePrsFromDiff(ctx, &diff, crsDir, wetRepo, prNumber, prs)
+
+	_, err = m.AddPrReferences(ctx, claimsRepo, prNumber, allPrs)
 
 	return diff
 }

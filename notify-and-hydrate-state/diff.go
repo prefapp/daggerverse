@@ -13,23 +13,25 @@ type DiffResult struct {
 	DeletedFiles []*File
 
 	ModifiedFiles []*File
+
+	UnmodifiedFiles []*File
 }
 
 func (m *NotifyAndHydrateState) CompareDirs(
 
 	ctx context.Context,
 
-	old *Directory,
+	oldCrs *Directory,
 
-	new *Directory,
+	newCrs *Directory,
 
 ) DiffResult {
 
-	localEntries, err := old.
+	oldEntries, err := oldCrs.
 		WithoutDirectory(".config").
 		WithoutDirectory(".git").
 		WithoutDirectory(".github").
-		Entries(ctx)
+		Glob(ctx, "*.yaml")
 
 	if err != nil {
 
@@ -37,7 +39,7 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	}
 
-	remoteEntries, err := new.Entries(ctx)
+	newEntries, err := newCrs.Entries(ctx)
 
 	if err != nil {
 
@@ -49,36 +51,36 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	entriesInBothDirs := []string{}
 
-	for _, localEntry := range localEntries {
+	for _, newEntry := range newEntries {
 
-		remoteIndex := slices.Index(remoteEntries, localEntry)
+		oldIndex := slices.Index(oldEntries, newEntry)
 
-		if remoteIndex != -1 {
+		if oldIndex != -1 {
 
-			entriesInBothDirs = append(entriesInBothDirs, localEntry)
+			entriesInBothDirs = append(entriesInBothDirs, newEntry)
 
 			// These two lines delete the element from the slice
-			remoteEntries[remoteIndex] = remoteEntries[len(remoteEntries)-1]
+			oldEntries[oldIndex] = oldEntries[len(oldEntries)-1]
 
-			remoteEntries = remoteEntries[:len(remoteEntries)-1]
+			oldEntries = oldEntries[:len(oldEntries)-1]
 
 		} else {
 
-			result.AddedFiles = append(result.AddedFiles, old.File(localEntry))
+			result.AddedFiles = append(result.AddedFiles, newCrs.File(newEntry))
 
 		}
 
 	}
 
-	for _, remoteEntry := range remoteEntries {
+	for _, oldEntry := range oldEntries {
 
-		result.DeletedFiles = append(result.DeletedFiles, new.File(remoteEntry))
+		result.DeletedFiles = append(result.DeletedFiles, oldCrs.File(oldEntry))
 
 	}
 
 	for _, entry := range entriesInBothDirs {
 
-		oldContents, err := old.File(entry).Contents(ctx)
+		oldContents, err := oldCrs.File(entry).Contents(ctx)
 
 		if err != nil {
 
@@ -86,7 +88,7 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 		}
 
-		newContents, err := new.File(entry).Contents(ctx)
+		newContents, err := newCrs.File(entry).Contents(ctx)
 
 		if err != nil {
 
@@ -96,8 +98,11 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 		if oldContents != newContents {
 
-			result.ModifiedFiles = append(result.ModifiedFiles, new.File(entry))
+			result.ModifiedFiles = append(result.ModifiedFiles, newCrs.File(entry))
 
+		} else {
+
+			result.UnmodifiedFiles = append(result.UnmodifiedFiles, newCrs.File(entry))
 		}
 
 	}

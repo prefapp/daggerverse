@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"path"
 )
@@ -64,6 +65,46 @@ func (m *NotifyAndHydrateState) CmdHydrate(
 
 }
 
+// Render claims into CRs
+func (m *NotifyAndHydrateState) CmdAnnotateCrPr(
+	ctx context.Context,
+	// Last claim PR link  (https://...//pulls/123)
+	// +required
+	lastClaimPrLink string,
+	// Last state PR link (https://...//pulls/123)
+	// +required
+	lastStatePrLink string,
+	// Previous CRs directory
+	// +required
+	wetRepo *Directory,
+	// Path to the cr
+	// +required
+	crFileName string,
+) *Directory {
+
+	wetRepoPath := "/repo"
+
+	cmd := m.CmdContainer().
+		WithMountedDirectory(wetRepoPath, wetRepo).
+		WithEnvVariable("GITHUB_APP_ID", m.GithubAppID).
+		WithEnvVariable("GITHUB_INSTALLATION_ID", m.GithubInstallationID).
+		WithEnvVariable("GITHUB_APP_INSTALLATION_ID_PREFAPP", m.GithubPrefappInstallationID).
+		WithSecretVariable("GITHUB_APP_PEM_FILE", m.GithubPrivateKey).
+		WithEnvVariable("ORG", m.GithubOrganization).
+		WithEnvVariable("DEBUG", "firestartr-test:*").
+		WithExec(
+			[]string{
+				"./run.sh",
+				"cdk8s",
+				"--crLocation", wetRepoPath + "/" + crFileName,
+				"--lastStatePrLink", lastStatePrLink,
+				"--lastClaimPrLink", lastClaimPrLink,
+			},
+		)
+
+	return cmd.Directory(wetRepoPath)
+
+}
 func (m *NotifyAndHydrateState) CmdAffectedWetRepos(
 
 	claimsFromMain *Directory,

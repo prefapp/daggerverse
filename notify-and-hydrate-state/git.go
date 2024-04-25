@@ -115,22 +115,48 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	prBranch := "automated/" + cr.Metadata.Name + "-" + claimPrNumber
 
-	m.ConfigGitContainer(ctx).
-		WithMountedDirectory("/repo", wetRepositoryDir).
-		WithWorkdir("/repo").
+	gitContainer := m.ConfigGitContainer(ctx).
 		WithEnvVariable("CACHEBUSTER", time.Now().String()).
+		WithMountedDirectory("/repo", wetRepositoryDir).
+		WithWorkdir("/repo")
+
+	wetRepositoryDir = gitContainer.
 		WithExec([]string{"checkout", "-b", prBranch}).
 		WithExec([]string{"add", fileName}).
 		WithExec([]string{"commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
 		WithExec([]string{"push", "origin", prBranch, "--force"}).
-		Stdout(ctx)
+		Directory("/repo")
 
 	prTitle := fmt.Sprintf("\"hydrate: %s from  %s/%s#%s\"", cr.Metadata.Name, strings.Split(wetRepoName, "/")[0], "claims", claimPrNumber)
 
 	prBody := fmt.Sprintf("\"hydrated: %s\"", cr.Metadata.Name)
 
-	return m.CreatePrIfNotExists(ctx, prBranch, wetRepoName, prTitle, prBody, prs)
+	prLink, err := m.CreatePrIfNotExists(ctx, prBranch, wetRepoName, prTitle, prBody, prs)
 
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	wetRepositoryDir = m.CmdAnnotateCrPr(
+		ctx,
+		prLink,
+		prLink,
+		wetRepositoryDir,
+		fileName,
+	)
+
+	gitContainer.
+		WithMountedDirectory("/repo", wetRepositoryDir).
+		WithWorkdir("/repo").
+		WithExec([]string{"checkout", prBranch}).
+		WithExec([]string{"add", fileName}).
+		WithExec([]string{"commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
+		WithExec([]string{"push", "origin", prBranch, "--force"}).
+		Stdout(ctx)
+
+	return prLink, nil
 }
 
 func (m *NotifyAndHydrateState) ConfigGitContainer(
@@ -192,7 +218,7 @@ func (m *NotifyAndHydrateState) CreatePrIfNotExists(
 
 		if pr.HeadRefName == branch {
 
-			return pr.HeadRefName, nil
+			return pr.Url, nil
 
 		}
 

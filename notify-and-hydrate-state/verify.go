@@ -19,6 +19,7 @@ type Cr struct {
 
 type PrBranchName struct {
 	HeadRefName string `json:"headRefName"`
+	Url         string `json:"url"`
 }
 
 func (m *NotifyAndHydrateState) Verify(
@@ -125,7 +126,7 @@ func (m *NotifyAndHydrateState) GetRepoPrs(
 
 ) ([]PrBranchName, error) {
 
-	command := strings.Join([]string{"pr", "list", "--json", "headRefName", "-R", ghRepo}, " ")
+	command := strings.Join([]string{"pr", "list", "--json", "headRefName", "--json", "url", "-R", ghRepo}, " ")
 
 	content, err := dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
 
