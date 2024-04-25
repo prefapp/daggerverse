@@ -39,6 +39,6 @@ Related PRs:
 		"-R", claimsRepo,
 		"edit", claimPrNumber,
 		"-b", fmt.Sprintf("\"%s\"", buf.String()),
-	}, " "))
+	}, " "), GhRunOpts{DisableCache: true})
 
 }
