@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
 )
 
@@ -31,35 +32,27 @@ type NotifyAndHydrateState struct {
 }
 
 func New(
-
 	// +optional
 	// +default="latest-slim"
 	firestarterImageTag string,
-
 	// +optional
 	// +default="ghcr.io/prefapp/gitops-k8s"
 	firestarterImage string,
-
 	// +required
 	// Github application ID
 	githubAppID string,
-
 	// +required
 	// Github installation ID
 	githubInstallationID string,
-
 	// +required
 	// Github prefapp installation ID
 	githubPrefappInstallationID string,
-
 	// +required
 	// Github private key
 	githubPrivateKey *Secret,
-
 	// +required
 	// Github organization
 	githubOrganization string,
-
 	// +required
 	// Github token
 	ghToken *Secret,
@@ -113,13 +106,21 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	diff := m.CompareDirs(ctx, crsDir, newCrsDir)
 
+	prs, err := m.GetRepoPrs(ctx, wetRepo)
+
+	if err != nil {
+
+		panic(fmt.Errorf("failed to get PRs: %w", err))
+
+	}
+
 	m.Verify(ctx, claimsPr, wetRepo, append(
 		append(diff.DeletedFiles, diff.AddedFiles...),
-		diff.ModifiedFiles...))
+		diff.ModifiedFiles...), prs)
 
-	prs := m.CreatePrsFromDiff(ctx, &diff, crsDir, wetRepo, strings.Split(claimsPr, "#")[1])
+	allPrs := m.CreatePrsFromDiff(ctx, &diff, crsDir, wetRepo, strings.Split(claimsPr, "#")[1])
 
-	m.AddPrReferences(ctx, claimsRepo, claimsPr, prs)
+	m.AddPrReferences(ctx, claimsRepo, claimsPr, allPrs)
 
 	return diff
 }

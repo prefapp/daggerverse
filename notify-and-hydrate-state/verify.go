@@ -34,17 +34,11 @@ func (m *NotifyAndHydrateState) Verify(
 	// CRs to verify
 	crs []*File,
 
+	prs []PrBranchName,
+
 ) (bool, error) {
 
 	currentPrNumber := strings.Split(claimsPr, "#")[1]
-
-	prs, err := m.GetRepoPrs(ctx, ghRepo)
-
-	if err != nil {
-
-		return false, fmt.Errorf("failed to get PRs: %w", err)
-
-	}
 
 	for _, cr := range crs {
 
