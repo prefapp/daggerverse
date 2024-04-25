@@ -19,13 +19,15 @@ func (m *NotifyAndHydrateState) CreatePrsFromDiff(
 
 	claimPrNumber string,
 
+	prs []PrBranchName,
+
 ) []string {
 
 	createdPrs := []string{}
 
 	for _, file := range diff.AddedFiles {
 
-		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "create", claimPrNumber)
+		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "create", claimPrNumber, prs)
 
 		if err != nil {
 
@@ -39,7 +41,7 @@ func (m *NotifyAndHydrateState) CreatePrsFromDiff(
 
 	for _, file := range diff.ModifiedFiles {
 
-		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "update", claimPrNumber)
+		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "update", claimPrNumber, prs)
 
 		if err != nil {
 
@@ -53,7 +55,7 @@ func (m *NotifyAndHydrateState) CreatePrsFromDiff(
 
 	for _, file := range diff.DeletedFiles {
 
-		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "delete", claimPrNumber)
+		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "delete", claimPrNumber, prs)
 
 		if err != nil {
 
@@ -82,6 +84,8 @@ func (m *NotifyAndHydrateState) CreatePr(
 	action string,
 
 	claimPrNumber string,
+
+	prs []PrBranchName,
 
 ) (string, error) {
 
@@ -121,20 +125,11 @@ func (m *NotifyAndHydrateState) CreatePr(
 		WithExec([]string{"push", "origin", prBranch, "--force"}).
 		Stdout(ctx)
 
-	command := strings.Join([]string{
-		"pr",
-		"create",
-		"-H",
-		prBranch,
-		"-R",
-		wetRepoName,
-		"-t",
-		fmt.Sprintf("\"hydrate: %s from  %s/%s#%s\"", cr.Metadata.Name, strings.Split(wetRepoName, "/")[0], "claims", claimPrNumber),
-		"-b",
-		fmt.Sprintf("\"hydrated: %s\"", cr.Metadata.Name),
-	}, " ")
+	prTitle := fmt.Sprintf("\"hydrate: %s from  %s/%s#%s\"", cr.Metadata.Name, strings.Split(wetRepoName, "/")[0], "claims", claimPrNumber)
 
-	return dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
+	prBody := fmt.Sprintf("\"hydrated: %s\"", cr.Metadata.Name)
+
+	return m.CreatePrIfNotExists(ctx, prBranch, wetRepoName, prTitle, prBody, prs)
 
 }
 
@@ -174,5 +169,48 @@ func (m *NotifyAndHydrateState) ConfigGitContainer(
 			"user.name",
 			"firestartr-bot",
 		})
+
+}
+
+func (m *NotifyAndHydrateState) CreatePrIfNotExists(
+
+	ctx context.Context,
+
+	branch string,
+
+	repo string,
+
+	title string,
+
+	body string,
+
+	prs []PrBranchName,
+
+) (string, error) {
+
+	for _, pr := range prs {
+
+		if pr.HeadRefName == branch {
+
+			return pr.HeadRefName, nil
+
+		}
+
+	}
+
+	command := strings.Join([]string{
+		"pr",
+		"create",
+		"-H",
+		branch,
+		"-R",
+		repo,
+		"-t",
+		title,
+		"-b",
+		body,
+	}, " ")
+
+	return dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
 
 }
