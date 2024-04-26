@@ -12,6 +12,12 @@ require (
 )
 
 require (
+	github.com/evanphx/json-patch/v5 v5.9.0 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
+	sigs.k8s.io/yaml v1.4.0 // indirect
+)
+
+require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

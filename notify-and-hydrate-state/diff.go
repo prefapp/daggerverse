@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	"golang.org/x/exp/slices"
+	"sigs.k8s.io/yaml"
 )
 
 type DiffResult struct {
@@ -96,7 +98,7 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 		}
 
-		if oldContents != newContents {
+		if !m.AreYamlsEqual(ctx, oldContents, newContents) {
 
 			result.ModifiedFiles = append(result.ModifiedFiles, newCrs.File(entry))
 
@@ -143,5 +145,35 @@ func PrintFileList(
 		fmt.Print(contents)
 
 	}
+
+}
+
+func (m *NotifyAndHydrateState) AreYamlsEqual(
+
+	ctx context.Context,
+
+	yamlA string,
+
+	yamlB string,
+
+) bool {
+
+	jsonString1, err := yaml.YAMLToJSON([]byte(yamlA))
+
+	jsonString2, err2 := yaml.YAMLToJSON([]byte(yamlB))
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	if err2 != nil {
+
+		panic(err2)
+
+	}
+
+	return jsonpatch.Equal(jsonString1, jsonString2)
 
 }

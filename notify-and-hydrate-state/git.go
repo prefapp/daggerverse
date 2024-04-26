@@ -115,20 +115,27 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	prBranch := "automated/" + cr.Metadata.Name + "-" + claimPrNumber
 
-	gitContainer := m.ConfigGitContainer(ctx).
+	gitContainer, err := m.ConfigGitContainer(ctx).
 		WithEnvVariable("CACHEBUSTER", time.Now().String()).
 		WithMountedDirectory("/repo", wetRepositoryDir).
-		WithWorkdir("/repo")
-
-	gitContainer = gitContainer.
+		WithWorkdir("/repo").
 		WithExec([]string{"checkout", "-b", prBranch}).
 		WithExec([]string{"add", fileName}).
 		WithExec([]string{"commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
-		WithExec([]string{"push", "origin", prBranch, "--force"})
+		WithExec([]string{"push", "origin", prBranch, "--force"}).
+		Sync(ctx)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	// 	hydrate: catalog-6b450558-c827-4ae8-90b2-78cb809cf972
+
+	// body: changes come from claims pr <org>/claims#192
 
 	wetRepositoryDir = gitContainer.Directory("/repo")
-
-	gitContainer.Sync(ctx)
 
 	prTitle := fmt.Sprintf("\"hydrate: %s from  %s/%s#%s\"", cr.Metadata.Name, strings.Split(wetRepoName, "/")[0], "claims", claimPrNumber)
 

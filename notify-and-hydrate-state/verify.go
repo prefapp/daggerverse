@@ -99,7 +99,7 @@ func (*NotifyAndHydrateState) CrHasPendingPr(
 
 	for _, pr := range prs {
 
-		if strings.Contains(pr.HeadRefName, cr.Metadata.Name) {
+		if strings.Contains(pr.HeadRefName, cr.Metadata.Name) && !strings.Contains(pr.HeadRefName, "-plan") {
 
 			// Pr format: automated/<metadata-name>-<uuid>-<pr-number>
 			uniqueValidPr := "automated/" + cr.Metadata.Name + "-" + currentPrNumber
