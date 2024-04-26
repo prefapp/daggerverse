@@ -4,7 +4,7 @@
   "dependencies": [
     {
       "name": "gh",
-      "source": "github.com/prefapp/daggerverse-aweris/gh@166afb744b163650bb9fc911c14ca5ee81c420a0"
+      "source": "github.com/aweris/daggerverse/gh@ff990b1897334421e5619afd4559279f445aeb57"
     },
     {
       "name": "supergit",
