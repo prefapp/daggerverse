@@ -131,15 +131,11 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	}
 
-	// 	hydrate: catalog-6b450558-c827-4ae8-90b2-78cb809cf972
-
-	// body: changes come from claims pr <org>/claims#192
-
 	wetRepositoryDir = gitContainer.Directory("/repo")
 
-	prTitle := fmt.Sprintf("\"hydrate: %s from  %s/%s#%s\"", cr.Metadata.Name, strings.Split(wetRepoName, "/")[0], "claims", claimPrNumber)
+	prTitle := fmt.Sprintf("\"hydrate: %s \"", cr.Metadata.Name)
 
-	prBody := fmt.Sprintf("\"hydrated: %s\"", cr.Metadata.Name)
+	prBody := fmt.Sprintf("\"changes come from %s/%s#%s\"", strings.Split(wetRepoName, "/")[0], "claims", claimPrNumber)
 
 	prLink, err := m.CreatePrIfNotExists(ctx, prBranch, wetRepoName, prTitle, prBody, prs)
 
