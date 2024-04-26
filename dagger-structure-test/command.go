@@ -18,13 +18,14 @@ func (m *DaggerStructureTest) AssertOutput(ctx context.Context, container *Conta
 
 	ctr := container
 
-	if *options.DisableCache {
+	if options.DisableCache != nil && *options.DisableCache {
 		ctr = container.WithEnvVariable("CACHEBUSTER", time.Now().String())
 	}
 
 	if options.ExpectedOutput != nil {
 		output, err := ctr.Stdout(ctx)
-		if err != nil {
+
+		if _, ok := err.(*ExecError); err != nil && !ok {
 			return false, err
 		}
 		if output != *options.ExpectedOutput {
@@ -44,22 +45,23 @@ func (m *DaggerStructureTest) AssertOutput(ctx context.Context, container *Conta
 
 	if options.ExpectedError != nil {
 		output, err := ctr.Stderr(ctx)
-		if err != nil {
+		
+		if _, ok := err.(*ExecError); err != nil && !ok {
 			return false, err
 		}
-
+		
 		match, err := regexp.MatchString(*options.ExpectedError, output)
-
+		
 		if err != nil {
 			return false, err
 		}
-
+		
 		if !match {
 			return false, nil
 		}
 		
 	}
-
+	
 	if options.ExpectedExitCode != nil {
 		exitCode, err := m.getExitCode(ctx, ctr)
 		if err != nil {
@@ -69,7 +71,7 @@ func (m *DaggerStructureTest) AssertOutput(ctx context.Context, container *Conta
 			return false, nil
 		}
 	}
-
+	
 	return true, nil
 }
 
