@@ -99,6 +99,7 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	switch action {
 	case "create":
+		wetRepositoryDir = wetRepositoryDir.WithFile(fileName, file)
 	case "update":
 		wetRepositoryDir = wetRepositoryDir.WithFile(fileName, file)
 	case "delete":
