@@ -126,7 +126,7 @@ func (m *NotifyAndHydrateState) GetRepoPrs(
 
 ) ([]PrBranchName, error) {
 
-	command := strings.Join([]string{"pr", "list", "--json", "headRefName", "--json", "url", "-R", ghRepo}, " ")
+	command := strings.Join([]string{"pr", "list", "--json", "headRefName", "--json", "url", "-L", "1000", "-R", ghRepo}, " ")
 
 	content, err := dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
 
