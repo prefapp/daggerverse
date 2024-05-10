@@ -102,9 +102,19 @@ func (m *NotifyAndHydrateState) Workflow(
 	claimsPr string,
 ) DiffResult {
 
+	prNumber := strings.Split(claimsPr, "#")[1]
+
 	newCrsDir := m.CmdHydrate(claimsRepo, claimsDir, crsDir, provider)
 
-	diff := m.CompareDirs(ctx, crsDir, newCrsDir)
+	affectedClaims, err := m.GetAffectedClaims(ctx, claimsRepo, prNumber, claimsDir)
+
+	if err != nil {
+
+		panic(fmt.Errorf("failed to get affected claims: %w", err))
+
+	}
+
+	diff := m.CompareDirs(ctx, crsDir, newCrsDir, affectedClaims)
 
 	prs, err := m.GetRepoPrs(ctx, wetRepo)
 
@@ -114,11 +124,15 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	}
 
-	m.Verify(ctx, claimsPr, wetRepo, append(
+	isValid, err := m.Verify(ctx, claimsPr, wetRepo, append(
 		append(diff.DeletedFiles, diff.AddedFiles...),
 		diff.ModifiedFiles...), prs)
 
-	prNumber := strings.Split(claimsPr, "#")[1]
+	if !isValid {
+
+		panic(fmt.Errorf("failed to verify: %w", err))
+
+	}
 
 	allPrs := m.CreatePrsFromDiff(ctx, &diff, crsDir, wetRepo, prNumber, prs)
 

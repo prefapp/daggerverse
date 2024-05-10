@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
+	"github.com/tidwall/gjson"
 	"golang.org/x/exp/slices"
 	"sigs.k8s.io/yaml"
 )
@@ -26,6 +28,8 @@ func (m *NotifyAndHydrateState) CompareDirs(
 	oldCrs *Directory,
 
 	newCrs *Directory,
+
+	affectedClaims []string,
 
 ) DiffResult {
 
@@ -59,25 +63,34 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 		if oldIndex != -1 {
 
-			entriesInBothDirs = append(entriesInBothDirs, newEntry)
+			if m.IsAffectedCRFromPr(ctx, affectedClaims, newCrs.File(newEntry)) {
 
-			// These two lines delete the element from the slice
-			oldEntries[oldIndex] = oldEntries[len(oldEntries)-1]
+				entriesInBothDirs = append(entriesInBothDirs, newEntry)
 
-			oldEntries = oldEntries[:len(oldEntries)-1]
+				// These two lines delete the element from the slice
+				oldEntries[oldIndex] = oldEntries[len(oldEntries)-1]
+
+				oldEntries = oldEntries[:len(oldEntries)-1]
+			}
 
 		} else {
 
-			result.AddedFiles = append(result.AddedFiles, newCrs.File(newEntry))
+			if m.IsAffectedCRFromPr(ctx, affectedClaims, newCrs.File(newEntry)) {
 
+				result.AddedFiles = append(result.AddedFiles, newCrs.File(newEntry))
+
+			}
 		}
 
 	}
 
 	for _, oldEntry := range oldEntries {
 
-		result.DeletedFiles = append(result.DeletedFiles, oldCrs.File(oldEntry))
+		if m.IsAffectedCRFromPr(ctx, affectedClaims, oldCrs.File(oldEntry)) {
 
+			result.DeletedFiles = append(result.DeletedFiles, oldCrs.File(oldEntry))
+
+		}
 	}
 
 	for _, entry := range entriesInBothDirs {
@@ -100,8 +113,11 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 		if !m.AreYamlsEqual(ctx, oldContents, newContents) {
 
-			result.ModifiedFiles = append(result.ModifiedFiles, newCrs.File(entry))
+			if m.IsAffectedCRFromPr(ctx, affectedClaims, newCrs.File(entry)) {
 
+				result.ModifiedFiles = append(result.ModifiedFiles, newCrs.File(entry))
+
+			}
 		} else {
 
 			result.UnmodifiedFiles = append(result.UnmodifiedFiles, newCrs.File(entry))
@@ -175,5 +191,41 @@ func (m *NotifyAndHydrateState) AreYamlsEqual(
 	}
 
 	return jsonpatch.Equal(jsonString1, jsonString2)
+
+}
+
+func (m *NotifyAndHydrateState) IsAffectedCRFromPr(
+
+	ctx context.Context,
+
+	affectedClaims []string,
+
+	cr *File,
+
+) bool {
+
+	contents, err := cr.Contents(ctx)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	jsonContents, err := yaml.YAMLToJSON([]byte(contents))
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	annotations := gjson.Get(string(jsonContents), "metadata.annotations")
+
+	claimRef := annotations.Get(gjson.Escape("firestartr.dev/claim-ref")).String()
+
+	claimName := strings.Split(claimRef, "/")[1]
+
+	return slices.Contains(affectedClaims, claimName)
 
 }
