@@ -13,7 +13,12 @@ require (
 	sigs.k8s.io/yaml v1.4.0
 )
 
-require github.com/pkg/errors v0.8.1 // indirect
+require (
+	github.com/pkg/errors v0.8.1 // indirect
+	github.com/tidwall/gjson v1.17.1 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
+)
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
