@@ -53,9 +53,6 @@ func (m *K6) Run(
 	// k6 Script file to execute
 	//+required
 	script string,
-	// Direcetory to store the results
-	//+required
-	outputDir string,
 	// Environment variables to set
 	//+optional
 	env []EnvironmentVariable,
