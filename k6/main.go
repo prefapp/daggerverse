@@ -31,7 +31,7 @@ type EnvironmentVariable string
 
 // IsValid checks if the EnvironmentVariable adheres to the specified format
 func (cs EnvironmentVariable) IsValid() bool {
-	re := regexp.MustCompile(`^[a-zA-Z0-9_\-]+=[a-zA-Z0-9_\-]+$`)
+	re := regexp.MustCompile(`^[a-zA-Z0-9_\-]+=.+$`)
 	return re.MatchString(string(cs))
 }
 
