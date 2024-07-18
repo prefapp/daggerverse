@@ -97,7 +97,7 @@ func (m *K6) Run(
 			"--duration", duration,
 			"--out", fmt.Sprintf("web-dashboard=export=%s", filepath.Join(outputDirMountPath, "report.html")),
 			"--summary-export", filepath.Join(outputDirMountPath, "summary.json"),
-			"--console-output", filepath.Join(outputDirMountPath, "logs.txt"),
+			"--console-output", filepath.Join(outputDirMountPath, "errors.txt"),
 			filepath.Join(workingDirMountPath, script),
 		})
 
