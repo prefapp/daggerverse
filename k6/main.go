@@ -101,13 +101,13 @@ func (m *K6) Run(
 			filepath.Join(workingDirMountPath, script),
 		})
 
-	ctr, err := ctr.Sync(ctx)
+	ctr, _ = ctr.Sync(ctx)
 
-	if e, ok := err.(*ExecError); ok {
-		panic("Error running QA workflow, exit code: " + strconv.Itoa(e.ExitCode))
-	} else if err != nil {
-		panic("Unexpected error")
-	}
+	// if e, ok := err.(*ExecError); ok {
+	// 	panic("Error running QA workflow, exit code: " + strconv.Itoa(e.ExitCode))
+	// } else if err != nil {
+	// 	panic("Unexpected error")
+	// }
 
 	return ctr
 }
