@@ -101,7 +101,7 @@ func (m *K6) Run(
 			filepath.Join(workingDirMountPath, script),
 		})
 
-	ctr, _ := ctr.Sync(ctx)
+	ctr, _ = ctr.Sync(ctx)
 
 	// if e, ok := err.(*ExecError); ok {
 	// 	panic("Error running QA workflow, exit code: " + strconv.Itoa(e.ExitCode))
