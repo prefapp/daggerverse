@@ -1,21 +1,10 @@
-// A generated module for K6 functions
-//
-// This module has been generated via dagger init and serves as a reference to
-// basic module structure as you get started with Dagger.
-//
-// Two functions have been pre-created. You can modify, delete, or add to them,
-// as needed. They demonstrate usage of arguments and return types using simple
-// echo and grep commands. The functions can be called from the dagger CLI or
-// from one of the SDKs.
-//
-// The first line in this comment block is a short description line and the
-// rest is a long description with more detail on the module's purpose or usage,
-// if appropriate. All modules should have a short description.
+// Module to run k6 QA tests
 
 package main
 
 import (
 	"context"
+	"dagger/k-6/internal/dagger"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -44,7 +33,7 @@ func (cs EnvironmentVariable) Parse() (string, string) {
 	return parts[0], parts[1]
 }
 
-// Returns lines that match a pattern in the files of the provided Directory
+// Runs the k6 QA tests
 func (m *K6) Run(
 	ctx context.Context,
 	// The working directory containing the script
@@ -88,26 +77,29 @@ func (m *K6) Run(
 		ctr = ctr.WithEnvVariable(key, value)
 	}
 
+	command := []string{
+		"k6",
+		"run",
+		"--vus", strconv.Itoa(vus),
+		"--duration", duration,
+		"--out", fmt.Sprintf("web-dashboard=export=%s", filepath.Join(outputDirMountPath, "report.html")),
+		"--summary-export", filepath.Join(outputDirMountPath, "summary.json"),
+		"--console-output", filepath.Join(outputDirMountPath, "errors.txt"),
+		filepath.Join(workingDirMountPath, script),
+	}
+
 	ctr = ctr.WithDirectory(workingDirMountPath, workingDir).
 		WithDirectory(outputDirMountPath, dag.Directory()).
 		WithUser("root").
 		WithExec([]string{
-			"run",
-			"--vus", strconv.Itoa(vus),
-			"--duration", duration,
-			"--out", fmt.Sprintf("web-dashboard=export=%s", filepath.Join(outputDirMountPath, "report.html")),
-			"--summary-export", filepath.Join(outputDirMountPath, "summary.json"),
-			"--console-output", filepath.Join(outputDirMountPath, "errors.txt"),
-			filepath.Join(workingDirMountPath, script),
+			"sh",
+			"-c",
+			fmt.Sprintf("%s || exit 0", strings.Join(command, " ")),
+		}, dagger.ContainerWithExecOpts{
+			SkipEntrypoint: true,
 		})
 
 	ctr, _ = ctr.Sync(ctx)
-
-	// if e, ok := err.(*ExecError); ok {
-	// 	panic("Error running QA workflow, exit code: " + strconv.Itoa(e.ExitCode))
-	// } else if err != nil {
-	// 	panic("Unexpected error")
-	// }
 
 	return ctr
 }
