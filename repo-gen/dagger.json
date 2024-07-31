@@ -1,0 +1,12 @@
+{
+  "name": "repo-gen",
+  "sdk": "go",
+  "dependencies": [
+    {
+      "name": "gh",
+      "source": "github.com/aweris/daggerverse/gh@ff990b1897334421e5619afd4559279f445aeb57"
+    }
+  ],
+  "source": ".",
+  "engineVersion": "v0.11.4"
+}
