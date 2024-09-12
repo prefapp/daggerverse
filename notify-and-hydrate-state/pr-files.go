@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"slices"
 	"strings"
@@ -290,4 +291,12 @@ func (m *NotifyAndHydrateState) GetFileContent(
 		String()
 
 	return base64Decode(b64Content)
+}
+
+func base64Decode(str string) string {
+	data, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		panic(err)
+	}
+	return string(data)
 }
