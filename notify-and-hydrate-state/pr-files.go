@@ -62,7 +62,7 @@ func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
 
 	}
 
-	claimsByYamlChanges := m.FilterClaimsByYamlChanges(ctx, claimsDir, prFiles)
+	claimsByYamlChanges := m.FilterClaimsByYamlChanges(ctx, claimsDir, prFiles, ghRepo)
 
 	claimsByTfChanges := m.FilterClaimsByTfChanges(ctx, claimsDir, prFiles)
 
@@ -78,6 +78,8 @@ func (m *NotifyAndHydrateState) FilterClaimsByYamlChanges(
 	claimsDir *Directory,
 
 	prFiles []string,
+
+	ghRepo string,
 
 ) []string {
 
@@ -125,9 +127,10 @@ func (m *NotifyAndHydrateState) FilterClaimsByYamlChanges(
 				claimName := gjson.Get(string(jsonContents), "name")
 
 				affectedClaims = append(affectedClaims, claimName.String())
+
 			} else {
 
-				yamlContent := m.GetFileContent(ctx, "firestartr-test", "claims", file)
+				yamlContent := m.GetFileContentFromDefaultBranch(ctx, ghRepo, file)
 
 				jsonContentFromMain, err := yaml.YAMLToJSON([]byte(yamlContent))
 
@@ -241,12 +244,9 @@ func (m *NotifyAndHydrateState) FilterClaimsByTfChanges(
 //	  -H "Accept: application/vnd.github+json" \
 //	  -H "X-GitHub-Api-Version: 2022-11-28" \
 //	  /repos/OWNER/REPO/contents/PATH
-func (m *NotifyAndHydrateState) GetFileContent(
+func (m *NotifyAndHydrateState) GetFileContentFromDefaultBranch(
 
 	ctx context.Context,
-
-	// +default="firestartr-test"
-	owner string,
 
 	// +default="claims"
 	repo string,
@@ -257,8 +257,7 @@ func (m *NotifyAndHydrateState) GetFileContent(
 ) string {
 
 	endpoint := fmt.Sprintf(
-		"/repos/%s/%s/contents/%s",
-		owner,
+		"/repos/%s/contents/%s",
 		repo,
 		path,
 	)
