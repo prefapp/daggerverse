@@ -124,6 +124,21 @@ func (m *NotifyAndHydrateState) FilterClaimsByYamlChanges(
 				claimName := gjson.Get(string(jsonContents), "name")
 
 				affectedClaims = append(affectedClaims, claimName.String())
+			} else {
+
+				yamlContent := m.GetFileContent(ctx, "firestartr-test", "claims", file)
+
+				jsonContentFromMain, err := yaml.YAMLToJSON([]byte(yamlContent))
+
+				if err != nil {
+
+					panic(err)
+
+				}
+
+				claimName := gjson.Get(string(jsonContentFromMain), "name")
+
+				affectedClaims = append(affectedClaims, claimName.String())
 			}
 		}
 
@@ -216,4 +231,63 @@ func (m *NotifyAndHydrateState) FilterClaimsByTfChanges(
 
 	return affectedClaims
 
+}
+
+// # GitHub CLI api
+// # https://cli.github.com/manual/gh_api
+
+//	gh api \
+//	  -H "Accept: application/vnd.github+json" \
+//	  -H "X-GitHub-Api-Version: 2022-11-28" \
+//	  /repos/OWNER/REPO/contents/PATH
+func (m *NotifyAndHydrateState) GetFileContent(
+
+	ctx context.Context,
+
+	// +default="firestartr-test"
+	owner string,
+
+	// +default="claims"
+	repo string,
+
+	// +default="claims/tfworkspaces/test-module-a.yaml"
+	path string,
+
+) string {
+
+	endpoint := fmt.Sprintf(
+		"/repos/%s/%s/contents/%s",
+		owner,
+		repo,
+		path,
+	)
+
+	command := strings.Join([]string{
+		"api",
+		"-H \"Accept: application/vnd.github+json\"",
+		"-H \"X-GitHub-Api-Version: 2022-11-28\"",
+		endpoint,
+	},
+		" ",
+	)
+
+	jsonResp, err := dag.
+		Gh().
+		Run(
+			ctx,
+			m.GhToken,
+			command,
+			GhRunOpts{DisableCache: true},
+		)
+
+	if err != nil {
+
+		panic(err)
+	}
+
+	b64Content := gjson.
+		Get(string(jsonResp), "content").
+		String()
+
+	return base64Decode(b64Content)
 }
