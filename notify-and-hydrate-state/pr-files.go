@@ -100,89 +100,78 @@ func (m *NotifyAndHydrateState) FilterClaimsByYamlChanges(
 
 	fmt.Printf("prFiles: %v\n", prFiles)
 
-	entries, err := claimsDir.
-		WithoutDirectory(".git").
-		WithoutDirectory(".github").
-		WithoutDirectory(".config").
-		Glob(ctx, "**/*.yaml")
-
-	fmt.Printf("entries: %v\n", entries)
-
-	if err != nil {
-
-		panic(err)
-
-	}
-
-	if err != nil {
-
-		panic(err)
-
-	}
-
 	affectedClaims := []string{}
 
 	for _, file := range prFiles {
 
-		for _, entry := range entries {
+		if !strings.HasSuffix(file, ".yaml") && !strings.HasSuffix(file, ".yml") {
 
-			fmt.Printf("entry: %s\n", entry)
-			fmt.Printf("file: %s\n", file)
+			continue
+		}
 
-			if strings.Contains(entry, file) {
+		contents, err := claimsDir.
+			File(file).
+			Contents(ctx)
 
-				// get contents of the file
-				contents, err := claimsDir.File(entry).Contents(ctx)
+		if err != nil {
 
-				if err != nil {
+			claimName := m.
+				GetClaimNameFromDefaultBranch(
+					ctx,
+					file,
+					ghRepo,
+				)
 
-					panic(err)
+			affectedClaims = append(
+				affectedClaims,
+				claimName,
+			)
 
-				}
+		} else {
 
-				jsonContents, err := yaml.YAMLToJSON([]byte(contents))
+			jsonContents, err := yaml.YAMLToJSON([]byte(contents))
 
-				claimName := gjson.Get(string(jsonContents), "name")
+			if err != nil {
 
-				affectedClaims = append(affectedClaims, claimName.String())
-
-			} else {
-
-				yamlContent, err := m.GetFileContentFromDefaultBranch(ctx, ghRepo, file)
-
-				if err != nil {
-
-					fmt.Printf("CR not found in the main branch: %s\n", file)
-
-					continue
-
-				}
-
-				jsonContentFromMain, err := yaml.YAMLToJSON([]byte(yamlContent))
-
-				if err != nil {
-
-					panic(err)
-
-				}
-
-				claimName := gjson.Get(string(jsonContentFromMain), "name")
-
-				affectedClaims = append(affectedClaims, claimName.String())
+				panic(err)
 
 			}
+
+			claimName := gjson.Get(string(jsonContents), "name")
+
+			affectedClaims = append(affectedClaims, claimName.String())
 		}
 
 	}
 
+	return affectedClaims
+}
+
+func (m *NotifyAndHydrateState) GetClaimNameFromDefaultBranch(ctx context.Context, file string, ghRepo string) string {
+
 	fmt.Printf(
-
-		"FilterClaimsByYamlChanges: affected claims: %v\n",
-
-		affectedClaims,
+		"Claim not found in pr, getting from default branch: %s\n",
+		file,
 	)
 
-	return affectedClaims
+	yamlContent, err := m.
+		GetFileContentFromDefaultBranch(
+			ctx,
+			ghRepo,
+			file,
+		)
+
+	jsonContentFromMain, err := yaml.YAMLToJSON([]byte(yamlContent))
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	return gjson.
+		Get(string(jsonContentFromMain), "name").
+		String()
 
 }
 
