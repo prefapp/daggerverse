@@ -17,31 +17,41 @@ func (m *NotifyAndHydrateState) GetPrChangedFiles(
 
 	ctx context.Context,
 
-	ghRepo string,
-
-	prNumber string,
+	claimsRepo *Directory,
 
 ) ([]string, error) {
 
-	command := strings.Join([]string{"pr", "view", prNumber, "--json", "files", "-R", ghRepo}, " ")
+	result := []string{}
 
-	content, err := dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
+	resp, err := dag.Container().
+		From("alpine/git").
+		WithMountedDirectory("/repo", claimsRepo).
+		WithWorkdir("/repo").
+		WithExec([]string{
+			"diff",
+			m.ClaimsDefaultBranch,
+			"-M90%",
+			"--name-only",
+		}).
+		Stdout(ctx)
 
 	if err != nil {
 
-		panic(err)
+		return nil, err
+
 	}
 
-	files := []string{}
+	for _, line := range strings.Split(resp, "\n") {
 
-	for _, fileName := range gjson.Get(content, "files.#.path").Array() {
+		if strings.HasSuffix(line, ".yaml") || strings.HasSuffix(line, ".yml") {
 
-		files = append(files, fileName.String())
+			result = append(result, line)
+
+		}
+
 	}
 
-	fmt.Printf("PR changed files: %v\n", files)
-
-	return files, nil
+	return result, nil
 }
 
 func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
@@ -54,7 +64,7 @@ func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
 
 ) ([]string, error) {
 
-	prFiles, err := m.GetPrChangedFiles(ctx, ghRepo, prNumber)
+	prFiles, err := m.GetPrChangedFiles(ctx, claimsDir)
 
 	if err != nil {
 
