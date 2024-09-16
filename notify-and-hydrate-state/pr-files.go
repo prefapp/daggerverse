@@ -13,38 +13,84 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+type PrFiles struct {
+	AddedModified []string
+	Deleted       []string
+}
+
 func (m *NotifyAndHydrateState) GetPrChangedFiles(
 
 	ctx context.Context,
 
 	claimsRepo *Directory,
 
-) ([]string, error) {
+) (PrFiles, error) {
 
-	result := []string{}
+	result := PrFiles{
+		AddedModified: []string{},
+		Deleted:       []string{},
+	}
 
-	resp, err := dag.
+	c, err := dag.
 		Container().
 		From("alpine/git").
 		WithMountedDirectory("/repo", claimsRepo).
 		WithWorkdir("/repo").
+		Sync(ctx)
+
+	amResp, err := c.
 		WithExec([]string{
 			"diff",
 			"origin/" + m.ClaimsDefaultBranch,
 			"-M90%",
 			"--name-only",
+			"--diff-filter=d",
 		}).
 		Stdout(ctx)
 
 	if err != nil {
 
-		return nil, err
+		return result, err
 
 	}
 
-	for _, line := range strings.Split(resp, "\n") {
+	for _, line := range strings.Split(amResp, "\n") {
 
-		result = append(result, line)
+		if line == "" {
+
+			continue
+
+		}
+
+		result.AddedModified = append(result.AddedModified, line)
+
+	}
+
+	dResp, err := c.
+		WithExec([]string{
+			"diff",
+			"origin/" + m.ClaimsDefaultBranch,
+			"-M90%",
+			"--name-only",
+			"--diff-filter=am",
+		}).
+		Stdout(ctx)
+
+	if err != nil {
+
+		return result, err
+
+	}
+
+	for _, line := range strings.Split(dResp, "\n") {
+
+		if line == "" {
+
+			continue
+
+		}
+
+		result.Deleted = append(result.Deleted, line)
 
 	}
 
@@ -69,9 +115,20 @@ func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
 
 	}
 
-	claimsByYamlChanges := m.FilterClaimsByYamlChanges(ctx, claimsDir, prFiles, ghRepo)
+	claimsByYamlChanges := m.
+		FilterClaimsByYamlChanges(
+			ctx,
+			claimsDir,
+			prFiles.Deleted,
+			prFiles.AddedModified,
+			ghRepo,
+		)
 
-	claimsByTfChanges := m.FilterClaimsByTfChanges(ctx, claimsDir, prFiles)
+	claimsByTfChanges := m.
+		FilterClaimsByTfChanges(ctx,
+			claimsDir,
+			prFiles.AddedModified,
+		)
 
 	claims := slices.Compact(append(claimsByTfChanges, claimsByYamlChanges...))
 
@@ -84,59 +141,70 @@ func (m *NotifyAndHydrateState) FilterClaimsByYamlChanges(
 
 	claimsDir *Directory,
 
-	prFiles []string,
+	deletedFiles []string,
+
+	addedOrModifiedFiles []string,
 
 	ghRepo string,
 
 ) []string {
 
-	fmt.Printf("prFiles: %v\n", prFiles)
+	result := []string{}
 
-	affectedClaims := []string{}
+	for _, file := range addedOrModifiedFiles {
 
-	for _, file := range prFiles {
+		if !isYaml(file) {
 
-		if !strings.HasSuffix(file, ".yaml") && !strings.HasSuffix(file, ".yml") {
+			continue
+
+		}
+
+		claimName := m.ReadClaimNameFromFile(ctx, claimsDir, file)
+
+		result = append(result, claimName)
+
+	}
+
+	for _, file := range deletedFiles {
+
+		if !isYaml(file) {
 
 			continue
 		}
 
-		contents, err := claimsDir.
-			File(file).
-			Contents(ctx)
-
-		if err != nil {
-
-			claimName := m.
-				GetClaimNameFromDefaultBranch(
-					ctx,
-					file,
-					ghRepo,
-				)
-
-			affectedClaims = append(
-				affectedClaims,
-				claimName,
+		claimName := m.
+			GetClaimNameFromDefaultBranch(
+				ctx,
+				file,
+				ghRepo,
 			)
 
-		} else {
+		result = append(
+			result,
+			claimName,
+		)
+	}
 
-			jsonContents, err := yaml.YAMLToJSON([]byte(contents))
+	return result
+}
 
-			if err != nil {
+func (*NotifyAndHydrateState) ReadClaimNameFromFile(ctx context.Context, claimsDir *Directory, file string) string {
 
-				panic(err)
+	contents, err := claimsDir.
+		File(file).
+		Contents(ctx)
 
-			}
+	jsonContents, err := yaml.YAMLToJSON([]byte(contents))
 
-			claimName := gjson.Get(string(jsonContents), "name")
+	if err != nil {
 
-			affectedClaims = append(affectedClaims, claimName.String())
-		}
+		panic(err)
 
 	}
 
-	return affectedClaims
+	claimName := gjson.Get(string(jsonContents), "name")
+
+	return claimName.String()
 }
 
 func (m *NotifyAndHydrateState) GetClaimNameFromDefaultBranch(ctx context.Context, file string, ghRepo string) string {
@@ -304,4 +372,8 @@ func base64Decode(str string) string {
 		panic(err)
 	}
 	return string(data)
+}
+
+func isYaml(file string) bool {
+	return filepath.Ext(file) == ".yaml" || filepath.Ext(file) == ".yml"
 }
