@@ -136,13 +136,15 @@ func (m *NotifyAndHydrateState) FilterClaimsByYamlChanges(
 
 				if err != nil {
 
-					panic(err)
+					fmt.Printf("CR not found in the main branch: %s\n", file)
+
+				} else {
+
+					claimName := gjson.Get(string(jsonContentFromMain), "name")
+
+					affectedClaims = append(affectedClaims, claimName.String())
 
 				}
-
-				claimName := gjson.Get(string(jsonContentFromMain), "name")
-
-				affectedClaims = append(affectedClaims, claimName.String())
 			}
 		}
 
