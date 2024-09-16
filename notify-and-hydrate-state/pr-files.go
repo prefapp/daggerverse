@@ -44,11 +44,7 @@ func (m *NotifyAndHydrateState) GetPrChangedFiles(
 
 	for _, line := range strings.Split(resp, "\n") {
 
-		if strings.HasSuffix(line, ".yaml") || strings.HasSuffix(line, ".yml") {
-
-			result = append(result, line)
-
-		}
+		result = append(result, line)
 
 	}
 
