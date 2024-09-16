@@ -75,8 +75,6 @@ func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
 
 	claims := slices.Compact(append(claimsByTfChanges, claimsByYamlChanges...))
 
-	fmt.Printf("🍄 Affected claims: %v\n", claims)
-
 	return claims, nil
 }
 
