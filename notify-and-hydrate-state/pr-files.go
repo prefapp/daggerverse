@@ -63,8 +63,6 @@ func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
 
 	prFiles, err := m.GetPrChangedFiles(ctx, claimsDir)
 
-	fmt.Printf("🍄 PR files affected: %v\n", prFiles)
-
 	if err != nil {
 
 		return nil, err
@@ -73,11 +71,7 @@ func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
 
 	claimsByYamlChanges := m.FilterClaimsByYamlChanges(ctx, claimsDir, prFiles, ghRepo)
 
-	fmt.Print("🍄 Claims by yaml changes: %v\n", claimsByYamlChanges)
-
 	claimsByTfChanges := m.FilterClaimsByTfChanges(ctx, claimsDir, prFiles)
-
-	fmt.Print("🍄 Claims by tf changes: %v\n", claimsByTfChanges)
 
 	claims := slices.Compact(append(claimsByTfChanges, claimsByYamlChanges...))
 
@@ -258,13 +252,6 @@ func (m *NotifyAndHydrateState) FilterClaimsByTfChanges(
 
 }
 
-// # GitHub CLI api
-// # https://cli.github.com/manual/gh_api
-
-//	gh api \
-//	  -H "Accept: application/vnd.github+json" \
-//	  -H "X-GitHub-Api-Version: 2022-11-28" \
-//	  /repos/OWNER/REPO/contents/PATH
 func (m *NotifyAndHydrateState) GetFileContentFromDefaultBranch(
 
 	ctx context.Context,
