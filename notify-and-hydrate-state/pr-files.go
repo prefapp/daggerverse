@@ -44,7 +44,7 @@ func (m *NotifyAndHydrateState) GetPrChangedFiles(
 			"origin/" + m.ClaimsDefaultBranch,
 			"-M90%",
 			"--name-only",
-			"--diff-filter=d",
+			"--diff-filter=AM",
 		}).
 		Stdout(ctx)
 
@@ -72,7 +72,7 @@ func (m *NotifyAndHydrateState) GetPrChangedFiles(
 			"origin/" + m.ClaimsDefaultBranch,
 			"-M90%",
 			"--name-only",
-			"--diff-filter=am",
+			"--diff-filter=D",
 		}).
 		Stdout(ctx)
 
@@ -194,7 +194,8 @@ func (*NotifyAndHydrateState) ReadClaimNameFromFile(ctx context.Context, claimsD
 		File(file).
 		Contents(ctx)
 
-	jsonContents, err := yaml.YAMLToJSON([]byte(contents))
+	jsonContents, err := yaml.
+		YAMLToJSON([]byte(contents))
 
 	if err != nil {
 
@@ -202,9 +203,10 @@ func (*NotifyAndHydrateState) ReadClaimNameFromFile(ctx context.Context, claimsD
 
 	}
 
-	claimName := gjson.Get(string(jsonContents), "name")
+	return gjson.
+		Get(string(jsonContents), "name").
+		String()
 
-	return claimName.String()
 }
 
 func (m *NotifyAndHydrateState) GetClaimNameFromDefaultBranch(ctx context.Context, file string, ghRepo string) string {
