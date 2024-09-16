@@ -23,13 +23,14 @@ func (m *NotifyAndHydrateState) GetPrChangedFiles(
 
 	result := []string{}
 
-	resp, err := dag.Container().
+	resp, err := dag.
+		Container().
 		From("alpine/git").
 		WithMountedDirectory("/repo", claimsRepo).
 		WithWorkdir("/repo").
 		WithExec([]string{
 			"diff",
-			m.ClaimsDefaultBranch,
+			"origin/" + m.ClaimsDefaultBranch,
 			"-M90%",
 			"--name-only",
 		}).
