@@ -226,6 +226,10 @@ func (m *NotifyAndHydrateState) IsAffectedCRFromPr(
 
 	claimName := strings.Split(claimRef, "/")[1]
 
-	return slices.Contains(affectedClaims, claimName)
+	isAffected := slices.Contains(affectedClaims, claimName)
+
+	// fmt.Printf("Claim %s is affected: %v
+
+	return isAffected
 
 }

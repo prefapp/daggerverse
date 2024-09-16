@@ -75,7 +75,7 @@ func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
 
 	claims := slices.Compact(append(claimsByTfChanges, claimsByYamlChanges...))
 
-	fmt.Printf("Affected claims: %v\n", claims)
+	fmt.Printf("🍄 Affected claims: %v\n", claims)
 
 	return claims, nil
 }
@@ -120,6 +120,9 @@ func (m *NotifyAndHydrateState) FilterClaimsByYamlChanges(
 
 		for _, entry := range entries {
 
+			fmt.Printf("entry: %s\n", entry)
+			fmt.Printf("file: %s\n", file)
+
 			if strings.Contains(entry, file) {
 
 				// get contents of the file
@@ -145,27 +148,33 @@ func (m *NotifyAndHydrateState) FilterClaimsByYamlChanges(
 
 					fmt.Printf("CR not found in the main branch: %s\n", file)
 
-				} else {
-
-					jsonContentFromMain, err := yaml.YAMLToJSON([]byte(yamlContent))
-
-					if err != nil {
-
-						panic(err)
-
-					}
-
-					claimName := gjson.Get(string(jsonContentFromMain), "name")
-
-					affectedClaims = append(affectedClaims, claimName.String())
+					continue
 
 				}
+
+				jsonContentFromMain, err := yaml.YAMLToJSON([]byte(yamlContent))
+
+				if err != nil {
+
+					panic(err)
+
+				}
+
+				claimName := gjson.Get(string(jsonContentFromMain), "name")
+
+				affectedClaims = append(affectedClaims, claimName.String())
+
 			}
 		}
 
 	}
 
-	fmt.Printf("Affected claims: %v\n", affectedClaims)
+	fmt.Printf(
+
+		"FilterClaimsByYamlChanges: affected claims: %v\n",
+
+		affectedClaims,
+	)
 
 	return affectedClaims
 
