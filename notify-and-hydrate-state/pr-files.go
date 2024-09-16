@@ -130,15 +130,21 @@ func (m *NotifyAndHydrateState) FilterClaimsByYamlChanges(
 
 			} else {
 
-				yamlContent := m.GetFileContentFromDefaultBranch(ctx, ghRepo, file)
-
-				jsonContentFromMain, err := yaml.YAMLToJSON([]byte(yamlContent))
+				yamlContent, err := m.GetFileContentFromDefaultBranch(ctx, ghRepo, file)
 
 				if err != nil {
 
 					fmt.Printf("CR not found in the main branch: %s\n", file)
 
 				} else {
+
+					jsonContentFromMain, err := yaml.YAMLToJSON([]byte(yamlContent))
+
+					if err != nil {
+
+						panic(err)
+
+					}
 
 					claimName := gjson.Get(string(jsonContentFromMain), "name")
 
@@ -256,7 +262,7 @@ func (m *NotifyAndHydrateState) GetFileContentFromDefaultBranch(
 	// +default="claims/tfworkspaces/test-module-a.yaml"
 	path string,
 
-) string {
+) (string, error) {
 
 	endpoint := fmt.Sprintf(
 		"/repos/%s/contents/%s",
@@ -284,14 +290,14 @@ func (m *NotifyAndHydrateState) GetFileContentFromDefaultBranch(
 
 	if err != nil {
 
-		panic(err)
+		return "", err
 	}
 
 	b64Content := gjson.
 		Get(string(jsonResp), "content").
 		String()
 
-	return base64Decode(b64Content)
+	return base64Decode(b64Content), nil
 }
 
 func base64Decode(str string) string {
