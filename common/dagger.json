@@ -1,6 +1,0 @@
-{
-  "name": "common",
-  "sdk": "go",
-  "source": ".",
-  "engineVersion": "v0.10.2"
-}
