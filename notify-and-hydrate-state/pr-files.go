@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"slices"
 	"strings"
@@ -12,35 +13,88 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+type PrFiles struct {
+	AddedModified []string
+	Deleted       []string
+}
+
 func (m *NotifyAndHydrateState) GetPrChangedFiles(
 
 	ctx context.Context,
 
-	ghRepo string,
+	claimsRepo *Directory,
 
-	prNumber string,
+) (PrFiles, error) {
 
-) ([]string, error) {
+	result := PrFiles{
+		AddedModified: []string{},
+		Deleted:       []string{},
+	}
 
-	command := strings.Join([]string{"pr", "view", prNumber, "--json", "files", "-R", ghRepo}, " ")
+	c, err := dag.
+		Container().
+		From("alpine/git").
+		WithMountedDirectory("/repo", claimsRepo).
+		WithWorkdir("/repo").
+		Sync(ctx)
 
-	content, err := dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
+	amResp, err := c.
+		WithExec([]string{
+			"diff",
+			"origin/" + m.ClaimsDefaultBranch,
+			"-M90%",
+			"--name-only",
+			"--diff-filter=AM",
+		}).
+		Stdout(ctx)
 
 	if err != nil {
 
-		panic(err)
+		return result, err
+
 	}
 
-	files := []string{}
+	for _, line := range strings.Split(amResp, "\n") {
 
-	for _, fileName := range gjson.Get(content, "files.#.path").Array() {
+		if line == "" {
 
-		files = append(files, fileName.String())
+			continue
+
+		}
+
+		result.AddedModified = append(result.AddedModified, line)
+
 	}
 
-	fmt.Printf("PR changed files: %v\n", files)
+	dResp, err := c.
+		WithExec([]string{
+			"diff",
+			"origin/" + m.ClaimsDefaultBranch,
+			"-M90%",
+			"--name-only",
+			"--diff-filter=D",
+		}).
+		Stdout(ctx)
 
-	return files, nil
+	if err != nil {
+
+		return result, err
+
+	}
+
+	for _, line := range strings.Split(dResp, "\n") {
+
+		if line == "" {
+
+			continue
+
+		}
+
+		result.Deleted = append(result.Deleted, line)
+
+	}
+
+	return result, nil
 }
 
 func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
@@ -53,7 +107,7 @@ func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
 
 ) ([]string, error) {
 
-	prFiles, err := m.GetPrChangedFiles(ctx, ghRepo, prNumber)
+	prFiles, err := m.GetPrChangedFiles(ctx, claimsDir)
 
 	if err != nil {
 
@@ -61,9 +115,20 @@ func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
 
 	}
 
-	claimsByYamlChanges := m.FilterClaimsByYamlChanges(ctx, claimsDir, prFiles)
+	claimsByYamlChanges := m.
+		FilterClaimsByYamlChanges(
+			ctx,
+			claimsDir,
+			prFiles.Deleted,
+			prFiles.AddedModified,
+			ghRepo,
+		)
 
-	claimsByTfChanges := m.FilterClaimsByTfChanges(ctx, claimsDir, prFiles)
+	claimsByTfChanges := m.
+		FilterClaimsByTfChanges(ctx,
+			claimsDir,
+			prFiles.AddedModified,
+		)
 
 	claims := slices.Compact(append(claimsByTfChanges, claimsByYamlChanges...))
 
@@ -76,62 +141,99 @@ func (m *NotifyAndHydrateState) FilterClaimsByYamlChanges(
 
 	claimsDir *Directory,
 
-	prFiles []string,
+	deletedFiles []string,
+
+	addedOrModifiedFiles []string,
+
+	ghRepo string,
 
 ) []string {
 
-	fmt.Printf("prFiles: %v\n", prFiles)
+	result := []string{}
 
-	entries, err := claimsDir.
-		WithoutDirectory(".git").
-		WithoutDirectory(".github").
-		WithoutDirectory(".config").
-		Glob(ctx, "**/*.yaml")
+	for _, file := range addedOrModifiedFiles {
 
-	fmt.Printf("entries: %v\n", entries)
+		if !isYaml(file) {
 
-	if err != nil {
+			continue
 
-		panic(err)
-
-	}
-
-	if err != nil {
-
-		panic(err)
-
-	}
-
-	affectedClaims := []string{}
-
-	for _, file := range prFiles {
-
-		for _, entry := range entries {
-
-			if strings.Contains(entry, file) {
-
-				// get contents of the file
-				contents, err := claimsDir.File(entry).Contents(ctx)
-
-				if err != nil {
-
-					panic(err)
-
-				}
-
-				jsonContents, err := yaml.YAMLToJSON([]byte(contents))
-
-				claimName := gjson.Get(string(jsonContents), "name")
-
-				affectedClaims = append(affectedClaims, claimName.String())
-			}
 		}
 
+		claimName := m.ReadClaimNameFromFile(ctx, claimsDir, file)
+
+		result = append(result, claimName)
+
 	}
 
-	fmt.Printf("Affected claims: %v\n", affectedClaims)
+	for _, file := range deletedFiles {
 
-	return affectedClaims
+		if !isYaml(file) {
+
+			continue
+		}
+
+		claimName := m.
+			GetClaimNameFromDefaultBranch(
+				ctx,
+				file,
+				ghRepo,
+			)
+
+		result = append(
+			result,
+			claimName,
+		)
+	}
+
+	return result
+}
+
+func (*NotifyAndHydrateState) ReadClaimNameFromFile(ctx context.Context, claimsDir *Directory, file string) string {
+
+	contents, err := claimsDir.
+		File(file).
+		Contents(ctx)
+
+	jsonContents, err := yaml.
+		YAMLToJSON([]byte(contents))
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	return gjson.
+		Get(string(jsonContents), "name").
+		String()
+
+}
+
+func (m *NotifyAndHydrateState) GetClaimNameFromDefaultBranch(ctx context.Context, file string, ghRepo string) string {
+
+	fmt.Printf(
+		"Claim not found in pr, getting from default branch: %s\n",
+		file,
+	)
+
+	yamlContent, err := m.
+		GetFileContentFromDefaultBranch(
+			ctx,
+			ghRepo,
+			file,
+		)
+
+	jsonContentFromMain, err := yaml.YAMLToJSON([]byte(yamlContent))
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	return gjson.
+		Get(string(jsonContentFromMain), "name").
+		String()
 
 }
 
@@ -216,4 +318,64 @@ func (m *NotifyAndHydrateState) FilterClaimsByTfChanges(
 
 	return affectedClaims
 
+}
+
+func (m *NotifyAndHydrateState) GetFileContentFromDefaultBranch(
+
+	ctx context.Context,
+
+	// +default="claims"
+	repo string,
+
+	// +default="claims/tfworkspaces/test-module-a.yaml"
+	path string,
+
+) (string, error) {
+
+	endpoint := fmt.Sprintf(
+		"/repos/%s/contents/%s",
+		repo,
+		path,
+	)
+
+	command := strings.Join([]string{
+		"api",
+		"-H \"Accept: application/vnd.github+json\"",
+		"-H \"X-GitHub-Api-Version: 2022-11-28\"",
+		endpoint,
+	},
+		" ",
+	)
+
+	jsonResp, err := dag.
+		Gh().
+		Run(
+			ctx,
+			m.GhToken,
+			command,
+			GhRunOpts{DisableCache: true},
+		)
+
+	if err != nil {
+
+		return "", err
+	}
+
+	b64Content := gjson.
+		Get(string(jsonResp), "content").
+		String()
+
+	return base64Decode(b64Content), nil
+}
+
+func base64Decode(str string) string {
+	data, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		panic(err)
+	}
+	return string(data)
+}
+
+func isYaml(file string) bool {
+	return filepath.Ext(file) == ".yaml" || filepath.Ext(file) == ".yml"
 }

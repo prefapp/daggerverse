@@ -29,6 +29,7 @@ type NotifyAndHydrateState struct {
 	GithubPrivateKey            *Secret
 	GithubOrganization          string
 	GhToken                     *Secret
+	ClaimsDefaultBranch         string // +default="main"
 }
 
 func New(
@@ -56,6 +57,8 @@ func New(
 	// +required
 	// Github token
 	ghToken *Secret,
+	// +default="main"
+	claimsDefaultBranch string,
 
 ) *NotifyAndHydrateState {
 
@@ -76,6 +79,8 @@ func New(
 		GithubOrganization: githubOrganization,
 
 		GhToken: ghToken,
+
+		ClaimsDefaultBranch: claimsDefaultBranch,
 	}
 
 }
