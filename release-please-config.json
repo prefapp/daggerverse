@@ -1,5 +1,4 @@
 {
-    "release-type": "go",
     "separate-pull-requests": true,
     "packages": {
        "dagger-structure-test": {},
