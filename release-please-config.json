@@ -1,8 +1,18 @@
 {
+    "bootstrap-sha": "1aea5346ea2fbca07196c80f8a94c297186a84f1",
     "separate-pull-requests": true,
     "packages": {
-       "dagger-structure-test": {},
-       "k6": {},
-       "notify-and-hydrate-state": {}
+       "dagger-structure-test": {
+           "package-name": "dagger-structure-test",
+           "release-type": "go"
+       },
+       "k6": {
+           "package-name": "k6",
+           "release-type": "go"
+       },
+       "notify-and-hydrate-state": {
+           "package-name": "notify-and-hydrate-state",
+           "release-type": "go"
+       }
     }
 }
