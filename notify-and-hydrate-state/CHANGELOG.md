@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/prefapp/daggerverse/compare/notify-and-hydrate-state-v1.0.0...notify-and-hydrate-state-v1.1.0) (2024-10-14)
+
+
+### Features
+
+* publish state prs on comments ([#27](https://github.com/prefapp/daggerverse/issues/27)) ([19e1110](https://github.com/prefapp/daggerverse/commit/19e11108603331c9e83972d843603493b48a27bc))
+
 ## [1.0.0](https://github.com/prefapp/daggerverse/compare/notify-and-hydrate-state-v0.1.0...notify-and-hydrate-state-v1.0.0) (2024-09-17)
 
 
