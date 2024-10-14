@@ -35,10 +35,12 @@ Related PRs:
 	t.Execute(&buf, prLinks)
 
 	return dag.Gh().Run(ctx, m.GhToken, strings.Join([]string{
-		"issue",
+		"pr",
+		"comment",
+		claimPrNumber,
+		"--body",
+		fmt.Sprintf("\"%s\"", buf.String()),
 		"-R", claimsRepo,
-		"edit", claimPrNumber,
-		"-b", fmt.Sprintf("\"%s\"", buf.String()),
 	}, " "), GhRunOpts{DisableCache: true})
 
 }
