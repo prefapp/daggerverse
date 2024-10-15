@@ -10,7 +10,6 @@ on:
 
 jobs:
   pr_verify:
-    name: Pr verify
     runs-on: ubuntu-latest
 
     steps:
