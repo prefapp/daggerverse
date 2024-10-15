@@ -30,7 +30,6 @@ jobs:
 
     - name: Run Unit Tests
       run: |
-        # Encuentra todos los directorios que contienen un go.mod excepto .github
         for dir in $(find . -name 'go.mod' -not -path './.github/*' -exec dirname {} \;); do
           echo "Running tests in $dir"
           cd $dir
