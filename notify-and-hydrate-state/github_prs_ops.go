@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"dagger/notify-and-hydrate-state/internal/dagger"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -51,7 +52,7 @@ Related PRs:
 		"--body",
 		fmt.Sprintf("\"%s\"", buf.String()),
 		"-R", claimsRepo,
-	}, " "), GhRunOpts{DisableCache: true})
+	}, " "), dagger.GhRunOpts{DisableCache: true})
 
 }
 
@@ -70,7 +71,7 @@ func (m *NotifyAndHydrateState) ClosePr(ctx context.Context, prNumber int, ghRep
 		Run(ctx,
 			m.GhToken,
 			command,
-			GhRunOpts{DisableCache: true},
+			dagger.GhRunOpts{DisableCache: true},
 		)
 
 }
@@ -90,7 +91,7 @@ func (m *NotifyAndHydrateState) GetRepoPrs(ctx context.Context, ghRepo string) (
 		ghRepo},
 		" ")
 
-	content, err := dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
+	content, err := dag.Gh().Run(ctx, m.GhToken, command, dagger.GhRunOpts{DisableCache: true})
 
 	if err != nil {
 

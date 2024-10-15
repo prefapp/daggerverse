@@ -38,7 +38,7 @@ func (m *K6) Run(
 	ctx context.Context,
 	// The working directory containing the script
 	//+required
-	workingDir *Directory,
+	workingDir *dagger.Directory,
 	// k6 Script file to execute
 	//+required
 	script string,
@@ -53,7 +53,8 @@ func (m *K6) Run(
 	//+optional
 	//+default="1s"
 	duration string,
-) *Container {
+	
+) *dagger.Container {
 	// We use Glob over Entries because it lists files recursively
 	entries, _ := workingDir.Glob(ctx, "*")
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"dagger/notify-and-hydrate-state/internal/dagger"
 	"encoding/base64"
 	"fmt"
 	"slices"
@@ -17,7 +18,7 @@ func (m *NotifyAndHydrateState) GetPrChangedFiles(
 
 	ctx context.Context,
 
-	claimsRepo *Directory,
+	claimsRepo *dagger.Directory,
 
 ) (PrFiles, error) {
 
@@ -98,7 +99,7 @@ func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
 
 	prNumber string,
 
-	claimsDir *Directory,
+	claimsDir *dagger.Directory,
 
 ) ([]string, error) {
 
@@ -136,7 +137,7 @@ func (m *NotifyAndHydrateState) FilterClaimsByYamlChanges(
 
 	ctx context.Context,
 
-	claimsDir *Directory,
+	claimsDir *dagger.Directory,
 
 	deletedFiles []string,
 
@@ -185,7 +186,7 @@ func (m *NotifyAndHydrateState) FilterClaimsByYamlChanges(
 	return result
 }
 
-func (*NotifyAndHydrateState) ReadClaimNameFromFile(ctx context.Context, claimsDir *Directory, file string) string {
+func (*NotifyAndHydrateState) ReadClaimNameFromFile(ctx context.Context, claimsDir *dagger.Directory, file string) string {
 
 	contents, err := claimsDir.
 		File(file).
@@ -238,7 +239,7 @@ func (m *NotifyAndHydrateState) FilterClaimsByTfChanges(
 
 	ctx context.Context,
 
-	claimsDir *Directory,
+	claimsDir *dagger.Directory,
 
 	prFiles []string,
 
@@ -350,7 +351,7 @@ func (m *NotifyAndHydrateState) GetFileContentFromDefaultBranch(
 			ctx,
 			m.GhToken,
 			command,
-			GhRunOpts{DisableCache: true},
+			dagger.GhRunOpts{DisableCache: true},
 		)
 
 	if err != nil {

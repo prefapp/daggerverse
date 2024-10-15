@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"dagger/notify-and-hydrate-state/internal/dagger"
 	"fmt"
 	"strings"
 
@@ -19,7 +20,7 @@ func (m *NotifyAndHydrateState) Verify(
 	ghRepo string,
 
 	// CRs to verify
-	crs []*File,
+	crs []*dagger.File,
 
 	prs []Pr,
 
@@ -56,7 +57,7 @@ func (m *NotifyAndHydrateState) Verify(
 	return true, nil
 }
 
-func (*NotifyAndHydrateState) unmarshalCr(ctx context.Context, cr *File) (Cr, error) {
+func (*NotifyAndHydrateState) unmarshalCr(ctx context.Context, cr *dagger.File) (Cr, error) {
 
 	crInstance := Cr{}
 

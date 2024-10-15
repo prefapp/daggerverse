@@ -1,13 +1,15 @@
 package main
 
+import "dagger/notify-and-hydrate-state/internal/dagger"
+
 type DiffResult struct {
-	AddedFiles []*File
+	AddedFiles []*dagger.File
 
-	DeletedFiles []*File
+	DeletedFiles []*dagger.File
 
-	ModifiedFiles []*File
+	ModifiedFiles []*dagger.File
 
-	UnmodifiedFiles []*File
+	UnmodifiedFiles []*dagger.File
 }
 
 type PrsResult struct {

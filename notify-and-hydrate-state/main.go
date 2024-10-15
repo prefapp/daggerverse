@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"dagger/notify-and-hydrate-state/internal/dagger"
 	"fmt"
 	"strings"
 )
@@ -12,9 +13,9 @@ type NotifyAndHydrateState struct {
 	GithubAppID                 string
 	GithubInstallationID        string
 	GithubPrefappInstallationID string
-	GithubPrivateKey            *Secret
+	GithubPrivateKey            *dagger.Secret
 	GithubOrganization          string
-	GhToken                     *Secret
+	GhToken                     *dagger.Secret
 	ClaimsDefaultBranch         string // +default="main"
 }
 
@@ -36,13 +37,13 @@ func New(
 	githubPrefappInstallationID string,
 	// +required
 	// Github private key
-	githubPrivateKey *Secret,
+	githubPrivateKey *dagger.Secret,
 	// +required
 	// Github organization
 	githubOrganization string,
 	// +required
 	// Github token
-	ghToken *Secret,
+	ghToken *dagger.Secret,
 	// +default="main"
 	claimsDefaultBranch string,
 
@@ -81,10 +82,10 @@ func (m *NotifyAndHydrateState) Workflow(
 	wetRepo string,
 	// Claims directory
 	// +required
-	claimsDir *Directory,
+	claimsDir *dagger.Directory,
 	// Previous CRs directory
 	// +required
-	crsDir *Directory,
+	crsDir *dagger.Directory,
 	// Provider to render
 	// +required
 	provider string,

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"dagger/notify-and-hydrate-state/internal/dagger"
 	"fmt"
 	"strings"
 	"time"
@@ -13,7 +14,7 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 	diff *DiffResult,
 
-	wetRepositoryDir *Directory,
+	wetRepositoryDir *dagger.Directory,
 
 	wetRepoName string,
 
@@ -99,9 +100,9 @@ func (m *NotifyAndHydrateState) UpsertPr(
 
 	ctx context.Context,
 
-	file *File,
+	file *dagger.File,
 
-	wetRepositoryDir *Directory,
+	wetRepositoryDir *dagger.Directory,
 
 	wetRepoName string,
 
@@ -199,7 +200,7 @@ func (m *NotifyAndHydrateState) ConfigGitContainer(
 
 	ctx context.Context,
 
-) *Container {
+) *dagger.Container {
 
 	plainTextToken, err := m.GhToken.Plaintext(ctx)
 
@@ -273,6 +274,6 @@ func (m *NotifyAndHydrateState) CreatePrIfNotExists(
 		body,
 	}, " ")
 
-	return dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
+	return dag.Gh().Run(ctx, m.GhToken, command, dagger.GhRunOpts{DisableCache: true})
 
 }

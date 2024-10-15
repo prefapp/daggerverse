@@ -2,5 +2,5 @@
   "name": "dagger-structure-test",
   "sdk": "go",
   "source": ".",
-  "engineVersion": "v0.11.0"
+  "engineVersion": "v0.13.5"
 }
