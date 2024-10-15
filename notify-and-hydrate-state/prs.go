@@ -35,13 +35,7 @@ func (m *NotifyAndHydrateState) CloseOrphanPrs(
 	}
 }
 
-func isOrphanPr(
-
-	pr Pr,
-
-	consideredPrs []Pr,
-
-) bool {
+func isOrphanPr(pr Pr, consideredPrs []Pr) bool {
 
 	for _, consideredPr := range consideredPrs {
 
@@ -56,13 +50,7 @@ func isOrphanPr(
 
 }
 
-func isChildPr(
-
-	parentPrNumber string,
-
-	pr Pr,
-
-) bool {
+func isChildPr(parentPrNumber string, pr Pr) bool {
 
 	splitted := strings.Split(pr.HeadRefName, "-")
 
@@ -73,11 +61,7 @@ func isChildPr(
 	return isChild
 }
 
-func isAutomatedPr(
-
-	pr Pr,
-
-) bool {
+func isAutomatedPr(pr Pr) bool {
 
 	return strings.HasPrefix(pr.HeadRefName, "automated/")
 
