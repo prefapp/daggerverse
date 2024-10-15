@@ -32,7 +32,8 @@ jobs:
         for dir in $(find . -name 'go.mod' -not -path './.github/*' -exec dirname {} \;); do
           echo "Running tests in $dir"
           cd $dir
-          dagger develop
+          dagger develop # set up module
+          dagger functions # ensures dagger can show the module functions
           dagger run go test -v ./
           cd - 
         done
