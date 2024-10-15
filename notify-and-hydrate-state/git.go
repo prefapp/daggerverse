@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+type PrsResult struct {
+	Orphans []Pr
+
+	Prs []Pr
+}
+
 func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 	ctx context.Context,
@@ -19,15 +25,19 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 	claimPrNumber string,
 
-	prs []Pr,
+	prList []Pr,
 
-) []Pr {
+) (PrsResult, error) {
 
 	createdOrUpdatedPrs := []Pr{}
 
+	orphanPrs := make([]Pr, len(prList))
+
+	copy(orphanPrs, prList)
+
 	for _, file := range diff.AddedFiles {
 
-		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, "create", claimPrNumber, prs)
+		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, "create", claimPrNumber, prList)
 
 		if err != nil {
 
@@ -36,12 +46,14 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 		}
 
 		createdOrUpdatedPrs = append(createdOrUpdatedPrs, pr)
+
+		orphanPrs = removeOrphan(orphanPrs, pr)
 
 	}
 
 	for _, file := range diff.ModifiedFiles {
 
-		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, "update", claimPrNumber, prs)
+		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, "update", claimPrNumber, prList)
 
 		if err != nil {
 
@@ -51,11 +63,12 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 		createdOrUpdatedPrs = append(createdOrUpdatedPrs, pr)
 
+		orphanPrs = removeOrphan(orphanPrs, pr)
 	}
 
 	for _, file := range diff.DeletedFiles {
 
-		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, "delete", claimPrNumber, prs)
+		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, "delete", claimPrNumber, prList)
 
 		if err != nil {
 
@@ -65,10 +78,27 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 		createdOrUpdatedPrs = append(createdOrUpdatedPrs, pr)
 
+		orphanPrs = removeOrphan(orphanPrs, pr)
+
 	}
 
-	return createdOrUpdatedPrs
+	return PrsResult{Orphans: orphanPrs, Prs: createdOrUpdatedPrs}, nil
 
+}
+
+func removeOrphan(orphanPrs []Pr, pr Pr) []Pr {
+
+	for i, orphanPr := range orphanPrs {
+
+		if orphanPr.Url == pr.Url {
+
+			orphanPrs = append(orphanPrs[:i], orphanPrs[i+1:]...)
+
+		}
+
+	}
+
+	return orphanPrs
 }
 
 func (m *NotifyAndHydrateState) UpsertPr(

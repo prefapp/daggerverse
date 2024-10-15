@@ -105,13 +105,14 @@ func (m *NotifyAndHydrateState) Workflow(
 	// Claims PR
 	// +required
 	claimsPr string,
+
 ) DiffResult {
 
-	prNumber := strings.Split(claimsPr, "#")[1]
+	claimsPrNumber := strings.Split(claimsPr, "#")[1]
 
 	newCrsDir := m.CmdHydrate(claimsRepo, claimsDir, crsDir, provider)
 
-	affectedClaims, err := m.GetAffectedClaims(ctx, claimsRepo, prNumber, claimsDir)
+	affectedClaims, err := m.GetAffectedClaims(ctx, claimsRepo, claimsPrNumber, claimsDir)
 
 	if err != nil {
 
@@ -121,7 +122,7 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	diff := m.CompareDirs(ctx, crsDir, newCrsDir, affectedClaims)
 
-	allPrs, err := m.GetRepoPrs(ctx, wetRepo)
+	previousPrs, err := m.GetRepoPrs(ctx, wetRepo)
 
 	if err != nil {
 
@@ -131,7 +132,7 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	isValid, err := m.Verify(ctx, claimsPr, wetRepo, append(
 		append(diff.DeletedFiles, diff.AddedFiles...),
-		diff.ModifiedFiles...), allPrs)
+		diff.ModifiedFiles...), previousPrs)
 
 	if !isValid {
 
@@ -139,18 +140,31 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	}
 
-	upsertedPrs := m.UpsertPrsFromDiff(
+	childPreviousPrs, err := m.FilterByParentPr(
+		ctx,
+		claimsPrNumber,
+		previousPrs,
+	)
+
+	result, err := m.UpsertPrsFromDiff(
 		ctx,
 		&diff,
 		crsDir,
 		wetRepo,
-		prNumber,
-		allPrs,
+		claimsPrNumber,
+		childPreviousPrs,
 	)
 
-	m.CloseOrphanPrs(ctx, prNumber, upsertedPrs, wetRepo)
+	fmt.Printf("💊 Orphans: %v\n", result.Orphans)
 
-	_, err = m.AddPrReferences(ctx, claimsRepo, prNumber, upsertedPrs)
+	m.CloseOrphanPrs(
+		ctx,
+		claimsPrNumber,
+		result.Orphans,
+		wetRepo,
+	)
+
+	_, err = m.AddPrReferences(ctx, claimsRepo, claimsPrNumber, result.Prs)
 
 	return diff
 }

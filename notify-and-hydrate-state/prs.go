@@ -9,45 +9,18 @@ import (
 func (m *NotifyAndHydrateState) CloseOrphanPrs(
 	ctx context.Context,
 	prNumber string,
-	upsertedPrs []Pr,
+	orphanPrs []Pr,
 	wetRepo string,
 ) {
+	fmt.Printf("💡 Closing orphan PRs for PR %s\n", prNumber)
+	fmt.Printf("💡 Orphan PRs: %v\n", orphanPrs)
+	fmt.Printf("💡 Wet repo: %s\n", wetRepo)
 
-	childPrs, err := m.FilterByParentPr(
-		ctx,
-		prNumber,
-		upsertedPrs,
-	)
+	for _, orphanPr := range orphanPrs {
 
-	if err != nil {
-
-		panic(fmt.Errorf("failed to filter by parent PR: %w", err))
+		m.ClosePr(ctx, orphanPr.Number, wetRepo)
 
 	}
-
-	for _, childPr := range childPrs {
-
-		if isOrphanPr(childPr, upsertedPrs) {
-
-			m.ClosePr(ctx, wetRepo, string(childPr.Number))
-
-		}
-	}
-}
-
-func isOrphanPr(pr Pr, consideredPrs []Pr) bool {
-
-	for _, consideredPr := range consideredPrs {
-
-		if consideredPr.Url == pr.Url {
-
-			return false
-
-		}
-	}
-
-	return true
-
 }
 
 func isChildPr(parentPrNumber string, pr Pr) bool {

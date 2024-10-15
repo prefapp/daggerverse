@@ -58,7 +58,7 @@ func (m *NotifyAndHydrateState) ClosePr(
 
 	ctx context.Context,
 
-	prNumber string,
+	prNumber int,
 
 	ghRepo string,
 
@@ -67,7 +67,7 @@ func (m *NotifyAndHydrateState) ClosePr(
 	command := strings.Join([]string{
 		"pr",
 		"close",
-		prNumber,
+		fmt.Sprintf("%d", prNumber),
 		"-R",
 		ghRepo,
 	}, " ")
@@ -117,7 +117,7 @@ func (m *NotifyAndHydrateState) GetRepoPrs(
 
 ) ([]Pr, error) {
 
-	command := strings.Join([]string{"pr", "list", "--json", "headRefName", "--json", "url", "-L", "1000", "-R", ghRepo}, " ")
+	command := strings.Join([]string{"pr", "list", "--json", "headRefName", "--json", "number,url", "-L", "1000", "-R", ghRepo}, " ")
 
 	content, err := dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
 
