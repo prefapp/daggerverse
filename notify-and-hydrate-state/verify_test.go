@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -31,5 +32,7 @@ func TestCrHasPendingPr(t *testing.T) {
 		t.Errorf("Expected false, got true")
 
 	}
+
+	fmt.Printf("Test passed\n")
 
 }

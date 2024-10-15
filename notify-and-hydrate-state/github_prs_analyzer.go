@@ -2,25 +2,33 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"strings"
 )
 
-func (m *NotifyAndHydrateState) CloseOrphanPrs(
+func (m *NotifyAndHydrateState) FilterByParentPr(
+
 	ctx context.Context,
-	prNumber string,
-	orphanPrs []Pr,
-	wetRepo string,
-) {
-	fmt.Printf("💡 Closing orphan PRs for PR %s\n", prNumber)
-	fmt.Printf("💡 Orphan PRs: %v\n", orphanPrs)
-	fmt.Printf("💡 Wet repo: %s\n", wetRepo)
 
-	for _, orphanPr := range orphanPrs {
+	parentPrNumber string,
 
-		m.ClosePr(ctx, orphanPr.Number, wetRepo)
+	prs []Pr,
+
+) ([]Pr, error) {
+
+	filteredPrs := []Pr{}
+
+	for _, pr := range prs {
+
+		if isAutomatedPr(pr) && isChildPr(parentPrNumber, pr) {
+
+			filteredPrs = append(filteredPrs, pr)
+
+		}
 
 	}
+
+	return filteredPrs, nil
+
 }
 
 func isChildPr(parentPrNumber string, pr Pr) bool {

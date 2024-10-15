@@ -10,6 +10,7 @@ import (
 )
 
 func (m *NotifyAndHydrateState) AddPrReferences(
+
 	ctx context.Context,
 	// Claims repository name
 	// +required
@@ -54,15 +55,7 @@ Related PRs:
 
 }
 
-func (m *NotifyAndHydrateState) ClosePr(
-
-	ctx context.Context,
-
-	prNumber int,
-
-	ghRepo string,
-
-) (string, error) {
+func (m *NotifyAndHydrateState) ClosePr(ctx context.Context, prNumber int, ghRepo string) (string, error) {
 
 	command := strings.Join([]string{
 		"pr",
@@ -82,42 +75,20 @@ func (m *NotifyAndHydrateState) ClosePr(
 
 }
 
-func (m *NotifyAndHydrateState) FilterByParentPr(
+func (m *NotifyAndHydrateState) GetRepoPrs(ctx context.Context, ghRepo string) ([]Pr, error) {
 
-	ctx context.Context,
-
-	parentPrNumber string,
-
-	prs []Pr,
-
-) ([]Pr, error) {
-
-	filteredPrs := []Pr{}
-
-	for _, pr := range prs {
-
-		if isAutomatedPr(pr) && isChildPr(parentPrNumber, pr) {
-
-			filteredPrs = append(filteredPrs, pr)
-
-		}
-
-	}
-
-	return filteredPrs, nil
-
-}
-
-func (m *NotifyAndHydrateState) GetRepoPrs(
-
-	ctx context.Context,
-
-	// Repository name ("<owner>/<repo>")
-	ghRepo string,
-
-) ([]Pr, error) {
-
-	command := strings.Join([]string{"pr", "list", "--json", "headRefName", "--json", "number,url", "-L", "1000", "-R", ghRepo}, " ")
+	command := strings.Join([]string{
+		"pr",
+		"list",
+		"--json",
+		"headRefName",
+		"--json",
+		"number,url",
+		"-L",
+		"1000",
+		"-R",
+		ghRepo},
+		" ")
 
 	content, err := dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
 
@@ -131,4 +102,24 @@ func (m *NotifyAndHydrateState) GetRepoPrs(
 	json.Unmarshal([]byte(content), &prs)
 
 	return prs, nil
+}
+
+func (m *NotifyAndHydrateState) CloseOrphanPrs(
+	ctx context.Context,
+	prNumber string,
+	orphanPrs []Pr,
+	wetRepo string,
+) {
+
+	fsLog(fmt.Sprintf("💡 Closing orphan PRs for PR %s\n", prNumber))
+
+	fsLog(fmt.Sprintf("💡 Orphan PRs: %v\n", orphanPrs))
+
+	fsLog(fmt.Sprintf("💡 Wet repo: %s\n", wetRepo))
+
+	for _, orphanPr := range orphanPrs {
+
+		m.ClosePr(ctx, orphanPr.Number, wetRepo)
+
+	}
 }
