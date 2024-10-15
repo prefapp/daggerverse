@@ -1,3 +1,5 @@
+[![Pr verify](https://github.com/prefapp/daggerverse/actions/workflows/pr_verify.yaml/badge.svg)](https://github.com/prefapp/daggerverse/actions/workflows/pr_verify.yaml)
+
 # Prefapp daggerverse
 
 ### Requirements to develop
