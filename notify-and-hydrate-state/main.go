@@ -122,7 +122,11 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	diff := m.CompareDirs(ctx, crsDir, newCrsDir, affectedClaims)
 
+	fsLog(fmt.Sprintf("Compared dirs has the diff: %+v", diff))
+
 	previousPrs, err := m.GetRepoPrs(ctx, wetRepo)
+
+	logPrs("Previous PRs", previousPrs)
 
 	if err != nil {
 
@@ -146,6 +150,8 @@ func (m *NotifyAndHydrateState) Workflow(
 		previousPrs,
 	)
 
+	logPrs("Child previous PRs", childPreviousPrs)
+
 	result, err := m.UpsertPrsFromDiff(
 		ctx,
 		&diff,
@@ -155,7 +161,7 @@ func (m *NotifyAndHydrateState) Workflow(
 		childPreviousPrs,
 	)
 
-	fmt.Printf("💊 Orphans: %v\n", result.Orphans)
+	logPrs("orphan PRs", result.Orphans)
 
 	m.CloseOrphanPrs(
 		ctx,
@@ -163,6 +169,8 @@ func (m *NotifyAndHydrateState) Workflow(
 		result.Orphans,
 		wetRepo,
 	)
+
+	logPrs("Created or updated PRs", result.Prs)
 
 	_, err = m.AddPrReferences(ctx, claimsRepo, claimsPrNumber, result.Prs)
 

@@ -107,6 +107,8 @@ func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
 
 ) ([]string, error) {
 
+	fsLog("Getting affected claims")
+
 	prFiles, err := m.GetPrChangedFiles(ctx, claimsDir)
 
 	if err != nil {

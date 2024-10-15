@@ -31,6 +31,8 @@ func (m *NotifyAndHydrateState) CmdHydrate(
 	// +required
 ) *Directory {
 
+	fsLog(fmt.Sprintf("Hydrating CRs for %s", provider))
+
 	claimsTargetDir := "/claims"
 	crsTargetDir := "/crs"
 	outputDir := "/output"
