@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -17,9 +16,10 @@ type Cr struct {
 	Metadata Metadata
 }
 
-type PrBranchName struct {
+type Pr struct {
 	HeadRefName string `json:"headRefName"`
 	Url         string `json:"url"`
+	Number      int    `json:"number"`
 }
 
 func (m *NotifyAndHydrateState) Verify(
@@ -35,7 +35,7 @@ func (m *NotifyAndHydrateState) Verify(
 	// CRs to verify
 	crs []*File,
 
-	prs []PrBranchName,
+	prs []Pr,
 
 ) (bool, error) {
 
@@ -89,7 +89,7 @@ func (*NotifyAndHydrateState) unmarshalCr(ctx context.Context, cr *File) (Cr, er
 
 func (*NotifyAndHydrateState) CrHasPendingPr(
 
-	prs []PrBranchName,
+	prs []Pr,
 
 	currentPrNumber string,
 
@@ -115,29 +115,4 @@ func (*NotifyAndHydrateState) CrHasPendingPr(
 
 	return false, nil
 
-}
-
-func (m *NotifyAndHydrateState) GetRepoPrs(
-
-	ctx context.Context,
-
-	// Repository name ("<owner>/<repo>")
-	ghRepo string,
-
-) ([]PrBranchName, error) {
-
-	command := strings.Join([]string{"pr", "list", "--json", "headRefName", "--json", "url", "-L", "1000", "-R", ghRepo}, " ")
-
-	content, err := dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
-
-	if err != nil {
-
-		return nil, err
-	}
-
-	prs := []PrBranchName{}
-
-	json.Unmarshal([]byte(content), &prs)
-
-	return prs, nil
 }

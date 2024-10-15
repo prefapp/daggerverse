@@ -14,7 +14,7 @@ func TestCrHasPendingPr(t *testing.T) {
 		},
 	}
 
-	prs := []PrBranchName{
+	prs := []Pr{
 		{
 			HeadRefName: "automated/notify-and-hydrate-state-uuid-1",
 		},

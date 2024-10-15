@@ -121,7 +121,7 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	diff := m.CompareDirs(ctx, crsDir, newCrsDir, affectedClaims)
 
-	prs, err := m.GetRepoPrs(ctx, wetRepo)
+	allPrs, err := m.GetRepoPrs(ctx, wetRepo)
 
 	if err != nil {
 
@@ -131,7 +131,7 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	isValid, err := m.Verify(ctx, claimsPr, wetRepo, append(
 		append(diff.DeletedFiles, diff.AddedFiles...),
-		diff.ModifiedFiles...), prs)
+		diff.ModifiedFiles...), allPrs)
 
 	if !isValid {
 
@@ -139,9 +139,18 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	}
 
-	allPrs := m.CreatePrsFromDiff(ctx, &diff, crsDir, wetRepo, prNumber, prs)
+	upsertedPrs := m.UpsertPrsFromDiff(
+		ctx,
+		&diff,
+		crsDir,
+		wetRepo,
+		prNumber,
+		allPrs,
+	)
 
-	_, err = m.AddPrReferences(ctx, claimsRepo, prNumber, allPrs)
+	m.CloseOrphanPrs(ctx, prNumber, upsertedPrs, wetRepo)
+
+	_, err = m.AddPrReferences(ctx, claimsRepo, prNumber, upsertedPrs)
 
 	return diff
 }
