@@ -7,12 +7,6 @@ import (
 	"time"
 )
 
-type PrsResult struct {
-	Orphans []Pr
-
-	Prs []Pr
-}
-
 func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 	ctx context.Context,

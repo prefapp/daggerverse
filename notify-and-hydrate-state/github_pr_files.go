@@ -13,11 +13,6 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type PrFiles struct {
-	AddedModified []string
-	Deleted       []string
-}
-
 func (m *NotifyAndHydrateState) GetPrChangedFiles(
 
 	ctx context.Context,

@@ -8,20 +8,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Metadata struct {
-	Name string `yaml:"name"`
-}
-
-type Cr struct {
-	Metadata Metadata
-}
-
-type Pr struct {
-	HeadRefName string `json:"headRefName"`
-	Url         string `json:"url"`
-	Number      int    `json:"number"`
-}
-
 func (m *NotifyAndHydrateState) Verify(
 
 	ctx context.Context,

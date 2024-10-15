@@ -152,6 +152,12 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	logPrs("Child previous PRs", childPreviousPrs)
 
+	if err != nil {
+
+		panic(fmt.Errorf("failed to filter by parent PR: %w", err))
+
+	}
+
 	result, err := m.UpsertPrsFromDiff(
 		ctx,
 		&diff,
@@ -160,6 +166,12 @@ func (m *NotifyAndHydrateState) Workflow(
 		claimsPrNumber,
 		childPreviousPrs,
 	)
+
+	if err != nil {
+
+		panic(fmt.Errorf("failed to upsert PRs from diff: %w", err))
+
+	}
 
 	logPrs("orphan PRs", result.Orphans)
 
@@ -173,6 +185,12 @@ func (m *NotifyAndHydrateState) Workflow(
 	logPrs("Created or updated PRs", result.Prs)
 
 	_, err = m.AddPrReferences(ctx, claimsRepo, claimsPrNumber, result.Prs)
+
+	if err != nil {
+
+		panic(fmt.Errorf("failed to add PR references: %w", err))
+
+	}
 
 	return diff
 }

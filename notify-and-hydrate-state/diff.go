@@ -11,16 +11,6 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type DiffResult struct {
-	AddedFiles []*File
-
-	DeletedFiles []*File
-
-	ModifiedFiles []*File
-
-	UnmodifiedFiles []*File
-}
-
 func (m *NotifyAndHydrateState) CompareDirs(
 
 	ctx context.Context,
