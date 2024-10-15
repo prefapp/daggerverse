@@ -34,6 +34,6 @@ jobs:
           echo "Running tests in $dir"
           cd $dir
           dagger develop
-          dagger run go test -v ./  # Corre los tests
+          dagger run go test -v ./
           cd - 
         done
