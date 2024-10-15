@@ -33,7 +33,7 @@ jobs:
         for dir in $(find . -name 'go.mod' -not -path './.github/*' -exec dirname {} \;); do
           echo "Running tests in $dir"
           cd $dir
-          dagger run go mod tidy   # Asegura dependencias
+          dagger develop
           dagger run go test -v ./  # Corre los tests
-          cd -  # Vuelve al directorio original
+          cd - 
         done
