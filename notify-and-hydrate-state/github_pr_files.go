@@ -13,11 +13,6 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type PrFiles struct {
-	AddedModified []string
-	Deleted       []string
-}
-
 func (m *NotifyAndHydrateState) GetPrChangedFiles(
 
 	ctx context.Context,
@@ -106,6 +101,8 @@ func (m *NotifyAndHydrateState) GetAffectedClaims(ctx context.Context,
 	claimsDir *Directory,
 
 ) ([]string, error) {
+
+	fsLog("Getting affected claims")
 
 	prFiles, err := m.GetPrChangedFiles(ctx, claimsDir)
 

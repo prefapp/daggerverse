@@ -1,17 +1,3 @@
-// A generated module for NotifyAndHydrateState functions
-//
-// This module has been generated via dagger init and serves as a reference to
-// basic module structure as you get started with Dagger.
-//
-// Two functions have been pre-created. You can modify, delete, or add to them,
-// as needed. They demonstrate usage of arguments and return types using simple
-// echo and grep commands. The functions can be called from the dagger CLI or
-// from one of the SDKs.
-//
-// The first line in this comment block is a short description line and the
-// rest is a long description with more detail on the module's purpose or usage,
-// if appropriate. All modules should have a short description.
-
 package main
 
 import (
@@ -105,13 +91,14 @@ func (m *NotifyAndHydrateState) Workflow(
 	// Claims PR
 	// +required
 	claimsPr string,
+
 ) DiffResult {
 
-	prNumber := strings.Split(claimsPr, "#")[1]
+	claimsPrNumber := strings.Split(claimsPr, "#")[1]
 
 	newCrsDir := m.CmdHydrate(claimsRepo, claimsDir, crsDir, provider)
 
-	affectedClaims, err := m.GetAffectedClaims(ctx, claimsRepo, prNumber, claimsDir)
+	affectedClaims, err := m.GetAffectedClaims(ctx, claimsRepo, claimsPrNumber, claimsDir)
 
 	if err != nil {
 
@@ -121,7 +108,11 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	diff := m.CompareDirs(ctx, crsDir, newCrsDir, affectedClaims)
 
-	prs, err := m.GetRepoPrs(ctx, wetRepo)
+	fsLog(fmt.Sprintf("Compared dirs has the diff: %+v", diff))
+
+	previousPrs, err := m.GetRepoPrs(ctx, wetRepo)
+
+	logPrs("Previous PRs", previousPrs)
 
 	if err != nil {
 
@@ -131,7 +122,7 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	isValid, err := m.Verify(ctx, claimsPr, wetRepo, append(
 		append(diff.DeletedFiles, diff.AddedFiles...),
-		diff.ModifiedFiles...), prs)
+		diff.ModifiedFiles...), previousPrs)
 
 	if !isValid {
 
@@ -139,9 +130,53 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	}
 
-	allPrs := m.CreatePrsFromDiff(ctx, &diff, crsDir, wetRepo, prNumber, prs)
+	childPreviousPrs, err := m.FilterByParentPr(
+		ctx,
+		claimsPrNumber,
+		previousPrs,
+	)
 
-	_, err = m.AddPrReferences(ctx, claimsRepo, prNumber, allPrs)
+	logPrs("Child previous PRs", childPreviousPrs)
+
+	if err != nil {
+
+		panic(fmt.Errorf("failed to filter by parent PR: %w", err))
+
+	}
+
+	result, err := m.UpsertPrsFromDiff(
+		ctx,
+		&diff,
+		crsDir,
+		wetRepo,
+		claimsPrNumber,
+		childPreviousPrs,
+	)
+
+	if err != nil {
+
+		panic(fmt.Errorf("failed to upsert PRs from diff: %w", err))
+
+	}
+
+	logPrs("orphan PRs", result.Orphans)
+
+	m.CloseOrphanPrs(
+		ctx,
+		claimsPrNumber,
+		result.Orphans,
+		wetRepo,
+	)
+
+	logPrs("Created or updated PRs", result.Prs)
+
+	_, err = m.AddPrReferences(ctx, claimsRepo, claimsPrNumber, result.Prs)
+
+	if err != nil {
+
+		panic(fmt.Errorf("failed to add PR references: %w", err))
+
+	}
 
 	return diff
 }

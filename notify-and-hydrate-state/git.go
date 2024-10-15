@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (m *NotifyAndHydrateState) CreatePrsFromDiff(
+func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 	ctx context.Context,
 
@@ -19,15 +19,19 @@ func (m *NotifyAndHydrateState) CreatePrsFromDiff(
 
 	claimPrNumber string,
 
-	prs []PrBranchName,
+	prList []Pr,
 
-) []string {
+) (PrsResult, error) {
 
-	createdPrs := []string{}
+	createdOrUpdatedPrs := []Pr{}
+
+	orphanPrs := make([]Pr, len(prList))
+
+	copy(orphanPrs, prList)
 
 	for _, file := range diff.AddedFiles {
 
-		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "create", claimPrNumber, prs)
+		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, "create", claimPrNumber, prList)
 
 		if err != nil {
 
@@ -35,13 +39,15 @@ func (m *NotifyAndHydrateState) CreatePrsFromDiff(
 
 		}
 
-		createdPrs = append(createdPrs, pr)
+		createdOrUpdatedPrs = append(createdOrUpdatedPrs, pr)
+
+		orphanPrs = removeOrphan(orphanPrs, pr)
 
 	}
 
 	for _, file := range diff.ModifiedFiles {
 
-		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "update", claimPrNumber, prs)
+		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, "update", claimPrNumber, prList)
 
 		if err != nil {
 
@@ -49,13 +55,14 @@ func (m *NotifyAndHydrateState) CreatePrsFromDiff(
 
 		}
 
-		createdPrs = append(createdPrs, pr)
+		createdOrUpdatedPrs = append(createdOrUpdatedPrs, pr)
 
+		orphanPrs = removeOrphan(orphanPrs, pr)
 	}
 
 	for _, file := range diff.DeletedFiles {
 
-		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "delete", claimPrNumber, prs)
+		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, "delete", claimPrNumber, prList)
 
 		if err != nil {
 
@@ -63,15 +70,32 @@ func (m *NotifyAndHydrateState) CreatePrsFromDiff(
 
 		}
 
-		createdPrs = append(createdPrs, pr)
+		createdOrUpdatedPrs = append(createdOrUpdatedPrs, pr)
+
+		orphanPrs = removeOrphan(orphanPrs, pr)
 
 	}
 
-	return createdPrs
+	return PrsResult{Orphans: orphanPrs, Prs: createdOrUpdatedPrs}, nil
 
 }
 
-func (m *NotifyAndHydrateState) CreatePr(
+func removeOrphan(orphanPrs []Pr, pr Pr) []Pr {
+
+	for i, orphanPr := range orphanPrs {
+
+		if orphanPr.Url == pr.Url {
+
+			orphanPrs = append(orphanPrs[:i], orphanPrs[i+1:]...)
+
+		}
+
+	}
+
+	return orphanPrs
+}
+
+func (m *NotifyAndHydrateState) UpsertPr(
 
 	ctx context.Context,
 
@@ -85,9 +109,11 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	claimPrNumber string,
 
-	prs []PrBranchName,
+	prs []Pr,
 
-) (string, error) {
+) (Pr, error) {
+
+	createdOrUpdatedPr := Pr{}
 
 	fileName, err := file.Name(ctx)
 
@@ -140,6 +166,9 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	prLink, err := m.CreatePrIfNotExists(ctx, prBranch, wetRepoName, prTitle, prBody, prs)
 
+	createdOrUpdatedPr.Url = prLink
+	createdOrUpdatedPr.HeadRefName = prBranch
+
 	if err != nil {
 
 		panic(err)
@@ -163,7 +192,7 @@ func (m *NotifyAndHydrateState) CreatePr(
 		WithExec([]string{"push", "origin", prBranch, "--force"}).
 		Stdout(ctx)
 
-	return prLink, nil
+	return createdOrUpdatedPr, nil
 }
 
 func (m *NotifyAndHydrateState) ConfigGitContainer(
@@ -217,7 +246,7 @@ func (m *NotifyAndHydrateState) CreatePrIfNotExists(
 
 	body string,
 
-	prs []PrBranchName,
+	prs []Pr,
 
 ) (string, error) {
 

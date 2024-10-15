@@ -11,16 +11,6 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type DiffResult struct {
-	AddedFiles []*File
-
-	DeletedFiles []*File
-
-	ModifiedFiles []*File
-
-	UnmodifiedFiles []*File
-}
-
 func (m *NotifyAndHydrateState) CompareDirs(
 
 	ctx context.Context,
@@ -227,8 +217,6 @@ func (m *NotifyAndHydrateState) IsAffectedCRFromPr(
 	claimName := strings.Split(claimRef, "/")[1]
 
 	isAffected := slices.Contains(affectedClaims, claimName)
-
-	// fmt.Printf("Claim %s is affected: %v
 
 	return isAffected
 
