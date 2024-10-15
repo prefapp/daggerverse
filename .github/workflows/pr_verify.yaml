@@ -1,0 +1,39 @@
+name: CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Install Dagger CLI
+      run: |
+        curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=0.11.4 sh
+        sudo mv bin/dagger /usr/local/bin/
+
+    - name: Run Unit Tests
+      run: |
+        # Encuentra todos los directorios que contienen un go.mod excepto .github
+        for dir in $(find . -name 'go.mod' -not -path './.github/*' -exec dirname {} \;); do
+          echo "Running tests in $dir"
+          cd $dir
+          dagger run go mod tidy   # Asegura dependencias
+          dagger run go test -v ./  # Corre los tests
+          cd -  # Vuelve al directorio original
+        done
