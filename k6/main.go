@@ -53,7 +53,7 @@ func (m *K6) Run(
 	//+optional
 	//+default="1s"
 	duration string,
-	
+
 ) *dagger.Container {
 	// We use Glob over Entries because it lists files recursively
 	entries, _ := workingDir.Glob(ctx, "*")
@@ -97,7 +97,7 @@ func (m *K6) Run(
 			"-c",
 			fmt.Sprintf("%s || exit 0", strings.Join(command, " ")),
 		}, dagger.ContainerWithExecOpts{
-			SkipEntrypoint: true,
+			UseEntrypoint: false,
 		})
 
 	ctr, _ = ctr.Sync(ctx)
