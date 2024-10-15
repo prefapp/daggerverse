@@ -1,4 +1,4 @@
-name: CI Workflow
+name: Pr verify
 
 on:
   push:
@@ -9,7 +9,8 @@ on:
       - main
 
 jobs:
-  test:
+  pr_verify:
+    name: Pr verify
     runs-on: ubuntu-latest
 
     steps:
