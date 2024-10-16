@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"dagger/notify-and-hydrate-state/internal/dagger"
 	"fmt"
 	"strings"
 	"time"
@@ -13,7 +14,7 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 	diff *DiffResult,
 
-	wetRepositoryDir *Directory,
+	wetRepositoryDir *dagger.Directory,
 
 	wetRepoName string,
 
@@ -99,9 +100,9 @@ func (m *NotifyAndHydrateState) UpsertPr(
 
 	ctx context.Context,
 
-	file *File,
+	file *dagger.File,
 
-	wetRepositoryDir *Directory,
+	wetRepositoryDir *dagger.Directory,
 
 	wetRepoName string,
 
@@ -146,10 +147,10 @@ func (m *NotifyAndHydrateState) UpsertPr(
 		WithEnvVariable("CACHEBUSTER", time.Now().String()).
 		WithMountedDirectory("/repo", wetRepositoryDir).
 		WithWorkdir("/repo").
-		WithExec([]string{"checkout", "-b", prBranch}).
-		WithExec([]string{"add", fileName}).
-		WithExec([]string{"commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
-		WithExec([]string{"push", "origin", prBranch, "--force"}).
+		WithExec([]string{"git", "checkout", "-b", prBranch}).
+		WithExec([]string{"git", "add", fileName}).
+		WithExec([]string{"git", "commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
+		WithExec([]string{"git", "push", "origin", prBranch, "--force"}).
 		Sync(ctx)
 
 	if err != nil {
@@ -186,10 +187,10 @@ func (m *NotifyAndHydrateState) UpsertPr(
 	gitContainer.
 		WithMountedDirectory("/repo", wetRepositoryDir).
 		WithWorkdir("/repo").
-		WithExec([]string{"checkout", prBranch}).
-		WithExec([]string{"add", fileName}).
-		WithExec([]string{"commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
-		WithExec([]string{"push", "origin", prBranch, "--force"}).
+		WithExec([]string{"git", "checkout", prBranch}).
+		WithExec([]string{"git", "add", fileName}).
+		WithExec([]string{"git", "commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
+		WithExec([]string{"git", "push", "origin", prBranch, "--force"}).
 		Stdout(ctx)
 
 	return createdOrUpdatedPr, nil
@@ -199,7 +200,7 @@ func (m *NotifyAndHydrateState) ConfigGitContainer(
 
 	ctx context.Context,
 
-) *Container {
+) *dagger.Container {
 
 	plainTextToken, err := m.GhToken.Plaintext(ctx)
 
@@ -214,18 +215,21 @@ func (m *NotifyAndHydrateState) ConfigGitContainer(
 	return dag.Container().
 		From("alpine/git").
 		WithExec([]string{
+			"git",
 			"config",
 			"--global",
 			"url." + gitConfigContent + ".insteadOf",
 			"https://github.com",
 		}).
 		WithExec([]string{
+			"git",
 			"config",
 			"--global",
 			"user.email",
 			"firestartr-bot@firestartr.dev",
 		}).
 		WithExec([]string{
+			"git",
 			"config",
 			"--global",
 			"user.name",
@@ -273,6 +277,6 @@ func (m *NotifyAndHydrateState) CreatePrIfNotExists(
 		body,
 	}, " ")
 
-	return dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
+	return dag.Gh().Run(ctx, m.GhToken, command, dagger.GhRunOpts{DisableCache: true})
 
 }

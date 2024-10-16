@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"strconv"
+	"dagger/dagger-structure-test/internal/dagger"
 	"strings"
 )
 
@@ -12,7 +13,7 @@ type AssertFileExistenceOpts struct {
 	Gid         *int
 }
 
-func (m *DaggerStructureTest) AssertFileExistence(ctx context.Context, container *Container, path string, shouldExist bool, options AssertFileExistenceOpts) (bool, error) {
+func (m *DaggerStructureTest) AssertFileExistence(ctx context.Context, container *dagger.Container, path string, shouldExist bool, options AssertFileExistenceOpts) (bool, error) {
 
 	isDir, err := m.IsDir(ctx, container, path)
 
@@ -20,7 +21,7 @@ func (m *DaggerStructureTest) AssertFileExistence(ctx context.Context, container
 		return false, err
 	}
 
-	var ctr *Container
+	var ctr *dagger.Container
 
 	if isDir {
 		ctr, err = dag.Container().From("alpine").WithDirectory("/mnt", container.Directory(path)).Sync(ctx)
@@ -57,7 +58,7 @@ func (m *DaggerStructureTest) AssertFileExistence(ctx context.Context, container
 	return true, nil
 }
 
-func (m *DaggerStructureTest) IsDir(ctx context.Context, container *Container, path string) (bool, error) {
+func (m *DaggerStructureTest) IsDir(ctx context.Context, container *dagger.Container, path string) (bool, error) {
 
 	_, err := container.Directory(path).Sync(ctx)
 	if err != nil {

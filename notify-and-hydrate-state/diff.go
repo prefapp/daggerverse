@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"dagger/notify-and-hydrate-state/internal/dagger"
 	"fmt"
 	"strings"
 
@@ -15,9 +16,9 @@ func (m *NotifyAndHydrateState) CompareDirs(
 
 	ctx context.Context,
 
-	oldCrs *Directory,
+	oldCrs *dagger.Directory,
 
-	newCrs *Directory,
+	newCrs *dagger.Directory,
 
 	affectedClaims []string,
 
@@ -134,7 +135,7 @@ func PrintFileList(
 
 	ctx context.Context,
 
-	listToPrint []*File,
+	listToPrint []*dagger.File,
 
 ) {
 
@@ -190,7 +191,7 @@ func (m *NotifyAndHydrateState) IsAffectedCRFromPr(
 
 	affectedClaims []string,
 
-	cr *File,
+	cr *dagger.File,
 
 ) bool {
 
