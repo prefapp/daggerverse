@@ -187,10 +187,10 @@ func (m *NotifyAndHydrateState) UpsertPr(
 	gitContainer.
 		WithMountedDirectory("/repo", wetRepositoryDir).
 		WithWorkdir("/repo").
-		WithExec([]string{"checkout", prBranch}).
-		WithExec([]string{"add", fileName}).
-		WithExec([]string{"commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
-		WithExec([]string{"push", "origin", prBranch, "--force"}).
+		WithExec([]string{"git", "checkout", prBranch}).
+		WithExec([]string{"git", "add", fileName}).
+		WithExec([]string{"git", "commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
+		WithExec([]string{"git", "push", "origin", prBranch, "--force"}).
 		Stdout(ctx)
 
 	return createdOrUpdatedPr, nil
