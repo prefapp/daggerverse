@@ -215,18 +215,21 @@ func (m *NotifyAndHydrateState) ConfigGitContainer(
 	return dag.Container().
 		From("alpine/git").
 		WithExec([]string{
+			"git",
 			"config",
 			"--global",
 			"url." + gitConfigContent + ".insteadOf",
 			"https://github.com",
 		}).
 		WithExec([]string{
+			"git",
 			"config",
 			"--global",
 			"user.email",
 			"firestartr-bot@firestartr.dev",
 		}).
 		WithExec([]string{
+			"git",
 			"config",
 			"--global",
 			"user.name",
