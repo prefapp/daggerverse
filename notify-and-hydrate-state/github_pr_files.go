@@ -31,12 +31,12 @@ func (m *NotifyAndHydrateState) GetPrChangedFiles(
 		Container().
 		From("alpine/git").
 		WithMountedDirectory("/repo", claimsRepo).
+		WithEntrypoint([]string{"git"}).
 		WithWorkdir("/repo").
 		Sync(ctx)
 
 	amResp, err := c.
 		WithExec([]string{
-			"git",
 			"diff",
 			"origin/" + m.ClaimsDefaultBranch,
 			"-M90%",
@@ -65,7 +65,6 @@ func (m *NotifyAndHydrateState) GetPrChangedFiles(
 
 	dResp, err := c.
 		WithExec([]string{
-			"git",
 			"diff",
 			"origin/" + m.ClaimsDefaultBranch,
 			"-M90%",
