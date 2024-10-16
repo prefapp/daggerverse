@@ -31,7 +31,6 @@ func (m *NotifyAndHydrateState) GetPrChangedFiles(
 		Container().
 		From("alpine/git").
 		WithMountedDirectory("/repo", claimsRepo).
-		WithEntrypoint([]string{"git"}).
 		WithWorkdir("/repo").
 		Sync(ctx)
 
