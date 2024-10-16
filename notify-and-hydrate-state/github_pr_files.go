@@ -36,6 +36,7 @@ func (m *NotifyAndHydrateState) GetPrChangedFiles(
 
 	amResp, err := c.
 		WithExec([]string{
+			"git",
 			"diff",
 			"origin/" + m.ClaimsDefaultBranch,
 			"-M90%",
@@ -64,6 +65,7 @@ func (m *NotifyAndHydrateState) GetPrChangedFiles(
 
 	dResp, err := c.
 		WithExec([]string{
+			"git",
 			"diff",
 			"origin/" + m.ClaimsDefaultBranch,
 			"-M90%",
