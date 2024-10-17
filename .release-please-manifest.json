@@ -1,5 +1,5 @@
 {
-   "k6": "1.1.0",
+   "k6": "1.2.0",
    "dagger-structure-test": "0.1.0",
    "notify-and-hydrate-state": "1.2.0"
 }
