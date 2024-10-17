@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/prefapp/daggerverse/compare/notify-and-hydrate-state-v1.1.0...notify-and-hydrate-state-v1.2.0) (2024-10-16)
+
+
+### Features
+
+* support remove orphan pull requests ([#29](https://github.com/prefapp/daggerverse/issues/29)) ([11b21a9](https://github.com/prefapp/daggerverse/commit/11b21a907a819ffdc91cdd6a5da9b5ada338cf7b))
+* upgrade to dagger from v0.11.0 to  v0.13.5 ([#31](https://github.com/prefapp/daggerverse/issues/31)) ([1bcc7ec](https://github.com/prefapp/daggerverse/commit/1bcc7ec92ed650b96df526647c9bbd437d4e1bde))
+
 ## [1.1.0](https://github.com/prefapp/daggerverse/compare/notify-and-hydrate-state-v1.0.0...notify-and-hydrate-state-v1.1.0) (2024-10-14)
 
 
