@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	jsonpatch "github.com/evanphx/json-patch/v5"
+	"reflect"
+
 	"github.com/tidwall/gjson"
 	"golang.org/x/exp/slices"
 	"sigs.k8s.io/yaml"
@@ -164,24 +165,31 @@ func (m *NotifyAndHydrateState) AreYamlsEqual(
 	yamlB string,
 
 ) bool {
+	var obj1, obj2 map[string]interface{}
 
-	jsonString1, err := yaml.YAMLToJSON([]byte(yamlA))
+	yaml.Unmarshal([]byte(yamlA), &obj1)
 
-	jsonString2, err2 := yaml.YAMLToJSON([]byte(yamlB))
+	yaml.Unmarshal([]byte(yamlB), &obj2)
 
-	if err != nil {
+	ignoredAnnotations := []string{
+		"firestartr.dev/last-state-pr",
+		"firestartr.dev/last-claim-pr",
+	}
 
-		panic(err)
+	for _, annotation := range ignoredAnnotations {
+
+		unsetAnnotation(annotation, obj1)
+
+		unsetAnnotation(annotation, obj2)
 
 	}
 
-	if err2 != nil {
+	return reflect.DeepEqual(obj1, obj2)
+}
 
-		panic(err2)
+func unsetAnnotation(annotation string, obj map[string]interface{}) {
 
-	}
-
-	return jsonpatch.Equal(jsonString1, jsonString2)
+	obj["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})[annotation] = nil
 
 }
 
