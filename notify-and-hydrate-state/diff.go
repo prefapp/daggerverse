@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"dagger/notify-and-hydrate-state/internal/dagger"
+	"encoding/json"
 	"fmt"
 	"strings"
 
-	jsonpatch "github.com/evanphx/json-patch/v5"
+	"reflect"
+
 	"github.com/tidwall/gjson"
 	"golang.org/x/exp/slices"
 	"sigs.k8s.io/yaml"
@@ -181,8 +183,29 @@ func (m *NotifyAndHydrateState) AreYamlsEqual(
 
 	}
 
-	return jsonpatch.Equal(jsonString1, jsonString2)
+	ignoredAnnotations := []string{
+		"firestartr.dev/last-state-pr",
+		"firestartr.dev/last-claim-pr",
+	}
 
+	var obj1, obj2 map[string]interface{}
+
+	json.Unmarshal([]byte(jsonString1), &obj1)
+
+	json.Unmarshal([]byte(jsonString2), &obj2)
+
+	for _, annotation := range ignoredAnnotations {
+
+		obj1["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})[annotation] = nil
+
+		obj2["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})[annotation] = nil
+
+	}
+
+	obj1["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})["firestartr.dev/last-state-pr"] = nil
+	obj2["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})["firestartr.dev/last-state-pr"] = nil
+
+	return reflect.DeepEqual(obj1, obj2)
 }
 
 func (m *NotifyAndHydrateState) IsAffectedCRFromPr(
