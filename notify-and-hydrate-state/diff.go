@@ -196,13 +196,19 @@ func (m *NotifyAndHydrateState) AreYamlsEqual(
 
 	for _, annotation := range ignoredAnnotations {
 
-		obj1["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})[annotation] = nil
+		unsetAnnotation(annotation, obj1)
 
-		obj2["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})[annotation] = nil
+		unsetAnnotation(annotation, obj2)
 
 	}
 
 	return reflect.DeepEqual(obj1, obj2)
+}
+
+func unsetAnnotation(annotation string, obj map[string]interface{}) {
+
+	obj["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})[annotation] = nil
+
 }
 
 func (m *NotifyAndHydrateState) IsAffectedCRFromPr(
