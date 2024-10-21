@@ -202,9 +202,6 @@ func (m *NotifyAndHydrateState) AreYamlsEqual(
 
 	}
 
-	obj1["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})["firestartr.dev/last-state-pr"] = nil
-	obj2["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})["firestartr.dev/last-state-pr"] = nil
-
 	return reflect.DeepEqual(obj1, obj2)
 }
 
