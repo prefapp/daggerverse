@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dagger/notify-and-hydrate-state/internal/dagger"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -166,33 +165,16 @@ func (m *NotifyAndHydrateState) AreYamlsEqual(
 	yamlB string,
 
 ) bool {
+	var obj1, obj2 map[string]interface{}
 
-	jsonString1, err := yaml.YAMLToJSON([]byte(yamlA))
+	yaml.Unmarshal([]byte(yamlA), &obj1)
 
-	jsonString2, err2 := yaml.YAMLToJSON([]byte(yamlB))
-
-	if err != nil {
-
-		panic(err)
-
-	}
-
-	if err2 != nil {
-
-		panic(err2)
-
-	}
+	yaml.Unmarshal([]byte(yamlB), &obj2)
 
 	ignoredAnnotations := []string{
 		"firestartr.dev/last-state-pr",
 		"firestartr.dev/last-claim-pr",
 	}
-
-	var obj1, obj2 map[string]interface{}
-
-	json.Unmarshal([]byte(jsonString1), &obj1)
-
-	json.Unmarshal([]byte(jsonString2), &obj2)
 
 	for _, annotation := range ignoredAnnotations {
 
