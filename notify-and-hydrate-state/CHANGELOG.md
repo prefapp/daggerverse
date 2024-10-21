@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/prefapp/daggerverse/compare/notify-and-hydrate-state-v1.2.0...notify-and-hydrate-state-v1.2.1) (2024-10-21)
+
+
+### Bug Fixes
+
+* ignore annotations not needed in ci ([#35](https://github.com/prefapp/daggerverse/issues/35)) ([9a03cdf](https://github.com/prefapp/daggerverse/commit/9a03cdf0fc165872e91dcc6ffd4e7b8a954b9fb4))
+
 ## [1.2.0](https://github.com/prefapp/daggerverse/compare/notify-and-hydrate-state-v1.1.0...notify-and-hydrate-state-v1.2.0) (2024-10-16)
 
 
