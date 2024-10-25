@@ -64,7 +64,7 @@ func (m *DaggerStructureTest) AssertOutput(ctx context.Context, container *dagge
 	}
 	
 	if options.ExpectedExitCode != nil {
-		exitCode, err := m.getExitCode(ctx, ctr)
+		exitCode, err := m.GetExitCode(ctx, ctr)
 		if err != nil {
 			return false, err
 		}
