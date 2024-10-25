@@ -77,7 +77,7 @@ func (m *DaggerStructureTest) AssertOutput(ctx context.Context, container *dagge
 }
 
 // Returns a container exit code
-func (m *DaggerStructureTest) getExitCode(ctx context.Context, ctr *dagger.Container) (int, error) {
+func (m *DaggerStructureTest) GetExitCode(ctx context.Context, ctr *dagger.Container) (int, error) {
 
 	_, err := ctr.Sync(ctx)
     if e, ok := err.(*ExecError); ok {
