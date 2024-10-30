@@ -137,12 +137,11 @@ func (m *NotifyAndHydrateState) Workflow(
 			ctx,
 			m.GhToken,
 			strings.Join([]string{
-				"gh",
 				"pr",
 				"comment",
 				claimsPrNumber,
 				"--body",
-				fmt.Sprintf("Failed to verify hydrate process: %s", err),
+				err.Error(),
 				"-R", claimsRepo,
 			}, " "),
 
