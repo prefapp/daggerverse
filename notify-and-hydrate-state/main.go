@@ -128,8 +128,8 @@ func (m *NotifyAndHydrateState) Workflow(
 	if !isValid {
 
 		dag.Gh().Run(
-			ctx, 
-			m.GhToken, 
+			ctx,
+			m.GhToken,
 			strings.Join([]string{
 				"pr",
 				"comment",
@@ -139,7 +139,7 @@ func (m *NotifyAndHydrateState) Workflow(
 				"-R", claimsRepo,
 			}, " "),
 
-			dagger.GhRunOpts{DisableCache: true}
+			dagger.GhRunOpts{DisableCache: true},
 		)
 
 		panic(fmt.Errorf("failed to verify: %w", err))
