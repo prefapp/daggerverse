@@ -128,6 +128,10 @@ func (m *NotifyAndHydrateState) Workflow(
 	if !isValid {
 
 		fmt.Printf("<---- DEBUG ---->")
+		fmt.Printf("Claims pr number: %s", claimsPrNumber)
+		fmt.Printf("Claims repo: %s", claimsRepo)
+		fmt.Printf("Error: %s", err)
+		fmt.Printf("<---- DEBUG ---->")
 
 		dag.Gh().Run(
 			ctx,
