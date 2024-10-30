@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/prefapp/daggerverse/compare/notify-and-hydrate-state-v1.2.1...notify-and-hydrate-state-v1.3.0) (2024-10-30)
+
+
+### Features
+
+* add use feedback on failed hydrate ([#38](https://github.com/prefapp/daggerverse/issues/38)) ([0003b09](https://github.com/prefapp/daggerverse/commit/0003b091f2847ba107447884355b6ef9fa435245))
+
 ## [1.2.1](https://github.com/prefapp/daggerverse/compare/notify-and-hydrate-state-v1.2.0...notify-and-hydrate-state-v1.2.1) (2024-10-21)
 
 
