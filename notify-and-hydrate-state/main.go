@@ -135,10 +135,10 @@ func (m *NotifyAndHydrateState) Workflow(
 				"comment",
 				claimsPrNumber,
 				"--body",
-				err.Error(),
+				fmt.Errorf("Failed to verify hydrate process: %w", err).Error(),
 				"-R", claimsRepo,
 			}, " "),
-			 
+
 			dagger.GhRunOpts{DisableCache: true}
 		)
 
