@@ -137,6 +137,7 @@ func (m *NotifyAndHydrateState) Workflow(
 			ctx,
 			m.GhToken,
 			strings.Join([]string{
+				"gh",
 				"pr",
 				"comment",
 				claimsPrNumber,
