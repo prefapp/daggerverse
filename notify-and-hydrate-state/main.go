@@ -141,7 +141,7 @@ func (m *NotifyAndHydrateState) Workflow(
 				"comment",
 				claimsPrNumber,
 				"--body",
-				"\"**❌ Error: **" + err.Error() + "\" ❌",
+				"\"❌ " + err.Error() + "\"❌",
 				"-R", claimsRepo,
 			}, " "),
 
