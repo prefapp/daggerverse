@@ -133,7 +133,7 @@ func (m *NotifyAndHydrateState) Workflow(
 		fmt.Printf("Error: %s", err)
 		fmt.Printf("<---- DEBUG ---->")
 
-		dag.Gh().Run(
+		res, err := dag.Gh().Run(
 			ctx,
 			m.GhToken,
 			strings.Join([]string{
@@ -147,6 +147,14 @@ func (m *NotifyAndHydrateState) Workflow(
 
 			dagger.GhRunOpts{DisableCache: true},
 		)
+
+		if err != nil {
+
+			panic(fmt.Errorf("failed to run gh command: %w", err))
+
+		}
+
+		fmt.Printf("Comment response: %s", res)
 
 		panic(fmt.Errorf("failed to verify: %w", err))
 
