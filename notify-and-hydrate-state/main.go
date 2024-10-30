@@ -127,6 +127,29 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	if !isValid {
 
+		res, err := dag.Gh().Run(
+			ctx,
+			m.GhToken,
+			strings.Join([]string{
+				"pr",
+				"comment",
+				claimsPrNumber,
+				"--body",
+				"\"❌ " + err.Error() + " ❌\"",
+				"-R", claimsRepo,
+			}, " "),
+
+			dagger.GhRunOpts{DisableCache: true},
+		)
+
+		if err != nil {
+
+			panic(fmt.Errorf("failed to run gh command: %w", err))
+
+		}
+
+		fmt.Printf("Comment response: %s", res)
+
 		panic(fmt.Errorf("failed to verify: %w", err))
 
 	}
