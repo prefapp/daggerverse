@@ -127,6 +127,8 @@ func (m *NotifyAndHydrateState) Workflow(
 
 	if !isValid {
 
+		fmt.Printf("<---- DEBUG ---->")
+
 		dag.Gh().Run(
 			ctx,
 			m.GhToken,
@@ -135,7 +137,7 @@ func (m *NotifyAndHydrateState) Workflow(
 				"comment",
 				claimsPrNumber,
 				"--body",
-				fmt.Errorf("Failed to verify hydrate process: %w", err).Error(),
+				fmt.Sprintf("Failed to verify hydrate process: %s", err),
 				"-R", claimsRepo,
 			}, " "),
 
