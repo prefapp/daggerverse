@@ -145,7 +145,7 @@ func (m *Kind) LoadContainerOnKind(
 	return m.Container.
 		WithFile(containerFileTaName, tarball).
 		WithEnvVariable("BUST", time.Now().String()).
-		WithExec([]string{"kind", "load", "image-archive", containerFileTaName}).
+		WithExec([]string{"kind", "load", "image-archive", containerFileTaName, "--name", m.ClusterName}).
 		WithoutFile(containerFileTaName)
 
 }
@@ -175,5 +175,18 @@ func (m *Kind) Inspect(
 ) *dagger.Container {
 
 	return m.Container.Terminal()
+
+}
+
+// Inspect returns the container that will be launched
+// Example usage:
+// dagger call --docker-socket=/var/run/docker.sock --kind-svc=tcp://127.0.0.1:3000 inspect
+func (m *Kind) Test(
+
+	ctx context.Context,
+
+) *dagger.Container {
+
+	return dag.Container().From("node:20").From("node:20-alpine")
 
 }
