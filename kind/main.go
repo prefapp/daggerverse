@@ -72,7 +72,7 @@ func New(
 
 	yamlFileContent, err := yaml.Marshal(kindConfig)
 
-	container := dag.Container().
+	container, err := dag.Container().
 		From("alpine").
 		WithUnixSocket("/var/run/docker.sock", dockerSocket).
 		WithNewFile("kind.yaml", string(yamlFileContent)).
@@ -95,7 +95,13 @@ func New(
 		WithExec([]string{
 			"kubectl", "config",
 			"set-cluster", fmt.Sprintf("kind-%s", clusterName), fmt.Sprintf("--server=https://localhost:%d", port)},
-		)
+		).Sync(ctx)
+
+	if err != nil {
+
+		panic(err)
+
+	}
 
 	return &Kind{
 		DockerSocket: dockerSocket,
