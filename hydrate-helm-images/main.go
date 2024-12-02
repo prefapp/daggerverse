@@ -87,11 +87,6 @@ func (m *HydrateHelmImages) BuildCurrentImages(
 
 	matrix string,
 
-	// +optional
-	// +description=Directory containing the manifests
-	// +defaultPath=manifests
-	manifestsDir *dagger.Directory,
-
 ) *dagger.File {
 
 	var imageMatrix ImageMatrix
