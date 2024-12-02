@@ -42,7 +42,7 @@ type ImageMatrix struct {
 	Images []ImageData
 }
 
-func (m *HydrateHelmImages) GetDeploymentMap(
+func GetDeploymentMap(
 
 	ctx context.Context,
 
@@ -100,7 +100,7 @@ func (m *HydrateHelmImages) BuildPreviousImages(
 
 ) *dagger.File {
 
-	mapImages := m.GetDeploymentMap(ctx, manifestsDir)
+	mapImages := GetDeploymentMap(ctx, manifestsDir)
 
 	marshaled, err := yaml.Marshal(mapImages)
 
@@ -143,7 +143,7 @@ func (m *HydrateHelmImages) BuildCurrentImages(
 
 	}
 
-	mapOldImages := m.GetDeploymentMap(ctx, manifestsDir)
+	mapOldImages := GetDeploymentMap(ctx, manifestsDir)
 
 	for key, value := range mapNewImages {
 
