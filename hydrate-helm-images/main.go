@@ -11,13 +11,51 @@ import (
 
 type HydrateHelmImages struct{}
 
+// # ["apps/cluster-name/test-tenant/sample-app/dev"]
 func (m *HydrateHelmImages) BuildPreviousImages(
+
+	ctx context.Context,
+
+	updatedDeployments string,
+
+	repoDir *dagger.Directory,
+
+) *dagger.Directory {
+
+	unmarshaledDeps := []string{}
+
+	err := json.Unmarshal([]byte(updatedDeployments), &unmarshaledDeps)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	dir := dag.Directory()
+
+	for _, dep := range unmarshaledDeps {
+
+		imagesContent := m.BuildPreviousImagesForApp(ctx, repoDir.Directory(dep), dir, dep)
+
+		dir = dir.WithNewDirectory(dep).WithNewFile(dep+"/previous_images.yaml", imagesContent)
+
+	}
+
+	return dir
+}
+
+func (m *HydrateHelmImages) BuildPreviousImagesForApp(
 
 	ctx context.Context,
 
 	manifestsDir *dagger.Directory,
 
-) *dagger.File {
+	outputDir *dagger.Directory,
+
+	app string,
+
+) string {
 
 	mapImages := getDeploymentMap(ctx, manifestsDir)
 
@@ -28,10 +66,8 @@ func (m *HydrateHelmImages) BuildPreviousImages(
 		panic(err)
 
 	}
+	return string(marshaled)
 
-	return dag.Directory().
-		WithNewFile("previous-images.yaml", string(marshaled)).
-		File("previous-images.yaml")
 }
 
 func getDeploymentMap(
