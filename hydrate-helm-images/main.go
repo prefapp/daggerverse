@@ -9,40 +9,32 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// YAML Types
 type HydrateHelmImages struct{}
 
-type Dp struct {
-	Metadata Metadata `yaml:"metadata"`
+func (m *HydrateHelmImages) BuildPreviousImages(
+
+	ctx context.Context,
+
+	manifestsDir *dagger.Directory,
+
+) *dagger.File {
+
+	mapImages := getDeploymentMap(ctx, manifestsDir)
+
+	marshaled, err := yaml.Marshal(mapImages)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	return dag.Directory().
+		WithNewFile("previous-images.yaml", string(marshaled)).
+		File("previous-images.yaml")
 }
 
-type Metadata struct {
-	Annotations Annotations `yaml:"annotations"`
-}
-
-type Annotations struct {
-	MicroService string `yaml:"firestartr.dev/microservice"`
-
-	Image string `yaml:"firestartr.dev/image"`
-}
-
-// JSON Types
-type ImageData struct {
-	Tenant           string
-	App              string
-	Env              string
-	ServiceNameList  []string
-	Image            string
-	Reviewers        []string
-	BaseFolder       string
-	RepositoryCaller string
-}
-
-type ImageMatrix struct {
-	Images []ImageData
-}
-
-func GetDeploymentMap(
+func getDeploymentMap(
 
 	ctx context.Context,
 
@@ -53,7 +45,7 @@ func GetDeploymentMap(
 	mapImages := make(map[string]map[string]string)
 
 	deploymentManifests, err := manifestsDir.
-		Glob(ctx, "Deployment.*.yaml")
+		Glob(ctx, "Deployment.*.yml")
 
 	if err != nil {
 
@@ -89,32 +81,6 @@ func GetDeploymentMap(
 
 }
 
-func (m *HydrateHelmImages) BuildPreviousImages(
-
-	ctx context.Context,
-
-	// +optional
-	// +description=Directory containing the manifests
-	// +defaultPath=manifests
-	manifestsDir *dagger.Directory,
-
-) *dagger.File {
-
-	mapImages := GetDeploymentMap(ctx, manifestsDir)
-
-	marshaled, err := yaml.Marshal(mapImages)
-
-	if err != nil {
-
-		panic(err)
-
-	}
-
-	return dag.Directory().
-		WithNewFile("previous-images.yaml", string(marshaled)).
-		File("previous-images.yaml")
-}
-
 func (m *HydrateHelmImages) BuildCurrentImages(
 
 	ctx context.Context,
@@ -127,6 +93,7 @@ func (m *HydrateHelmImages) BuildCurrentImages(
 	manifestsDir *dagger.Directory,
 
 ) *dagger.File {
+
 	var imageMatrix ImageMatrix
 
 	json.Unmarshal([]byte(matrix), &imageMatrix)
@@ -143,15 +110,7 @@ func (m *HydrateHelmImages) BuildCurrentImages(
 
 	}
 
-	mapOldImages := GetDeploymentMap(ctx, manifestsDir)
-
-	for key, value := range mapNewImages {
-
-		mapOldImages[key] = value
-
-	}
-
-	marshaled, errMars := yaml.Marshal(mapOldImages)
+	marshaled, errMars := yaml.Marshal(mapNewImages)
 
 	if errMars != nil {
 
