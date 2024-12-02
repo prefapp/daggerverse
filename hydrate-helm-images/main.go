@@ -28,18 +28,18 @@ type Annotations struct {
 
 // JSON Types
 type ImageData struct {
-	Tenant           string
-	App              string
-	Env              string
-	ServiceNameList  []string
-	Image            string
-	Reviewers        []string
-	BaseFolder       string
-	RepositoryCaller string
+    Tenant           string `json:"tenant"`
+	App              string `json:"app"`
+	Env              string `json:"env"`
+	ServiceNameList  []string `json:"service_name_list"`
+	Image            string `json:"image"`
+	Reviewers        []string `json:"reviewers"`
+	BaseFolder       string `json:"base_folder"`
+	RepositoryCaller string `json:"repository_caller"`
 }
 
 type ImageMatrix struct {
-	Images []ImageData
+	Images []ImageData `json:"images"`
 }
 
 func GetDeploymentMap(
