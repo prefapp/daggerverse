@@ -38,7 +38,13 @@ func (m *HydrateHelmImages) BuildPreviousImages(
 
 		imagesContent := m.BuildPreviousImagesForApp(ctx, repoDir.Directory(dep), dir, dep)
 
-		dir = dir.WithNewDirectory(dep).WithNewFile(dep+"/previous_images.yaml", imagesContent)
+		dir = dir.WithNewDirectory(dep, dagger.DirectoryWithNewDirectoryOpts{
+			Permissions: 0755,
+		}).WithNewFile(dep+"/previous_images.yaml", imagesContent,
+
+			dagger.DirectoryWithNewFileOpts{
+				Permissions: 0644,
+			})
 
 	}
 
