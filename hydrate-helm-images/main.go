@@ -4,9 +4,12 @@ import (
 	"context"
 	"dagger/hydrate-helm-images/internal/dagger"
 
+    "encoding/json"
+
 	"gopkg.in/yaml.v3"
 )
 
+// YAML Types
 type HydrateHelmImages struct{}
 
 type Dp struct {
@@ -23,17 +26,29 @@ type Annotations struct {
 	Image string `yaml:"firestartr.dev/image"`
 }
 
-// Returns a container that echoes whatever string argument is provided
-func (m *HydrateHelmImages) BuildPreviousImages(
+// JSON Types
+type ImageData struct {
+    Tenant string
+    App string
+    Env string
+    ServiceNameList []string
+    Image string
+    Reviewers []string
+    BaseFolder string
+    RepositoryCaller string
+}
 
-	ctx context.Context,
+type ImageMatrix struct {
+    Images []ImageData
+}
 
-	// +optional
-	// +description=Directory containing the manifests
-	// +defaultPath=manifests
-	manifestsDir *dagger.Directory,
+func (m *HydrateHelmImages) GetDeploymentMap(
 
-) *dagger.File {
+    ctx context.Context,
+
+    manifestsDir *dagger.Directory,
+
+) map[string]map[string]string {
 
 	mapImages := make(map[string]map[string]string)
 
@@ -70,9 +85,68 @@ func (m *HydrateHelmImages) BuildPreviousImages(
 
 	}
 
+    return mapImages
+
+}
+
+func (m *HydrateHelmImages) BuildPreviousImages(
+
+	ctx context.Context,
+
+	// +optional
+	// +description=Directory containing the manifests
+	// +defaultPath=manifests
+	manifestsDir *dagger.Directory,
+
+) *dagger.File {
+   	mapImages := GetDeploymentMap(ctx, manifestsDir)
+
 	marshaled, err := yaml.Marshal(mapImages)
 
 	return dag.Directory().
 		WithNewFile("previous-images.yaml", string(marshaled)).
 		File("previous-images.yaml")
+}
+
+func (m *HydrateHelmImages) BuildCurrentImages(
+
+	ctx context.Context,
+
+    matrix string,
+
+	// +optional
+	// +description=Directory containing the manifests
+	// +defaultPath=manifests
+	manifestsDir *dagger.Directory,
+
+) *dagger.File {
+    var imageMatrix ImageMatrix
+
+    json.Unmarshal([]byte(matrix), &imageMatrix)
+
+	mapNewImages := make(map[string]map[string]string)
+
+    for _, imageData := range imageMatrix.Images {
+
+        for _, serviceName := range imageData.ServiceNameList {
+
+            mapNewImages[serviceName] = map[string]string{"image": imageData.Image}
+
+        }
+
+    }
+
+    mapOldImages := GetDeploymentMap(ctx, manifestsDir)
+
+    for key, value := range mapNewImages {
+
+        mapOldImages[key] = value
+
+    }
+
+	marshaled, err := yaml.Marshal(mapOldImages)
+
+	return dag.Directory().
+		WithNewFile("current-images.yaml", string(marshaled)).
+		File("current-images.yaml")
 }
