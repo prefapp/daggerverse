@@ -4,7 +4,7 @@ import (
 	"context"
 	"dagger/hydrate-helm-images/internal/dagger"
 
-    "encoding/json"
+	"encoding/json"
 
 	"gopkg.in/yaml.v3"
 )
@@ -28,25 +28,25 @@ type Annotations struct {
 
 // JSON Types
 type ImageData struct {
-    Tenant string
-    App string
-    Env string
-    ServiceNameList []string
-    Image string
-    Reviewers []string
-    BaseFolder string
-    RepositoryCaller string
+	Tenant           string
+	App              string
+	Env              string
+	ServiceNameList  []string
+	Image            string
+	Reviewers        []string
+	BaseFolder       string
+	RepositoryCaller string
 }
 
 type ImageMatrix struct {
-    Images []ImageData
+	Images []ImageData
 }
 
 func (m *HydrateHelmImages) GetDeploymentMap(
 
-    ctx context.Context,
+	ctx context.Context,
 
-    manifestsDir *dagger.Directory,
+	manifestsDir *dagger.Directory,
 
 ) map[string]map[string]string {
 
@@ -85,7 +85,7 @@ func (m *HydrateHelmImages) GetDeploymentMap(
 
 	}
 
-    return mapImages
+	return mapImages
 
 }
 
@@ -99,9 +99,16 @@ func (m *HydrateHelmImages) BuildPreviousImages(
 	manifestsDir *dagger.Directory,
 
 ) *dagger.File {
-   	mapImages := GetDeploymentMap(ctx, manifestsDir)
+
+	mapImages := m.GetDeploymentMap(ctx, manifestsDir)
 
 	marshaled, err := yaml.Marshal(mapImages)
+
+	if err != nil {
+
+		panic(err)
+
+	}
 
 	return dag.Directory().
 		WithNewFile("previous-images.yaml", string(marshaled)).
@@ -112,7 +119,7 @@ func (m *HydrateHelmImages) BuildCurrentImages(
 
 	ctx context.Context,
 
-    matrix string,
+	matrix string,
 
 	// +optional
 	// +description=Directory containing the manifests
@@ -120,31 +127,37 @@ func (m *HydrateHelmImages) BuildCurrentImages(
 	manifestsDir *dagger.Directory,
 
 ) *dagger.File {
-    var imageMatrix ImageMatrix
+	var imageMatrix ImageMatrix
 
-    json.Unmarshal([]byte(matrix), &imageMatrix)
+	json.Unmarshal([]byte(matrix), &imageMatrix)
 
 	mapNewImages := make(map[string]map[string]string)
 
-    for _, imageData := range imageMatrix.Images {
+	for _, imageData := range imageMatrix.Images {
 
-        for _, serviceName := range imageData.ServiceNameList {
+		for _, serviceName := range imageData.ServiceNameList {
 
-            mapNewImages[serviceName] = map[string]string{"image": imageData.Image}
+			mapNewImages[serviceName] = map[string]string{"image": imageData.Image}
 
-        }
+		}
 
-    }
+	}
 
-    mapOldImages := GetDeploymentMap(ctx, manifestsDir)
+	mapOldImages := m.GetDeploymentMap(ctx, manifestsDir)
 
-    for key, value := range mapNewImages {
+	for key, value := range mapNewImages {
 
-        mapOldImages[key] = value
+		mapOldImages[key] = value
 
-    }
+	}
 
-	marshaled, err := yaml.Marshal(mapOldImages)
+	marshaled, errMars := yaml.Marshal(mapOldImages)
+
+	if errMars != nil {
+
+		panic(errMars)
+
+	}
 
 	return dag.Directory().
 		WithNewFile("current-images.yaml", string(marshaled)).
