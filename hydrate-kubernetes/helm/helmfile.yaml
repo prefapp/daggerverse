@@ -1,7 +1,7 @@
 ---
 bases:
-  - environments.yaml
-  - repositories.yaml
+  - kubernetes/environments.yaml
+  - kubernetes/repositories.yaml
 
 releases:
 

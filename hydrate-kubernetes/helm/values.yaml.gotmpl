@@ -1,8 +1,8 @@
 {{/* Init combined dict values */}}
 {{- $combined := dict }}
 
-{{/* Main coordinates dir ./<cluster>/<tenant>/<app>/<env> .  It will be used further to process files */}}
-{{- $mainCoordinatesDir := printf "%s/%s/%s/%s" .StateValues.cluster .StateValues.tenant .StateValues.app .Environment.Name }}
+{{/* Main coordinates dir ./kubernetes/<cluster>/<tenant>/<env> .  It will be used further to process files */}}
+{{- $mainCoordinatesDir := printf "kubernetes/%s/%s/%s" .StateValues.cluster .StateValues.tenant .Environment.Name }}
 
 {{/* ⚙️ Execs
 
@@ -50,16 +50,4 @@ execs:
     {{- $content := readFile $path | fromYaml }}
     {{- $combined = merge $combined $content }}
   {{- end }}
-{{- end }}
-
-{{/* Read previous_images.yaml */}}
-{{- $previousImages := printf "%s/%s/%s/%s/previous_images.yaml" "/tmp" "images" "apps" $mainCoordinatesDir }}
-{{- $previousImagesContent := readFile $previousImages | fromYaml }}
-{{- $combined = merge $combined $previousImagesContent }}
-
-{{/* Read new_images.yaml */}}
-{{- $newImagesFile := printf "%s/%s/%s/%s/new_images.yaml" "/tmp" "images" "apps" $mainCoordinatesDir }}
-{{- if (file.Exists $newImagesFile) -}}
-{{- $newImagesContent := readFile $newImagesFile | fromYaml }}
-{{- $combined = merge $combined $newImagesContent }}
 {{- end }}

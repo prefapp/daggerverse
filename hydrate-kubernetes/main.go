@@ -17,11 +17,11 @@ package main
 import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
+	"time"
 )
 
 type HydrateKubernetes struct {
-	HelmfileImageTag string
-	Container        *dagger.Container
+	Container *dagger.Container
 }
 
 func New(
@@ -38,28 +38,99 @@ func New(
 	// +default="ghcr.io/helmfile/helmfile"
 	helmfileImage string,
 
+	// extra packages to install
+	// +optional
+	// +default=[]
+	addPackage []string,
 ) *HydrateKubernetes {
+
+	c := dag.
+		Container().
+		From(helmfileImage + ":" + helmfileImageTag)
+
+	for _, pkg := range addPackage {
+
+		c = c.WithExec([]string{"apk", "add", pkg})
+
+	}
 
 	return &HydrateKubernetes{
 
-		Container: dag.
-			Container().
-			From(helmfileImage + ":" + helmfileImageTag),
+		Container: c,
 	}
 }
 
-// Returns a container that echoes whatever string argument is provided
+// HydrateKubernetes hydrates the wet manifests with the helm values
 func (m *HydrateKubernetes) Render(
 
+	// Json string of the affected paths
+	// Format: ["path/to/file1", "path/to/file2"]
+	// optional
+	// +default="[]"
 	affectedPaths string,
 
-	repoDir *dagger.Directory,
+	// The path to the values repo, where helm values are stored
+	// +required
+	valuesRepoDir *dagger.Directory,
 
+	// The path to the wet repo, where the wet manifests are stored
+	// +required
 	wetRepoDir *dagger.Directory,
 
+	// The path to auth files, which will contain the helm login credentials
+	// For azure:
+	//	<authDir>/az/helmfile.user
+	//	<authDir>/az/helmfile.password
+	//	<authDir>/az/helmfile.repository
+	//
+	// For aws:
+	//	<authDir>/aws/helmfile.user
+	//	<authDir>/aws/helmfile.password
+	//	<authDir>/aws/helmfile.repository
+	//
+	// +required
 	authDir *dagger.Directory,
 
 ) *dagger.Directory {
 
 	return dag.Directory()
+}
+
+func (m *HydrateKubernetes) RenderApp(
+	// The path to the values repo, where helm values are stored
+	// +required
+	valuesDir *dagger.Directory,
+
+	env string,
+
+	app string,
+
+	cluster string,
+
+	tenant string,
+
+) *dagger.Container {
+
+	m.Container = m.Container.
+		WithDirectory("/values", valuesDir).
+		WithWorkdir("/values").
+		WithMountedFile(
+			"/values/helmfile.yaml",
+			dag.CurrentModule().Source().File("helm/helmfile.yaml")).
+		WithMountedFile(
+			"/values/values.yaml.gotmpl",
+			dag.CurrentModule().Source().File("helm/values.yaml.gotmpl")).
+		WithEnvVariable("BUST", time.Now().String()).
+		WithExec([]string{
+			"helmfile",
+			"-e",
+			env,
+			"template",
+			"--state-values-set-string",
+			"tenant=" + tenant + ",app=" + app + ",cluster=" + cluster,
+			"--state-values-file",
+			"/values/kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml",
+		})
+
+	return m.Container
 }
