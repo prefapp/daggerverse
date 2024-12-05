@@ -7,7 +7,8 @@ type CiTask struct {
     Run        string            `yaml:"run"`
     Uses       string            `yaml:"uses"`
     Function   string            `yaml:"function"`
-    With       map[string]string `yaml:"with"`
+    // We must express this property as a string
+    // With       map[string]string `yaml:"with"`
     Image      string            `yaml:"image"`
 }
 
