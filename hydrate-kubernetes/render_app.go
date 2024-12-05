@@ -49,7 +49,7 @@ func (m *HydrateKubernetes) RenderApp(
 
 	}
 
-	syncContainer, errSync := m.Container.
+	syncedCtr, errSync := m.Container.
 		WithDirectory("/values", m.ValuesDir).
 		WithWorkdir("/values").
 		WithMountedFile("/values/helmfile.yaml", m.Helmfile).
@@ -66,8 +66,7 @@ func (m *HydrateKubernetes) RenderApp(
 		WithExec([]string{
 			"helmfile", "-e", env, "template",
 			"--state-values-set-string", "tenant=" + tenant + ",app=" + app + ",cluster=" + cluster,
-			"--state-values-file", "./kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml",
-			"--debug",
+			"--state-values-file", targetDir + "/" + env + ".yaml",
 		}).
 		Sync(ctx)
 
@@ -77,7 +76,7 @@ func (m *HydrateKubernetes) RenderApp(
 
 	}
 
-	m.Container = syncContainer
+	m.Container = syncedCtr
 
 	return m.Container
 }
