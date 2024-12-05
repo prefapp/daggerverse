@@ -80,7 +80,7 @@ func New(
 
 	if valuesGoTmpl == nil {
 
-		valuesGoTmpl = dag.CurrentModule().Source().File("helm/values.go.tmpl")
+		valuesGoTmpl = dag.CurrentModule().Source().File("helm/values.yaml.gotmpl")
 
 	}
 

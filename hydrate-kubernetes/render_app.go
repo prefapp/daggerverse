@@ -31,9 +31,7 @@ func (m *HydrateKubernetes) RenderApp(
 	entries, err := m.WetRepoDir.Glob(ctx, "kubernetes/*/*/*")
 
 	if err != nil {
-
 		panic(err)
-
 	}
 
 	targetDir := strings.Join([]string{"kubernetes", cluster, tenant, env}, "/")
@@ -66,7 +64,7 @@ func (m *HydrateKubernetes) RenderApp(
 		WithExec([]string{
 			"helmfile", "-e", env, "template",
 			"--state-values-set-string", "tenant=" + tenant + ",app=" + app + ",cluster=" + cluster,
-			"--state-values-file", targetDir + "/" + env + ".yaml",
+			"--state-values-file", "./" + targetDir + "/" + env + ".yaml",
 		}).
 		Sync(ctx)
 

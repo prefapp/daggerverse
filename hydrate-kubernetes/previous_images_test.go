@@ -11,14 +11,14 @@ func TestBuildPreviousImageCanRecoverPreviousImages(t *testing.T) {
 
 	ctx := context.Background()
 
-	wetRepoDir := getDir("./test/wet-repo-dir")
+	wetRepoDir := getDir("./fixtures/wet-repo-dir")
 
 	m := &HydrateKubernetes{}
 
 	buildImagesContent := m.BuildPreviousImagesApp(
 		ctx,
 		wetRepoDir.Directory(
-			"./test/wet-repo-dir/kubernetes/cluster-name/test-tenant/dev/",
+			"./fixtures/wet-repo-dir/kubernetes/cluster-name/test-tenant/dev/",
 		),
 	)
 

@@ -1,1 +1,1 @@
-dagger --add-package=python3 --add-package=py3-yaml --values-dir=./test/values-repo-dir/ --wet-repo-dir=./test/wet-repo-dir call build-previous-images-app --manifests-dir=./test/wet-repo-dir/kubernetes/cluster-name/test-tenant/dev/
+dagger --deps-file=./test/values-repo-dir/.github/hydrate_deps.yaml --values-dir=./test/values-repo-dir/ --wet-repo-dir=./test/wet-repo-dir call build-previous-images-app --manifests-dir=./test/wet-repo-dir/kubernetes/cluster-name/test-tenant/dev/
