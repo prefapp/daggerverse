@@ -21,7 +21,9 @@ import (
 )
 
 type HydrateKubernetes struct {
-	Container *dagger.Container
+	Container  *dagger.Container
+	ValuesDir  *dagger.Directory
+	WetRepoDir *dagger.Directory
 }
 
 func New(
@@ -38,10 +40,18 @@ func New(
 	// +default="ghcr.io/helmfile/helmfile"
 	helmfileImage string,
 
+	// The path to the values directory, where the helm values are stored
+	valuesDir *dagger.Directory,
+
+	// The path to the wet repo directory, where the wet manifests are stored
+	// +optional
+	wetRepoDir *dagger.Directory,
+
 	// extra packages to install
 	// +optional
 	// +default=[]
 	addPackage []string,
+
 ) *HydrateKubernetes {
 
 	c := dag.
@@ -57,6 +67,10 @@ func New(
 	return &HydrateKubernetes{
 
 		Container: c,
+
+		ValuesDir: valuesDir,
+
+		WetRepoDir: wetRepoDir,
 	}
 }
 
@@ -78,6 +92,7 @@ func (m *HydrateKubernetes) Render(
 	wetRepoDir *dagger.Directory,
 
 	// The path to auth files, which will contain the helm login credentials
+	//
 	// For azure:
 	//	<authDir>/az/helmfile.user
 	//	<authDir>/az/helmfile.password
@@ -97,9 +112,6 @@ func (m *HydrateKubernetes) Render(
 }
 
 func (m *HydrateKubernetes) RenderApp(
-	// The path to the values repo, where helm values are stored
-	// +required
-	valuesDir *dagger.Directory,
 
 	env string,
 
@@ -112,7 +124,7 @@ func (m *HydrateKubernetes) RenderApp(
 ) *dagger.Container {
 
 	m.Container = m.Container.
-		WithDirectory("/values", valuesDir).
+		WithDirectory("/values", m.ValuesDir).
 		WithWorkdir("/values").
 		WithMountedFile(
 			"/values/helmfile.yaml",
@@ -129,7 +141,8 @@ func (m *HydrateKubernetes) RenderApp(
 			"--state-values-set-string",
 			"tenant=" + tenant + ",app=" + app + ",cluster=" + cluster,
 			"--state-values-file",
-			"/values/kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml",
+			"./kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml",
+			"--debug",
 		})
 
 	return m.Container
