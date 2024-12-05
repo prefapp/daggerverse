@@ -49,22 +49,12 @@ func (m *HydrateKubernetes) RenderApp(
 
 	}
 
-	m.Container, _ = m.Container.
-		WithDirectory(
-			"/values",
-			m.ValuesDir,
-		).
+	syncContainer, errSync := m.Container.
+		WithDirectory("/values", m.ValuesDir).
 		WithWorkdir("/values").
-		WithMountedFile(
-			"/values/helmfile.yaml",
-			m.Helmfile).
-		WithMountedFile(
-			"/values/values.yaml.gotmpl",
-			m.ValuesGoTmpl).
-		WithEnvVariable(
-			"BUST",
-			time.Now().String(),
-		).
+		WithMountedFile("/values/helmfile.yaml", m.Helmfile).
+		WithMountedFile("/values/values.yaml.gotmpl", m.ValuesGoTmpl).
+		WithEnvVariable("BUST", time.Now().String()).
 		WithNewFile(
 			"/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/previous_images.yaml",
 			previousImagesFileContent,
@@ -74,16 +64,20 @@ func (m *HydrateKubernetes) RenderApp(
 			newImagesFile,
 		).
 		WithExec([]string{
-			"helmfile",
-			"-e",
-			env,
-			"template",
-			"--state-values-set-string",
-			"tenant=" + tenant + ",app=" + app + ",cluster=" + cluster,
-			"--state-values-file",
-			"./kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml",
+			"helmfile", "-e", env, "template",
+			"--state-values-set-string", "tenant=" + tenant + ",app=" + app + ",cluster=" + cluster,
+			"--state-values-file", "./kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml",
 			"--debug",
-		}).Sync(ctx)
+		}).
+		Sync(ctx)
+
+	if errSync != nil {
+
+		panic(errSync)
+
+	}
+
+	m.Container = syncContainer
 
 	return m.Container
 }
