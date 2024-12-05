@@ -4,60 +4,16 @@ import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
 
-func (m *HydrateKubernetes) BuildPreviousImages(
-
-	ctx context.Context,
-
-	updatedDeployments string,
-
-	repoDir *dagger.Directory,
-
-) *dagger.File {
-
-	unmarshaledDeps := []string{}
-
-	err := json.Unmarshal([]byte(updatedDeployments), &unmarshaledDeps)
-
-	if err != nil {
-
-		panic(err)
-
-	}
-
-	dir := dag.Directory()
-
-	for _, dep := range unmarshaledDeps {
-
-		imagesContent := m.BuildPreviousImagesForApp(ctx, repoDir.Directory(dep), dir, dep)
-
-		dir = dir.
-			WithNewDirectory(dep, dagger.DirectoryWithNewDirectoryOpts{
-				Permissions: 0755,
-			}).
-			WithNewFile(
-				dep+"/previous_images.yaml",
-				imagesContent,
-				dagger.DirectoryWithNewFileOpts{Permissions: 0644},
-			)
-
-	}
-
-	return dir.File("previous_images.yaml")
-}
-
-func (m *HydrateKubernetes) BuildPreviousImagesForApp(
+func (m *HydrateKubernetes) BuildPreviousImagesApp(
 
 	ctx context.Context,
 
 	manifestsDir *dagger.Directory,
-
-	outputDir *dagger.Directory,
-
-	app string,
 
 ) string {
 
@@ -70,6 +26,7 @@ func (m *HydrateKubernetes) BuildPreviousImagesForApp(
 		panic(err)
 
 	}
+
 	return string(marshaled)
 
 }
@@ -84,18 +41,25 @@ func getDeploymentMap(
 
 	mapImages := make(map[string]map[string]string)
 
-	deploymentManifests, err := manifestsDir.
-		Glob(ctx, "Deployment.*.yml")
+	deploymentManifests := []string{}
 
-	if err != nil {
+	for _, regex := range []string{"*.*.yml", "*.*.yaml"} {
 
-		panic(err)
+		manifests, err := manifestsDir.Glob(ctx, regex)
+
+		if err != nil {
+
+			panic(err)
+
+		}
+
+		deploymentManifests = append(deploymentManifests, manifests...)
 
 	}
 
 	for _, manifest := range deploymentManifests {
 
-		dp := Dp{}
+		artifact := Artifact{}
 
 		content, err := manifestsDir.File(manifest).Contents(ctx)
 
@@ -105,7 +69,7 @@ func getDeploymentMap(
 
 		}
 
-		errUnms := yaml.Unmarshal([]byte(content), &dp)
+		errUnms := yaml.Unmarshal([]byte(content), &artifact)
 
 		if errUnms != nil {
 
@@ -113,7 +77,17 @@ func getDeploymentMap(
 
 		}
 
-		mapImages[dp.Metadata.Annotations.MicroService] = map[string]string{"image": dp.Metadata.Annotations.Image}
+		if mapImages[artifact.Metadata.Annotations.MicroService] != nil {
+
+			panic(fmt.Sprintf("Duplicate microservice found: %s", artifact.Metadata.Annotations.MicroService))
+
+		}
+
+		if artifact.Metadata.Annotations.MicroService != "" {
+
+			mapImages[artifact.Metadata.Annotations.MicroService] = map[string]string{"image": artifact.Metadata.Annotations.Image}
+
+		}
 
 	}
 

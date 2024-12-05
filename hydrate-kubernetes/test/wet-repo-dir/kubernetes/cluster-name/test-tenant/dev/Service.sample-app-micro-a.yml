@@ -4,6 +4,9 @@ kind: Service
 metadata:
   labels: null
   name: sample-app-micro-a
+  annotations:
+    firestartr.dev/image: image-a:1.16.0
+    firestartr.dev/microservice: micro-a
 spec:
   ports:
   - name: http

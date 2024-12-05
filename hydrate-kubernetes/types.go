@@ -1,6 +1,6 @@
 package main
 
-type Dp struct {
+type Artifact struct {
 	Metadata Metadata `yaml:"metadata"`
 }
 
