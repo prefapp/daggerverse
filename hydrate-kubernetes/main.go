@@ -1,29 +1,18 @@
-// A generated module for HydrateKubernetes functions
-//
-// This module has been generated via dagger init and serves as a reference to
-// basic module structure as you get started with Dagger.
-//
-// Two functions have been pre-created. You can modify, delete, or add to them,
-// as needed. They demonstrate usage of arguments and return types using simple
-// echo and grep commands. The functions can be called from the dagger CLI or
-// from one of the SDKs.
-//
-// The first line in this comment block is a short description line and the
-// rest is a long description with more detail on the module's purpose or usage,
-// if appropriate. All modules should have a short description.
-
 package main
 
 import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
-	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 type HydrateKubernetes struct {
-	Container  *dagger.Container
-	ValuesDir  *dagger.Directory
-	WetRepoDir *dagger.Directory
+	Container    *dagger.Container
+	ValuesDir    *dagger.Directory
+	WetRepoDir   *dagger.Directory
+	Helmfile     *dagger.File
+	ValuesGoTmpl *dagger.File
 }
 
 func New(
@@ -49,8 +38,15 @@ func New(
 
 	// extra packages to install
 	// +optional
-	// +default=[]
-	addPackage []string,
+	depsFile *dagger.File,
+
+	// The path to the helmfile.yaml file
+	// +optional
+	helmfile *dagger.File,
+
+	// The path to the values.go.tmpl file
+	// +optional
+	valuesGoTmpl *dagger.File,
 
 ) *HydrateKubernetes {
 
@@ -58,9 +54,33 @@ func New(
 		Container().
 		From(helmfileImage + ":" + helmfileImageTag)
 
-	for _, pkg := range addPackage {
+	depsFileContent, err := depsFile.Contents(ctx)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	deps := DepsFile{}
+
+	err = yaml.Unmarshal([]byte(depsFileContent), &deps)
+
+	for _, pkg := range deps.Dependencies {
 
 		c = c.WithExec([]string{"apk", "add", pkg})
+
+	}
+
+	if helmfile == nil {
+
+		helmfile = dag.CurrentModule().Source().File("helm/helmfile.yaml")
+
+	}
+
+	if valuesGoTmpl == nil {
+
+		valuesGoTmpl = dag.CurrentModule().Source().File("helm/values.go.tmpl")
 
 	}
 
@@ -71,6 +91,10 @@ func New(
 		ValuesDir: valuesDir,
 
 		WetRepoDir: wetRepoDir,
+
+		Helmfile: helmfile,
+
+		ValuesGoTmpl: valuesGoTmpl,
 	}
 }
 
@@ -109,41 +133,4 @@ func (m *HydrateKubernetes) Render(
 ) *dagger.Directory {
 
 	return dag.Directory()
-}
-
-func (m *HydrateKubernetes) RenderApp(
-
-	env string,
-
-	app string,
-
-	cluster string,
-
-	tenant string,
-
-) *dagger.Container {
-
-	m.Container = m.Container.
-		WithDirectory("/values", m.ValuesDir).
-		WithWorkdir("/values").
-		WithMountedFile(
-			"/values/helmfile.yaml",
-			dag.CurrentModule().Source().File("helm/helmfile.yaml")).
-		WithMountedFile(
-			"/values/values.yaml.gotmpl",
-			dag.CurrentModule().Source().File("helm/values.yaml.gotmpl")).
-		WithEnvVariable("BUST", time.Now().String()).
-		WithExec([]string{
-			"helmfile",
-			"-e",
-			env,
-			"template",
-			"--state-values-set-string",
-			"tenant=" + tenant + ",app=" + app + ",cluster=" + cluster,
-			"--state-values-file",
-			"./kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml",
-			"--debug",
-		})
-
-	return m.Container
 }

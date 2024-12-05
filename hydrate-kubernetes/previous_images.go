@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
-	"encoding/json"
 	"fmt"
 
 	"gopkg.in/yaml.v3"
@@ -16,28 +15,6 @@ func (m *HydrateKubernetes) BuildPreviousImagesApp(
 	manifestsDir *dagger.Directory,
 
 ) string {
-
-	mapImages := getDeploymentMap(ctx, manifestsDir)
-
-	marshaled, err := yaml.Marshal(mapImages)
-
-	if err != nil {
-
-		panic(err)
-
-	}
-
-	return string(marshaled)
-
-}
-
-func getDeploymentMap(
-
-	ctx context.Context,
-
-	manifestsDir *dagger.Directory,
-
-) map[string]map[string]string {
 
 	mapImages := make(map[string]map[string]string)
 
@@ -91,43 +68,14 @@ func getDeploymentMap(
 
 	}
 
-	return mapImages
+	marshaled, err := yaml.Marshal(mapImages)
 
-}
+	if err != nil {
 
-func (m *HydrateKubernetes) BuildCurrentImages(
-
-	ctx context.Context,
-
-	matrix string,
-
-) *dagger.File {
-
-	var imageMatrix ImageMatrix
-
-	json.Unmarshal([]byte(matrix), &imageMatrix)
-
-	mapNewImages := make(map[string]map[string]string)
-
-	for _, imageData := range imageMatrix.Images {
-
-		for _, serviceName := range imageData.ServiceNameList {
-
-			mapNewImages[serviceName] = map[string]string{"image": imageData.Image}
-
-		}
+		panic(err)
 
 	}
 
-	marshaled, errMars := yaml.Marshal(mapNewImages)
+	return string(marshaled)
 
-	if errMars != nil {
-
-		panic(errMars)
-
-	}
-
-	return dag.Directory().
-		WithNewFile("current-images.yaml", string(marshaled)).
-		File("current-images.yaml")
 }

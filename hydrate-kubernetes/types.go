@@ -15,7 +15,7 @@ type Annotations struct {
 }
 
 type ImageMatrix struct {
-	Images []ImageData
+	Images []ImageData `json:"images"`
 }
 
 // JSON Types
@@ -28,4 +28,8 @@ type ImageData struct {
 	Reviewers        []string `json:"reviewers"`
 	BaseFolder       string   `json:"base_folder"`
 	RepositoryCaller string   `json:"repository_caller"`
+}
+
+type DepsFile struct {
+	Dependencies []string `yaml:"deps"`
 }

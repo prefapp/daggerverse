@@ -1,0 +1,1 @@
+dagger --add-package=python3 --add-package=py3-yaml --values-dir=./test/values-repo-dir/ --wet-repo-dir=./test/wet-repo-dir/ call render-app --env=$1 --tenant=test-tenant --app=sample-app --cluster=cluster-name --new-images-matrix='{ "images": [{ "service_name_list": ["micro-a", "micro-b"], "image": "test-image" }] }' $2

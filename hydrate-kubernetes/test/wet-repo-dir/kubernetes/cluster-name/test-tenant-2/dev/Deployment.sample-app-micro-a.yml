@@ -3,27 +3,28 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    firestartr.dev/image: image-c:other-image
-    firestartr.dev/microservice: micro-c
+    firestartr.dev/image: image-a:1.16.0
+    firestartr.dev/microservice: micro-a
   labels:
     app: example
-  name: sample-app-micro-c
+    manolo: escobar
+  name: sample-app-micro-a
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: sample-app
-      chart: micro-c
+      chart: micro-a
   template:
     metadata:
       labels:
         app: sample-app
-        chart: micro-c
+        chart: micro-a
     spec:
       containers:
       - command: null
         envFrom: null
-        image: image-c:other-image
+        image: image-a:1.16.0
         imagePullPolicy: null
         name: example
         ports:

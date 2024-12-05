@@ -23,7 +23,7 @@ spec:
       containers:
       - command: null
         envFrom: null
-        image: image-c:other-image
+        image: image-c:other-image-2
         imagePullPolicy: null
         name: example
         ports:
