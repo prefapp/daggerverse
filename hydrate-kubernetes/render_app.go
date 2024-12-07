@@ -64,7 +64,7 @@ func (m *HydrateKubernetes) RenderApp(
 		WithExec([]string{
 			"helmfile", "-e", env, "template",
 			"--state-values-set-string", "tenant=" + tenant + ",app=" + app + ",cluster=" + cluster,
-			"--state-values-file", "./" + targetDir + "/" + env + ".yaml",
+			"--state-values-file", "./kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml",
 		}).
 		Sync(ctx)
 

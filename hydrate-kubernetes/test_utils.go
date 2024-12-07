@@ -26,7 +26,10 @@ func getDir(dirPath string) *dagger.Directory {
 
 			}
 
-			daggerDir = daggerDir.WithNewFile(path, string(content))
+			daggerDir = daggerDir.WithNewFile(path, string(content),
+				dagger.DirectoryWithNewFileOpts{
+					Permissions: 0777,
+				})
 		}
 
 		return nil

@@ -62,25 +62,17 @@ func New(
 
 	}
 
-	deps := DepsFile{}
-
-	err = yaml.Unmarshal([]byte(depsFileContent), &deps)
-
-	for _, pkg := range deps.Dependencies {
-
-		c = c.WithExec([]string{"apk", "add", pkg})
-
-	}
+	c = installDeps(depsFileContent, c)
 
 	if helmfile == nil {
 
-		helmfile = dag.CurrentModule().Source().File("helm/helmfile.yaml")
+		helmfile = dag.CurrentModule().Source().File("./helm/helmfile.yaml")
 
 	}
 
 	if valuesGoTmpl == nil {
 
-		valuesGoTmpl = dag.CurrentModule().Source().File("helm/values.yaml.gotmpl")
+		valuesGoTmpl = dag.CurrentModule().Source().File("./helm/values.yaml.gotmpl")
 
 	}
 
@@ -96,6 +88,27 @@ func New(
 
 		ValuesGoTmpl: valuesGoTmpl,
 	}
+}
+
+func installDeps(depsFileContent string, c *dagger.Container) *dagger.Container {
+
+	deps := DepsFile{}
+
+	err := yaml.Unmarshal([]byte(depsFileContent), &deps)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	for _, pkg := range deps.Dependencies {
+
+		c = c.WithExec([]string{"apk", "add", pkg})
+
+	}
+
+	return c
 }
 
 // HydrateKubernetes hydrates the wet manifests with the helm values
