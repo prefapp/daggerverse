@@ -33,3 +33,11 @@ type ImageData struct {
 type DepsFile struct {
 	Dependencies []string `yaml:"deps"`
 }
+
+type KubernetesResource struct {
+	APIVersion string `yaml:"apiVersion"`
+	Kind       string `yaml:"kind"`
+	Metadata   struct {
+		Name string `yaml:"name"`
+	} `yaml:"metadata"`
+}
