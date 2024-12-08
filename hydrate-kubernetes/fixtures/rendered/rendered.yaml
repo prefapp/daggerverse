@@ -1,0 +1,170 @@
+---
+# Source: aws-web-service-umbrella/templates/patched_resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels: null
+  name: sample-app-micro-a
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: sample-app
+    chart: micro-a
+  type: null
+---
+# Source: aws-web-service-umbrella/templates/patched_resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels: null
+  name: sample-app-micro-b
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: sample-app
+    chart: micro-b
+  type: null
+---
+# Source: aws-web-service-umbrella/templates/patched_resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels: null
+  name: sample-app-micro-c
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: sample-app
+    chart: micro-c
+  type: null
+---
+# Source: aws-web-service-umbrella/templates/patched_resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    firestartr.dev/image: test-image
+    firestartr.dev/microservice: micro-a
+  labels:
+    app: example
+    manolo: escobar
+  name: sample-app-micro-a
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-app
+      chart: micro-a
+  template:
+    metadata:
+      labels:
+        app: sample-app
+        chart: micro-a
+    spec:
+      containers:
+      - command: null
+        envFrom: null
+        image: test-image
+        imagePullPolicy: null
+        name: example
+        ports:
+        - containerPort: 9898
+        resources:
+          limits:
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts: null
+      volumes: null
+---
+# Source: aws-web-service-umbrella/templates/patched_resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    firestartr.dev/image: test-image
+    firestartr.dev/microservice: micro-b
+  labels:
+    app: example
+  name: sample-app-micro-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-app
+      chart: micro-b
+  template:
+    metadata:
+      labels:
+        app: sample-app
+        chart: micro-b
+    spec:
+      containers:
+      - command: null
+        envFrom: null
+        image: test-image
+        imagePullPolicy: null
+        name: example
+        ports:
+        - containerPort: 9898
+        resources:
+          limits:
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts: null
+      volumes: null
+---
+# Source: aws-web-service-umbrella/templates/patched_resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    firestartr.dev/image: image-c:other-image
+    firestartr.dev/microservice: micro-c
+  labels:
+    app: example
+  name: sample-app-micro-c
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-app
+      chart: micro-c
+  template:
+    metadata:
+      labels:
+        app: sample-app
+        chart: micro-c
+    spec:
+      containers:
+      - command: null
+        envFrom: null
+        image: image-c:other-image
+        imagePullPolicy: null
+        name: example
+        ports:
+        - containerPort: 9898
+        resources:
+          limits:
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts: null
+      volumes: null
+
