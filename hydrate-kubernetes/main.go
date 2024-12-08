@@ -134,7 +134,7 @@ func (m *HydrateKubernetes) RenderApps(
 
 	for _, app := range apps {
 
-		stdout, renderErr := m.RenderApp(
+		renderedChartFile, renderErr := m.RenderApp(
 			ctx,
 			app.Env,
 			app.App,
@@ -151,7 +151,7 @@ func (m *HydrateKubernetes) RenderApps(
 
 		tmpDir := m.SplitRenderInFiles(ctx,
 			dag.Directory().
-				WithNewFile("rendered.yaml", stdout).
+				WithNewFile("rendered.yaml", renderedChartFile).
 				File("rendered.yaml"),
 		)
 
