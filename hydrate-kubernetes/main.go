@@ -51,6 +51,19 @@ func New(
 	// +optional
 	valuesGoTmpl *dagger.File,
 
+	// +optional
+	// +default=false
+	helmRegistryLoginNeeded bool,
+
+	// +optional
+	helmRegistry string,
+
+	// +optional
+	helmRegistryUser string,
+
+	// +optional
+	helmRegistryPassword *dagger.Secret,
+
 ) *HydrateKubernetes {
 
 	c := dag.
@@ -90,6 +103,14 @@ func New(
 		Helmfile: helmfile,
 
 		ValuesGoTmpl: valuesGoTmpl,
+
+		HelmRegistryLoginNeeded: helmRegistryLoginNeeded,
+
+		HelmRegistry: helmRegistry,
+
+		HelmRegistryUser: helmRegistryUser,
+
+		HelmRegistryPassword: helmRegistryPassword,
 	}
 }
 
