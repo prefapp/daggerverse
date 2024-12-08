@@ -43,7 +43,7 @@ func TestRenderAppCanRender(t *testing.T) {
 		"cluster-name",
 		"test-tenant",
 		"{\"images\":[]}",
-	).Stdout(ctx)
+	)
 
 	if err != nil {
 

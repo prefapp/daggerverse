@@ -1,2 +1,3 @@
 micro-a:
   image: my-nginx:aaaa
+  replicas: 3

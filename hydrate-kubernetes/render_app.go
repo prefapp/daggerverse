@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"dagger/hydrate-kubernetes/internal/dagger"
 	"slices"
 	"strings"
 	"time"
@@ -24,7 +23,7 @@ func (m *HydrateKubernetes) RenderApp(
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
 
-) *dagger.Container {
+) (string, error) {
 
 	newImagesFile := m.BuildNewImages(ctx, newImagesMatrix)
 
@@ -47,7 +46,7 @@ func (m *HydrateKubernetes) RenderApp(
 
 	}
 
-	syncedCtr, errSync := m.Container.
+	return m.Container.
 		WithDirectory("/values", m.ValuesDir).
 		WithWorkdir("/values").
 		WithMountedFile("/values/helmfile.yaml", m.Helmfile).
@@ -66,15 +65,5 @@ func (m *HydrateKubernetes) RenderApp(
 			"--state-values-set-string", "tenant=" + tenant + ",app=" + app + ",cluster=" + cluster,
 			"--state-values-file", "./kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml",
 		}).
-		Sync(ctx)
-
-	if errSync != nil {
-
-		panic(errSync)
-
-	}
-
-	m.Container = syncedCtr
-
-	return m.Container
+		Stdout(ctx)
 }

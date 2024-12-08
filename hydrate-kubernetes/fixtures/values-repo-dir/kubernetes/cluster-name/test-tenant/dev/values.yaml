@@ -1,2 +1,2 @@
-# micro-a:
-#   image: my-nginx:aaaa
+micro-a:
+  image: new-image:1.0.0
