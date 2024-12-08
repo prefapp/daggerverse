@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/prefapp/daggerverse/compare/dagger-structure-test-v0.2.0...dagger-structure-test-v0.2.1) (2024-12-08)
+
+
+### Bug Fixes
+
+* Update function signature ([1d9014f](https://github.com/prefapp/daggerverse/commit/1d9014f7406ed2afab806be9bd55e9006537a3fb))
+
 ## [0.2.0](https://github.com/prefapp/daggerverse/compare/dagger-structure-test-v0.1.0...dagger-structure-test-v0.2.0) (2024-10-25)
 
 
