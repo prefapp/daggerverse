@@ -3,8 +3,7 @@ package main
 import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
-
-	"gopkg.in/yaml.v3"
+	"encoding/json"
 )
 
 type HydrateKubernetes struct {
@@ -94,11 +93,32 @@ func New(
 	}
 }
 
-func installDeps(depsFileContent string, c *dagger.Container) *dagger.Container {
+type App struct {
+	App     string
+	Cluster string
+	Tenant  string
+	Env     string
+}
 
-	deps := DepsFile{}
+func (m *HydrateKubernetes) RenderApps(
 
-	err := yaml.Unmarshal([]byte(depsFileContent), &deps)
+	ctx context.Context,
+
+	// +optional
+	// +default="[]"
+	affectedPaths string,
+
+	// +optional
+	// +default="{\"images\":[]}"
+	newImagesMatrix string,
+
+	app string,
+
+) *dagger.Directory {
+
+	affectedPathsList := []string{}
+
+	err := json.Unmarshal([]byte(affectedPaths), &affectedPathsList)
 
 	if err != nil {
 
@@ -106,48 +126,42 @@ func installDeps(depsFileContent string, c *dagger.Container) *dagger.Container 
 
 	}
 
-	for _, pkg := range deps.Dependencies {
+	appsFromAffectedPaths := getAffectedAppsFromAffectedPaths(affectedPathsList, app)
 
-		c = c.WithExec([]string{"apk", "add", pkg})
+	appsFromInputMatrix := getAffectedAppFromInputMatrix(newImagesMatrix)
 
+	apps := combineMaps(appsFromAffectedPaths, appsFromInputMatrix)
+
+	for _, app := range apps {
+
+		stdout, renderErr := m.RenderApp(
+			ctx,
+			app.Env,
+			app.App,
+			app.Cluster,
+			app.Tenant,
+			newImagesMatrix,
+		)
+
+		if renderErr != nil {
+
+			panic(renderErr)
+
+		}
+
+		tmpDir := m.SplitRenderInFiles(ctx,
+			dag.Directory().
+				WithNewFile("rendered.yaml", stdout).
+				File("rendered.yaml"),
+		)
+
+		m.WetRepoDir = m.WetRepoDir.
+			WithoutDirectory("kubernetes/"+app.Cluster+"/"+app.Tenant+"/"+app.Env).
+			WithDirectory(
+				"kubernetes/"+app.Cluster+"/"+app.Tenant+"/"+app.Env,
+				tmpDir,
+			)
 	}
 
-	return c
-}
-
-// HydrateKubernetes hydrates the wet manifests with the helm values
-func (m *HydrateKubernetes) Render(
-
-	// Json string of the affected paths
-	// Format: ["path/to/file1", "path/to/file2"]
-	// optional
-	// +default="[]"
-	affectedPaths string,
-
-	// The path to the values repo, where helm values are stored
-	// +required
-	valuesRepoDir *dagger.Directory,
-
-	// The path to the wet repo, where the wet manifests are stored
-	// +required
-	wetRepoDir *dagger.Directory,
-
-	// The path to auth files, which will contain the helm login credentials
-	//
-	// For azure:
-	//	<authDir>/az/helmfile.user
-	//	<authDir>/az/helmfile.password
-	//	<authDir>/az/helmfile.repository
-	//
-	// For aws:
-	//	<authDir>/aws/helmfile.user
-	//	<authDir>/aws/helmfile.password
-	//	<authDir>/aws/helmfile.repository
-	//
-	// +required
-	authDir *dagger.Directory,
-
-) *dagger.Directory {
-
-	return dag.Directory()
+	return m.WetRepoDir
 }
