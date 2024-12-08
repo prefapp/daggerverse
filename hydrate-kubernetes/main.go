@@ -8,11 +8,15 @@ import (
 )
 
 type HydrateKubernetes struct {
-	Container    *dagger.Container
-	ValuesDir    *dagger.Directory
-	WetRepoDir   *dagger.Directory
-	Helmfile     *dagger.File
-	ValuesGoTmpl *dagger.File
+	Container               *dagger.Container
+	ValuesDir               *dagger.Directory
+	WetRepoDir              *dagger.Directory
+	Helmfile                *dagger.File
+	ValuesGoTmpl            *dagger.File
+	HelmRegistryLoginNeeded bool
+	HelmRegistry            string
+	HelmRegistryUser        string
+	HelmRegistryPassword    *dagger.Secret
 }
 
 func New(

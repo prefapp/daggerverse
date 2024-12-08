@@ -46,7 +46,7 @@ func (m *HydrateKubernetes) RenderApp(
 
 	}
 
-	return m.Container.
+	helmfileCtr := m.Container.
 		WithDirectory("/values", m.ValuesDir).
 		WithWorkdir("/values").
 		WithMountedFile("/values/helmfile.yaml", m.Helmfile).
@@ -59,7 +59,27 @@ func (m *HydrateKubernetes) RenderApp(
 		WithFile(
 			"/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/new_images.yaml",
 			newImagesFile,
-		).
+		)
+
+	if m.HelmRegistryLoginNeeded == true {
+
+		pass, err := m.HelmRegistryPassword.Plaintext(ctx)
+
+		if err != nil {
+
+			panic(err)
+
+		}
+
+		helmfileCtr = helmfileCtr.
+			WithExec([]string{
+				"helm", "registry", "login", m.HelmRegistry,
+				"--username", m.HelmRegistryUser,
+				"--password", pass,
+			})
+	}
+
+	return helmfileCtr.
 		WithExec([]string{
 			"helmfile", "-e", env, "template",
 			"--state-values-set-string", "tenant=" + tenant + ",app=" + app + ",cluster=" + cluster,
