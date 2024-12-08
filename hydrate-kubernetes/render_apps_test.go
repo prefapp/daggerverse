@@ -40,9 +40,20 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 	renderedDir := m.RenderApps(
 		ctx,
 		"[\"kubernetes/cluster-name/test-tenant/dev/values.yaml\",\"kubernetes/cluster-name/test-tenant/pre/values.yaml\"]",
-		"{\"images\":[{\"service_name_list\":[\"micro-a\"],\"image\":\"new-image:1.0.0\"}]}",
+		"{\"images\":[{\"service_name_list\":[\"micro-a\"],\"image\":\"new-image:1.0.0\",\"env\":\"dev\",\"app\":\"sample-app\",\"tenant\":\"test-tenant\",\"base_folder\":\"kubernetes/cluster-name\"}]}",
 		"sample-app",
 	)
+
+	// type ImageData struct {
+	// 	Tenant           string   `json:"tenant"`
+	// 	App              string   `json:"app"`
+	// 	Env              string   `json:"env"`
+	// 	ServiceNameList  []string `json:"service_name_list"`
+	// 	Image            string   `json:"image"`
+	// 	Reviewers        []string `json:"reviewers"`
+	// 	BaseFolder       string   `json:"base_folder"`
+	// 	RepositoryCaller string   `json:"repository_caller"`
+	// }
 
 	newDpRendered := renderedDir.File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
 

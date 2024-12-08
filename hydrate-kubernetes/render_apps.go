@@ -4,7 +4,6 @@ import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
 	"encoding/json"
-	"strings"
 )
 
 type App struct {
@@ -40,7 +39,11 @@ func (m *HydrateKubernetes) RenderApps(
 
 	}
 
-	apps := getAffectedApps(affectedPathsList, app)
+	appsFromAffectedPaths := getAffectedAppsFromAffectedPaths(affectedPathsList, app)
+
+	appsFromInputMatrix := getAffectedAppFromInputMatrix(newImagesMatrix)
+
+	apps := combineMaps(appsFromAffectedPaths, appsFromInputMatrix)
 
 	for _, app := range apps {
 
@@ -74,54 +77,4 @@ func (m *HydrateKubernetes) RenderApps(
 	}
 
 	return m.WetRepoDir
-}
-
-func getAffectedApps(affectedPathsList []string, app string) map[string]App {
-
-	apps := map[string]App{}
-
-	for _, affectedPath := range affectedPathsList {
-
-		parts := splitAffectedPath(affectedPath)
-
-		if parts == nil {
-
-			continue
-
-		}
-
-		app := App{
-			App:     app,
-			Cluster: parts[1],
-			Tenant:  parts[2],
-			Env:     parts[3],
-		}
-
-		apps[app.App+app.Cluster+app.Tenant+app.Env] = app
-
-	}
-
-	return apps
-}
-
-func splitAffectedPath(affectedPath string) []string {
-
-	parts := strings.Split(affectedPath, "/")
-
-	if parts[0] != "kubernetes" {
-
-		return nil
-
-	}
-
-	if len(parts) == 3 && (strings.HasSuffix(parts[2], ".yaml") || strings.HasSuffix(parts[2], ".yml")) {
-
-		envPart := strings.Split(parts[2], ".")
-
-		return []string{"kubernetes", parts[0], parts[1], envPart[0]}
-
-	}
-
-	return parts
-
 }
