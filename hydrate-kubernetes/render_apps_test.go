@@ -44,17 +44,6 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 		"sample-app",
 	)
 
-	// type ImageData struct {
-	// 	Tenant           string   `json:"tenant"`
-	// 	App              string   `json:"app"`
-	// 	Env              string   `json:"env"`
-	// 	ServiceNameList  []string `json:"service_name_list"`
-	// 	Image            string   `json:"image"`
-	// 	Reviewers        []string `json:"reviewers"`
-	// 	BaseFolder       string   `json:"base_folder"`
-	// 	RepositoryCaller string   `json:"repository_caller"`
-	// }
-
 	newDpRendered := renderedDir.File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
 
 	if newDpRendered == nil {
