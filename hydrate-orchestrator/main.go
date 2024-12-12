@@ -11,26 +11,24 @@ import (
 
 type HydrateOrchestrator struct {
 	WetRepoDir *dagger.Directory
-	ghToken    dagger.Secret
 }
 
 func New(
 
-	// Github token
-	// +required
-	ghToken dagger.Secret,
 	// The path to the wet repo directory, where the wet manifests are stored
 	// +optional
 	wetRepoDir *dagger.Directory,
 ) *HydrateOrchestrator {
 	return &HydrateOrchestrator{
 		WetRepoDir: wetRepoDir,
-		ghToken:    ghToken,
 	}
 }
 
 func (m *HydrateOrchestrator) Run(
 	ctx context.Context,
+	// GitHub token
+	// +required
+	GhToken *dagger.Secret,
 	app string,
 	// The path to the values directory, where the helm values are stored
 	valuesDir *dagger.Directory,
@@ -82,7 +80,7 @@ func (m *HydrateOrchestrator) Run(
 			branchName := fmt.Sprintf("%s-%s-%s-%s", depType, cluster, tenant, env)
 
 			dag.Gh().Container(dagger.GhContainerOpts{
-				Token: &m.ghToken,
+				Token: m.GhToken,
 			}).
 				WithDirectory(wetRepoPath, m.WetRepoDir).
 				WithWorkdir(wetRepoPath).
@@ -100,14 +98,14 @@ func (m *HydrateOrchestrator) Run(
 			})
 
 			// Create each label
-			dag.Gh(dagger.GhOpts{Token: &m.ghToken}).Run(fmt.Sprintf("label create --force type/%s", depType))
-			dag.Gh(dagger.GhOpts{Token: &m.ghToken}).Run(fmt.Sprintf("label create --force app/%s", app))
-			dag.Gh(dagger.GhOpts{Token: &m.ghToken}).Run(fmt.Sprintf("label create --force cluster/%s", cluster))
-			dag.Gh(dagger.GhOpts{Token: &m.ghToken}).Run(fmt.Sprintf("label create --force tenant/%s", tenant))
-			dag.Gh(dagger.GhOpts{Token: &m.ghToken}).Run(fmt.Sprintf("label create --force env/%s", env))
+			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create --force type/%s", depType))
+			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create --force app/%s", app))
+			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create --force cluster/%s", cluster))
+			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create --force tenant/%s", tenant))
+			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create --force env/%s", env))
 
 			// Create a PR for the updated deployment
-			dag.Gh(dagger.GhOpts{Token: &m.ghToken}).Run(fmt.Sprintf("pr create --title 'Update deployment' --body 'Update deployment' --base main --head %s", branchName))
+			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("pr create --title 'Update deployment' --body 'Update deployment' --base main --head %s", branchName))
 
 		}
 	}
