@@ -1,0 +1,13 @@
+{
+  "name": "hydrate-orchestrator",
+  "engineVersion": "v0.14.0",
+  "sdk": "go",
+  "dependencies": [
+    {
+      "name": "hydrate-kubernetes",
+      "source": "github.com/prefapp/daggerverse/hydrate-kubernetes",
+      "pin": "2b89969f0b589639cce3d76c626b6fdafa906cce"
+    }
+  ],
+  "source": "."
+}
