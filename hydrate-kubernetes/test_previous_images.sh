@@ -1,0 +1,1 @@
+dagger --deps-file=./test/values-repo-dir/.github/hydrate_deps.yaml --values-dir=./test/values-repo-dir/ --wet-repo-dir=./test/wet-repo-dir call build-previous-images-app --manifests-dir=./test/wet-repo-dir/kubernetes/cluster-name/test-tenant/dev/
