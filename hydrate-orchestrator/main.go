@@ -5,34 +5,25 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"strings"
+	"time"
 )
 
 type HydrateOrchestrator struct {
-	WetRepoDir *dagger.Directory
-}
-
-func New(
-
-	// The path to the wet repo directory, where the wet manifests are stored
-	// +optional
-	wetRepoDir *dagger.Directory,
-) *HydrateOrchestrator {
-	return &HydrateOrchestrator{
-		WetRepoDir: wetRepoDir,
-	}
 }
 
 func (m *HydrateOrchestrator) Run(
 	ctx context.Context,
+	// Github repository name <owner>/<repo>
+	// +required
+	repo string,
 	// GitHub token
 	// +required
-	GhToken *dagger.Secret,
+	ghToken *dagger.Secret,
 	app string,
 	// The path to the values directory, where the helm values are stored
 	valuesDir *dagger.Directory,
-	repositoryDir *dagger.Directory,
+	wetRepoDir *dagger.Directory,
 	// extra packages to install
 	// +optional
 	depsFile *dagger.File,
@@ -42,6 +33,9 @@ func (m *HydrateOrchestrator) Run(
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
+	// +optional
+	// +default="deployment"
+	depBranch string,
 ) {
 
 	// Load the updated deployments from JSON string using gojq
@@ -50,26 +44,26 @@ func (m *HydrateOrchestrator) Run(
 
 	for _, deployment := range deployments {
 		// Get the first directory from the deployment string
-		deploymentType := filepath.SplitList(deployment)[1]
+		deploymentType := strings.Split(deployment, "/")[0]
 		switch deploymentType {
 		case "kubernetes":
+
 			affectedJson, err := json.Marshal([]string{deployment})
 			if err != nil {
 				// skip the deployment if it can't be marshalled
 				continue
 			}
-			dag.HydrateKubernetes(
+			renderedDep := dag.HydrateKubernetes(
 				valuesDir,
 				dagger.HydrateKubernetesOpts{
-					DepsFile: depsFile,
+					DepsFile:   depsFile,
+					WetRepoDir: wetRepoDir,
 				},
 			).RenderApps(app, dagger.HydrateKubernetesRenderAppsOpts{
 				AffectedPaths:   string(affectedJson),
 				NewImagesMatrix: newImagesMatrix,
 			})
 
-			// Create a branch for the updated deployment
-			wetRepoPath := "/wet_repo"
 			// split the path into a slice
 			deploymentPath := strings.Split(deployment, "/")
 			depType := deploymentPath[0]
@@ -79,35 +73,89 @@ func (m *HydrateOrchestrator) Run(
 
 			branchName := fmt.Sprintf("%s-%s-%s-%s", depType, cluster, tenant, env)
 
-			dag.Gh().Container(dagger.GhContainerOpts{
-				Token: m.GhToken,
-			}).
-				WithDirectory(wetRepoPath, m.WetRepoDir).
-				WithWorkdir(wetRepoPath).
-				WithExec([]string{
-					"git",
-					"checkout",
-					"-b",
-					branchName,
-				}, dagger.ContainerWithExecOpts{},
-				).WithExec([]string{
-				"git",
-				"push",
-				"origin",
-				branchName,
-			})
+			m.CreateRemoteBranch(ctx, wetRepoDir, branchName, ghToken)
 
 			// Create each label
-			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create --force type/%s", depType))
-			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create --force app/%s", app))
-			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create --force cluster/%s", cluster))
-			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create --force tenant/%s", tenant))
-			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create --force env/%s", env))
+			labels := []string{
+				fmt.Sprintf("type/%s", depType),
+				fmt.Sprintf("app/%s", app),
+				fmt.Sprintf("cluster/%s", cluster),
+				fmt.Sprintf("tenant/%s", tenant),
+				fmt.Sprintf("env/%s", env),
+			}
 
-			// Create a PR for the updated deployment
-			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("pr create --title 'Update deployment' --body 'Update deployment' --base main --head %s", branchName))
+			for _, label := range labels {
+				dag.Gh(dagger.GhOpts{Token: ghToken}).Run(fmt.Sprintf("label create -R %s --force %s", repo, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
+			}
 
+			m.UpsertPR(ctx, repo, ghToken, branchName, depBranch, renderedDep)
 		}
 	}
 
+}
+
+func (m *HydrateOrchestrator) UpsertPR(
+	ctx context.Context,
+	// Github repository name <owner>/<repo>
+	// +required
+	repo string,
+	// GitHub token
+	// +required
+	ghToken *dagger.Secret,
+	// +required
+	newBranchName string,
+	// +required
+	baseBranchName string,
+	// +required
+	contents *dagger.Directory,
+) {
+	contentsDirPath := "/contents"
+	dag.Gh().Container(dagger.GhContainerOpts{Token: ghToken, Plugins: []string{"prefapp/gh-commit"}}).
+		WithDirectory(contentsDirPath, contents).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{
+			"gh",
+			"commit",
+			"-R", repo,
+			"-b", newBranchName,
+		}).Sync(ctx)
+	// Create a PR for the updated deployment
+	dag.Gh().Run(
+		fmt.Sprintf("pr create -R %s --base %s --title 'Update deployment' --body 'Update deployment' --head %s", repo, baseBranchName, newBranchName),
+		dagger.GhRunOpts{DisableCache: true},
+	).Sync(ctx)
+}
+
+func (m *HydrateOrchestrator) CreateRemoteBranch(
+
+	ctx context.Context,
+	// Base branch name
+	// +required
+	gitDir *dagger.Directory,
+	// New branch name
+	// +required
+	newBranch string,
+	// GitHub token
+	// +required
+	ghToken *dagger.Secret,
+) {
+	gitDirPath := "/git_dir"
+	dag.Gh().Container(dagger.GhContainerOpts{
+		Token: ghToken,
+	}).
+		WithDirectory(gitDirPath, gitDir).
+		WithWorkdir(gitDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{
+			"git",
+			"checkout",
+			"-b",
+			newBranch,
+		}, dagger.ContainerWithExecOpts{},
+		).WithExec([]string{
+		"git",
+		"push",
+		"origin",
+		newBranch,
+	}).Sync(ctx)
 }
