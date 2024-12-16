@@ -17,7 +17,7 @@ execs:
 
 */}} 
 
-{{- if .StateValues.execs }}
+{{- if hasKey .StateValues "execs" }}
     
     {{- range .StateValues.execs }}
 
