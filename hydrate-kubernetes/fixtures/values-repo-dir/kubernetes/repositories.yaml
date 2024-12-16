@@ -2,7 +2,5 @@ repositories:
   - name: bitnami
     url: https://charts.bitnami.com/bitnami
 
-  - name: prefappacr
-    url: prefappacr.azurecr.io
-    username: 00000000-0000-0000-0000-000000000000
-    oci: true
+  - name: prefapp
+    url: https://prefapp.github.io/test-umbrella
