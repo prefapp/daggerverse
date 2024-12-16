@@ -69,6 +69,12 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 
 	}
 
+	if artifact.Metadata.Labels["test-label"] != "test-value" {
+
+		t.Errorf("Expected new Deployment.sample-app-micro-a.yml to have label test-label=test-value, got %s", artifact.Metadata.Labels)
+
+	}
+
 	if artifact.Metadata.Annotations.Image != "new-image:1.0.0" {
 
 		t.Errorf("Expected new Deployment.sample-app-micro-a.yml to have image new-image:1.0.0, got %s", artifact.Metadata.Annotations)

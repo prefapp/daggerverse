@@ -12,9 +12,9 @@ extraPatches:
       name: sample-app-micro-a
     patch:
       - op: add
-        path: /metadata/labels/manolo
-        value: escobar
-execs: #[]
+        path: /metadata/labels/test-label
+        value: test-value
+execs:
   - command: ".github/certs_to_ca_yaml.py"
     args: [
       "--ca_certs_path", 
