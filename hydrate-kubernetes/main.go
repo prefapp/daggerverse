@@ -113,18 +113,11 @@ func New(
 	}
 }
 
-type App struct {
-	App     string
-	Cluster string
-	Tenant  string
-	Env     string
-}
-
 func (m *HydrateKubernetes) Render(
 
 	ctx context.Context,
 
-	appName string,
+	app string,
 
 	cluster string,
 
@@ -138,19 +131,12 @@ func (m *HydrateKubernetes) Render(
 
 ) *dagger.Directory {
 
-	app := App{
-		App:     appName,
-		Cluster: cluster,
-		Tenant:  tenant,
-		Env:     env,
-	}
-
 	renderedChartFile, renderErr := m.RenderApp(
 		ctx,
-		app.Env,
-		app.App,
-		app.Cluster,
-		app.Tenant,
+		env,
+		app,
+		cluster,
+		tenant,
 		newImagesMatrix,
 	)
 
@@ -167,9 +153,9 @@ func (m *HydrateKubernetes) Render(
 	)
 
 	m.WetRepoDir = m.WetRepoDir.
-		WithoutDirectory("kubernetes/"+app.Cluster+"/"+app.Tenant+"/"+app.Env).
+		WithoutDirectory("kubernetes/"+cluster+"/"+tenant+"/"+env).
 		WithDirectory(
-			"kubernetes/"+app.Cluster+"/"+app.Tenant+"/"+app.Env,
+			"kubernetes/"+cluster+"/"+tenant+"/"+env,
 			tmpDir,
 		)
 
