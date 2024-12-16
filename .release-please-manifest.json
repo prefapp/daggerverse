@@ -1,5 +1,6 @@
 {
    "k6": "1.2.0",
    "dagger-structure-test": "0.2.0",
-   "notify-and-hydrate-state": "1.3.0"
+   "notify-and-hydrate-state": "1.3.0",
+   "hydrate-kubernetes": "0.0.0"
 }

@@ -14,8 +14,8 @@
            "package-name": "notify-and-hydrate-state",
            "release-type": "go"
        },
-        "hydrate-helm-images": {
-           "package-name": "hydrate-helm-images",
+        "hydrate-kubernetes": {
+           "package-name": "hydrate-kubernetes",
            "release-type": "go"
        }
     }
