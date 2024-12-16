@@ -1,6 +1,6 @@
 # dev.yaml
 version: 0.1.0
-chart: prefapp/aws-web-service-umbrella 
+chart: prefappacr/test-umbrella/aws-web-service-umbrella
 
 hooks: []
 
