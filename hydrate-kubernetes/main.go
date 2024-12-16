@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
-	"encoding/json"
 )
 
 type HydrateKubernetes struct {
@@ -121,68 +120,58 @@ type App struct {
 	Env     string
 }
 
-func (m *HydrateKubernetes) RenderApps(
+func (m *HydrateKubernetes) Render(
 
 	ctx context.Context,
 
-	// +optional
-	// +default="[]"
-	affectedPaths string,
+	appName string,
+
+	cluster string,
+
+	tenant string,
+
+	env string,
 
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
 
-	app string,
-
 ) *dagger.Directory {
 
-	affectedPathsList := []string{}
+	app := App{
+		App:     appName,
+		Cluster: cluster,
+		Tenant:  tenant,
+		Env:     env,
+	}
 
-	err := json.Unmarshal([]byte(affectedPaths), &affectedPathsList)
+	renderedChartFile, renderErr := m.RenderApp(
+		ctx,
+		app.Env,
+		app.App,
+		app.Cluster,
+		app.Tenant,
+		newImagesMatrix,
+	)
 
-	if err != nil {
+	if renderErr != nil {
 
-		panic(err)
+		panic(renderErr)
 
 	}
 
-	appsFromAffectedPaths := getAffectedAppsFromAffectedPaths(affectedPathsList, app)
+	tmpDir := m.SplitRenderInFiles(ctx,
+		dag.Directory().
+			WithNewFile("rendered.yaml", renderedChartFile).
+			File("rendered.yaml"),
+	)
 
-	appsFromInputMatrix := getAffectedAppFromInputMatrix(newImagesMatrix)
-
-	apps := combineMaps(appsFromAffectedPaths, appsFromInputMatrix)
-
-	for _, app := range apps {
-
-		renderedChartFile, renderErr := m.RenderApp(
-			ctx,
-			app.Env,
-			app.App,
-			app.Cluster,
-			app.Tenant,
-			newImagesMatrix,
+	m.WetRepoDir = m.WetRepoDir.
+		WithoutDirectory("kubernetes/"+app.Cluster+"/"+app.Tenant+"/"+app.Env).
+		WithDirectory(
+			"kubernetes/"+app.Cluster+"/"+app.Tenant+"/"+app.Env,
+			tmpDir,
 		)
-
-		if renderErr != nil {
-
-			panic(renderErr)
-
-		}
-
-		tmpDir := m.SplitRenderInFiles(ctx,
-			dag.Directory().
-				WithNewFile("rendered.yaml", renderedChartFile).
-				File("rendered.yaml"),
-		)
-
-		m.WetRepoDir = m.WetRepoDir.
-			WithoutDirectory("kubernetes/"+app.Cluster+"/"+app.Tenant+"/"+app.Env).
-			WithDirectory(
-				"kubernetes/"+app.Cluster+"/"+app.Tenant+"/"+app.Env,
-				tmpDir,
-			)
-	}
 
 	return m.WetRepoDir
 }

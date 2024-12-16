@@ -38,11 +38,13 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 
 	m.Container = installDeps(depsContent, m.Container)
 
-	renderedDir := m.RenderApps(
+	renderedDir := m.Render(
 		ctx,
-		"[\"kubernetes/cluster-name/test-tenant/dev/values.yaml\",\"kubernetes/cluster-name/test-tenant/pre/values.yaml\"]",
-		"{\"images\":[{\"service_name_list\":[\"micro-a\"],\"image\":\"new-image:1.0.0\",\"env\":\"dev\",\"app\":\"sample-app\",\"tenant\":\"test-tenant\",\"base_folder\":\"kubernetes/cluster-name\"}]}",
 		"sample-app",
+		"cluster-name",
+		"test-tenant",
+		"dev",
+		"{\"images\":[{\"service_name_list\":[\"micro-a\"],\"image\":\"new-image:1.0.0\",\"env\":\"dev\",\"app\":\"sample-app\",\"tenant\":\"test-tenant\",\"base_folder\":\"kubernetes/cluster-name\"}]}",
 	)
 
 	newDpRendered := renderedDir.File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
@@ -114,11 +116,13 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 
 	m.Container = installDeps(depsContent, m.Container)
 
-	renderedDir := m.RenderApps(
+	renderedDir := m.Render(
 		ctx,
-		"[\"kubernetes/cluster-name/test-tenant/without_execs/values.yaml\"]",
-		"{\"images\":[]}",
 		"sample-app",
+		"cluster-name",
+		"test-tenant",
+		"without_execs",
+		"{\"images\":[]}",
 	)
 
 	fmt.Printf("Rendered dir: %v", renderedDir)
