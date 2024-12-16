@@ -114,6 +114,7 @@ func (m *HydrateOrchestrator) UpsertPR(
 		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
 			Exclude: []string{".git"},
 		}).
+		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
 			"gh",
