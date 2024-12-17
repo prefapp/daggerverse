@@ -7,3 +7,9 @@ func (m *HydrateOrchestrator) RunDispatch(
 ) {
 
 }
+
+func (m *HydrateOrchestrator) processImagesMatrix(
+	updatedDeployments string,
+) *Deployments {
+	return nil
+}

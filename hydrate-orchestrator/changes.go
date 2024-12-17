@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
-	"strings"
+
+	"github.com/samber/lo"
 )
 
 // Hydrate deployments based on the updated deployments
@@ -23,38 +23,58 @@ func (m *HydrateOrchestrator) RunChanges(
 		// renderedDeployment
 
 		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
-		dag.HydrateKubernetes(
+		renderedDeployment := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
 		).Render(m.App, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
+		m.upsertPR(ctx, branchName, renderedDeployment, []string{})
+	}
+
+}
+
+// Process updated deployments and return all unique deployments after validating and processing them
+func (m *HydrateOrchestrator) processUpdatedDeployments(
+	ctx context.Context,
+	// List of updated deployments in JSON format
+	// +required
+	updatedDeployments string,
+) *Deployments {
+	// Load the updated deployments from JSON string using gojq
+	var deployments []string
+	err := json.Unmarshal([]byte(updatedDeployments), &deployments)
+
+	if err != nil {
+		panic(err)
+	}
+
+	result := &Deployments{
+		KubernetesDeployments: []KubernetesDeployment{},
 	}
 
 	for _, deployment := range deployments {
 
-			branchName := fmt.Sprintf("%s-%s-%s-%s", depType, cluster, tenant, env)
+		dirs := splitPath(deployment)
 
-			prExists := m.CheckPrExists(ctx, repo, branchName, ghToken)
-			if !prExists {
-
-				m.CreateRemoteBranch(ctx, wetRepoDir, branchName, ghToken)
-			}
-
-			// Create each label
-			labels := []string{
-				fmt.Sprintf("type/%s", depType),
-				fmt.Sprintf("app/%s", app),
-				fmt.Sprintf("cluster/%s", cluster),
-				fmt.Sprintf("tenant/%s", tenant),
-				fmt.Sprintf("env/%s", env),
-			}
-
-			for _, label := range labels {
-				dag.Gh(dagger.GhOpts{Token: ghToken}).Run(fmt.Sprintf("label create -R %s --force %s", repo, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
-			}
-
-			m.UpsertPR(ctx, repo, ghToken, branchName, depBranch, renderedDep)
+		if len(dirs) == 0 {
+			panic(fmt.Sprintf("Invalid deployment path provided: %s", deployment))
 		}
+
+		deploymentType := dirs[0]
+
+		switch deploymentType {
+		case "kubernetes":
+			// Process kubernetes deployment
+			dep := kubernetesDepFromStr(deployment)
+			if !lo.ContainsBy(result.KubernetesDeployments, func(d KubernetesDeployment) bool {
+				return d.Equals(*dep)
+			}) {
+				result.KubernetesDeployments = append(result.KubernetesDeployments, *dep)
+			}
+		}
+
 	}
+
+	return result
 
 }
