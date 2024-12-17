@@ -13,9 +13,10 @@ func (m *HydrateOrchestrator) RunChanges(
 	// Updated deployments in JSON format
 	// +required
 	updatedDeployments string,
-	// Pr that triggered the render
+	// Identifier that triggered the render, this could be a PR number or a workflow run id
 	// +optional
-	valuesPrNumber int,
+	// +default=0
+	id int,
 ) {
 
 	deployments := m.processUpdatedDeployments(ctx, updatedDeployments)
@@ -38,14 +39,14 @@ func (m *HydrateOrchestrator) RunChanges(
 		).Render(m.App, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
 		var prBody string
-		if valuesPrNumber != 0 {
+		if m.Event == PullRequest {
 			prBody = fmt.Sprintf(`
-			New deployment created by @author (%s) (PR #%d)
+			New deployment created by @author in PR #%d
 			%s
-			`, m.Event, valuesPrNumber, kdep.String(true))
-		} else {
+			`, m.Event, id, kdep.String(true))
+		} else if m.Event == Manual {
 			prBody = fmt.Sprintf(`
-			New deployment created by @author (%s)
+			New deployment created by @author in wokrlfow run #%d
 			%s
 			`, m.Event, kdep.String(true))
 		}

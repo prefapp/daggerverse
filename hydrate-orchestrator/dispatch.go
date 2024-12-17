@@ -31,12 +31,14 @@ func (m *HydrateOrchestrator) RunDispatch(
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
-	// Pr that triggered the render
-	// +required
-	workflowRun int,
+	// // Pr that triggered the render
+	// // +required
+	// workflowRun int,
 ) {
 
 	deployments := m.processImagesMatrix(newImagesMatrix)
+
+	repositoryCaller := m.getRepositoryCaller(newImagesMatrix)
 
 	helmAuth := m.GetHelmAuth(ctx)
 
@@ -58,9 +60,9 @@ func (m *HydrateOrchestrator) RunDispatch(
 		})
 
 		prBody := fmt.Sprintf(`
-		New deployment created by @author, from workflow run (%s) #%d
+		New deployment created by @author, from repository %s
 		%s
-		`, m.Event, workflowRun, kdep.String(true))
+		`, repositoryCaller, m.Event, kdep.String(true))
 
 		m.upsertPR(
 			ctx,
@@ -113,4 +115,15 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 	}
 
 	return result
+}
+
+func (m *HydrateOrchestrator) getRepositoryCaller(newImagesMatrix string) string {
+	var imagesMatrix ImageMatrix
+	err := json.Unmarshal([]byte(newImagesMatrix), &imagesMatrix)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return imagesMatrix.Images[0].RepositoryCaller
 }

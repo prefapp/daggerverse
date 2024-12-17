@@ -5,6 +5,19 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 )
 
+type EventType string
+
+const (
+	// Undetermined risk; analyze further.
+	PullRequest EventType = "pr"
+
+	// Minimal risk; routine fix.
+	Manual EventType = "manual"
+
+	// Moderate risk; timely fix.
+	Dispatch EventType = "dispatch"
+)
+
 type HydrateOrchestrator struct {
 	Repo             string
 	GhToken          *dagger.Secret
@@ -13,7 +26,7 @@ type HydrateOrchestrator struct {
 	WetStateDir      *dagger.Directory
 	AuthDir          *dagger.Directory
 	DeploymentBranch string
-	Event            string
+	Event            EventType
 }
 
 func New(
@@ -42,8 +55,8 @@ func New(
 	deploymentBranch string,
 	// Event that triggered the workflow
 	// +optional
-	// +default="manual"
-	event string,
+	// +default="pr"
+	event EventType,
 
 ) *HydrateOrchestrator {
 	return &HydrateOrchestrator{
