@@ -84,7 +84,7 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 			image.Env,
 		)
 
-		kdep := KubernetesDeployment{
+		kdep := &KubernetesDeployment{
 			Deployment: Deployment{
 				DeploymentPath: deploymentPath,
 			},
