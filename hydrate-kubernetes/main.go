@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
-	"encoding/json"
 )
 
 type HydrateKubernetes struct {
@@ -114,75 +113,51 @@ func New(
 	}
 }
 
-type App struct {
-	App     string
-	Cluster string
-	Tenant  string
-	Env     string
-}
-
-func (m *HydrateKubernetes) RenderApps(
+func (m *HydrateKubernetes) Render(
 
 	ctx context.Context,
 
-	// +optional
-	// +default="[]"
-	affectedPaths string,
+	app string,
+
+	cluster string,
+
+	tenant string,
+
+	env string,
 
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
 
-	app string,
-
 ) *dagger.Directory {
 
-	affectedPathsList := []string{}
+	renderedChartFile, renderErr := m.RenderApp(
+		ctx,
+		env,
+		app,
+		cluster,
+		tenant,
+		newImagesMatrix,
+	)
 
-	err := json.Unmarshal([]byte(affectedPaths), &affectedPathsList)
+	if renderErr != nil {
 
-	if err != nil {
-
-		panic(err)
+		panic(renderErr)
 
 	}
 
-	appsFromAffectedPaths := getAffectedAppsFromAffectedPaths(affectedPathsList, app)
+	tmpDir := m.SplitRenderInFiles(ctx,
+		dag.Directory().
+			WithNewFile("rendered.yaml", renderedChartFile).
+			File("rendered.yaml"),
+	)
 
-	appsFromInputMatrix := getAffectedAppFromInputMatrix(newImagesMatrix)
-
-	apps := combineMaps(appsFromAffectedPaths, appsFromInputMatrix)
-
-	for _, app := range apps {
-
-		renderedChartFile, renderErr := m.RenderApp(
-			ctx,
-			app.Env,
-			app.App,
-			app.Cluster,
-			app.Tenant,
-			newImagesMatrix,
+	m.WetRepoDir = m.WetRepoDir.
+		WithoutDirectory("kubernetes/"+cluster+"/"+tenant+"/"+env).
+		WithDirectory(
+			"kubernetes/"+cluster+"/"+tenant+"/"+env,
+			tmpDir,
 		)
-
-		if renderErr != nil {
-
-			panic(renderErr)
-
-		}
-
-		tmpDir := m.SplitRenderInFiles(ctx,
-			dag.Directory().
-				WithNewFile("rendered.yaml", renderedChartFile).
-				File("rendered.yaml"),
-		)
-
-		m.WetRepoDir = m.WetRepoDir.
-			WithoutDirectory("kubernetes/"+app.Cluster+"/"+app.Tenant+"/"+app.Env).
-			WithDirectory(
-				"kubernetes/"+app.Cluster+"/"+app.Tenant+"/"+app.Env,
-				tmpDir,
-			)
-	}
 
 	return m.WetRepoDir
 }
