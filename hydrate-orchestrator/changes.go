@@ -36,7 +36,7 @@ func (m *HydrateOrchestrator) RunChanges(
 			},
 		).Render(m.App, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
-		m.upsertPR(ctx, branchName, renderedDeployment, []string{})
+		m.upsertPR(ctx, branchName, renderedDeployment, kdep.Labels(), kdep.String(true), kdep.String(false))
 	}
 
 }
