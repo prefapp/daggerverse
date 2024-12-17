@@ -38,10 +38,6 @@ func New(
 	// +optional
 	wetRepoDir *dagger.Directory,
 
-	// extra packages to install
-	// +optional
-	depsFile *dagger.File,
-
 	// The path to the helmfile.yaml file
 	// +optional
 	helmfile *dagger.File,
@@ -69,15 +65,12 @@ func New(
 		Container().
 		From(helmfileImage + ":" + helmfileImageTag)
 
-	depsFileContent, err := depsFile.Contents(ctx)
+	depsFileContent, err := valuesDir.File(".github/hydrate_deps.yaml").Contents(ctx)
 
-	if err != nil {
+	if err == nil {
 
-		panic(err)
-
+		c = installDeps(depsFileContent, c)
 	}
-
-	c = installDeps(depsFileContent, c)
 
 	if helmfile == nil {
 
