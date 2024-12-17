@@ -13,6 +13,7 @@ type HydrateOrchestrator struct {
 	WetStateDir      *dagger.Directory
 	AuthDir          *dagger.Directory
 	DeploymentBranch string
+	Event            string
 }
 
 func New(
@@ -39,6 +40,10 @@ func New(
 	// +optional
 	// +default="deployment"
 	deploymentBranch string,
+	// Event that triggered the workflow
+	// +optional
+	// +default="manual"
+	event string,
 
 ) *HydrateOrchestrator {
 	return &HydrateOrchestrator{
@@ -49,5 +54,6 @@ func New(
 		WetStateDir:      wetStateDir,
 		DeploymentBranch: deploymentBranch,
 		AuthDir:          authDir,
+		Event:            event,
 	}
 }

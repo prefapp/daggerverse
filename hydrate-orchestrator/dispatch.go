@@ -31,6 +31,9 @@ func (m *HydrateOrchestrator) RunDispatch(
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
+	// Pr that triggered the render
+	// +required
+	workflowRun int,
 ) {
 
 	deployments := m.processImagesMatrix(newImagesMatrix)
@@ -54,7 +57,19 @@ func (m *HydrateOrchestrator) RunDispatch(
 			NewImagesMatrix: newImagesMatrix,
 		})
 
-		m.upsertPR(ctx, branchName, renderedDeployment, kdep.Labels(), kdep.String(true), kdep.String(false))
+		prBody := fmt.Sprintf(`
+		New deployment created by @author, from workflow run #%d
+		%s
+		`, workflowRun, kdep.String(true))
+
+		m.upsertPR(
+			ctx,
+			branchName,
+			renderedDeployment,
+			kdep.Labels(),
+			kdep.String(true),
+			prBody,
+		)
 	}
 
 }

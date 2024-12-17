@@ -13,6 +13,9 @@ func (m *HydrateOrchestrator) RunChanges(
 	// Updated deployments in JSON format
 	// +required
 	updatedDeployments string,
+	// Pr that triggered the render
+	// +required
+	valuesPrNumber int,
 ) {
 
 	deployments := m.processUpdatedDeployments(ctx, updatedDeployments)
@@ -34,7 +37,19 @@ func (m *HydrateOrchestrator) RunChanges(
 			},
 		).Render(m.App, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
-		m.upsertPR(ctx, branchName, renderedDeployment, kdep.Labels(), kdep.String(true), kdep.String(false))
+		prBody := fmt.Sprintf(`
+		New deployment created by @author, from PR #%d
+		%s
+		`, valuesPrNumber, kdep.String(true))
+
+		m.upsertPR(
+			ctx,
+			branchName,
+			renderedDeployment,
+			kdep.Labels(),
+			kdep.String(true),
+			prBody,
+		)
 	}
 
 }
