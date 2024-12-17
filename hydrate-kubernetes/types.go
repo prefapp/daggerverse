@@ -5,7 +5,8 @@ type Artifact struct {
 }
 
 type Metadata struct {
-	Annotations Annotations `yaml:"annotations"`
+	Annotations Annotations       `yaml:"annotations"`
+	Labels      map[string]string `yaml:"labels"`
 }
 
 type Annotations struct {

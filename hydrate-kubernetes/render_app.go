@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"dagger/hydrate-kubernetes/internal/dagger"
 	"slices"
 	"strings"
 	"time"
@@ -66,8 +67,7 @@ func (m *HydrateKubernetes) RenderApp(
 		pass, err := m.HelmRegistryPassword.Plaintext(ctx)
 
 		if err != nil {
-
-			panic(err)
+			panic("ERROR_PASSWORD " + err.Error())
 
 		}
 
@@ -75,8 +75,12 @@ func (m *HydrateKubernetes) RenderApp(
 			WithExec([]string{
 				"helm", "registry", "login", m.HelmRegistry,
 				"--username", m.HelmRegistryUser,
-				"--password", pass,
-			})
+				"--password-stdin",
+			},
+				dagger.ContainerWithExecOpts{
+					Stdin: pass,
+				},
+			)
 	}
 
 	return helmfileCtr.

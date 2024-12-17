@@ -1,11 +1,6 @@
 repositories:
   - name: bitnami
     url: https://charts.bitnami.com/bitnami
+
   - name: prefapp
-    url: https://prefapp.github.io/test-umbrella/
-
-
-
-
-
-    # helmfile -e dev --state-values-set-string tenant=test-tenant,app=sample-app,cluster=cluster-name template --state-values-file ./cluster-name/test-tenant/dev. yaml --debug
+    url: https://prefapp.github.io/test-umbrella
