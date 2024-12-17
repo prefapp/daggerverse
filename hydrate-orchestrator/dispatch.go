@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
+	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"strings"
 )
@@ -24,10 +27,35 @@ type ImageData struct {
 }
 
 func (m *HydrateOrchestrator) RunDispatch(
+	ctx context.Context,
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
 ) {
+
+	deployments := m.processImagesMatrix(newImagesMatrix)
+
+	helmAuth := m.GetHelmAuth(ctx)
+
+	for _, kdep := range deployments.KubernetesDeployments {
+
+		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
+
+		renderedDeployment := dag.HydrateKubernetes(
+			m.ValuesStateDir,
+			m.WetStateDir,
+			dagger.HydrateKubernetesOpts{
+				HelmRegistryLoginNeeded: helmAuth.NeedsAuth,
+				HelmRegistry:            helmAuth.Registry,
+				HelmRegistryUser:        helmAuth.Username,
+				HelmRegistryPassword:    helmAuth.Password,
+			},
+		).Render(m.App, kdep.Cluster, kdep.Tenant, kdep.Environment, dagger.HydrateKubernetesRenderOpts{
+			NewImagesMatrix: newImagesMatrix,
+		})
+
+		m.upsertPR(ctx, branchName, renderedDeployment, kdep.Labels(), kdep.String(true), kdep.String(false))
+	}
 
 }
 
