@@ -9,13 +9,29 @@ import (
 	"time"
 )
 
+type Pr struct {
+	HeadRefName string `json:"headRefName"`
+	Url         string `json:"url"`
+	Number      int    `json:"number"`
+}
+
 func (m *HydrateOrchestrator) upsertPR(
 	ctx context.Context,
 	// +required
 	newBranchName string,
 	// +required
 	contents *dagger.Directory,
+	// +required
+	labels []string,
+
 ) {
+	prExists := m.checkPrExists(ctx, newBranchName)
+
+	// if !prExists {
+	// Create a new branch
+	m.createRemoteBranch(ctx, contents, newBranchName)
+	// }
+
 	contentsDirPath := "/contents"
 	dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
 		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
@@ -29,9 +45,20 @@ func (m *HydrateOrchestrator) upsertPR(
 			"-R", m.Repo,
 			"-b", newBranchName,
 		}).Sync(ctx)
+	/*
+		// Create each label
+		labels := []string{
+			fmt.Sprintf("type/%s", depType),
+			fmt.Sprintf("app/%s", app),
+			fmt.Sprintf("cluster/%s", cluster),
+			fmt.Sprintf("tenant/%s", tenant),
+			fmt.Sprintf("env/%s", env),
+		}
 
-	prExists := m.checkPrExists(ctx, newBranchName)
-
+		for _, label := range labels {
+			dag.Gh(dagger.GhOpts{Token: ghToken}).Run(fmt.Sprintf("label create -R %s --force %s", repo, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
+		}
+	*/
 	if !prExists {
 		// Create a PR for the updated deployment
 		dag.Gh().Run(fmt.Sprintf("pr create -R '%s' --base '%s' --title 'Update deployment' --body 'Update deployment' --head %s", m.Repo, m.DeploymentBranch, newBranchName),
@@ -41,12 +68,6 @@ func (m *HydrateOrchestrator) upsertPR(
 			},
 		).Sync(ctx)
 	}
-}
-
-type Pr struct {
-	HeadRefName string `json:"headRefName"`
-	Url         string `json:"url"`
-	Number      int    `json:"number"`
 }
 
 func (m *HydrateOrchestrator) checkPrExists(ctx context.Context, branchName string) bool {

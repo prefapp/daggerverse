@@ -1,14 +1,10 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/samber/lo"
 )
 
 /*
@@ -24,7 +20,7 @@ type Deployment struct {
 }
 
 /*
-kubernetes specific deployment struct
+- kubernetes specific deployment struct
 */
 
 type KubernetesDeployment struct {
@@ -42,50 +38,24 @@ func (kd *KubernetesDeployment) Equals(other KubernetesDeployment) bool {
 		kd.Environment == other.Environment
 }
 
-// Process updated deployments and return all unique deployments after validating and processing them
-func (m *HydrateOrchestrator) processUpdatedDeployments(
-	ctx context.Context,
-	// List of updated deployments in JSON format
-	// +required
-	updatedDeployments string,
-) *Deployments {
-	// Load the updated deployments from JSON string using gojq
-	var deployments []string
-	err := json.Unmarshal([]byte(updatedDeployments), &deployments)
+func (kd *KubernetesDeployment) String(summary bool) string {
 
-	if err != nil {
-		panic(err)
+	if summary {
+
+		return fmt.Sprintf(
+			"Deployment in cluster: %s, tenant: %s, env: %s",
+			kd.Cluster, kd.Tenant, kd.Environment,
+		)
+	} else {
+		return fmt.Sprintf(`
+Deployment:
+* Cluster: %s
+* Tenant: %s
+* Environment: %s
+		`,
+			kd.Cluster, kd.Tenant, kd.Environment,
+		)
 	}
-
-	result := &Deployments{
-		KubernetesDeployments: []KubernetesDeployment{},
-	}
-
-	for _, deployment := range deployments {
-
-		dirs := splitPath(deployment)
-
-		if len(dirs) == 0 {
-			panic(fmt.Sprintf("Invalid deployment path provided: %s", deployment))
-		}
-
-		deploymentType := dirs[0]
-
-		switch deploymentType {
-		case "kubernetes":
-			// Process kubernetes deployment
-			dep := kubernetesDepFromStr(deployment)
-			if !lo.ContainsBy(result.KubernetesDeployments, func(d KubernetesDeployment) bool {
-				return d.Equals(*dep)
-			}) {
-				result.KubernetesDeployments = append(result.KubernetesDeployments, *dep)
-			}
-		}
-
-	}
-
-	return result
-
 }
 
 func kubernetesDepFromStr(deployment string) *KubernetesDeployment {

@@ -38,8 +38,11 @@ func New(
 
 ) *HydrateOrchestrator {
 	return &HydrateOrchestrator{
-		Repo:    repo,
-		GhToken: ghToken,
-		App:     app,
+		Repo:             repo,
+		GhToken:          ghToken,
+		App:              app,
+		ValuesStateDir:   valuesStateDir,
+		WetStateDir:      wetStateDir,
+		DeploymentBranch: deploymentBranch,
 	}
 }
