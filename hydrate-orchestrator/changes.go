@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
 
@@ -18,14 +19,21 @@ func (m *HydrateOrchestrator) RunChanges(
 
 	deployments := m.processUpdatedDeployments(ctx, updatedDeployments)
 
+	helmAuth := m.GetHelmAuth(ctx)
+
 	for _, kdep := range deployments.KubernetesDeployments {
 
-		// renderedDeployment
-
 		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
+
 		renderedDeployment := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
+			dagger.HydrateKubernetesOpts{
+				HelmRegistryLoginNeeded: helmAuth.NeedsAuth,
+				HelmRegistry:            helmAuth.Registry,
+				HelmRegistryUser:        helmAuth.Username,
+				HelmRegistryPassword:    helmAuth.Password,
+			},
 		).Render(m.App, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
 		m.upsertPR(ctx, branchName, renderedDeployment, []string{})

@@ -14,9 +14,9 @@ type HelmAuth struct {
 	NeedsAuth bool
 }
 
-func (m *HydrateOrchestrator) GetHelmAuth(ctx context.Context, authDir *dagger.Directory) HelmAuth {
+func (m *HydrateOrchestrator) GetHelmAuth(ctx context.Context) HelmAuth {
 
-	needsAuth, err := m.NeedsHelmAuth(ctx, authDir)
+	needsAuth, err := m.NeedsHelmAuth(ctx, m.AuthDir)
 
 	if err != nil {
 		panic(err)
@@ -28,11 +28,11 @@ func (m *HydrateOrchestrator) GetHelmAuth(ctx context.Context, authDir *dagger.D
 		}
 	}
 
-	username := getFileContent(ctx, authDir.File("helm_auth/username"))
+	username := getFileContent(ctx, m.AuthDir.File("helm_auth/username"))
 
-	password := getFileContent(ctx, authDir.File("helm_auth/password"))
+	password := getFileContent(ctx, m.AuthDir.File("helm_auth/password"))
 
-	registry := getFileContent(ctx, authDir.File("helm_auth/registry"))
+	registry := getFileContent(ctx, m.AuthDir.File("helm_auth/registry"))
 
 	return HelmAuth{
 		Username:  username,
