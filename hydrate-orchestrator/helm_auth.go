@@ -28,11 +28,11 @@ func (m *HydrateOrchestrator) GetHelmAuth(ctx context.Context, authDir *dagger.D
 		}
 	}
 
-	username := getFileContent(ctx, authDir.File("helm-auth/username"))
+	username := getFileContent(ctx, authDir.File("helm_auth/username"))
 
-	password := getFileContent(ctx, authDir.File("helm-auth/password"))
+	password := getFileContent(ctx, authDir.File("helm_auth/password"))
 
-	registry := getFileContent(ctx, authDir.File("helm-auth/registry"))
+	registry := getFileContent(ctx, authDir.File("helm_auth/registry"))
 
 	return HelmAuth{
 		Username:  username,
@@ -56,7 +56,7 @@ func getFileContent(ctx context.Context, file *dagger.File) string {
 
 func (m *HydrateOrchestrator) NeedsHelmAuth(ctx context.Context, authDir *dagger.Directory) (bool, error) {
 
-	entries, err := authDir.Glob(ctx, "**/helm-auth/*")
+	entries, err := authDir.Glob(ctx, "helm_auth/*")
 
 	if err != nil {
 		panic(err)
@@ -64,7 +64,7 @@ func (m *HydrateOrchestrator) NeedsHelmAuth(ctx context.Context, authDir *dagger
 
 	for _, file := range []string{"username", "password", "registry"} {
 
-		if slices.Contains(entries, "helm-auth/"+file) {
+		if slices.Contains(entries, "helm_auth/"+file) {
 			continue
 		}
 
