@@ -5,8 +5,6 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
-
-	"github.com/samber/lo"
 )
 
 // Hydrate deployments based on the updated deployments
@@ -73,12 +71,9 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 		switch deploymentType {
 		case "kubernetes":
 			// Process kubernetes deployment
-			dep := kubernetesDepFromStr(deployment)
-			if !lo.ContainsBy(result.KubernetesDeployments, func(d KubernetesDeployment) bool {
-				return d.Equals(*dep)
-			}) {
-				result.KubernetesDeployments = append(result.KubernetesDeployments, *dep)
-			}
+			kdep := kubernetesDepFromStr(deployment)
+			result.addDeployment(kdep)
+
 		}
 
 	}

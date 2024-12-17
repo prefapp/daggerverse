@@ -1,5 +1,11 @@
 package main
 
+import (
+	"encoding/json"
+	"path/filepath"
+	"strings"
+)
+
 // JSON Types
 
 type ImageMatrix struct {
@@ -28,5 +34,40 @@ func (m *HydrateOrchestrator) RunDispatch(
 func (m *HydrateOrchestrator) processImagesMatrix(
 	updatedDeployments string,
 ) *Deployments {
-	return nil
+	result := &Deployments{
+		KubernetesDeployments: []KubernetesDeployment{},
+	}
+
+	var imagesMatrix ImageMatrix
+	err := json.Unmarshal([]byte(updatedDeployments), &imagesMatrix)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, image := range imagesMatrix.Images {
+
+		// At the moment the dispatch does not send the cluster so we extract it from the base folder
+		cluster := strings.Split(image.BaseFolder, "/")[1]
+		deploymentPath := filepath.Join(
+			"kubernetes",
+			cluster,
+			image.Tenant,
+			image.Env,
+		)
+
+		kdep := KubernetesDeployment{
+			Deployment: Deployment{
+				DeploymentPath: deploymentPath,
+			},
+			Cluster:     cluster,
+			Tenant:      image.Tenant,
+			Environment: image.Env,
+		}
+
+		result.addDeployment(kdep)
+
+	}
+
+	return result
 }

@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/samber/lo"
 )
 
 /*
@@ -13,6 +15,21 @@ struct to hold the updated deployments
 
 type Deployments struct {
 	KubernetesDeployments []KubernetesDeployment
+}
+
+func (d *Deployments) addDeployment(dep interface{}) {
+	switch dep.(type) {
+	case *KubernetesDeployment:
+
+		kdep := dep.(*KubernetesDeployment)
+		if !lo.ContainsBy(d.KubernetesDeployments, func(kd KubernetesDeployment) bool {
+			return kd.Equals(*kdep)
+		}) {
+			d.KubernetesDeployments = append(d.KubernetesDeployments, *kdep)
+		}
+	default:
+		panic(fmt.Sprintf("Unknown deployment type: %T", dep))
+	}
 }
 
 type Deployment struct {
