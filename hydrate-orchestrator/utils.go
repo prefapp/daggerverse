@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/samber/lo"
 )
 
 /*
@@ -13,6 +15,21 @@ struct to hold the updated deployments
 
 type Deployments struct {
 	KubernetesDeployments []KubernetesDeployment
+}
+
+func (d *Deployments) addDeployment(dep interface{}) {
+	switch dep.(type) {
+	case *KubernetesDeployment:
+
+		kdep := dep.(*KubernetesDeployment)
+		if !lo.ContainsBy(d.KubernetesDeployments, func(kd KubernetesDeployment) bool {
+			return kd.Equals(*kdep)
+		}) {
+			d.KubernetesDeployments = append(d.KubernetesDeployments, *kdep)
+		}
+	default:
+		panic(fmt.Sprintf("Unknown deployment type: %T", dep))
+	}
 }
 
 type Deployment struct {
@@ -43,18 +60,23 @@ func (kd *KubernetesDeployment) String(summary bool) string {
 	if summary {
 
 		return fmt.Sprintf(
-			"Deployment in cluster: %s, tenant: %s, env: %s",
+			"Deployment in cluster: `%s`, tenant: `%s`, env: `%s`",
 			kd.Cluster, kd.Tenant, kd.Environment,
 		)
 	} else {
-		return fmt.Sprintf(`
-Deployment:
-* Cluster: %s
-* Tenant: %s
-* Environment: %s
-		`,
-			kd.Cluster, kd.Tenant, kd.Environment,
-		)
+		return "Deployment:" +
+			fmt.Sprintf("\n\tCluster: `%s`", kd.Cluster) +
+			fmt.Sprintf("\n\tTenant: `%s`", kd.Tenant) +
+			fmt.Sprintf("\n\tEnvironment: `%s`", kd.Environment)
+	}
+}
+
+func (kd *KubernetesDeployment) Labels() []string {
+	return []string{
+		fmt.Sprintf("type/kubernetes"),
+		fmt.Sprintf("cluster/%s", kd.Cluster),
+		fmt.Sprintf("tenant/%s", kd.Tenant),
+		fmt.Sprintf("env/%s", kd.Environment),
 	}
 }
 
