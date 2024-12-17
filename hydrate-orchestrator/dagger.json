@@ -4,14 +4,13 @@
   "sdk": "go",
   "dependencies": [
     {
-      "name": "hydrate-kubernetes",
-      "source": "github.com/prefapp/daggerverse/hydrate-kubernetes@main",
-      "pin": "d9df2386b0d9bf5ee32adeebdeb48166cb707cbb"
-    },
-    {
       "name": "gh",
       "source": "github.com/prefapp/aweris-daggerverse/gh",
       "pin": "b301adc888e6c420b46e5b71f48ea4ea68023865"
+    },
+    {
+      "name": "hydrate-kubernetes",
+      "source": "../hydrate-kubernetes"
     }
   ],
   "source": "."
