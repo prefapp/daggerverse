@@ -35,7 +35,6 @@ func New(
 	valuesDir *dagger.Directory,
 
 	// The path to the wet repo directory, where the wet manifests are stored
-	// +optional
 	wetRepoDir *dagger.Directory,
 
 	// The path to the helmfile.yaml file
