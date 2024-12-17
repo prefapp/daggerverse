@@ -3,16 +3,18 @@ package main
 import (
 	"context"
 	"dagger/hydrate-orchestrator/internal/dagger"
-	"encoding/json"
-	"fmt"
-	"strings"
-	"time"
 )
 
 type HydrateOrchestrator struct {
+	Repo             string
+	GhToken          *dagger.Secret
+	App              string
+	ValuesStateDir   *dagger.Directory
+	WetStateDir      *dagger.Directory
+	DeploymentBranch string
 }
 
-func (m *HydrateOrchestrator) Run(
+func New(
 	ctx context.Context,
 	// Github repository name <owner>/<repo>
 	// +required
@@ -20,207 +22,24 @@ func (m *HydrateOrchestrator) Run(
 	// GitHub token
 	// +required
 	ghToken *dagger.Secret,
+	// Application name
+	// +required
 	app string,
-	// The path to the values directory, where the helm values are stored
-	valuesDir *dagger.Directory,
-	wetRepoDir *dagger.Directory,
-	// extra packages to install
-	// +optional
-	depsFile *dagger.File,
-	// +optional
-	// +default="[]"
-	updatedDeployments string,
-	// +optional
-	// +default="{\"images\":[]}"
-	newImagesMatrix string,
+	// State values directory (e.g. state-app-<app>#main)
+	// +required
+	valuesStateDir *dagger.Directory,
+	// Wet state directory (e.g. wet-state-app-<app>#<deployment-branch>)
+	// +required
+	wetStateDir *dagger.Directory,
+	// Deployment branch to hydrate
 	// +optional
 	// +default="deployment"
-	depBranch string,
-) {
+	deploymentBranch string,
 
-	// Load the updated deployments from JSON string using gojq
-	var deployments []string
-	json.Unmarshal([]byte(updatedDeployments), &deployments)
-
-	for _, deployment := range deployments {
-		// Get the first directory from the deployment string
-		deploymentType := strings.Split(deployment, "/")[0]
-		switch deploymentType {
-		case "kubernetes":
-
-			affectedJson, err := json.Marshal([]string{deployment})
-			if err != nil {
-				// skip the deployment if it can't be marshalled
-				continue
-			}
-			renderedDep := dag.HydrateKubernetes(
-				valuesDir,
-				dagger.HydrateKubernetesOpts{
-					DepsFile:   depsFile,
-					WetRepoDir: wetRepoDir,
-				},
-			).RenderApps(app, dagger.HydrateKubernetesRenderAppsOpts{
-				AffectedPaths:   string(affectedJson),
-				NewImagesMatrix: newImagesMatrix,
-			})
-
-			// split the path into a slice
-			deploymentPath := strings.Split(deployment, "/")
-			depType := deploymentPath[0]
-			cluster := deploymentPath[1]
-			tenant := deploymentPath[2]
-			env := deploymentPath[3]
-
-			branchName := fmt.Sprintf("%s-%s-%s-%s", depType, cluster, tenant, env)
-
-			prExists := m.CheckPrExists(ctx, repo, branchName, ghToken)
-			if !prExists {
-
-				m.CreateRemoteBranch(ctx, wetRepoDir, branchName, ghToken)
-			}
-
-			// Create each label
-			labels := []string{
-				fmt.Sprintf("type/%s", depType),
-				fmt.Sprintf("app/%s", app),
-				fmt.Sprintf("cluster/%s", cluster),
-				fmt.Sprintf("tenant/%s", tenant),
-				fmt.Sprintf("env/%s", env),
-			}
-
-			for _, label := range labels {
-				dag.Gh(dagger.GhOpts{Token: ghToken}).Run(fmt.Sprintf("label create -R %s --force %s", repo, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
-			}
-
-			m.UpsertPR(ctx, repo, ghToken, branchName, depBranch, renderedDep)
-		}
+) *HydrateOrchestrator {
+	return &HydrateOrchestrator{
+		Repo:    repo,
+		GhToken: ghToken,
+		App:     app,
 	}
-
-}
-
-func (m *HydrateOrchestrator) UpsertPR(
-	ctx context.Context,
-	// Github repository name <owner>/<repo>
-	// +required
-	repo string,
-	// GitHub token
-	// +required
-	ghToken *dagger.Secret,
-	// +required
-	newBranchName string,
-	// +required
-	baseBranchName string,
-	// +required
-	contents *dagger.Directory,
-) {
-	contentsDirPath := "/contents"
-	dag.Gh().Container(dagger.GhContainerOpts{Token: ghToken, Plugins: []string{"prefapp/gh-commit"}}).
-		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
-			Exclude: []string{".git"},
-		}).
-		WithWorkdir(contentsDirPath).
-		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{
-			"gh",
-			"commit",
-			"-R", repo,
-			"-b", newBranchName,
-		}).Sync(ctx)
-
-	prExists := m.CheckPrExists(ctx, repo, newBranchName, ghToken)
-
-	if !prExists {
-		// Create a PR for the updated deployment
-		dag.Gh().Run(fmt.Sprintf("pr create -R '%s' --base '%s' --title 'Update deployment' --body 'Update deployment' --head %s", repo, baseBranchName, newBranchName),
-			dagger.GhRunOpts{
-				DisableCache: true,
-				Token:        ghToken,
-			},
-		).Sync(ctx)
-	}
-}
-
-type Pr struct {
-	HeadRefName string `json:"headRefName"`
-	Url         string `json:"url"`
-	Number      int    `json:"number"`
-}
-
-func (m *HydrateOrchestrator) GetRepoPrs(ctx context.Context, ghRepo string, token *dagger.Secret) ([]Pr, error) {
-
-	command := strings.Join([]string{
-		"pr",
-		"list",
-		"--json",
-		"headRefName",
-		"--json",
-		"number,url",
-		"-L",
-		"1000",
-		"-R",
-		ghRepo},
-		" ")
-
-	content, err := dag.Gh().Run(command, dagger.GhRunOpts{DisableCache: true, Token: token}).Stdout(ctx)
-
-	if err != nil {
-
-		return nil, err
-	}
-
-	prs := []Pr{}
-
-	json.Unmarshal([]byte(content), &prs)
-
-	return prs, nil
-}
-
-func (m *HydrateOrchestrator) CheckPrExists(ctx context.Context, repo string, branchName string, token *dagger.Secret) bool {
-
-	prs, err := m.GetRepoPrs(ctx, repo, token)
-
-	if err != nil {
-		panic(err)
-	}
-
-	for _, pr := range prs {
-		if pr.HeadRefName == branchName {
-			return true
-		}
-	}
-	return false
-}
-
-func (m *HydrateOrchestrator) CreateRemoteBranch(
-
-	ctx context.Context,
-	// Base branch name
-	// +required
-	gitDir *dagger.Directory,
-	// New branch name
-	// +required
-	newBranch string,
-	// GitHub token
-	// +required
-	ghToken *dagger.Secret,
-) {
-	gitDirPath := "/git_dir"
-	dag.Gh().Container(dagger.GhContainerOpts{
-		Token: ghToken,
-	}).
-		WithDirectory(gitDirPath, gitDir).
-		WithWorkdir(gitDirPath).
-		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{
-			"git",
-			"checkout",
-			"-b",
-			newBranch,
-		}, dagger.ContainerWithExecOpts{},
-		).WithExec([]string{
-		"git",
-		"push",
-		"origin",
-		newBranch,
-	}).Sync(ctx)
 }

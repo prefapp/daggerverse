@@ -43,7 +43,7 @@ func (kd *KubernetesDeployment) Equals(other KubernetesDeployment) bool {
 }
 
 // Process updated deployments and return all unique deployments after validating and processing them
-func (m *HydrateOrchestrator) ProcessUpdatedDeployments(
+func (m *HydrateOrchestrator) processUpdatedDeployments(
 	ctx context.Context,
 	// List of updated deployments in JSON format
 	// +required
