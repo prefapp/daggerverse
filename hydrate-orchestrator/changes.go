@@ -23,22 +23,14 @@ func (m *HydrateOrchestrator) RunChanges(
 		// renderedDeployment
 
 		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
-		dag.HydrateKubernetes(m.ValuesStateDir).Render(m.App, kdep.Cluster, kdep.Tenant, kdep.Environment)
+		dag.HydrateKubernetes(
+			m.ValuesStateDir,
+			m.WetStateDir,
+		).Render(m.App, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
 	}
 
 	for _, deployment := range deployments {
-
-			renderedDep := dag.HydrateKubernetes(
-				valuesDir,
-				dagger.HydrateKubernetesOpts{
-					DepsFile:   depsFile,
-					WetRepoDir: wetRepoDir,
-				},
-			).Render(app, dagger.HydrateKubernetesRenderAppsOpts{
-				AffectedPaths:   string(affectedJson),
-				NewImagesMatrix: newImagesMatrix,
-			})
 
 			branchName := fmt.Sprintf("%s-%s-%s-%s", depType, cluster, tenant, env)
 
