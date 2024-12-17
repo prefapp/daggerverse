@@ -11,6 +11,7 @@ type HydrateOrchestrator struct {
 	App              string
 	ValuesStateDir   *dagger.Directory
 	WetStateDir      *dagger.Directory
+	AuthDir          *dagger.Directory
 	DeploymentBranch string
 }
 
@@ -31,6 +32,9 @@ func New(
 	// Wet state directory (e.g. wet-state-app-<app>#<deployment-branch>)
 	// +required
 	wetStateDir *dagger.Directory,
+	// Auth directory
+	// +required
+	authDir *dagger.Directory,
 	// Deployment branch to hydrate
 	// +optional
 	// +default="deployment"
@@ -44,5 +48,6 @@ func New(
 		ValuesStateDir:   valuesStateDir,
 		WetStateDir:      wetStateDir,
 		DeploymentBranch: deploymentBranch,
+		AuthDir:          authDir,
 	}
 }
