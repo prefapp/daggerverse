@@ -14,7 +14,7 @@ func (m *HydrateOrchestrator) RunChanges(
 	// +required
 	updatedDeployments string,
 	// Pr that triggered the render
-	// +required
+	// +optional
 	valuesPrNumber int,
 ) {
 
@@ -37,10 +37,18 @@ func (m *HydrateOrchestrator) RunChanges(
 			},
 		).Render(m.App, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
-		prBody := fmt.Sprintf(`
-		New deployment created by @author, from PR #%d
-		%s
-		`, valuesPrNumber, kdep.String(true))
+		var prBody string
+		if valuesPrNumber != 0 {
+			prBody = fmt.Sprintf(`
+			New deployment created by @author (%s) (PR #%d)
+			%s
+			`, m.Event, valuesPrNumber, kdep.String(true))
+		} else {
+			prBody = fmt.Sprintf(`
+			New deployment created by @author (%s)
+			%s
+			`, m.Event, kdep.String(true))
+		}
 
 		m.upsertPR(
 			ctx,

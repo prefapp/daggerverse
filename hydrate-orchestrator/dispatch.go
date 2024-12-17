@@ -58,9 +58,9 @@ func (m *HydrateOrchestrator) RunDispatch(
 		})
 
 		prBody := fmt.Sprintf(`
-		New deployment created by @author, from workflow run #%d
+		New deployment created by @author, from workflow run (%s) #%d
 		%s
-		`, workflowRun, kdep.String(true))
+		`, m.Event, workflowRun, kdep.String(true))
 
 		m.upsertPR(
 			ctx,
