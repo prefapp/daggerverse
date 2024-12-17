@@ -73,7 +73,11 @@ func (m *HydrateOrchestrator) Run(
 
 			branchName := fmt.Sprintf("%s-%s-%s-%s", depType, cluster, tenant, env)
 
-			m.CreateRemoteBranch(ctx, wetRepoDir, branchName, ghToken)
+			prExists := m.CheckPrExists(ctx, repo, branchName, ghToken)
+			if !prExists {
+
+				m.CreateRemoteBranch(ctx, wetRepoDir, branchName, ghToken)
+			}
 
 			// Create each label
 			labels := []string{
@@ -122,11 +126,69 @@ func (m *HydrateOrchestrator) UpsertPR(
 			"-R", repo,
 			"-b", newBranchName,
 		}).Sync(ctx)
-	// Create a PR for the updated deployment
-	dag.Gh().Run(
-		fmt.Sprintf("pr create -R %s --base %s --title 'Update deployment' --body 'Update deployment' --head %s", repo, baseBranchName, newBranchName),
-		dagger.GhRunOpts{DisableCache: true},
-	).Sync(ctx)
+
+	prExists := m.CheckPrExists(ctx, repo, newBranchName, ghToken)
+
+	if !prExists {
+		// Create a PR for the updated deployment
+		dag.Gh().Run(fmt.Sprintf("pr create -R '%s' --base '%s' --title 'Update deployment' --body 'Update deployment' --head %s", repo, baseBranchName, newBranchName),
+			dagger.GhRunOpts{
+				DisableCache: true,
+				Token:        ghToken,
+			},
+		).Sync(ctx)
+	}
+}
+
+type Pr struct {
+	HeadRefName string `json:"headRefName"`
+	Url         string `json:"url"`
+	Number      int    `json:"number"`
+}
+
+func (m *HydrateOrchestrator) GetRepoPrs(ctx context.Context, ghRepo string, token *dagger.Secret) ([]Pr, error) {
+
+	command := strings.Join([]string{
+		"pr",
+		"list",
+		"--json",
+		"headRefName",
+		"--json",
+		"number,url",
+		"-L",
+		"1000",
+		"-R",
+		ghRepo},
+		" ")
+
+	content, err := dag.Gh().Run(command, dagger.GhRunOpts{DisableCache: true, Token: token}).Stdout(ctx)
+
+	if err != nil {
+
+		return nil, err
+	}
+
+	prs := []Pr{}
+
+	json.Unmarshal([]byte(content), &prs)
+
+	return prs, nil
+}
+
+func (m *HydrateOrchestrator) CheckPrExists(ctx context.Context, repo string, branchName string, token *dagger.Secret) bool {
+
+	prs, err := m.GetRepoPrs(ctx, repo, token)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, pr := range prs {
+		if pr.HeadRefName == branchName {
+			return true
+		}
+	}
+	return false
 }
 
 func (m *HydrateOrchestrator) CreateRemoteBranch(
