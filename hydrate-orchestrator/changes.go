@@ -47,7 +47,7 @@ func (m *HydrateOrchestrator) RunChanges(
 			prBody = fmt.Sprintf(`
 New deployment created by @%s in PR #%d
 %s
-`, id, kdep.String(true))
+`, author, id, kdep.String(true))
 		} else if m.Event == Manual {
 			prBody = fmt.Sprintf(`
 New deployment created by @%s in wokrlfow run #%d
