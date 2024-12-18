@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
+
+	"gopkg.in/yaml.v3"
 )
 
 type HydrateKubernetes struct {
@@ -20,16 +22,6 @@ type HydrateKubernetes struct {
 func New(
 
 	ctx context.Context,
-
-	// The Helmfile image tag to use https://github.com/helmfile/helmfile/pkgs/container/helmfile
-	// +optional
-	// +default="latest"
-	helmfileImageTag string,
-
-	// The Helmfile image to use
-	// +optional
-	// +default="ghcr.io/helmfile/helmfile"
-	helmfileImage string,
 
 	// The path to the values directory, where the helm values are stored
 	valuesDir *dagger.Directory,
@@ -60,16 +52,30 @@ func New(
 
 ) *HydrateKubernetes {
 
+	hydrateK8sConf, err := valuesDir.
+		File(".github/hydrate_k8s_config.yaml").
+		Contents(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	config := Config{}
+
+	errUnmsh := yaml.
+		Unmarshal([]byte(hydrateK8sConf), config)
+
+	if errUnmsh != nil {
+
+		panic(errUnmsh)
+
+	}
+
 	c := dag.
 		Container().
-		From(helmfileImage + ":" + helmfileImageTag)
+		From(config.Image)
 
-	depsFileContent, err := valuesDir.File(".github/hydrate_deps.yaml").Contents(ctx)
-
-	if err == nil {
-
-		c = installDeps(depsFileContent, c)
-	}
+	c = containerWithCmds(c, config.Commands)
 
 	if helmfile == nil {
 

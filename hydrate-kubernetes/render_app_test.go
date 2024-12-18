@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestRenderAppCanRender(t *testing.T) {
@@ -24,8 +26,8 @@ func TestRenderAppCanRender(t *testing.T) {
 		ValuesGoTmpl: helmDir.File("helm/values.yaml.gotmpl"),
 	}
 
-	depsContent, errContents := valuesRepoDir.
-		File("./fixtures/values-repo-dir/.github/hydrate_deps.yaml").
+	config, errContents := valuesRepoDir.
+		File("./fixtures/values-repo-dir/.github/hydrate_k8s_config.yaml").
 		Contents(ctx)
 
 	if errContents != nil {
@@ -34,7 +36,19 @@ func TestRenderAppCanRender(t *testing.T) {
 
 	}
 
-	m.Container = installDeps(depsContent, m.Container)
+	configStruct := Config{}
+
+	errUnmsh := yaml.Unmarshal([]byte(config), &configStruct)
+
+	if errUnmsh != nil {
+
+		t.Errorf("Error unmarshalling deps file: %v", errUnmsh)
+
+	}
+
+	m.Container = m.Container.From(configStruct.Image)
+
+	m.Container = containerWithCmds(m.Container, configStruct.Commands)
 
 	stdout, err := m.RenderApp(
 		ctx,
