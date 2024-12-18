@@ -22,7 +22,7 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 	prList []Pr,
 
-    claimsRepo string,
+	claimsRepo string,
 
 ) (PrsResult, error) {
 
@@ -32,28 +32,28 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 	copy(orphanPrs, prList)
 
-    claimsRepoPRLink := fmt.Sprintf("%s#%s", claimsRepo, claimPrNumber)
+	claimsRepoPRLink := fmt.Sprintf("%s#%s", claimsRepo, claimPrNumber)
 
-    m.UpsertPrFromFileList(
-        ctx, diff.AddedFiles, wetRepositoryDir, wetRepoName, "create",
-        claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs
-    )
+	m.upsertPrsFromFileList(
+		ctx, diff.AddedFiles, wetRepositoryDir, wetRepoName, "create",
+		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
+	)
 
-    m.UpsertPrFromFileList(
-        ctx, diff.ModifiedFiles, wetRepositoryDir, wetRepoName, "update",
-        claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs
-    )
+	m.upsertPrsFromFileList(
+		ctx, diff.ModifiedFiles, wetRepositoryDir, wetRepoName, "update",
+		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
+	)
 
-    m.UpsertPrFromFileList(
-        ctx, diff.ModifiedFiles, wetRepositoryDir, wetRepoName, "update",
-        claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs
-    )
+	m.upsertPrsFromFileList(
+		ctx, diff.ModifiedFiles, wetRepositoryDir, wetRepoName, "update",
+		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
+	)
 
 	return PrsResult{Orphans: orphanPrs, Prs: createdOrUpdatedPrs}, nil
 
 }
 
-func upsertPrsFromFileList(
+func (m *NotifyAndHydrateState) upsertPrsFromFileList(
 
 	ctx context.Context,
 
@@ -63,17 +63,17 @@ func upsertPrsFromFileList(
 
 	wetRepoName string,
 
-    action string,
+	action string,
 
 	claimPrNumber string,
 
 	prList []Pr,
 
-    claimsRepoPRLink string,
+	claimsRepoPRLink string,
 
-    createdOrUpdatedPrs []Pr,
+	createdOrUpdatedPrs []Pr,
 
-    orphanPrs []Pr,
+	orphanPrs []Pr,
 
 ) {
 
@@ -126,7 +126,7 @@ func (m *NotifyAndHydrateState) UpsertPr(
 
 	prs []Pr,
 
-    claimsRepoPRLink string,
+	claimsRepoPrLink string,
 
 ) (Pr, error) {
 
