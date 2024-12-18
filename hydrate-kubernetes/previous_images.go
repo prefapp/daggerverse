@@ -71,7 +71,7 @@ func (m *HydrateKubernetes) BuildPreviousImagesApp(
 
 		if errUnms != nil {
 
-			panic(err)
+			panic(errUnms)
 
 		}
 

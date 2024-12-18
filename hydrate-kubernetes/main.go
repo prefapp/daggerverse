@@ -166,7 +166,7 @@ func (m *HydrateKubernetes) Render(
 
 		panic(
 			fmt.Sprintf(
-				"Invalid render type: %s, it should be either apps or sys-apps",
+				"Invalid render type: %s, it should be either 'apps' or 'sys-apps'",
 				m.RenderType,
 			),
 		)
