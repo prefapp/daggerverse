@@ -38,14 +38,14 @@ func (m *HydrateOrchestrator) RunDispatch(
 
 	deployments := m.processImagesMatrix(newImagesMatrix)
 
-	repositoryCaller := m.getRepositoryCaller(newImagesMatrix)
+	repositoryCaller, repoURL := m.getRepositoryCaller(newImagesMatrix)
 	reviewers := m.getReviewers(newImagesMatrix)
 
 	helmAuth := m.GetHelmAuth(ctx)
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
-		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
+		branchName := fmt.Sprintf("%s-kubernetes-%s-%s-%s", repositoryCaller, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
 		renderedDeployment := dag.HydrateKubernetes(
 			m.ValuesStateDir,
@@ -61,9 +61,9 @@ func (m *HydrateOrchestrator) RunDispatch(
 		})
 
 		prBody := fmt.Sprintf(`
-New deployment created by @author, from repository dispatch in *%s*
+# New deployment from new image in repository [*%s*](%s)
 %s
-`, repositoryCaller, kdep.String(true))
+`, repositoryCaller, &repoURL, kdep.String(false))
 
 		m.upsertPR(
 			ctx,
@@ -119,7 +119,7 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 	return result
 }
 
-func (m *HydrateOrchestrator) getRepositoryCaller(newImagesMatrix string) string {
+func (m *HydrateOrchestrator) getRepositoryCaller(newImagesMatrix string) (string, string) {
 	var imagesMatrix ImageMatrix
 	err := json.Unmarshal([]byte(newImagesMatrix), &imagesMatrix)
 
@@ -127,7 +127,13 @@ func (m *HydrateOrchestrator) getRepositoryCaller(newImagesMatrix string) string
 		panic(err)
 	}
 
-	return imagesMatrix.Images[0].RepositoryCaller
+	org := strings.Split(m.Repo, "/")[0]
+
+	repositoryCaller := imagesMatrix.Images[0].RepositoryCaller
+
+	repoURL := fmt.Sprintf("https://github.com/%s/%s", org, repositoryCaller)
+
+	return repositoryCaller, repoURL
 }
 
 func (m *HydrateOrchestrator) getReviewers(newImagesMatrix string) []string {

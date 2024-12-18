@@ -21,7 +21,7 @@ func (m *HydrateOrchestrator) RunChanges(
 	id int,
 	// Author of the PR
 	// +optional
-	// +default=""
+	// +default="author"
 	author string,
 ) {
 
@@ -31,7 +31,7 @@ func (m *HydrateOrchestrator) RunChanges(
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
-		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
+		branchName := fmt.Sprintf("%d-kubernetes-%s-%s-%s", id, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
 		renderedDeployment := dag.HydrateKubernetes(
 			m.ValuesStateDir,
@@ -47,14 +47,16 @@ func (m *HydrateOrchestrator) RunChanges(
 		var prBody string
 		if m.Event == PullRequest {
 			prBody = fmt.Sprintf(`
-New deployment created by @%s in PR #%d
+# New deployment from PR #%d
+Created by @%s
 %s
-`, id, kdep.String(true))
+`, id, author, kdep.String(false))
 		} else if m.Event == Manual {
 			prBody = fmt.Sprintf(`
-New deployment created by @%s in wokrlfow run #%d
+# New deployment manually triggered
+Created by @%s
 %s
-`, author, m.Event, kdep.String(true))
+`, author, kdep.String(false))
 		}
 
 		m.upsertPR(
@@ -64,7 +66,7 @@ New deployment created by @%s in wokrlfow run #%d
 			kdep.Labels(),
 			kdep.String(true),
 			prBody,
-			lo.Ternary(author == "", []string{}, []string{author}),
+			lo.Ternary(author == "author", []string{}, []string{author}),
 		)
 	}
 
