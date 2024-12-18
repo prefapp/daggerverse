@@ -39,6 +39,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 	deployments := m.processImagesMatrix(newImagesMatrix)
 
 	repositoryCaller := m.getRepositoryCaller(newImagesMatrix)
+	reviewers := m.getReviewers(newImagesMatrix)
 
 	helmAuth := m.GetHelmAuth(ctx)
 
@@ -60,7 +61,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 		})
 
 		prBody := fmt.Sprintf(`
-New deployment created by @author, from repository %s
+New deployment created by @author, from repository dispatch in *%s*
 %s
 `, repositoryCaller, kdep.String(true))
 
@@ -71,6 +72,7 @@ New deployment created by @author, from repository %s
 			kdep.Labels(),
 			kdep.String(true),
 			prBody,
+			reviewers,
 		)
 	}
 
@@ -126,4 +128,19 @@ func (m *HydrateOrchestrator) getRepositoryCaller(newImagesMatrix string) string
 	}
 
 	return imagesMatrix.Images[0].RepositoryCaller
+}
+
+func (m *HydrateOrchestrator) getReviewers(newImagesMatrix string) []string {
+	var imagesMatrix ImageMatrix
+	err := json.Unmarshal([]byte(newImagesMatrix), &imagesMatrix)
+
+	if err != nil {
+		panic(err)
+	}
+
+	reviewers := []string{}
+	for _, image := range imagesMatrix.Images {
+		reviewers = append(reviewers, image.Reviewers...)
+	}
+	return reviewers
 }

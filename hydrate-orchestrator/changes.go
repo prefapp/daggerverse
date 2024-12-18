@@ -17,6 +17,10 @@ func (m *HydrateOrchestrator) RunChanges(
 	// +optional
 	// +default=0
 	id int,
+	// Author of the PR
+	// +optional
+	// +default="author"
+	author string,
 ) {
 
 	deployments := m.processUpdatedDeployments(ctx, updatedDeployments)
@@ -41,14 +45,14 @@ func (m *HydrateOrchestrator) RunChanges(
 		var prBody string
 		if m.Event == PullRequest {
 			prBody = fmt.Sprintf(`
-New deployment created by @author in PR #%d
+New deployment created by @%s in PR #%d
 %s
 `, id, kdep.String(true))
 		} else if m.Event == Manual {
 			prBody = fmt.Sprintf(`
-New deployment created by @author in wokrlfow run #%d
+New deployment created by @%s in wokrlfow run #%d
 %s
-`, m.Event, kdep.String(true))
+`, author, m.Event, kdep.String(true))
 		}
 
 		m.upsertPR(
@@ -58,6 +62,7 @@ New deployment created by @author in wokrlfow run #%d
 			kdep.Labels(),
 			kdep.String(true),
 			prBody,
+			[]string{},
 		)
 	}
 
