@@ -83,7 +83,7 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 
 	for _, regex := range []string{"*.yml", "*.yaml"} {
 
-		entries, err := m.WetRepoDir.Glob(ctx, cluster+"/"+app+"/extra_artifacts/"+regex)
+		entries, err := m.ValuesDir.Glob(ctx, cluster+"/"+app+"/extra_artifacts/"+regex)
 
 		if err != nil {
 
@@ -95,7 +95,7 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 
 			extraFile := m.WetRepoDir.File(entry)
 
-			m.WetRepoDir = m.WetRepoDir.WithFile(entry, extraFile)
+			m.WetRepoDir = m.WetRepoDir.WithFile(cluster+"/"+app+"/"+entry, extraFile)
 		}
 
 	}
