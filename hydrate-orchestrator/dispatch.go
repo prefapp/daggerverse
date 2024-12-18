@@ -45,7 +45,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
-		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
+		branchName := fmt.Sprintf("%s-kubernetes-%s-%s-%s", repositoryCaller, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
 		renderedDeployment := dag.HydrateKubernetes(
 			m.ValuesStateDir,
@@ -61,7 +61,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 		})
 
 		prBody := fmt.Sprintf(`
-New deployment created by @author, from repository dispatch in *%s*
+# New deployment from new image in repository *%s*
 %s
 `, repositoryCaller, kdep.String(true))
 
