@@ -38,7 +38,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 
 	deployments := m.processImagesMatrix(newImagesMatrix)
 
-	repositoryCaller := m.getRepositoryCaller(newImagesMatrix)
+	repositoryCaller, repoURL := m.getRepositoryCaller(newImagesMatrix)
 	reviewers := m.getReviewers(newImagesMatrix)
 
 	helmAuth := m.GetHelmAuth(ctx)
@@ -61,9 +61,9 @@ func (m *HydrateOrchestrator) RunDispatch(
 		})
 
 		prBody := fmt.Sprintf(`
-# New deployment from new image in repository *%s*
+# New deployment from new image in repository [*%s*](%s)
 %s
-`, repositoryCaller, kdep.String(true))
+`, repositoryCaller, &repoURL, kdep.String(false))
 
 		m.upsertPR(
 			ctx,
@@ -119,7 +119,7 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 	return result
 }
 
-func (m *HydrateOrchestrator) getRepositoryCaller(newImagesMatrix string) string {
+func (m *HydrateOrchestrator) getRepositoryCaller(newImagesMatrix string) (string, string) {
 	var imagesMatrix ImageMatrix
 	err := json.Unmarshal([]byte(newImagesMatrix), &imagesMatrix)
 
@@ -127,7 +127,13 @@ func (m *HydrateOrchestrator) getRepositoryCaller(newImagesMatrix string) string
 		panic(err)
 	}
 
-	return imagesMatrix.Images[0].RepositoryCaller
+	org := strings.Split(m.Repo, "/")[0]
+
+	repositoryCaller := imagesMatrix.Images[0].RepositoryCaller
+
+	repoURL := fmt.Sprintf("https://github.com/%s/%s", org, repositoryCaller)
+
+	return repositoryCaller, repoURL
 }
 
 func (m *HydrateOrchestrator) getReviewers(newImagesMatrix string) []string {
