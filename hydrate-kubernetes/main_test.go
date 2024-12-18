@@ -16,14 +16,14 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 
 	wetRepoDir := getDir("./fixtures/wet-repo-dir")
 
-	helmDir := getDir("./helm")
+	helmDir := getDir("./helm-apps")
 
 	m := &HydrateKubernetes{
 		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir"),
 		WetRepoDir:   wetRepoDir.Directory("fixtures/wet-repo-dir"),
 		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
-		Helmfile:     helmDir.File("helm/helmfile.yaml"),
-		ValuesGoTmpl: helmDir.File("helm/values.yaml.gotmpl"),
+		Helmfile:     helmDir.File("helm-apps/helmfile.yaml"),
+		ValuesGoTmpl: helmDir.File("helm-apps/values.yaml.gotmpl"),
 	}
 
 	config, errContents := valuesRepoDir.
@@ -106,14 +106,14 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 
 	wetRepoDir := getDir("./fixtures/wet-repo-dir")
 
-	helmDir := getDir("./helm")
+	helmDir := getDir("./helm-apps")
 
 	m := &HydrateKubernetes{
 		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir"),
 		WetRepoDir:   wetRepoDir.Directory("fixtures/wet-repo-dir"),
 		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
-		Helmfile:     helmDir.File("helm/helmfile.yaml"),
-		ValuesGoTmpl: helmDir.File("helm/values.yaml.gotmpl"),
+		Helmfile:     helmDir.File("helm-apps/helmfile.yaml"),
+		ValuesGoTmpl: helmDir.File("helm-apps/values.yaml.gotmpl"),
 	}
 
 	config, errContents := valuesRepoDir.

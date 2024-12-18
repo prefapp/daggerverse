@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -50,6 +51,10 @@ func New(
 	// +optional
 	helmRegistryPassword *dagger.Secret,
 
+	// Type of the render, it can be apps or sys-apps
+	// +optional
+	// +default="apps"
+	renderType string,
 ) *HydrateKubernetes {
 
 	hydrateK8sConf, err := valuesDir.
@@ -60,14 +65,13 @@ func New(
 		panic(err)
 	}
 
-	config := Config{}
+	config := &Config{}
 
-	errUnmsh := yaml.
-		Unmarshal([]byte(hydrateK8sConf), config)
+	errUnmsh := yaml.Unmarshal([]byte(hydrateK8sConf), config)
 
 	if errUnmsh != nil {
 
-		panic(errUnmsh)
+		panic("ERROR_UNMARSHAL")
 
 	}
 
@@ -79,13 +83,36 @@ func New(
 
 	if helmfile == nil {
 
-		helmfile = dag.CurrentModule().Source().File("./helm/helmfile.yaml")
+		if renderType == "apps" {
 
+			helmfile = dag.CurrentModule().Source().File("./helm-apps/helmfile.yaml")
+
+		} else if renderType == "sys-apps" {
+
+			helmfile = dag.CurrentModule().Source().File("./helm-sys-apps/helmfile.yaml")
+
+		} else {
+
+			panic(fmt.Sprintf("Invalid render type %s", renderType))
+
+		}
 	}
 
 	if valuesGoTmpl == nil {
 
-		valuesGoTmpl = dag.CurrentModule().Source().File("./helm/values.yaml.gotmpl")
+		if renderType == "apps" {
+
+			valuesGoTmpl = dag.CurrentModule().Source().File("./helm-apps/values.yaml.gotmpl")
+
+		} else if renderType == "sys-apps" {
+
+			valuesGoTmpl = dag.CurrentModule().Source().File("./helm-sys-apps/values.yaml.gotmpl")
+
+		} else {
+
+			panic(fmt.Sprintf("Invalid render type %s", renderType))
+
+		}
 
 	}
 

@@ -1,0 +1,23 @@
+# dev.yaml
+version: 1.2.0
+chart: stakater/reloader
+
+hooks: []
+
+extraPatches: # []
+  - target:
+      group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name:  stakater-reloader-role-binding
+    patch:
+      - op: add
+        path: /metadata/labels/test-label
+        value: test-value
+execs: []
+  # - command: ".github/certs_to_ca_yaml.py"
+  #   args: [
+  #     "--ca_certs_path", 
+  #     "./kubernetes/{{.StateValues.cluster}}/{{.StateValues.tenant}}/{{$.Environment.Name}}/ca-certs", 
+  #     "--ca_yml_path", 
+  #     "./kubernetes/{{.StateValues.cluster}}/{{.StateValues.tenant}}/{{$.Environment.Name}}/ca.yaml"
+  #   ]

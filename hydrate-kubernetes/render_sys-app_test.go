@@ -8,26 +8,26 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestRenderAppCanRender(t *testing.T) {
+func TestRenderSysAppCanRender(t *testing.T) {
 
 	ctx := context.Background()
 
-	valuesRepoDir := getDir("./fixtures/values-repo-dir")
+	valuesRepoDir := getDir("./fixtures/values-repo-dir-sys-apps")
 
 	wetRepoDir := getDir("./fixtures/wet-repo-dir")
 
-	helmDir := getDir("./helm-apps")
+	helmDir := getDir("./helm-sys-apps")
 
 	m := &HydrateKubernetes{
-		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir"),
+		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir-sys-apps"),
 		WetRepoDir:   wetRepoDir.Directory("fixtures/wet-repo-dir"),
 		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
-		Helmfile:     helmDir.File("helm-apps/helmfile.yaml"),
-		ValuesGoTmpl: helmDir.File("helm-apps/values.yaml.gotmpl"),
+		Helmfile:     helmDir.File("helm-sys-apps/helmfile.yaml"),
+		ValuesGoTmpl: helmDir.File("helm-sys-apps/values.yaml.gotmpl"),
 	}
 
 	config, errContents := valuesRepoDir.
-		File("./fixtures/values-repo-dir/.github/hydrate_k8s_config.yaml").
+		File("./fixtures/values-repo-dir-sys-apps/.github/hydrate_k8s_config.yaml").
 		Contents(ctx)
 
 	if errContents != nil {
@@ -50,13 +50,10 @@ func TestRenderAppCanRender(t *testing.T) {
 
 	m.Container = containerWithCmds(m.Container, configStruct.Commands)
 
-	stdout, err := m.RenderApp(
+	stdout, err := m.RenderSysApp(
 		ctx,
-		"dev",
-		"sample-app",
 		"cluster-name",
-		"test-tenant",
-		"{\"images\":[]}",
+		"stakater",
 	)
 
 	if err != nil {

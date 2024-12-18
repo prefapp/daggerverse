@@ -1,0 +1,1 @@
+dagger --helm-registry=$ACR_NAME --helm-registry-password=env:PASSWORD --render-type=sys-apps --helm-registry-user='00000000-0000-0000-0000-000000000000' --helm-registry-login-needed=false --values-dir=./fixtures/values-repo-dir-sys-apps/ --wet-repo-dir=./fixtures/wet-repo-dir/ call render-sys-app --app=stakater --cluster=cluster-name
