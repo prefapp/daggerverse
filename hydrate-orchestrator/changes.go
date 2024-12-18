@@ -41,14 +41,14 @@ func (m *HydrateOrchestrator) RunChanges(
 		var prBody string
 		if m.Event == PullRequest {
 			prBody = fmt.Sprintf(`
-			New deployment created by @author in PR #%d
-			%s
-			`, m.Event, id, kdep.String(true))
+New deployment created by @author in PR #%d
+%s
+`, id, kdep.String(true))
 		} else if m.Event == Manual {
 			prBody = fmt.Sprintf(`
-			New deployment created by @author in wokrlfow run #%d
-			%s
-			`, m.Event, kdep.String(true))
+New deployment created by @author in wokrlfow run #%d
+%s
+`, m.Event, kdep.String(true))
 		}
 
 		m.upsertPR(

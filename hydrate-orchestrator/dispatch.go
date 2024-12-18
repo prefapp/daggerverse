@@ -60,9 +60,9 @@ func (m *HydrateOrchestrator) RunDispatch(
 		})
 
 		prBody := fmt.Sprintf(`
-		New deployment created by @author, from repository %s
-		%s
-		`, repositoryCaller, m.Event, kdep.String(true))
+New deployment created by @author, from repository %s
+%s
+`, repositoryCaller, m.Event, kdep.String(true))
 
 		m.upsertPR(
 			ctx,
