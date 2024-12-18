@@ -5,6 +5,8 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
+
+	"github.com/samber/lo"
 )
 
 // Hydrate deployments based on the updated deployments
@@ -19,7 +21,7 @@ func (m *HydrateOrchestrator) RunChanges(
 	id int,
 	// Author of the PR
 	// +optional
-	// +default="author"
+	// +default=""
 	author string,
 ) {
 
@@ -47,7 +49,7 @@ func (m *HydrateOrchestrator) RunChanges(
 			prBody = fmt.Sprintf(`
 New deployment created by @%s in PR #%d
 %s
-`, author, id, kdep.String(true))
+`, id, kdep.String(true))
 		} else if m.Event == Manual {
 			prBody = fmt.Sprintf(`
 New deployment created by @%s in wokrlfow run #%d
@@ -62,7 +64,7 @@ New deployment created by @%s in wokrlfow run #%d
 			kdep.Labels(),
 			kdep.String(true),
 			prBody,
-			[]string{},
+			lo.Ternary(author == "", []string{}, []string{author}),
 		)
 	}
 
