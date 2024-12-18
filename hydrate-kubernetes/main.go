@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
 	"fmt"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -18,6 +19,7 @@ type HydrateKubernetes struct {
 	HelmRegistry            string
 	HelmRegistryUser        string
 	HelmRegistryPassword    *dagger.Secret
+	RenderType              string
 }
 
 func New(
@@ -55,6 +57,7 @@ func New(
 	// +optional
 	// +default="apps"
 	renderType string,
+
 ) *HydrateKubernetes {
 
 	hydrateK8sConf, err := valuesDir.
@@ -71,7 +74,7 @@ func New(
 
 	if errUnmsh != nil {
 
-		panic("ERROR_UNMARSHAL")
+		panic(errUnmsh)
 
 	}
 
@@ -83,36 +86,13 @@ func New(
 
 	if helmfile == nil {
 
-		if renderType == "apps" {
+		helmfile = dag.CurrentModule().Source().File("./helm-" + renderType + "/helmfile.yaml")
 
-			helmfile = dag.CurrentModule().Source().File("./helm-apps/helmfile.yaml")
-
-		} else if renderType == "sys-apps" {
-
-			helmfile = dag.CurrentModule().Source().File("./helm-sys-apps/helmfile.yaml")
-
-		} else {
-
-			panic(fmt.Sprintf("Invalid render type %s", renderType))
-
-		}
 	}
 
 	if valuesGoTmpl == nil {
 
-		if renderType == "apps" {
-
-			valuesGoTmpl = dag.CurrentModule().Source().File("./helm-apps/values.yaml.gotmpl")
-
-		} else if renderType == "sys-apps" {
-
-			valuesGoTmpl = dag.CurrentModule().Source().File("./helm-sys-apps/values.yaml.gotmpl")
-
-		} else {
-
-			panic(fmt.Sprintf("Invalid render type %s", renderType))
-
-		}
+		valuesGoTmpl = dag.CurrentModule().Source().File("./helm-" + renderType + "/values.yaml.gotmpl")
 
 	}
 
@@ -135,10 +115,96 @@ func New(
 		HelmRegistryUser: helmRegistryUser,
 
 		HelmRegistryPassword: helmRegistryPassword,
+
+		RenderType: strings.Trim(
+			strings.ToLower(renderType),
+			" ",
+		),
 	}
 }
 
 func (m *HydrateKubernetes) Render(
+
+	ctx context.Context,
+
+	app string,
+
+	cluster string,
+
+	// +optional
+	tenant string,
+
+	//+optional
+	env string,
+
+	// +optional
+	// +default="{\"images\":[]}"
+	newImagesMatrix string,
+
+) *dagger.Directory {
+
+	if m.RenderType == "sys-apps" {
+
+		return m.DumpSysAppRenderToWetDir(
+			ctx,
+			app,
+			cluster,
+		)
+
+	} else if m.RenderType == "apps" {
+
+		return m.DumpAppRenderToWetDir(
+			ctx,
+			app,
+			cluster,
+			tenant,
+			env,
+			newImagesMatrix,
+		)
+
+	} else {
+
+		panic(
+			fmt.Sprintf(
+				"Invalid render type: %s, it should be either apps or sys-apps",
+				m.RenderType,
+			),
+		)
+	}
+}
+
+func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
+
+	ctx context.Context,
+
+	app string,
+
+	cluster string,
+
+) *dagger.Directory {
+
+	renderedChartFile, renderErr := m.RenderSysApp(ctx, cluster, app)
+
+	if renderErr != nil {
+
+		panic(renderErr)
+
+	}
+
+	tmpDir := m.SplitRenderInFiles(ctx,
+		dag.Directory().
+			WithNewFile("rendered.yaml", renderedChartFile).
+			File("rendered.yaml"),
+	)
+
+	m.WetRepoDir = m.WetRepoDir.
+		WithoutDirectory(cluster+"/"+app).
+		WithDirectory(cluster+"/"+app, tmpDir)
+
+	return m.WetRepoDir
+}
+
+func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 
 	ctx context.Context,
 

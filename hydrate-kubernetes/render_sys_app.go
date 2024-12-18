@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"dagger/hydrate-kubernetes/internal/dagger"
 	"time"
 )
 
@@ -23,25 +22,15 @@ func (m *HydrateKubernetes) RenderSysApp(
 		WithMountedFile("/values/values.yaml.gotmpl", m.ValuesGoTmpl).
 		WithEnvVariable("BUST", time.Now().String())
 
-	if m.HelmRegistryLoginNeeded == true {
+	if m.HelmRegistryLoginNeeded {
 
-		pass, err := m.HelmRegistryPassword.Plaintext(ctx)
-
-		if err != nil {
-			panic("ERROR_PASSWORD " + err.Error())
-
-		}
-
-		helmfileCtr = helmfileCtr.
-			WithExec([]string{
-				"helm", "registry", "login", m.HelmRegistry,
-				"--username", m.HelmRegistryUser,
-				"--password-stdin",
-			},
-				dagger.ContainerWithExecOpts{
-					Stdin: pass,
-				},
-			)
+		helmfileCtr = prepareHelmLogin(
+			ctx,
+			helmfileCtr,
+			m.HelmRegistry,
+			m.HelmRegistryUser,
+			m.HelmRegistryPassword,
+		)
 	}
 
 	return helmfileCtr.
@@ -49,5 +38,6 @@ func (m *HydrateKubernetes) RenderSysApp(
 			"helmfile", "template",
 			"--state-values-set-string", "app=" + app + ",cluster=" + cluster,
 			"--state-values-file", "./" + cluster + "/" + app + ".yaml",
-		}).Stdout(ctx)
+		}).
+		Stdout(ctx)
 }

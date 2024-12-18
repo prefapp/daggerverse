@@ -24,6 +24,7 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
 		Helmfile:     helmDir.File("helm-apps/helmfile.yaml"),
 		ValuesGoTmpl: helmDir.File("helm-apps/values.yaml.gotmpl"),
+		RenderType:   "apps",
 	}
 
 	config, errContents := valuesRepoDir.
@@ -114,6 +115,7 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
 		Helmfile:     helmDir.File("helm-apps/helmfile.yaml"),
 		ValuesGoTmpl: helmDir.File("helm-apps/values.yaml.gotmpl"),
+		RenderType:   "apps",
 	}
 
 	config, errContents := valuesRepoDir.

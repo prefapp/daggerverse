@@ -24,6 +24,7 @@ func TestRenderSysAppCanRender(t *testing.T) {
 		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
 		Helmfile:     helmDir.File("helm-sys-apps/helmfile.yaml"),
 		ValuesGoTmpl: helmDir.File("helm-sys-apps/values.yaml.gotmpl"),
+		RenderType:   "sys-apps",
 	}
 
 	config, errContents := valuesRepoDir.
