@@ -63,7 +63,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 		prBody := fmt.Sprintf(`
 # New deployment from new image in repository [*%s*](%s)
 %s
-`, repositoryCaller, &repoURL, kdep.String(false))
+`, repositoryCaller, repoURL, kdep.String(false))
 
 		m.upsertPR(
 			ctx,
