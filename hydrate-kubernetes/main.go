@@ -123,6 +123,8 @@ func New(
 	}
 }
 
+// This function renders the apps or sys-apps based on the render type
+// It returns the wet directory where the rendered files are stored
 func (m *HydrateKubernetes) Render(
 
 	ctx context.Context,
@@ -147,11 +149,7 @@ func (m *HydrateKubernetes) Render(
 
 	if m.RenderType == "sys-apps" {
 
-		return m.DumpSysAppRenderToWetDir(
-			ctx,
-			app,
-			cluster,
-		)
+		return m.DumpSysAppRenderToWetDir(ctx, app, cluster)
 
 	} else if m.RenderType == "apps" {
 
@@ -161,14 +159,7 @@ func (m *HydrateKubernetes) Render(
 
 		}
 
-		return m.DumpAppRenderToWetDir(
-			ctx,
-			app,
-			cluster,
-			tenant,
-			env,
-			newImagesMatrix,
-		)
+		return m.DumpAppRenderToWetDir(ctx, app, cluster, tenant, env, newImagesMatrix)
 
 	} else {
 
