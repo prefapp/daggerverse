@@ -52,3 +52,83 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 	return dir
 }
+
+func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
+
+	ctx context.Context,
+
+	app string,
+
+	cluster string,
+
+) *dagger.Directory {
+
+	renderedChartFile, renderErr := m.RenderSysApp(ctx, cluster, app)
+
+	if renderErr != nil {
+
+		panic(renderErr)
+
+	}
+
+	tmpDir := m.SplitRenderInFiles(ctx,
+		dag.Directory().
+			WithNewFile("rendered.yaml", renderedChartFile).
+			File("rendered.yaml"),
+	)
+
+	m.WetRepoDir = m.WetRepoDir.
+		WithoutDirectory(cluster+"/"+app).
+		WithDirectory(cluster+"/"+app, tmpDir)
+
+	return m.WetRepoDir
+}
+
+func (m *HydrateKubernetes) DumpAppRenderToWetDir(
+
+	ctx context.Context,
+
+	app string,
+
+	cluster string,
+
+	tenant string,
+
+	env string,
+
+	// +optional
+	// +default="{\"images\":[]}"
+	newImagesMatrix string,
+
+) *dagger.Directory {
+
+	renderedChartFile, renderErr := m.RenderApp(
+		ctx,
+		env,
+		app,
+		cluster,
+		tenant,
+		newImagesMatrix,
+	)
+
+	if renderErr != nil {
+
+		panic(renderErr)
+
+	}
+
+	tmpDir := m.SplitRenderInFiles(ctx,
+		dag.Directory().
+			WithNewFile("rendered.yaml", renderedChartFile).
+			File("rendered.yaml"),
+	)
+
+	m.WetRepoDir = m.WetRepoDir.
+		WithoutDirectory("kubernetes/"+cluster+"/"+tenant+"/"+env).
+		WithDirectory(
+			"kubernetes/"+cluster+"/"+tenant+"/"+env,
+			tmpDir,
+		)
+
+	return m.WetRepoDir
+}
