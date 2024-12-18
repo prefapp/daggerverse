@@ -37,6 +37,9 @@ func (m *HydrateOrchestrator) upsertPR(
 	// PR body
 	// +required
 	body string,
+	// PR author
+	// +optional
+	reviewers []string,
 
 ) {
 	prExists := m.checkPrExists(ctx, newBranchName)
@@ -67,12 +70,17 @@ func (m *HydrateOrchestrator) upsertPR(
 		for _, label := range labels {
 			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create -R %s --force %s", m.Repo, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
 			labelArgs += fmt.Sprintf(" --label '%s'", label)
-
 		}
+
+		reviewerArgs := ""
+		for _, reviewer := range reviewers {
+			reviewerArgs += fmt.Sprintf(" --reviewer '%s'", reviewer)
+		}
+
 		// Create a PR for the updated deployment
 		dag.Gh().Run(fmt.Sprintf(
-			"pr create -R '%s' --base '%s' --title '%s' --body '%s' --head %s %s",
-			m.Repo, m.DeploymentBranch, title, body, newBranchName, labelArgs,
+			"pr create -R '%s' --base '%s' --title '%s' --body '%s' --head %s %s %s",
+			m.Repo, m.DeploymentBranch, title, body, newBranchName, labelArgs, reviewerArgs,
 		),
 			dagger.GhRunOpts{
 				DisableCache: true,

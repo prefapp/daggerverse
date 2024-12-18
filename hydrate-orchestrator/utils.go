@@ -65,9 +65,9 @@ func (kd *KubernetesDeployment) String(summary bool) string {
 		)
 	} else {
 		return "Deployment:" +
-			fmt.Sprintf("\n\tCluster: `%s`", kd.Cluster) +
-			fmt.Sprintf("\n\tTenant: `%s`", kd.Tenant) +
-			fmt.Sprintf("\n\tEnvironment: `%s`", kd.Environment)
+			fmt.Sprintf("\n\t* Cluster: `%s`", kd.Cluster) +
+			fmt.Sprintf("\n\t* Tenant: `%s`", kd.Tenant) +
+			fmt.Sprintf("\n\t* Environment: `%s`", kd.Environment)
 	}
 }
 

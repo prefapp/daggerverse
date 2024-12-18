@@ -5,6 +5,8 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
+
+	"github.com/samber/lo"
 )
 
 // Hydrate deployments based on the updated deployments
@@ -13,6 +15,14 @@ func (m *HydrateOrchestrator) RunChanges(
 	// Updated deployments in JSON format
 	// +required
 	updatedDeployments string,
+	// Identifier that triggered the render, this could be a PR number or a workflow run id
+	// +optional
+	// +default=0
+	id int,
+	// Author of the PR
+	// +optional
+	// +default=""
+	author string,
 ) {
 
 	deployments := m.processUpdatedDeployments(ctx, updatedDeployments)
@@ -34,7 +44,28 @@ func (m *HydrateOrchestrator) RunChanges(
 			},
 		).Render(m.App, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
-		m.upsertPR(ctx, branchName, renderedDeployment, kdep.Labels(), kdep.String(true), kdep.String(false))
+		var prBody string
+		if m.Event == PullRequest {
+			prBody = fmt.Sprintf(`
+New deployment created by @%s in PR #%d
+%s
+`, id, kdep.String(true))
+		} else if m.Event == Manual {
+			prBody = fmt.Sprintf(`
+New deployment created by @%s in wokrlfow run #%d
+%s
+`, author, m.Event, kdep.String(true))
+		}
+
+		m.upsertPR(
+			ctx,
+			branchName,
+			renderedDeployment,
+			kdep.Labels(),
+			kdep.String(true),
+			prBody,
+			lo.Ternary(author == "", []string{}, []string{author}),
+		)
 	}
 
 }
