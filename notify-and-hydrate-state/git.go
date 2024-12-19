@@ -32,9 +32,8 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 	copy(orphanPrs, prList)
 
 	claimsRepoPRLink := fmt.Sprintf(
-		"https://www.github.com/%s/pull/%s", claimsRepo, claimPrNumber
+		"https://www.github.com/%s/pull/%s", claimsRepo, claimPrNumber,
 	)
-
 
 	result, err := m.upsertPrsFromFileList(
 		ctx, diff.AddedFiles, wetRepositoryDir, wetRepoName, "create",
@@ -48,7 +47,6 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 	createdOrUpdatedPrs = result.Prs
 	orphanPrs = result.Orphans
 
-
 	result, err = m.upsertPrsFromFileList(
 		ctx, diff.ModifiedFiles, wetRepositoryDir, wetRepoName, "update",
 		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
@@ -61,7 +59,6 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 	createdOrUpdatedPrs = result.Prs
 	orphanPrs = result.Orphans
 
-
 	result, err = m.upsertPrsFromFileList(
 		ctx, diff.DeletedFiles, wetRepositoryDir, wetRepoName, "delete",
 		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
@@ -73,7 +70,6 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 	createdOrUpdatedPrs = result.Prs
 	orphanPrs = result.Orphans
-
 
 	return PrsResult{Orphans: orphanPrs, Prs: createdOrUpdatedPrs}, nil
 }
