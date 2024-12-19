@@ -179,7 +179,12 @@ func (m *NotifyAndHydrateState) UpsertPr(
 
 	prTitle := fmt.Sprintf("\"hydrate: %s \"", cr.Metadata.Name)
 
-	prBody := fmt.Sprintf("\"changes come from %s\"", claimsRepoPrLink)
+	prBody := fmt.Sprintf(
+		"\"changes come from %s/%s#%s\"",
+		strings.Split(wetRepoName, "/")[0],
+		"claims",
+		claimPrNumber,
+	)
 
 	prLink, err := m.CreatePrIfNotExists(ctx, prBranch, wetRepoName, prTitle, prBody, prs)
 
