@@ -175,6 +175,7 @@ func (m *NotifyAndHydrateState) Workflow(
 		wetRepo,
 		claimsPrNumber,
 		childPreviousPrs,
+		claimsRepo,
 	)
 
 	if err != nil {
