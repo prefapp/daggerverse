@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func (m *HydrateKubernetes) RenderSysApp(
+func (m *HydrateKubernetes) RenderSysService(
 
 	ctx context.Context,
 

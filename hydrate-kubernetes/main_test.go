@@ -254,21 +254,21 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 
 	ctx := context.Background()
 
-	valuesRepoDir := getDir("./fixtures/values-repo-dir-sys-apps")
+	valuesRepoDir := getDir("./fixtures/values-repo-dir-sys-services")
 
-	helmDir := getDir("./helm-sys-apps")
+	helmDir := getDir("./helm-sys-services")
 
 	m := &HydrateKubernetes{
-		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir-sys-apps"),
+		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir-sys-services"),
 		WetRepoDir:   dag.Directory(),
 		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
-		Helmfile:     helmDir.File("helm-sys-apps/helmfile.yaml"),
-		ValuesGoTmpl: helmDir.File("helm-sys-apps/values.yaml.gotmpl"),
-		RenderType:   "sys-apps",
+		Helmfile:     helmDir.File("helm-sys-services/helmfile.yaml"),
+		ValuesGoTmpl: helmDir.File("helm-sys-services/values.yaml.gotmpl"),
+		RenderType:   "sys-services",
 	}
 
 	config, errContents := valuesRepoDir.
-		File("./fixtures/values-repo-dir-sys-apps/.github/hydrate_k8s_config.yaml").
+		File("./fixtures/values-repo-dir-sys-services/.github/hydrate_k8s_config.yaml").
 		Contents(ctx)
 
 	if errContents != nil {
