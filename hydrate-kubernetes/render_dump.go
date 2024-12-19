@@ -44,6 +44,11 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 		}
 
+		if k8sresource.Kind == "" || k8sresource.Metadata.Name == "" {
+
+			continue
+		}
+
 		// create a new file for each k8s manifest
 		// with <kind>.<metadata.name>.yml as the file name
 		fileName := fmt.Sprintf("%s.%s.yml", k8sresource.Kind, k8sresource.Metadata.Name)
