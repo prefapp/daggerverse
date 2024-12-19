@@ -56,7 +56,9 @@ func (m *HydrateOrchestrator) RunDispatch(
 				HelmRegistryUser:        helmAuth.Username,
 				HelmRegistryPassword:    helmAuth.Password,
 			},
-		).Render(m.App, kdep.Cluster, kdep.Tenant, kdep.Environment, dagger.HydrateKubernetesRenderOpts{
+		).Render(m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
+			Tenant:          kdep.Tenant,
+			Env:             kdep.Environment,
 			NewImagesMatrix: newImagesMatrix,
 		})
 
