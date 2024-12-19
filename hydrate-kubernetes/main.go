@@ -147,7 +147,7 @@ func (m *HydrateKubernetes) Render(
 
 ) *dagger.Directory {
 
-	if m.RenderType == "sys-apps" {
+	if m.RenderType == "sys-services" {
 
 		return m.DumpSysAppRenderToWetDir(ctx, app, cluster)
 
@@ -165,7 +165,7 @@ func (m *HydrateKubernetes) Render(
 
 		panic(
 			fmt.Sprintf(
-				"Invalid render type: %s, it should be either 'apps' or 'sys-apps'",
+				"Invalid render type: %s, it should be either 'apps' or 'sys-services'",
 				m.RenderType,
 			),
 		)

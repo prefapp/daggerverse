@@ -65,7 +65,7 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 
 ) *dagger.Directory {
 
-	renderedChartFile, renderErr := m.RenderSysApp(ctx, cluster, app)
+	renderedChartFile, renderErr := m.RenderSysService(ctx, cluster, app)
 
 	if renderErr != nil {
 
