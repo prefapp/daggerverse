@@ -45,7 +45,7 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 	)
 
 	m.upsertPrsFromFileList(
-		ctx, diff.ModifiedFiles, wetRepositoryDir, wetRepoName, "update",
+		ctx, diff.DeletedFiles, wetRepositoryDir, wetRepoName, "update",
 		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
 	)
 
@@ -199,7 +199,7 @@ func (m *NotifyAndHydrateState) UpsertPr(
 
 	wetRepositoryDir = m.CmdAnnotateCrPr(
 		ctx,
-		prLink,
+		claimsRepoPrLink,
 		prLink,
 		wetRepositoryDir,
 		fileName,
