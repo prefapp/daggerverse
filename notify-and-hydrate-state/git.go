@@ -25,32 +25,57 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 	claimsRepo string,
 
 ) (PrsResult, error) {
-
 	createdOrUpdatedPrs := []Pr{}
 
 	orphanPrs := make([]Pr, len(prList))
 
 	copy(orphanPrs, prList)
 
-	claimsRepoPRLink := fmt.Sprintf("https://www.github.com/%s/pull/%s", claimsRepo, claimPrNumber)
+	claimsRepoPRLink := fmt.Sprintf(
+		"https://www.github.com/%s/pull/%s", claimsRepo, claimPrNumber
+	)
 
-	m.upsertPrsFromFileList(
+
+	result, err := m.upsertPrsFromFileList(
 		ctx, diff.AddedFiles, wetRepositoryDir, wetRepoName, "create",
 		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
 	)
 
-	m.upsertPrsFromFileList(
+	if err != nil {
+		panic(err)
+	}
+
+	createdOrUpdatedPrs = result.Prs
+	orphanPrs = result.Orphans
+
+
+	result, err = m.upsertPrsFromFileList(
 		ctx, diff.ModifiedFiles, wetRepositoryDir, wetRepoName, "update",
 		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
 	)
 
-	m.upsertPrsFromFileList(
-		ctx, diff.DeletedFiles, wetRepositoryDir, wetRepoName, "update",
+	if err != nil {
+		panic(err)
+	}
+
+	createdOrUpdatedPrs = result.Prs
+	orphanPrs = result.Orphans
+
+
+	result, err = m.upsertPrsFromFileList(
+		ctx, diff.DeletedFiles, wetRepositoryDir, wetRepoName, "delete",
 		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
 	)
 
-	return PrsResult{Orphans: orphanPrs, Prs: createdOrUpdatedPrs}, nil
+	if err != nil {
+		panic(err)
+	}
 
+	createdOrUpdatedPrs = result.Prs
+	orphanPrs = result.Orphans
+
+
+	return PrsResult{Orphans: orphanPrs, Prs: createdOrUpdatedPrs}, nil
 }
 
 func (m *NotifyAndHydrateState) upsertPrsFromFileList(
@@ -75,24 +100,22 @@ func (m *NotifyAndHydrateState) upsertPrsFromFileList(
 
 	orphanPrs []Pr,
 
-) {
-
+) (PrsResult, error) {
 	for _, file := range fileList {
-
-		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, action, claimPrNumber, prList, claimsRepoPRLink)
+		pr, err := m.UpsertPr(
+			ctx, file, wetRepositoryDir, wetRepoName, action,
+			claimPrNumber, prList, claimsRepoPRLink,
+		)
 
 		if err != nil {
-
 			panic(err)
-
 		}
 
 		createdOrUpdatedPrs = append(createdOrUpdatedPrs, pr)
-
 		orphanPrs = removeOrphan(orphanPrs, pr)
-
 	}
 
+	return PrsResult{Orphans: orphanPrs, Prs: createdOrUpdatedPrs}, nil
 }
 
 func removeOrphan(orphanPrs []Pr, pr Pr) []Pr {
