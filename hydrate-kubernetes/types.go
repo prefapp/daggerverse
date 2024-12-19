@@ -31,14 +31,15 @@ type ImageData struct {
 	RepositoryCaller string   `json:"repository_caller"`
 }
 
-type DepsFile struct {
-	Dependencies []string `yaml:"deps"`
-}
-
 type KubernetesResource struct {
 	APIVersion string `yaml:"apiVersion"`
 	Kind       string `yaml:"kind"`
 	Metadata   struct {
 		Name string `yaml:"name"`
 	} `yaml:"metadata"`
+}
+
+type Config struct {
+	Image    string     `yaml:"image"`
+	Commands [][]string `yaml:"commands"`
 }

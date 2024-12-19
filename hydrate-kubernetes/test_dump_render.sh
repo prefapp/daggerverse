@@ -1,1 +1,0 @@
-dagger --deps-file=./fixtures/values-repo-dir/.github/hydrate_deps.yaml --values-dir=./fixtures/values-repo-dir/ --wet-repo-dir=./fixtures/wet-repo-dir call split-render-in-files --renderFile=./fixtures/rendered/rendered.yaml $1 

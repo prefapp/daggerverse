@@ -13,13 +13,15 @@ func TestBuildPreviousImageCanRecoverPreviousImages(t *testing.T) {
 
 	wetRepoDir := getDir("./fixtures/wet-repo-dir")
 
-	m := &HydrateKubernetes{}
+	m := &HydrateKubernetes{
+		WetRepoDir: wetRepoDir.Directory("fixtures/wet-repo-dir"),
+	}
 
 	buildImagesContent := m.BuildPreviousImagesApp(
 		ctx,
-		wetRepoDir.Directory(
-			"./fixtures/wet-repo-dir/kubernetes/cluster-name/test-tenant/dev/",
-		),
+		"cluster-name",
+		"test-tenant",
+		"dev",
 	)
 
 	yamlDecoded := map[string]map[string]string{}
