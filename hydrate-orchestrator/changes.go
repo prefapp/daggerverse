@@ -42,7 +42,10 @@ func (m *HydrateOrchestrator) RunChanges(
 				HelmRegistryUser:        helmAuth.Username,
 				HelmRegistryPassword:    helmAuth.Password,
 			},
-		).Render(m.App, kdep.Cluster, kdep.Tenant, kdep.Environment)
+		).Render(m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
+			Tenant: kdep.Tenant,
+			Env:    kdep.Environment,
+		})
 
 		var prBody string
 		if m.Event == PullRequest {
