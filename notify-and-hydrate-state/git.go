@@ -199,7 +199,7 @@ func (m *NotifyAndHydrateState) UpsertPr(
 
 	wetRepositoryDir = m.CmdAnnotateCrPr(
 		ctx,
-		claimsRepoPrLink,
+		prLink,
 		prLink,
 		wetRepositoryDir,
 		fileName,
