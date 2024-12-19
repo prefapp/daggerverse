@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
+	"fmt"
+	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 type HydrateKubernetes struct {
@@ -15,21 +19,12 @@ type HydrateKubernetes struct {
 	HelmRegistry            string
 	HelmRegistryUser        string
 	HelmRegistryPassword    *dagger.Secret
+	RenderType              string
 }
 
 func New(
 
 	ctx context.Context,
-
-	// The Helmfile image tag to use https://github.com/helmfile/helmfile/pkgs/container/helmfile
-	// +optional
-	// +default="latest"
-	helmfileImageTag string,
-
-	// The Helmfile image to use
-	// +optional
-	// +default="ghcr.io/helmfile/helmfile"
-	helmfileImage string,
 
 	// The path to the values directory, where the helm values are stored
 	valuesDir *dagger.Directory,
@@ -58,28 +53,46 @@ func New(
 	// +optional
 	helmRegistryPassword *dagger.Secret,
 
+	// Type of the render, it can be apps or sys-apps
+	// +optional
+	// +default="apps"
+	renderType string,
+
 ) *HydrateKubernetes {
+
+	hydrateK8sConf, err := valuesDir.
+		File(".github/hydrate_k8s_config.yaml").
+		Contents(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	config := &Config{}
+
+	errUnmsh := yaml.Unmarshal([]byte(hydrateK8sConf), config)
+
+	if errUnmsh != nil {
+
+		panic(errUnmsh)
+
+	}
 
 	c := dag.
 		Container().
-		From(helmfileImage + ":" + helmfileImageTag)
+		From(config.Image)
 
-	depsFileContent, err := valuesDir.File(".github/hydrate_deps.yaml").Contents(ctx)
-
-	if err == nil {
-
-		c = installDeps(depsFileContent, c)
-	}
+	c = containerWithCmds(c, config.Commands)
 
 	if helmfile == nil {
 
-		helmfile = dag.CurrentModule().Source().File("./helm/helmfile.yaml")
+		helmfile = dag.CurrentModule().Source().File("./helm-" + renderType + "/helmfile.yaml")
 
 	}
 
 	if valuesGoTmpl == nil {
 
-		valuesGoTmpl = dag.CurrentModule().Source().File("./helm/values.yaml.gotmpl")
+		valuesGoTmpl = dag.CurrentModule().Source().File("./helm-" + renderType + "/values.yaml.gotmpl")
 
 	}
 
@@ -102,9 +115,16 @@ func New(
 		HelmRegistryUser: helmRegistryUser,
 
 		HelmRegistryPassword: helmRegistryPassword,
+
+		RenderType: strings.Trim(
+			strings.ToLower(renderType),
+			" ",
+		),
 	}
 }
 
+// This function renders the apps or sys-apps based on the render type
+// It returns the wet directory where the rendered files are stored
 func (m *HydrateKubernetes) Render(
 
 	ctx context.Context,
@@ -113,8 +133,12 @@ func (m *HydrateKubernetes) Render(
 
 	cluster string,
 
+	// +optional
+	// +default=""
 	tenant string,
 
+	//+optional
+	//+default=""
 	env string,
 
 	// +optional
@@ -123,33 +147,27 @@ func (m *HydrateKubernetes) Render(
 
 ) *dagger.Directory {
 
-	renderedChartFile, renderErr := m.RenderApp(
-		ctx,
-		env,
-		app,
-		cluster,
-		tenant,
-		newImagesMatrix,
-	)
+	if m.RenderType == "sys-apps" {
 
-	if renderErr != nil {
+		return m.DumpSysAppRenderToWetDir(ctx, app, cluster)
 
-		panic(renderErr)
+	} else if m.RenderType == "apps" {
 
-	}
+		if tenant == "" || env == "" {
 
-	tmpDir := m.SplitRenderInFiles(ctx,
-		dag.Directory().
-			WithNewFile("rendered.yaml", renderedChartFile).
-			File("rendered.yaml"),
-	)
+			panic("--tenant and --env are required params for apps render")
 
-	m.WetRepoDir = m.WetRepoDir.
-		WithoutDirectory("kubernetes/"+cluster+"/"+tenant+"/"+env).
-		WithDirectory(
-			"kubernetes/"+cluster+"/"+tenant+"/"+env,
-			tmpDir,
+		}
+
+		return m.DumpAppRenderToWetDir(ctx, app, cluster, tenant, env, newImagesMatrix)
+
+	} else {
+
+		panic(
+			fmt.Sprintf(
+				"Invalid render type: %s, it should be either 'apps' or 'sys-apps'",
+				m.RenderType,
+			),
 		)
-
-	return m.WetRepoDir
+	}
 }

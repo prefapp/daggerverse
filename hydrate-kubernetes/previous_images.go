@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"dagger/hydrate-kubernetes/internal/dagger"
 	"fmt"
+	"slices"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -12,9 +13,29 @@ func (m *HydrateKubernetes) BuildPreviousImagesApp(
 
 	ctx context.Context,
 
-	manifestsDir *dagger.Directory,
+	cluster string,
+
+	tenant string,
+
+	env string,
 
 ) string {
+
+	entries, err := m.WetRepoDir.Glob(ctx, "kubernetes/*/*/*")
+
+	if err != nil {
+		panic(err)
+	}
+
+	targetDir := strings.Join([]string{"kubernetes", cluster, tenant, env}, "/")
+
+	if !slices.Contains(entries, targetDir) {
+
+		return "{}"
+
+	}
+
+	manifestsDir := m.WetRepoDir.Directory(targetDir)
 
 	mapImages := make(map[string]map[string]string)
 
@@ -50,7 +71,7 @@ func (m *HydrateKubernetes) BuildPreviousImagesApp(
 
 		if errUnms != nil {
 
-			panic(err)
+			panic(errUnms)
 
 		}
 

@@ -2,9 +2,6 @@ package main
 
 import (
 	"context"
-	"dagger/hydrate-kubernetes/internal/dagger"
-	"slices"
-	"strings"
 	"time"
 )
 
@@ -28,24 +25,7 @@ func (m *HydrateKubernetes) RenderApp(
 
 	newImagesFile := m.BuildNewImages(ctx, newImagesMatrix)
 
-	entries, err := m.WetRepoDir.Glob(ctx, "kubernetes/*/*/*")
-
-	if err != nil {
-		panic(err)
-	}
-
-	targetDir := strings.Join([]string{"kubernetes", cluster, tenant, env}, "/")
-
-	previousImagesFileContent := "{}"
-
-	if slices.Contains(entries, targetDir) {
-
-		previousImagesFileContent = m.BuildPreviousImagesApp(
-			ctx,
-			m.WetRepoDir.Directory(targetDir),
-		)
-
-	}
+	previousImagesFileContent := m.BuildPreviousImagesApp(ctx, cluster, tenant, env)
 
 	helmfileCtr := m.Container.
 		WithDirectory("/values", m.ValuesDir).
@@ -62,25 +42,15 @@ func (m *HydrateKubernetes) RenderApp(
 			newImagesFile,
 		)
 
-	if m.HelmRegistryLoginNeeded == true {
+	if m.HelmRegistryLoginNeeded {
 
-		pass, err := m.HelmRegistryPassword.Plaintext(ctx)
-
-		if err != nil {
-			panic("ERROR_PASSWORD " + err.Error())
-
-		}
-
-		helmfileCtr = helmfileCtr.
-			WithExec([]string{
-				"helm", "registry", "login", m.HelmRegistry,
-				"--username", m.HelmRegistryUser,
-				"--password-stdin",
-			},
-				dagger.ContainerWithExecOpts{
-					Stdin: pass,
-				},
-			)
+		helmfileCtr = prepareHelmLogin(
+			ctx,
+			helmfileCtr,
+			m.HelmRegistry,
+			m.HelmRegistryUser,
+			m.HelmRegistryPassword,
+		)
 	}
 
 	return helmfileCtr.
