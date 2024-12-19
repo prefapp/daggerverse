@@ -25,7 +25,10 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 	}
 
-	k8sManifests := strings.Split(string(content), "\n---\n")
+	k8sManifests := strings.Split(
+		string(content),
+		"\n---\n",
+	)
 
 	dir := dag.Directory()
 
@@ -43,7 +46,6 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 		// create a new file for each k8s manifest
 		// with <kind>.<metadata.name>.yml as the file name
-
 		fileName := fmt.Sprintf("%s.%s.yml", k8sresource.Kind, k8sresource.Metadata.Name)
 
 		dir = dir.WithNewFile(fileName, manifest)
@@ -83,7 +85,8 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 
 	for _, regex := range []string{"*.yml", "*.yaml"} {
 
-		entries, err := m.ValuesDir.Glob(ctx, cluster+"/"+app+"/extra_artifacts/"+regex)
+		entries, err := m.ValuesDir.
+			Glob(ctx, cluster+"/"+app+"/extra_artifacts/"+regex)
 
 		if err != nil {
 
@@ -93,9 +96,10 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 
 		for _, entry := range entries {
 
-			extraFile := m.WetRepoDir.File(entry)
+			extraFile := m.ValuesDir.File(entry)
 
-			m.WetRepoDir = m.WetRepoDir.WithFile(cluster+"/"+app+"/"+entry, extraFile)
+			m.WetRepoDir = m.WetRepoDir.WithFile(entry, extraFile)
+
 		}
 
 	}
@@ -148,6 +152,27 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 			"kubernetes/"+cluster+"/"+tenant+"/"+env,
 			tmpDir,
 		)
+
+	for _, regex := range []string{"*.yml", "*.yaml"} {
+
+		entries, err := m.ValuesDir.
+			Glob(ctx, "kubernetes/"+cluster+"/"+tenant+"/"+env+"/extra_artifacts/"+regex)
+
+		if err != nil {
+
+			panic(err)
+
+		}
+
+		for _, entry := range entries {
+
+			extraFile := m.ValuesDir.File(entry)
+
+			m.WetRepoDir = m.WetRepoDir.WithFile(entry, extraFile)
+
+		}
+
+	}
 
 	return m.WetRepoDir
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"slices"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -97,6 +98,71 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 		t.Errorf("Expected new Deployment.sample-app-micro-a.yml to have image new-image:1.0.0, got %s", artifact.Metadata.Annotations)
 
 	}
+
+	regularEntries, errGlob := renderedDir.Glob(ctx, "kubernetes/cluster-name/test-tenant/dev/*.yml")
+
+	if errGlob != nil {
+
+		t.Errorf("Error reading rendered files: %v", errGlob)
+
+	}
+
+	mapRegularEntries := map[string]bool{
+		"kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml": true,
+		"kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-b.yml": true,
+		"kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-c.yml": true,
+		"kubernetes/cluster-name/test-tenant/dev/Service.sample-app-micro-a.yml":    true,
+		"kubernetes/cluster-name/test-tenant/dev/Service.sample-app-micro-b.yml":    true,
+		"kubernetes/cluster-name/test-tenant/dev/Service.sample-app-micro-c.yml":    true,
+	}
+
+	if len(regularEntries) != 6 {
+
+		t.Errorf("Expected 6 files to be rendered, got %v", regularEntries)
+
+	}
+
+	for k := range mapRegularEntries {
+
+		if !slices.Contains(regularEntries, k) {
+
+			t.Errorf("Expected %s to be rendered, got %v", k, regularEntries)
+
+		}
+
+	}
+
+	extraArtifacts, errGlob2 := renderedDir.Glob(ctx, "kubernetes/cluster-name/test-tenant/dev/extra_artifacts/*.yml")
+
+	if errGlob2 != nil {
+
+		t.Errorf("Error reading rendered files: %v", errGlob2)
+
+	}
+
+	extraArtifactsMap := map[string]bool{
+
+		"kubernetes/cluster-name/test-tenant/dev/extra_artifacts/ExternalSecret.a.yml": true,
+
+		"kubernetes/cluster-name/test-tenant/dev/extra_artifacts/ExternalSecret.b.yml": true,
+	}
+
+	if len(extraArtifacts) != 2 {
+
+		t.Errorf("Expected 2 extra artifacts to be rendered, got %v", extraArtifacts)
+
+	}
+
+	for k := range extraArtifactsMap {
+
+		if !slices.Contains(extraArtifacts, k) {
+
+			t.Errorf("Expected %s to be rendered, got %v", k, extraArtifacts)
+
+		}
+
+	}
+
 }
 
 func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
@@ -180,6 +246,95 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 	if artifact.Metadata.Annotations.Image != "image-a:1.16.0" {
 
 		t.Errorf("Expected new Deployment.sample-app-micro-a.yml to have image image-a:1.16.0, got %s", artifact.Metadata.Annotations)
+
+	}
+}
+
+func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
+
+	ctx := context.Background()
+
+	valuesRepoDir := getDir("./fixtures/values-repo-dir-sys-apps")
+
+	helmDir := getDir("./helm-sys-apps")
+
+	m := &HydrateKubernetes{
+		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir-sys-apps"),
+		WetRepoDir:   dag.Directory(),
+		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
+		Helmfile:     helmDir.File("helm-sys-apps/helmfile.yaml"),
+		ValuesGoTmpl: helmDir.File("helm-sys-apps/values.yaml.gotmpl"),
+		RenderType:   "sys-apps",
+	}
+
+	config, errContents := valuesRepoDir.
+		File("./fixtures/values-repo-dir-sys-apps/.github/hydrate_k8s_config.yaml").
+		Contents(ctx)
+
+	if errContents != nil {
+
+		t.Errorf("Error reading deps file: %v", errContents)
+
+	}
+
+	configStruct := Config{}
+
+	errUnmsh := yaml.Unmarshal([]byte(config), &configStruct)
+
+	if errUnmsh != nil {
+
+		t.Errorf("Error unmarshalling deps file: %v", errUnmsh)
+
+	}
+
+	m.Container = m.Container.From(configStruct.Image)
+
+	m.Container = containerWithCmds(m.Container, configStruct.Commands)
+
+	dir := m.Render(ctx, "stakater", "cluster-name", "", "", "")
+
+	extraEntries, errGlob := dir.Glob(ctx, "cluster-name/stakater/extra_artifacts/*.yml")
+
+	if errGlob != nil {
+
+		t.Errorf("Error reading rendered files: %v", errGlob)
+
+	}
+
+	if extraEntries[0] != "cluster-name/stakater/extra_artifacts/ExternalSecret.a.yml" {
+
+		t.Errorf("Expected ExternalSecret.a.yml to be rendered, got %v", extraEntries)
+
+	}
+
+	regularEntries, errGlob2 := dir.Glob(ctx, "cluster-name/stakater/*.yml")
+
+	if errGlob2 != nil {
+
+		t.Errorf("Error reading rendered files: %v", errGlob2)
+
+	}
+
+	mapEntries := map[string]bool{
+		"cluster-name/stakater/ClusterRole.stakater-reloader-role.yml":                true,
+		"cluster-name/stakater/ClusterRoleBinding.stakater-reloader-role-binding.yml": true,
+		"cluster-name/stakater/Deployment.stakater-reloader.yml":                      true,
+		"cluster-name/stakater/ServiceAccount.stakater-reloader.yml":                  true,
+	}
+
+	if len(regularEntries) != 4 {
+
+		t.Errorf("Expected 4 files to be rendered, got %v", regularEntries)
+
+	}
+
+	for k := range mapEntries {
+
+		if !slices.Contains(regularEntries, k) {
+
+			t.Errorf("Expected %s to be rendered, got %v", k, regularEntries)
+
+		}
 
 	}
 }
