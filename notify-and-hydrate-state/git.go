@@ -194,7 +194,7 @@ func (m *NotifyAndHydrateState) UpsertPr(
 
 	wetRepositoryDir = m.CmdAnnotateCrPr(
 		ctx,
-		claimsRepoPrLink,
+		"https://github.com/firestartr-test/claims/pull/254",
 		prLink,
 		wetRepositoryDir,
 		fileName,
