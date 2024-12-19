@@ -32,7 +32,7 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 	copy(orphanPrs, prList)
 
-	claimsRepoPRLink := fmt.Sprintf("%s#%s", claimsRepo, claimPrNumber)
+	claimsRepoPRLink := fmt.Sprintf("https://www.github.com/%s/pull/%s", claimsRepo, claimPrNumber)
 
 	m.upsertPrsFromFileList(
 		ctx, diff.AddedFiles, wetRepositoryDir, wetRepoName, "create",
@@ -194,7 +194,7 @@ func (m *NotifyAndHydrateState) UpsertPr(
 
 	wetRepositoryDir = m.CmdAnnotateCrPr(
 		ctx,
-		"https://github.com/firestartr-test/claims/pull/254",
+		claimsRepoPrLink,
 		prLink,
 		wetRepositoryDir,
 		fileName,
