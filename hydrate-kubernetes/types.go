@@ -32,9 +32,8 @@ type ImageData struct {
 }
 
 type KubernetesResource struct {
-	APIVersion string `yaml:"apiVersion"`
-	Kind       string `yaml:"kind"`
-	Metadata   struct {
+	Kind     string `yaml:"kind"`
+	Metadata struct {
 		Name string `yaml:"name"`
 	} `yaml:"metadata"`
 }
