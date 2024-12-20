@@ -107,57 +107,28 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 
 	}
 
-	mapRegularEntries := map[string]bool{
+	if len(regularEntries) != 8 {
+
+		t.Errorf("Expected 8 files to be rendered, got %v", regularEntries)
+
+	}
+
+	mapEntries := map[string]bool{
 		"kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml": true,
 		"kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-b.yml": true,
 		"kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-c.yml": true,
 		"kubernetes/cluster-name/test-tenant/dev/Service.sample-app-micro-a.yml":    true,
 		"kubernetes/cluster-name/test-tenant/dev/Service.sample-app-micro-b.yml":    true,
 		"kubernetes/cluster-name/test-tenant/dev/Service.sample-app-micro-c.yml":    true,
+		"kubernetes/cluster-name/test-tenant/dev/ExternalSecret.a.yml":              true,
+		"kubernetes/cluster-name/test-tenant/dev/ExternalSecret.b.yml":              true,
 	}
 
-	if len(regularEntries) != 6 {
-
-		t.Errorf("Expected 6 files to be rendered, got %v", regularEntries)
-
-	}
-
-	for k := range mapRegularEntries {
+	for k := range mapEntries {
 
 		if !slices.Contains(regularEntries, k) {
 
 			t.Errorf("Expected %s to be rendered, got %v", k, regularEntries)
-
-		}
-
-	}
-
-	extraArtifacts, errGlob2 := renderedDir.Glob(ctx, "kubernetes/cluster-name/test-tenant/dev/extra_artifacts/*.yml")
-
-	if errGlob2 != nil {
-
-		t.Errorf("Error reading rendered files: %v", errGlob2)
-
-	}
-
-	extraArtifactsMap := map[string]bool{
-
-		"kubernetes/cluster-name/test-tenant/dev/extra_artifacts/ExternalSecret.a.yml": true,
-
-		"kubernetes/cluster-name/test-tenant/dev/extra_artifacts/ExternalSecret.b.yml": true,
-	}
-
-	if len(extraArtifacts) != 2 {
-
-		t.Errorf("Expected 2 extra artifacts to be rendered, got %v", extraArtifacts)
-
-	}
-
-	for k := range extraArtifactsMap {
-
-		if !slices.Contains(extraArtifacts, k) {
-
-			t.Errorf("Expected %s to be rendered, got %v", k, extraArtifacts)
 
 		}
 
@@ -293,25 +264,11 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 
 	dir := m.Render(ctx, "stakater", "cluster-name", "", "", "")
 
-	extraEntries, errGlob := dir.Glob(ctx, "cluster-name/stakater/extra_artifacts/*.yml")
+	regularEntries, errGlob := dir.Glob(ctx, "cluster-name/stakater/*.yml")
 
 	if errGlob != nil {
 
 		t.Errorf("Error reading rendered files: %v", errGlob)
-
-	}
-
-	if extraEntries[0] != "cluster-name/stakater/extra_artifacts/ExternalSecret.a.yml" {
-
-		t.Errorf("Expected ExternalSecret.a.yml to be rendered, got %v", extraEntries)
-
-	}
-
-	regularEntries, errGlob2 := dir.Glob(ctx, "cluster-name/stakater/*.yml")
-
-	if errGlob2 != nil {
-
-		t.Errorf("Error reading rendered files: %v", errGlob2)
 
 	}
 
@@ -320,11 +277,12 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 		"cluster-name/stakater/ClusterRoleBinding.stakater-reloader-role-binding.yml": true,
 		"cluster-name/stakater/Deployment.stakater-reloader.yml":                      true,
 		"cluster-name/stakater/ServiceAccount.stakater-reloader.yml":                  true,
+		"cluster-name/stakater/ExternalSecret.a.yml":                                  true,
 	}
 
-	if len(regularEntries) != 4 {
+	if len(regularEntries) != 5 {
 
-		t.Errorf("Expected 4 files to be rendered, got %v", regularEntries)
+		t.Errorf("Expected 5 files to be rendered, got %v", regularEntries)
 
 	}
 

@@ -27,7 +27,7 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 	k8sManifests := strings.Split(
 		string(content),
-		"\n---\n",
+		"---\n",
 	)
 
 	dir := dag.Directory()
@@ -44,9 +44,17 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 		}
 
+		if k8sresource.Kind == "" || k8sresource.Metadata.Name == "" {
+
+			continue
+		}
+
 		// create a new file for each k8s manifest
 		// with <kind>.<metadata.name>.yml as the file name
 		fileName := fmt.Sprintf("%s.%s.yml", k8sresource.Kind, k8sresource.Metadata.Name)
+
+		//add the --- at the beginning of the file
+		manifest = "---\n" + manifest
 
 		dir = dir.WithNewFile(fileName, manifest)
 
@@ -97,6 +105,8 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 		for _, entry := range entries {
 
 			extraFile := m.ValuesDir.File(entry)
+
+			entry = strings.Replace(entry, "/extra_artifacts", "", 1)
 
 			m.WetRepoDir = m.WetRepoDir.WithFile(entry, extraFile)
 
@@ -167,6 +177,8 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 		for _, entry := range entries {
 
 			extraFile := m.ValuesDir.File(entry)
+
+			entry = strings.Replace(entry, "/extra_artifacts", "", 1)
 
 			m.WetRepoDir = m.WetRepoDir.WithFile(entry, extraFile)
 
