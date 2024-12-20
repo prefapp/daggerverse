@@ -107,6 +107,9 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 		switch deploymentType {
 		case "kubernetes":
 			// Process kubernetes deployment
+			if lo.Contains([]string{"repositories.yaml", "environments.yaml"}, dirs[1]) {
+				continue
+			}
 			kdep := kubernetesDepFromStr(deployment)
 			result.addDeployment(kdep)
 
