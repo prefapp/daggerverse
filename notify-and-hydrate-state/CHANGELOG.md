@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.1](https://github.com/prefapp/daggerverse/compare/notify-and-hydrate-state-v1.4.0...notify-and-hydrate-state-v1.4.1) (2024-12-20)
+
+
+### Bug Fixes
+
+* Fixed compilation error ([aa44748](https://github.com/prefapp/daggerverse/commit/aa4474885abb35a2ef139c3cde2b506a7fd09f69))
+* Fixed compilation errors ([827dd58](https://github.com/prefapp/daggerverse/commit/827dd58f2a9ddfbba39000860455fc82faa6a98d))
+* Fixed incorrect call to upsertPrsFromFileList ([87b7c11](https://github.com/prefapp/daggerverse/commit/87b7c115198eb0fb1c6cd37186d3c14c2ac84fc2))
+* Fixed last-claim-pr annotation value being incorrect ([d0ad3f9](https://github.com/prefapp/daggerverse/commit/d0ad3f9911b105f6511b3a6c13b45838bd307cb8))
+* Fixed PRs always being detected as orphans ([3231f79](https://github.com/prefapp/daggerverse/commit/3231f79cc87b9a0111f1fb088515f90fb568f822))
+* Reverted prBody value to previous one ([c6481f6](https://github.com/prefapp/daggerverse/commit/c6481f620e97336659b366269d3a0c0c0cbb5032))
+* Reverted testing change and fixed claimsRepoPrLink value ([c4a3c2c](https://github.com/prefapp/daggerverse/commit/c4a3c2c618be79902df045871b8dd31219939aa6))
+
 ## [1.4.0](https://github.com/prefapp/daggerverse/compare/notify-and-hydrate-state-v1.3.0...notify-and-hydrate-state-v1.4.0) (2024-12-16)
 
 
