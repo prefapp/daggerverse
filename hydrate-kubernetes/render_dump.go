@@ -106,7 +106,6 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 
 			extraFile := m.ValuesDir.File(entry)
 
-			// remove extra_artifacts from the path
 			entry = strings.Replace(entry, "/extra_artifacts", "", 1)
 
 			m.WetRepoDir = m.WetRepoDir.WithFile(entry, extraFile)
@@ -179,7 +178,6 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 
 			extraFile := m.ValuesDir.File(entry)
 
-			// remove extra_artifacts from the path
 			entry = strings.Replace(entry, "/extra_artifacts", "", 1)
 
 			m.WetRepoDir = m.WetRepoDir.WithFile(entry, extraFile)
