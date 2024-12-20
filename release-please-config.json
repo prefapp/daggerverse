@@ -17,6 +17,10 @@
         "hydrate-kubernetes": {
            "package-name": "hydrate-kubernetes",
            "release-type": "go"
-       }
+    },
+    "hydrate-orchestrator": {
+        "package-name": "hydrate-orchestrator",
+        "release-type": "go"
+        }
     }
 }
