@@ -106,6 +106,8 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 
 			extraFile := m.ValuesDir.File(entry)
 
+			entry = strings.Replace(entry, "/extra_artifacts", "", 1)
+
 			m.WetRepoDir = m.WetRepoDir.WithFile(entry, extraFile)
 
 		}
@@ -175,6 +177,8 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 		for _, entry := range entries {
 
 			extraFile := m.ValuesDir.File(entry)
+
+			entry = strings.Replace(entry, "/extra_artifacts", "", 1)
 
 			m.WetRepoDir = m.WetRepoDir.WithFile(entry, extraFile)
 
