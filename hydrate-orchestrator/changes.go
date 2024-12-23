@@ -69,6 +69,7 @@ Created by @%s
 			kdep.Labels(),
 			kdep.String(true),
 			prBody,
+			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 			lo.Ternary(author == "author", []string{}, []string{author}),
 		)
 	}
