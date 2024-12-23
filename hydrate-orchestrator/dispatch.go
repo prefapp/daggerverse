@@ -74,6 +74,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 			kdep.Labels(),
 			kdep.String(true),
 			prBody,
+			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 			reviewers,
 		)
 	}
