@@ -57,6 +57,11 @@ execs:
 {{- $previousImagesContent := readFile $previousImages | fromYaml }}
 {{- $combined = merge $combined $previousImagesContent }}
 
+{{/* Read images.yaml */}}
+{{- $images := printf "./%s/%s" $mainCoordinatesDir "images.yaml" }}
+{{- $imagesContent := readFile $images | fromYaml }}
+{{- $combined = merge $combined $imagesContent }}
+
 {{/* Read new_images.yaml */}}
 {{- $newImages := printf "./%s/%s" $mainCoordinatesDir "new_images.yaml" }}
 {{- $newImagesContent := readFile $newImages | fromYaml }}
