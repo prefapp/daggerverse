@@ -3,3 +3,4 @@ environments:
   dev: {}
   pre: {}
   without_execs: {}
+  with_images_file: {}

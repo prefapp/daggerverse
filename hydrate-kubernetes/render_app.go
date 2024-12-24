@@ -25,6 +25,8 @@ func (m *HydrateKubernetes) RenderApp(
 
 	newImagesFile := m.BuildNewImages(ctx, newImagesMatrix)
 
+	imagesFile := m.GetImagesFile(ctx, cluster, tenant, env)
+
 	previousImagesFileContent := m.BuildPreviousImagesApp(ctx, cluster, tenant, env)
 
 	helmfileCtr := m.Container.
@@ -36,6 +38,10 @@ func (m *HydrateKubernetes) RenderApp(
 		WithNewFile(
 			"/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/previous_images.yaml",
 			previousImagesFileContent,
+		).
+		WithFile(
+			"/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/images.yaml",
+			imagesFile,
 		).
 		WithFile(
 			"/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/new_images.yaml",
