@@ -5,7 +5,6 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -65,7 +64,7 @@ func (m *HydrateOrchestrator) upsertPR(
 			"-R", m.Repo,
 			"-b", newBranchName,
 			"-m", title,
-			"--delete-path", filepath.Join(contentsDirPath, cleanupDir),
+			"--delete-path", cleanupDir,
 		}).Sync(ctx)
 
 	if !prExists {
