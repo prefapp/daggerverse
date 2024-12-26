@@ -25,7 +25,7 @@ func (m *HydrateOrchestrator) RunChanges(
 	author string,
 ) {
 
-	deployments := m.processUpdatedDeployments(ctx, updatedDeployments)
+	deployments := m.processUpdatedDeployments(updatedDeployments)
 
 	helmAuth := m.GetHelmAuth(ctx)
 
@@ -78,7 +78,6 @@ Created by @%s
 
 // Process updated deployments and return all unique deployments after validating and processing them
 func (m *HydrateOrchestrator) processUpdatedDeployments(
-	ctx context.Context,
 	// List of updated deployments in JSON format
 	// +required
 	updatedDeployments string,
