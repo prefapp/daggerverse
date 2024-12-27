@@ -99,7 +99,7 @@ func (m *HydrateOrchestrator) ValidateChanges(
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
-		dag.HydrateKubernetes(
+		_, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
 			dagger.HydrateKubernetesOpts{
@@ -111,8 +111,11 @@ func (m *HydrateOrchestrator) ValidateChanges(
 		).Render(m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
 			Tenant: kdep.Tenant,
 			Env:    kdep.Environment,
-		})
+		}).Sync(ctx)
 
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
