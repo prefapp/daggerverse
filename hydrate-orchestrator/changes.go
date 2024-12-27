@@ -12,9 +12,6 @@ import (
 // Hydrate deployments based on the updated deployments
 func (m *HydrateOrchestrator) RunChanges(
 	ctx context.Context,
-	// Updated deployments in JSON format
-	// +required
-	updatedDeployments string,
 	// Identifier that triggered the render, this could be a PR number or a workflow run id
 	// +optional
 	// +default=0
@@ -23,9 +20,25 @@ func (m *HydrateOrchestrator) RunChanges(
 	// +optional
 	// +default="author"
 	author string,
+	// Type of deployment
+	// +required
+	deploymentType string,
+	// Cluster name
+	// +required
+	cluster string,
+	// Tenant name
+	// +required
+	tenant string,
+	// Environment name
+	// +required
+	environment string,
 ) {
 
+<<<<<<< Updated upstream
 	deployments := m.processUpdatedDeployments(ctx, updatedDeployments)
+=======
+	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, deploymentType, cluster, tenant, environment)
+>>>>>>> Stashed changes
 
 	helmAuth := m.GetHelmAuth(ctx)
 
@@ -74,6 +87,78 @@ Created by @%s
 		)
 	}
 
+}
+
+// Hydrate deployments based on the updated deployments
+func (m *HydrateOrchestrator) ValidateChanges(
+	ctx context.Context,
+	// Updated deployments in JSON format
+	// +required
+	updatedDeployments string,
+	// Identifier that triggered the render, this could be a PR number or a workflow run id
+	// +optional
+	// +default=0
+	id int,
+	// Author of the PR
+	// +optional
+	// +default="author"
+	author string,
+) {
+
+	deployments := m.processUpdatedDeployments(updatedDeployments)
+
+	helmAuth := m.GetHelmAuth(ctx)
+
+	for _, kdep := range deployments.KubernetesDeployments {
+
+		dag.HydrateKubernetes(
+			m.ValuesStateDir,
+			m.WetStateDir,
+			dagger.HydrateKubernetesOpts{
+				HelmRegistryLoginNeeded: helmAuth.NeedsAuth,
+				HelmRegistry:            helmAuth.Registry,
+				HelmRegistryUser:        helmAuth.Username,
+				HelmRegistryPassword:    helmAuth.Password,
+			},
+		).Render(m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
+			Tenant: kdep.Tenant,
+			Env:    kdep.Environment,
+		})
+
+	}
+}
+
+// Function that returns a deployment object from a type, cluster, tenant and environment considering glob patterns
+func (m *HydrateOrchestrator) processDeploymentGlob(
+	ctx context.Context,
+	// Values state directory
+	// +required
+	valuesStateDir *dagger.Directory,
+	// Type of deployment
+	// +required
+	deploymentType string,
+	// Cluster name
+	// +required
+	cluster string,
+	// Tenant name
+	// +required
+	tenant string,
+	// Environment name
+	// +required
+	environment string,
+) *Deployments {
+
+	affected_files, err := valuesStateDir.Glob(ctx, fmt.Sprintf("%s/%s/%s/%s", deploymentType, cluster, tenant, environment))
+
+	if err != nil {
+		panic(err)
+	}
+
+	jsonString, err := json.Marshal(affected_files)
+	if err != nil {
+		panic(err)
+	}
+	return m.processUpdatedDeployments(string(jsonString))
 }
 
 // Process updated deployments and return all unique deployments after validating and processing them
