@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/prefapp/daggerverse/compare/hydrate-kubernetes-v1.0.0...hydrate-kubernetes-v1.1.0) (2024-12-27)
+
+
+### Features
+
+* support images file on values dir ([#82](https://github.com/prefapp/daggerverse/issues/82)) ([4a627ed](https://github.com/prefapp/daggerverse/commit/4a627edfe0eda86f3818a701fbbc8d7452611071))
+
 ## 1.0.0 (2024-12-20)
 
 
