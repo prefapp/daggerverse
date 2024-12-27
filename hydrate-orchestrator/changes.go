@@ -10,7 +10,7 @@ import (
 )
 
 // Hydrate deployments based on the updated deployments
-func (m *HydrateOrchestrator) RunChanges(
+func (m *HydrateOrchestrator) GenerateDeployment(
 	ctx context.Context,
 	// Identifier that triggered the render, this could be a PR number or a workflow run id
 	// +optional
@@ -34,11 +34,7 @@ func (m *HydrateOrchestrator) RunChanges(
 	environment string,
 ) {
 
-<<<<<<< Updated upstream
-	deployments := m.processUpdatedDeployments(ctx, updatedDeployments)
-=======
 	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, deploymentType, cluster, tenant, environment)
->>>>>>> Stashed changes
 
 	helmAuth := m.GetHelmAuth(ctx)
 
@@ -95,14 +91,6 @@ func (m *HydrateOrchestrator) ValidateChanges(
 	// Updated deployments in JSON format
 	// +required
 	updatedDeployments string,
-	// Identifier that triggered the render, this could be a PR number or a workflow run id
-	// +optional
-	// +default=0
-	id int,
-	// Author of the PR
-	// +optional
-	// +default="author"
-	author string,
 ) {
 
 	deployments := m.processUpdatedDeployments(updatedDeployments)
@@ -163,7 +151,6 @@ func (m *HydrateOrchestrator) processDeploymentGlob(
 
 // Process updated deployments and return all unique deployments after validating and processing them
 func (m *HydrateOrchestrator) processUpdatedDeployments(
-	ctx context.Context,
 	// List of updated deployments in JSON format
 	// +required
 	updatedDeployments string,
