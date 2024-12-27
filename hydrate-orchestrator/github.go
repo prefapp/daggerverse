@@ -52,7 +52,7 @@ func (m *HydrateOrchestrator) upsertPR(
 	}
 
 	contentsDirPath := "/contents"
-	dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
+	_, err := dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
 		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
 			Exclude: []string{".git"},
 		}).
@@ -66,6 +66,10 @@ func (m *HydrateOrchestrator) upsertPR(
 			"-m", title,
 			"--delete-path", cleanupDir,
 		}).Sync(ctx)
+
+	if err != nil {
+		panic(err)
+	}
 
 	if !prExists {
 		labelArgs := ""
@@ -82,7 +86,7 @@ func (m *HydrateOrchestrator) upsertPR(
 		}
 
 		// Create a PR for the updated deployment
-		dag.Gh().Run(fmt.Sprintf(
+		_, err := dag.Gh().Run(fmt.Sprintf(
 			"pr create -R '%s' --base '%s' --title '%s' --body '%s' --head %s %s %s",
 			m.Repo, m.DeploymentBranch, title, body, newBranchName, labelArgs, reviewerArgs,
 		),
@@ -91,6 +95,9 @@ func (m *HydrateOrchestrator) upsertPR(
 				Token:        m.GhToken,
 			},
 		).Sync(ctx)
+
+		panic(err)
+
 	}
 }
 
@@ -126,7 +133,7 @@ func (m *HydrateOrchestrator) getRepoPrs(ctx context.Context) ([]Pr, error) {
 
 	if err != nil {
 
-		return nil, err
+		panic(err)
 	}
 
 	prs := []Pr{}
@@ -146,7 +153,7 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 	newBranch string,
 ) {
 	gitDirPath := "/git_dir"
-	dag.Gh().Container(dagger.GhContainerOpts{
+	_, err := dag.Gh().Container(dagger.GhContainerOpts{
 		Token: m.GhToken,
 	}).
 		WithDirectory(gitDirPath, gitDir).
@@ -164,4 +171,8 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 		"origin",
 		newBranch,
 	}).Sync(ctx)
+
+	if err != nil {
+		panic(err)
+	}
 }
