@@ -96,7 +96,9 @@ func (m *HydrateOrchestrator) upsertPR(
 			},
 		).Sync(ctx)
 
-		panic(err)
+		if err != nil {
+			panic(err)
+		}
 
 	}
 }
