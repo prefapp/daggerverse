@@ -152,7 +152,7 @@ type BranchInfo struct {
 	SHA  string
 }
 
-func (m *HydrateOrchestrator) GetBranchInfo(
+func (m *HydrateOrchestrator) getBranchInfo(
 	ctx context.Context,
 ) *BranchInfo {
 
