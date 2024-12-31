@@ -58,23 +58,23 @@ func New(
 	// +default="apps"
 	renderType string,
 
-) *HydrateKubernetes {
+) (*HydrateKubernetes, error) {
 
 	hydrateK8sConf, err := valuesDir.
 		File(".github/hydrate_k8s_config.yaml").
 		Contents(ctx)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	config := &Config{}
 
-	errUnmsh := yaml.Unmarshal([]byte(hydrateK8sConf), config)
+	err = yaml.Unmarshal([]byte(hydrateK8sConf), config)
 
-	if errUnmsh != nil {
+	if err != nil {
 
-		panic(errUnmsh)
+		return nil, err
 
 	}
 
@@ -120,7 +120,7 @@ func New(
 			strings.ToLower(renderType),
 			" ",
 		),
-	}
+	}, nil
 }
 
 // This function renders the apps or sys-apps based on the render type
@@ -145,7 +145,7 @@ func (m *HydrateKubernetes) Render(
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
 
-) *dagger.Directory {
+) (*dagger.Directory, error) {
 
 	if m.RenderType == "sys-services" {
 

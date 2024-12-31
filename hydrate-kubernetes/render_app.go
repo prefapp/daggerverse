@@ -23,11 +23,23 @@ func (m *HydrateKubernetes) RenderApp(
 
 ) (string, error) {
 
-	newImagesFile := m.BuildNewImages(ctx, newImagesMatrix)
+	newImagesFile, err := m.BuildNewImages(ctx, newImagesMatrix)
 
-	imagesFile := m.GetImagesFile(ctx, cluster, tenant, env)
+	if err != nil {
+		return "", err
+	}
 
-	previousImagesFileContent := m.BuildPreviousImagesApp(ctx, cluster, tenant, env)
+	imagesFile, err := m.GetImagesFile(ctx, cluster, tenant, env)
+
+	if err != nil {
+		return "", err
+	}
+
+	previousImagesFileContent, err := m.BuildPreviousImagesApp(ctx, cluster, tenant, env)
+
+	if err != nil {
+		return "", err
+	}
 
 	helmfileCtr := m.Container.
 		WithDirectory("/values", m.ValuesDir).
@@ -50,13 +62,17 @@ func (m *HydrateKubernetes) RenderApp(
 
 	if m.HelmRegistryLoginNeeded {
 
-		helmfileCtr = prepareHelmLogin(
+		helmfileCtr, err = prepareHelmLogin(
 			ctx,
 			helmfileCtr,
 			m.HelmRegistry,
 			m.HelmRegistryUser,
 			m.HelmRegistryPassword,
 		)
+
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return helmfileCtr.

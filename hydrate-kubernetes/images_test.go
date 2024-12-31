@@ -17,7 +17,7 @@ func TestGetImagesFileCanGenerateImagesFile(t *testing.T) {
 		ValuesDir: valuesRepoDir.Directory("./fixtures/values-repo-dir"),
 	}
 
-	imagesFile := m.GetImagesFile(ctx, "cluster-name", "test-tenant", "with_images_file")
+	imagesFile, _ := m.GetImagesFile(ctx, "cluster-name", "test-tenant", "with_images_file")
 
 	yamlContent, errCnts := imagesFile.Contents(ctx)
 

@@ -52,7 +52,7 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 
 	m.Container = containerWithCmds(m.Container, configStruct.Commands)
 
-	renderedDir := m.Render(
+	renderedDir, _ := m.Render(
 		ctx,
 		"sample-app",
 		"cluster-name",
@@ -179,7 +179,7 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 
 	m.Container = containerWithCmds(m.Container, configStruct.Commands)
 
-	renderedDir := m.Render(
+	renderedDir, _ := m.Render(
 		ctx,
 		"sample-app",
 		"cluster-name",
@@ -262,7 +262,7 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 
 	m.Container = containerWithCmds(m.Container, configStruct.Commands)
 
-	dir := m.Render(ctx, "stakater", "cluster-name", "", "", "")
+	dir, _ := m.Render(ctx, "stakater", "cluster-name", "", "", "")
 
 	regularEntries, errGlob := dir.Glob(ctx, "cluster-name/stakater/*.yml")
 
@@ -340,7 +340,7 @@ func TestRenderAppsCanRenderImages(t *testing.T) {
 
 	m.Container = containerWithCmds(m.Container, configStruct.Commands)
 
-	renderedDir := m.Render(
+	renderedDir, _ := m.Render(
 		ctx,
 		"sample-app",
 		"cluster-name",
