@@ -34,6 +34,8 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	environment string,
 ) {
 
+	branchInfo := m.GetBranchInfo(ctx)
+
 	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, deploymentType, cluster, tenant, environment)
 
 	helmAuth := m.GetHelmAuth(ctx)
@@ -57,19 +59,17 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 		})
 
 		var prBody string
-		if m.Event == PullRequest {
-			prBody = fmt.Sprintf(`
-# New deployment from PR #%d
-Created by @%s
-%s
-`, id, author, kdep.String(false))
-		} else if m.Event == Manual {
-			prBody = fmt.Sprintf(`
+		prBody = fmt.Sprintf(`
 # New deployment manually triggered
-Created by @%s
+Created by @%s from %s within commit [%s](%s)
 %s
-`, author, kdep.String(false))
-		}
+`,
+			author,
+			branchInfo.Name,
+			branchInfo.SHA,
+			fmt.Sprintf("https://github.com/%s/commit/%s", m.Repo, branchInfo.SHA),
+			kdep.String(false),
+		)
 
 		m.upsertPR(
 			ctx,

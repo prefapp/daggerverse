@@ -105,6 +105,8 @@ func (m *HydrateOrchestrator) upsertPR(
 
 func (m *HydrateOrchestrator) checkPrExists(ctx context.Context, branchName string) bool {
 
+	// branch name depends on the deployment kind, the format is <depKindId>-<depKind>-<cluster>-<tenant>-<env>
+
 	prs, err := m.getRepoPrs(ctx)
 
 	if err != nil {

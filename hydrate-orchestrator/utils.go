@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
+	"dagger/hydrate-orchestrator/internal/dagger"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/samber/lo"
 )
@@ -118,4 +121,75 @@ func kubernetesDepFromStr(deployment string) *KubernetesDeployment {
 
 func splitPath(path string) []string {
 	return strings.Split(path, string(os.PathSeparator))
+}
+
+func (m *HydrateOrchestrator) WriteToFile(
+	ctx context.Context,
+	file *dagger.File,
+	content string,
+) *dagger.Container {
+
+	path := filepath.Join("/tmp", "file")
+
+	ctr, _ := dag.Container().From("alpine:latest").
+		WithFile(path, file).
+		WithExec(
+			[]string{
+				"sh",
+				"-c",
+				fmt.Sprintf("cat >> %s", path),
+			},
+			dagger.ContainerWithExecOpts{
+				Stdin: content,
+			},
+		).Sync(ctx)
+
+	return ctr
+}
+
+type BranchInfo struct {
+	Name string
+	SHA  string
+}
+
+func (m *HydrateOrchestrator) GetBranchInfo(
+	ctx context.Context,
+) *BranchInfo {
+
+	gitDirPath := "/git_dir"
+	ctr := dag.Gh().Container(dagger.GhContainerOpts{
+		Token: m.GhToken,
+	}).
+		WithDirectory(gitDirPath, m.ValuesStateDir).
+		WithWorkdir(gitDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String())
+
+	branch, err := ctr.WithExec([]string{
+		"git",
+		"branch",
+		"--show-current",
+	}).Stdout(ctx)
+
+	branch = strings.TrimSpace(branch)
+
+	if err != nil {
+		panic(err)
+	}
+
+	sha, err := ctr.WithExec([]string{
+		"git",
+		"rev-parse",
+		branch,
+	}).Stdout(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	sha = strings.TrimSpace(sha)
+
+	return &BranchInfo{
+		Name: strings.TrimSpace(branch),
+		SHA:  sha,
+	}
 }
