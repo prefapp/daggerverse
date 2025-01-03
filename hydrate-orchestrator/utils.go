@@ -21,10 +21,10 @@ type Deployments struct {
 }
 
 func (d *Deployments) addDeployment(dep interface{}) {
-	switch dep.(type) {
+	switch dep := dep.(type) {
 	case *KubernetesDeployment:
 
-		kdep := dep.(*KubernetesDeployment)
+		kdep := dep
 		if !lo.ContainsBy(d.KubernetesDeployments, func(kd KubernetesDeployment) bool {
 			return kd.Equals(*kdep)
 		}) {
@@ -76,7 +76,7 @@ func (kd *KubernetesDeployment) String(summary bool) string {
 
 func (kd *KubernetesDeployment) Labels() []string {
 	return []string{
-		fmt.Sprintf("type/kubernetes"),
+		"type/kubernetes",
 		fmt.Sprintf("cluster/%s", kd.Cluster),
 		fmt.Sprintf("tenant/%s", kd.Tenant),
 		fmt.Sprintf("env/%s", kd.Environment),
@@ -121,30 +121,6 @@ func kubernetesDepFromStr(deployment string) *KubernetesDeployment {
 
 func splitPath(path string) []string {
 	return strings.Split(path, string(os.PathSeparator))
-}
-
-func (m *HydrateOrchestrator) WriteToFile(
-	ctx context.Context,
-	file *dagger.File,
-	content string,
-) *dagger.Container {
-
-	path := filepath.Join("/tmp", "file")
-
-	ctr, _ := dag.Container().From("alpine:latest").
-		WithFile(path, file).
-		WithExec(
-			[]string{
-				"sh",
-				"-c",
-				fmt.Sprintf("cat >> %s", path),
-			},
-			dagger.ContainerWithExecOpts{
-				Stdin: content,
-			},
-		).Sync(ctx)
-
-	return ctr
 }
 
 type BranchInfo struct {

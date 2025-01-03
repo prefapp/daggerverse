@@ -44,7 +44,7 @@ func (m *HydrateOrchestrator) upsertPR(
 	// +optional
 	reviewers []string,
 
-) {
+) error {
 	prExists := m.checkPrExists(ctx, newBranchName)
 
 	if !prExists {
@@ -68,7 +68,7 @@ func (m *HydrateOrchestrator) upsertPR(
 		}).Sync(ctx)
 
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if !prExists {
@@ -97,10 +97,12 @@ func (m *HydrateOrchestrator) upsertPR(
 		).Sync(ctx)
 
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 	}
+
+	return nil
 }
 
 func (m *HydrateOrchestrator) checkPrExists(ctx context.Context, branchName string) bool {

@@ -32,7 +32,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	// Environment name
 	// +required
 	environment string,
-) {
+) *dagger.File {
 
 	branchInfo := m.getBranchInfo(ctx)
 
@@ -40,11 +40,15 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 
 	helmAuth := m.GetHelmAuth(ctx)
 
+	summary := &DeploymentSummary{
+		Items: []DeploymentSummaryRow{},
+	}
+
 	for _, kdep := range deployments.KubernetesDeployments {
 
 		branchName := fmt.Sprintf("%d-kubernetes-%s-%s-%s", id, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
-		renderedDeployment := dag.HydrateKubernetes(
+		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
 			dagger.HydrateKubernetesOpts{
@@ -53,11 +57,18 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 				HelmRegistryUser:        helmAuth.Username,
 				HelmRegistryPassword:    helmAuth.Password,
 			},
-		).Render(m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
+		).Render(ctx, m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
 			Tenant: kdep.Tenant,
 			Env:    kdep.Environment,
 		})
 
+		if err != nil {
+			summary.addDeploymentSummaryRow(
+				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+				"Failed",
+			)
+			continue
+		}
 		prBody := fmt.Sprintf(`
 # New deployment manually triggered
 Created by @%s from %s within commit [%s](%s)
@@ -70,17 +81,31 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		m.upsertPR(
+		err = m.upsertPR(
 			ctx,
 			branchName,
-			renderedDeployment,
+			&renderedDeployment[0],
 			kdep.Labels(),
 			kdep.String(true),
 			prBody,
 			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 			lo.Ternary(author == "author", []string{}, []string{author}),
 		)
+
+		if err != nil {
+			summary.addDeploymentSummaryRow(
+				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+				"Failed",
+			)
+		} else {
+			summary.addDeploymentSummaryRow(
+				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+				"Success",
+			)
+		}
 	}
+
+	return m.DeploymentSummaryToFile(ctx, summary)
 
 }
 
@@ -98,7 +123,7 @@ func (m *HydrateOrchestrator) ValidateChanges(
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
-		_, err := dag.HydrateKubernetes(
+		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
 			dagger.HydrateKubernetesOpts{
@@ -107,14 +132,21 @@ func (m *HydrateOrchestrator) ValidateChanges(
 				HelmRegistryUser:        helmAuth.Username,
 				HelmRegistryPassword:    helmAuth.Password,
 			},
-		).Render(m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
+		).Render(ctx, m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
 			Tenant: kdep.Tenant,
 			Env:    kdep.Environment,
-		}).Sync(ctx)
+		})
 
 		if err != nil {
 			panic(err)
 		}
+
+		_, err = renderedDeployment[0].Sync(ctx)
+
+		if err != nil {
+			panic(err)
+		}
+
 	}
 }
 
