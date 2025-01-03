@@ -193,12 +193,12 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 
 		for _, remoteArtifact := range envYamlStruct.RemoteArtifacts {
 
-			artifact, err := m.Container.
+			withRemotesArtifacts, err := m.Container.
 				WithExec([]string{
 					"curl",
 					"-o",
 					"/tmp/" + remoteArtifact.Filename, remoteArtifact.URL}).
-				Stdout(ctx)
+				Sync(ctx)
 
 			if err != nil {
 
@@ -206,9 +206,9 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 
 			}
 
-			m.ValuesDir = m.ValuesDir.WithNewFile(
+			m.ValuesDir = m.ValuesDir.WithFile(
 				"kubernetes/"+cluster+"/"+tenant+"/"+env+"/"+remoteArtifact.Filename,
-				artifact,
+				withRemotesArtifacts.File("/tmp/"+remoteArtifact.Filename),
 			)
 
 		}
