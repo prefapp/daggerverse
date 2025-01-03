@@ -171,6 +171,50 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 			tmpDir,
 		)
 
+	envYaml, errEnvYaml := m.ValuesDir.File("kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml").Contents(ctx)
+
+	if errEnvYaml != nil {
+
+		return nil, errEnvYaml
+
+	}
+
+	envYamlStruct := EnvYaml{}
+
+	errUnmshEnv := yaml.Unmarshal([]byte(envYaml), &envYamlStruct)
+
+	if errUnmshEnv != nil {
+
+		return nil, errUnmshEnv
+
+	}
+
+	if envYamlStruct.RemoteArtifacts != nil {
+
+		for _, remoteArtifact := range envYamlStruct.RemoteArtifacts {
+
+			withRemotesArtifacts, err := m.Container.
+				WithExec([]string{
+					"curl",
+					"-o",
+					"/tmp/" + remoteArtifact.Filename, remoteArtifact.URL}).
+				Sync(ctx)
+
+			if err != nil {
+
+				return nil, err
+
+			}
+
+			m.ValuesDir = m.ValuesDir.WithFile(
+				"kubernetes/"+cluster+"/"+tenant+"/"+env+"/"+remoteArtifact.Filename,
+				withRemotesArtifacts.File("/tmp/"+remoteArtifact.Filename),
+			)
+
+		}
+
+	}
+
 	for _, regex := range []string{"*.yml", "*.yaml"} {
 
 		entries, err := m.ValuesDir.
