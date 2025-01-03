@@ -207,7 +207,7 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 			}
 
 			m.ValuesDir = m.ValuesDir.WithFile(
-				"kubernetes/"+cluster+"/"+tenant+"/"+env+"/"+remoteArtifact.Filename,
+				"kubernetes/"+cluster+"/"+tenant+"/"+env+"/extra_artifacts/"+remoteArtifact.Filename,
 				withRemotesArtifacts.File("/tmp/"+remoteArtifact.Filename),
 			)
 
