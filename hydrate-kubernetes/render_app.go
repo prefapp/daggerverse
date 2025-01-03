@@ -83,3 +83,11 @@ func (m *HydrateKubernetes) RenderApp(
 		}).
 		Stdout(ctx)
 }
+
+type EnvYaml struct {
+	RemoteArtifacts []struct {
+		Filename string `yaml:"filename"`
+
+		URL string `yaml:"url"`
+	} `yaml:"remoteArtifacts",omitempty`
+}
