@@ -10,7 +10,8 @@
     },
     {
       "name": "hydrate-kubernetes",
-      "source": "../hydrate-kubernetes"
+      "source": "github.com/prefapp/daggerverse/hydrate-kubernetes@feat/45-orchestrator-deploy-under-demand",
+      "pin": "e442c090720418e6c78363a36d60448491f2bc0d"
     }
   ],
   "source": "."
