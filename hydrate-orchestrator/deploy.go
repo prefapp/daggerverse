@@ -110,10 +110,6 @@ Created by @%s from %s within commit [%s](%s)
 		}
 	}
 
-	if !succeded {
-		panic("Found errors in at least one deployment, check the logs for more information")
-	}
-
 	return m.DeploymentSummaryToFile(ctx, summary)
 
 }
