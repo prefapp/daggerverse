@@ -18,7 +18,7 @@ type DeploymentSummary struct {
 	Items []DeploymentSummaryRow `json:"items"`
 }
 
-func (s DeploymentSummary) addDeploymentSummaryRow(deploymentPath string, status string) {
+func (s *DeploymentSummary) addDeploymentSummaryRow(deploymentPath string, status string) {
 	s.Items = append(s.Items, DeploymentSummaryRow{DeploymentPath: deploymentPath, Status: status})
 }
 
