@@ -67,6 +67,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 				fmt.Sprintf("Failed: %s", err.Error()),
 			)
+
 			continue
 		}
 		prBody := fmt.Sprintf(`
@@ -98,6 +99,7 @@ Created by @%s from %s within commit [%s](%s)
 				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 				fmt.Sprintf("Failed: %s", err.Error()),
 			)
+
 		} else {
 			summary.addDeploymentSummaryRow(
 				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
