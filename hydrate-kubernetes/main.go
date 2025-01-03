@@ -145,11 +145,13 @@ func (m *HydrateKubernetes) Render(
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
 
-) (*dagger.Directory, error) {
+) ([]*dagger.Directory, error) {
 
 	if m.RenderType == "sys-services" {
 
-		return m.DumpSysAppRenderToWetDir(ctx, app, cluster)
+		dir, err := m.DumpSysAppRenderToWetDir(ctx, app, cluster)
+
+		return []*dagger.Directory{dir}, err
 
 	} else if m.RenderType == "apps" {
 
@@ -159,7 +161,9 @@ func (m *HydrateKubernetes) Render(
 
 		}
 
-		return m.DumpAppRenderToWetDir(ctx, app, cluster, tenant, env, newImagesMatrix)
+		dir, err := m.DumpAppRenderToWetDir(ctx, app, cluster, tenant, env, newImagesMatrix)
+
+		return []*dagger.Directory{dir}, err
 
 	} else {
 

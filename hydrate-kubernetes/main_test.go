@@ -61,7 +61,7 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 		"{\"images\":[{\"service_name_list\":[\"micro-a\"],\"image\":\"new-image:1.0.0\",\"env\":\"dev\",\"app\":\"sample-app\",\"tenant\":\"test-tenant\",\"base_folder\":\"kubernetes/cluster-name\"}]}",
 	)
 
-	newDpRendered := renderedDir.File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
+	newDpRendered := renderedDir[0].File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
 
 	if newDpRendered == nil {
 		t.Errorf("Expected new Deployment.sample-app-micro-a.yml to be rendered")
@@ -99,7 +99,7 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 
 	}
 
-	regularEntries, errGlob := renderedDir.Glob(ctx, "kubernetes/cluster-name/test-tenant/dev/*.yml")
+	regularEntries, errGlob := renderedDir[0].Glob(ctx, "kubernetes/cluster-name/test-tenant/dev/*.yml")
 
 	if errGlob != nil {
 
@@ -190,7 +190,7 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 
 	fmt.Printf("Rendered dir: %v", renderedDir)
 
-	newDpRendered := renderedDir.File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
+	newDpRendered := renderedDir[0].File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
 
 	if newDpRendered == nil {
 		t.Errorf("Expected new Deployment.sample-app-micro-a.yml to be rendered")
@@ -264,7 +264,7 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 
 	dir, _ := m.Render(ctx, "stakater", "cluster-name", "", "", "")
 
-	regularEntries, errGlob := dir.Glob(ctx, "cluster-name/stakater/*.yml")
+	regularEntries, errGlob := dir[0].Glob(ctx, "cluster-name/stakater/*.yml")
 
 	if errGlob != nil {
 
@@ -349,7 +349,7 @@ func TestRenderAppsCanRenderImages(t *testing.T) {
 		"{\"images\":[]}",
 	)
 
-	newDpRendered := renderedDir.File("kubernetes/cluster-name/test-tenant/with_images_file/Deployment.sample-app-micro-b.yml")
+	newDpRendered := renderedDir[0].File("kubernetes/cluster-name/test-tenant/with_images_file/Deployment.sample-app-micro-b.yml")
 
 	dpMicroB := Artifact{}
 
