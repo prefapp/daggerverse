@@ -65,7 +65,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
-				"Failed",
+				fmt.Sprintf("Failed: %s", err.Error()),
 			)
 			continue
 		}
