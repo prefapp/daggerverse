@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
+	"dagger/hydrate-orchestrator/internal/dagger"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/samber/lo"
 )
@@ -18,10 +21,10 @@ type Deployments struct {
 }
 
 func (d *Deployments) addDeployment(dep interface{}) {
-	switch dep.(type) {
+	switch dep := dep.(type) {
 	case *KubernetesDeployment:
 
-		kdep := dep.(*KubernetesDeployment)
+		kdep := dep
 		if !lo.ContainsBy(d.KubernetesDeployments, func(kd KubernetesDeployment) bool {
 			return kd.Equals(*kdep)
 		}) {
@@ -73,7 +76,7 @@ func (kd *KubernetesDeployment) String(summary bool) string {
 
 func (kd *KubernetesDeployment) Labels() []string {
 	return []string{
-		fmt.Sprintf("type/kubernetes"),
+		"type/kubernetes",
 		fmt.Sprintf("cluster/%s", kd.Cluster),
 		fmt.Sprintf("tenant/%s", kd.Tenant),
 		fmt.Sprintf("env/%s", kd.Environment),
@@ -118,4 +121,51 @@ func kubernetesDepFromStr(deployment string) *KubernetesDeployment {
 
 func splitPath(path string) []string {
 	return strings.Split(path, string(os.PathSeparator))
+}
+
+type BranchInfo struct {
+	Name string
+	SHA  string
+}
+
+func (m *HydrateOrchestrator) getBranchInfo(
+	ctx context.Context,
+) *BranchInfo {
+
+	gitDirPath := "/git_dir"
+	ctr := dag.Gh().Container(dagger.GhContainerOpts{
+		Token: m.GhToken,
+	}).
+		WithDirectory(gitDirPath, m.ValuesStateDir).
+		WithWorkdir(gitDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String())
+
+	branch, err := ctr.WithExec([]string{
+		"git",
+		"branch",
+		"--show-current",
+	}).Stdout(ctx)
+
+	branch = strings.TrimSpace(branch)
+
+	if err != nil {
+		panic(err)
+	}
+
+	sha, err := ctr.WithExec([]string{
+		"git",
+		"rev-parse",
+		branch,
+	}).Stdout(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	sha = strings.TrimSpace(sha)
+
+	return &BranchInfo{
+		Name: strings.TrimSpace(branch),
+		SHA:  sha,
+	}
 }

@@ -17,7 +17,7 @@ func TestBuildPreviousImageCanRecoverPreviousImages(t *testing.T) {
 		WetRepoDir: wetRepoDir.Directory("fixtures/wet-repo-dir"),
 	}
 
-	buildImagesContent := m.BuildPreviousImagesApp(
+	buildImagesContent, _ := m.BuildPreviousImagesApp(
 		ctx,
 		"cluster-name",
 		"test-tenant",

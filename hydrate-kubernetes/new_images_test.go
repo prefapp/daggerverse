@@ -13,7 +13,7 @@ func TestNewImagesCanGenerateNewFile(t *testing.T) {
 
 	m := &HydrateKubernetes{}
 
-	daggerFile := m.BuildNewImages(
+	daggerFile, _ := m.BuildNewImages(
 		ctx,
 		"{ \"images\": [{ \"service_name_list\": [\"test\"], \"image\": \"test-image\" }] }",
 	)

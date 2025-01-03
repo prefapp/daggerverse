@@ -22,6 +22,9 @@ Create or update a PR with the updated contents
 
 func (m *HydrateOrchestrator) upsertPR(
 	ctx context.Context,
+	// Branch ID
+	// +required
+	branchId int,
 	// Updated deployment branch name
 	// +required
 	newBranchName string,
@@ -44,15 +47,22 @@ func (m *HydrateOrchestrator) upsertPR(
 	// +optional
 	reviewers []string,
 
-) {
-	prExists := m.checkPrExists(ctx, newBranchName)
+) error {
+
+	prExists, err := m.checkPrExists(ctx, newBranchName, branchId)
+
+	if err != nil {
+		return err
+	}
+
+	branchWithId := fmt.Sprintf("%d-%s", branchId, newBranchName)
 
 	if !prExists {
-		m.createRemoteBranch(ctx, contents, newBranchName)
+		m.createRemoteBranch(ctx, contents, branchWithId)
 	}
 
 	contentsDirPath := "/contents"
-	_, err := dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
+	_, err = dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
 		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
 			Exclude: []string{".git"},
 		}).
@@ -62,13 +72,13 @@ func (m *HydrateOrchestrator) upsertPR(
 			"gh",
 			"commit",
 			"-R", m.Repo,
-			"-b", newBranchName,
+			"-b", branchWithId,
 			"-m", title,
 			"--delete-path", cleanupDir,
 		}).Sync(ctx)
 
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if !prExists {
@@ -88,7 +98,7 @@ func (m *HydrateOrchestrator) upsertPR(
 		// Create a PR for the updated deployment
 		_, err := dag.Gh().Run(fmt.Sprintf(
 			"pr create -R '%s' --base '%s' --title '%s' --body '%s' --head %s %s %s",
-			m.Repo, m.DeploymentBranch, title, body, newBranchName, labelArgs, reviewerArgs,
+			m.Repo, m.DeploymentBranch, title, body, branchWithId, labelArgs, reviewerArgs,
 		),
 			dagger.GhRunOpts{
 				DisableCache: true,
@@ -96,25 +106,37 @@ func (m *HydrateOrchestrator) upsertPR(
 			},
 		).Sync(ctx)
 
-		panic(err)
+		if err != nil {
+			return err
+		}
 
 	}
+
+	return nil
 }
 
-func (m *HydrateOrchestrator) checkPrExists(ctx context.Context, branchName string) bool {
+func (m *HydrateOrchestrator) checkPrExists(ctx context.Context, branchName string, branchId int) (bool, error) {
+
+	// branch name depends on the deployment kind, the format is <depKindId>-<depKind>-<cluster>-<tenant>-<env>
 
 	prs, err := m.getRepoPrs(ctx)
 
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 
 	for _, pr := range prs {
-		if pr.HeadRefName == branchName && strings.ToLower(pr.State) == "open" {
-			return true
+		if strings.HasSuffix(pr.HeadRefName, branchName) &&
+			!strings.HasPrefix(pr.HeadRefName, fmt.Sprintf("%d-", branchId)) &&
+			strings.ToLower(pr.State) == "open" {
+			return false, fmt.Errorf("Deployment pending (%s) with branch name %s", branchName, pr.HeadRefName)
+		} else if strings.HasSuffix(pr.HeadRefName, branchName) &&
+			strings.ToLower(pr.State) == "open" {
+			return true, nil
 		}
+
 	}
-	return false
+	return false, nil
 }
 
 func (m *HydrateOrchestrator) getRepoPrs(ctx context.Context) ([]Pr, error) {

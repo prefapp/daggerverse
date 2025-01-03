@@ -14,7 +14,7 @@ func (m *HydrateKubernetes) BuildNewImages(
 
 	matrix string,
 
-) *dagger.File {
+) (*dagger.File, error) {
 
 	var imageMatrix ImageMatrix
 
@@ -32,15 +32,15 @@ func (m *HydrateKubernetes) BuildNewImages(
 
 	}
 
-	marshaled, errMars := yaml.Marshal(mapNewImages)
+	marshaled, err := yaml.Marshal(mapNewImages)
 
-	if errMars != nil {
+	if err != nil {
 
-		panic(errMars)
+		return nil, err
 
 	}
 
 	return dag.Directory().
 		WithNewFile("current-images.yaml", string(marshaled)).
-		File("current-images.yaml")
+		File("current-images.yaml"), nil
 }

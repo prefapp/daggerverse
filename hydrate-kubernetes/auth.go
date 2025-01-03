@@ -17,13 +17,12 @@ func prepareHelmLogin(
 
 	helmRegistryPassword *dagger.Secret,
 
-) *dagger.Container {
+) (*dagger.Container, error) {
 
 	pass, err := helmRegistryPassword.Plaintext(ctx)
 
 	if err != nil {
-		panic("ERROR_PASSWORD " + err.Error())
-
+		return nil, err
 	}
 
 	return ctr.
@@ -35,5 +34,5 @@ func prepareHelmLogin(
 			dagger.ContainerWithExecOpts{
 				Stdin: pass,
 			},
-		)
+		), nil
 }
