@@ -32,7 +32,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	// Environment name
 	// +required
 	environment string,
-) *dagger.File {
+) (*dagger.File, error) {
 
 	branchInfo := m.getBranchInfo(ctx)
 
@@ -43,6 +43,8 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	summary := &DeploymentSummary{
 		Items: []DeploymentSummaryRow{},
 	}
+
+	err := error(nil)
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
@@ -67,6 +69,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 				fmt.Sprintf("Failed: %s", err.Error()),
 			)
+
 			continue
 		}
 		prBody := fmt.Sprintf(`
@@ -98,6 +101,7 @@ Created by @%s from %s within commit [%s](%s)
 				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 				fmt.Sprintf("Failed: %s", err.Error()),
 			)
+
 		} else {
 			summary.addDeploymentSummaryRow(
 				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
@@ -106,7 +110,7 @@ Created by @%s from %s within commit [%s](%s)
 		}
 	}
 
-	return m.DeploymentSummaryToFile(ctx, summary)
+	return m.DeploymentSummaryToFile(ctx, summary), err
 
 }
 
