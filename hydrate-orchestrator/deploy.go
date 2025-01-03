@@ -44,6 +44,8 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 		Items: []DeploymentSummaryRow{},
 	}
 
+	succeded := true
+
 	for _, kdep := range deployments.KubernetesDeployments {
 
 		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
@@ -67,6 +69,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 				fmt.Sprintf("Failed: %s", err.Error()),
 			)
+			succeded = false
 			continue
 		}
 		prBody := fmt.Sprintf(`
@@ -96,14 +99,19 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
-				"Failed",
+				fmt.Sprintf("Failed: %s", err.Error()),
 			)
+			succeded = false
 		} else {
 			summary.addDeploymentSummaryRow(
 				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 				"Success",
 			)
 		}
+	}
+
+	if !succeded {
+		panic("Found errors in at least one deployment, check the logs for more information")
 	}
 
 	return m.DeploymentSummaryToFile(ctx, summary)
