@@ -46,7 +46,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
-		branchName := fmt.Sprintf("%d-kubernetes-%s-%s-%s", id, kdep.Cluster, kdep.Tenant, kdep.Environment)
+		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", id, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
@@ -83,6 +83,7 @@ Created by @%s from %s within commit [%s](%s)
 
 		err = m.upsertPR(
 			ctx,
+			id,
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
