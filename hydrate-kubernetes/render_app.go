@@ -89,5 +89,5 @@ type EnvYaml struct {
 		Filename string `yaml:"filename"`
 
 		URL string `yaml:"url"`
-	} `yaml:"remoteArtifacts",omitempty`
+	} `yaml:"remoteArtifacts,omitempty"`
 }
