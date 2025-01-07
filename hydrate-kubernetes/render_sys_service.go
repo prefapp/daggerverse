@@ -43,7 +43,7 @@ func (m *HydrateKubernetes) RenderSysService(
 		WithExec([]string{
 			"helmfile", "template",
 			"--state-values-set-string", "app=" + app + ",cluster=" + cluster,
-			"--state-values-file", "./" + cluster + "/" + app + ".yaml",
+			"--state-values-file", "./kubernetes/" + cluster + "/" + app + ".yaml",
 		}).
 		Stdout(ctx)
 }

@@ -264,7 +264,7 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 
 	dir, _ := m.Render(ctx, "stakater", "cluster-name", "", "", "")
 
-	regularEntries, errGlob := dir[0].Glob(ctx, "cluster-name/stakater/*.yml")
+	entries, errGlob := dir[0].Glob(ctx, "kubernetes/cluster-name/stakater/*.yml")
 
 	if errGlob != nil {
 
@@ -273,24 +273,24 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 	}
 
 	mapEntries := map[string]bool{
-		"cluster-name/stakater/ClusterRole.stakater-reloader-role.yml":                true,
-		"cluster-name/stakater/ClusterRoleBinding.stakater-reloader-role-binding.yml": true,
-		"cluster-name/stakater/Deployment.stakater-reloader.yml":                      true,
-		"cluster-name/stakater/ServiceAccount.stakater-reloader.yml":                  true,
-		"cluster-name/stakater/ExternalSecret.a.yml":                                  true,
+		"kubernetes/cluster-name/stakater/ClusterRole.stakater-reloader-role.yml":                true,
+		"kubernetes/cluster-name/stakater/ClusterRoleBinding.stakater-reloader-role-binding.yml": true,
+		"kubernetes/cluster-name/stakater/Deployment.stakater-reloader.yml":                      true,
+		"kubernetes/cluster-name/stakater/ServiceAccount.stakater-reloader.yml":                  true,
+		"kubernetes/cluster-name/stakater/ExternalSecret.a.yml":                                  true,
 	}
 
-	if len(regularEntries) != 5 {
+	if len(entries) != 5 {
 
-		t.Errorf("Expected 5 files to be rendered, got %v", regularEntries)
+		t.Errorf("Expected 5 files to be rendered, got %v", entries)
 
 	}
 
 	for k := range mapEntries {
 
-		if !slices.Contains(regularEntries, k) {
+		if !slices.Contains(entries, k) {
 
-			t.Errorf("Expected %s to be rendered, got %v", k, regularEntries)
+			t.Errorf("Expected %s to be rendered, got %v", k, entries)
 
 		}
 
