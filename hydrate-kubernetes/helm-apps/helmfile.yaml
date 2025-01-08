@@ -5,7 +5,7 @@ bases:
 
 releases:
 
-  - name: {{.StateValues.app}}
+  - name: {{.StateValues.releaseName }}
     chart: {{.StateValues.chart}}
     version: {{.StateValues.version}}
     namespace:  
