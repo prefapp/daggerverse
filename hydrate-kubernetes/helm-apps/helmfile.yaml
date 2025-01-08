@@ -4,8 +4,12 @@ bases:
   - kubernetes/repositories.yaml
 
 releases:
-
-  - name: {{.StateValues.releaseName }}
+  - name: 
+      {{- if hasKey .StateValues "releaseName" -}}
+      {{.StateValues.releaseName | quote | indent 1}}
+      {{- else -}}
+      {{ .StateValues.app | quote | indent 1}}
+      {{- end }}
     chart: {{.StateValues.chart}}
     version: {{.StateValues.version}}
     namespace:  
