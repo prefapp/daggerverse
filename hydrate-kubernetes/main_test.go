@@ -52,7 +52,7 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 
 	m.Container = containerWithCmds(m.Container, configStruct.Commands)
 
-	renderedDir := m.Render(
+	renderedDir, _ := m.Render(
 		ctx,
 		"sample-app",
 		"cluster-name",
@@ -61,7 +61,7 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 		"{\"images\":[{\"service_name_list\":[\"micro-a\"],\"image\":\"new-image:1.0.0\",\"env\":\"dev\",\"app\":\"sample-app\",\"tenant\":\"test-tenant\",\"base_folder\":\"kubernetes/cluster-name\"}]}",
 	)
 
-	newDpRendered := renderedDir.File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
+	newDpRendered := renderedDir[0].File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
 
 	if newDpRendered == nil {
 		t.Errorf("Expected new Deployment.sample-app-micro-a.yml to be rendered")
@@ -99,7 +99,7 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 
 	}
 
-	regularEntries, errGlob := renderedDir.Glob(ctx, "kubernetes/cluster-name/test-tenant/dev/*.yml")
+	regularEntries, errGlob := renderedDir[0].Glob(ctx, "kubernetes/cluster-name/test-tenant/dev/*.yml")
 
 	if errGlob != nil {
 
@@ -179,7 +179,7 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 
 	m.Container = containerWithCmds(m.Container, configStruct.Commands)
 
-	renderedDir := m.Render(
+	renderedDir, _ := m.Render(
 		ctx,
 		"sample-app",
 		"cluster-name",
@@ -190,7 +190,7 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 
 	fmt.Printf("Rendered dir: %v", renderedDir)
 
-	newDpRendered := renderedDir.File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
+	newDpRendered := renderedDir[0].File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
 
 	if newDpRendered == nil {
 		t.Errorf("Expected new Deployment.sample-app-micro-a.yml to be rendered")
@@ -262,9 +262,9 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 
 	m.Container = containerWithCmds(m.Container, configStruct.Commands)
 
-	dir := m.Render(ctx, "stakater", "cluster-name", "", "", "")
+	dir, _ := m.Render(ctx, "stakater", "cluster-name", "", "", "")
 
-	regularEntries, errGlob := dir.Glob(ctx, "cluster-name/stakater/*.yml")
+	entries, errGlob := dir[0].Glob(ctx, "kubernetes/cluster-name/stakater/*.yml")
 
 	if errGlob != nil {
 
@@ -273,24 +273,24 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 	}
 
 	mapEntries := map[string]bool{
-		"cluster-name/stakater/ClusterRole.stakater-reloader-role.yml":                true,
-		"cluster-name/stakater/ClusterRoleBinding.stakater-reloader-role-binding.yml": true,
-		"cluster-name/stakater/Deployment.stakater-reloader.yml":                      true,
-		"cluster-name/stakater/ServiceAccount.stakater-reloader.yml":                  true,
-		"cluster-name/stakater/ExternalSecret.a.yml":                                  true,
+		"kubernetes/cluster-name/stakater/ClusterRole.stakater-reloader-role.yml":                true,
+		"kubernetes/cluster-name/stakater/ClusterRoleBinding.stakater-reloader-role-binding.yml": true,
+		"kubernetes/cluster-name/stakater/Deployment.stakater-reloader.yml":                      true,
+		"kubernetes/cluster-name/stakater/ServiceAccount.stakater-reloader.yml":                  true,
+		"kubernetes/cluster-name/stakater/ExternalSecret.a.yml":                                  true,
 	}
 
-	if len(regularEntries) != 5 {
+	if len(entries) != 5 {
 
-		t.Errorf("Expected 5 files to be rendered, got %v", regularEntries)
+		t.Errorf("Expected 5 files to be rendered, got %v", entries)
 
 	}
 
 	for k := range mapEntries {
 
-		if !slices.Contains(regularEntries, k) {
+		if !slices.Contains(entries, k) {
 
-			t.Errorf("Expected %s to be rendered, got %v", k, regularEntries)
+			t.Errorf("Expected %s to be rendered, got %v", k, entries)
 
 		}
 
@@ -340,7 +340,7 @@ func TestRenderAppsCanRenderImages(t *testing.T) {
 
 	m.Container = containerWithCmds(m.Container, configStruct.Commands)
 
-	renderedDir := m.Render(
+	renderedDir, _ := m.Render(
 		ctx,
 		"sample-app",
 		"cluster-name",
@@ -349,7 +349,7 @@ func TestRenderAppsCanRenderImages(t *testing.T) {
 		"{\"images\":[]}",
 	)
 
-	newDpRendered := renderedDir.File("kubernetes/cluster-name/test-tenant/with_images_file/Deployment.sample-app-micro-b.yml")
+	newDpRendered := renderedDir[0].File("kubernetes/cluster-name/test-tenant/with_images_file/Deployment.sample-app-micro-b.yml")
 
 	dpMicroB := Artifact{}
 

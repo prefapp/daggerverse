@@ -28,6 +28,9 @@ type ImageData struct {
 
 func (m *HydrateOrchestrator) RunDispatch(
 	ctx context.Context,
+	// Workflow run id
+	// +required
+	id int,
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
@@ -47,7 +50,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 
 		branchName := fmt.Sprintf("%s-kubernetes-%s-%s-%s", repositoryCaller, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
-		renderedDeployment := dag.HydrateKubernetes(
+		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
 			dagger.HydrateKubernetesOpts{
@@ -56,11 +59,15 @@ func (m *HydrateOrchestrator) RunDispatch(
 				HelmRegistryUser:        helmAuth.Username,
 				HelmRegistryPassword:    helmAuth.Password,
 			},
-		).Render(m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
+		).Render(ctx, m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
 			Tenant:          kdep.Tenant,
 			Env:             kdep.Environment,
 			NewImagesMatrix: newImagesMatrix,
 		})
+
+		if err != nil {
+			panic(err)
+		}
 
 		prBody := fmt.Sprintf(`
 # New deployment from new image in repository [*%s*](%s)
@@ -69,8 +76,9 @@ func (m *HydrateOrchestrator) RunDispatch(
 
 		m.upsertPR(
 			ctx,
+			id,
 			branchName,
-			renderedDeployment,
+			&renderedDeployment[0],
 			kdep.Labels(),
 			kdep.String(true),
 			prBody,

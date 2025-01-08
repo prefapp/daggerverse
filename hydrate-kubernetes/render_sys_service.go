@@ -24,20 +24,26 @@ func (m *HydrateKubernetes) RenderSysService(
 
 	if m.HelmRegistryLoginNeeded {
 
-		helmfileCtr = prepareHelmLogin(
+		ctr, err := prepareHelmLogin(
 			ctx,
 			helmfileCtr,
 			m.HelmRegistry,
 			m.HelmRegistryUser,
 			m.HelmRegistryPassword,
 		)
+
+		helmfileCtr = ctr
+
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return helmfileCtr.
 		WithExec([]string{
 			"helmfile", "template",
 			"--state-values-set-string", "app=" + app + ",cluster=" + cluster,
-			"--state-values-file", "./" + cluster + "/" + app + ".yaml",
+			"--state-values-file", "./kubernetes/" + cluster + "/" + app + ".yaml",
 		}).
 		Stdout(ctx)
 }

@@ -15,13 +15,13 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 	renderFile *dagger.File,
 
-) *dagger.Directory {
+) (*dagger.Directory, error) {
 
 	content, err := renderFile.Contents(ctx)
 
 	if err != nil {
 
-		panic(err)
+		return nil, err
 
 	}
 
@@ -40,7 +40,7 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 		if err != nil {
 
-			panic(err)
+			return nil, err
 
 		}
 
@@ -60,7 +60,7 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 	}
 
-	return dir
+	return dir, nil
 }
 
 func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
@@ -71,42 +71,94 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 
 	cluster string,
 
-) *dagger.Directory {
+) (*dagger.Directory, error) {
 
-	renderedChartFile, renderErr := m.RenderSysService(ctx, cluster, app)
+	renderedChartFile, err := m.RenderSysService(ctx, cluster, app)
 
-	if renderErr != nil {
+	if err != nil {
 
-		panic(renderErr)
+		return nil, err
 
 	}
 
-	tmpDir := m.SplitRenderInFiles(ctx,
+	tmpDir, err := m.SplitRenderInFiles(ctx,
 		dag.Directory().
 			WithNewFile("rendered.yaml", renderedChartFile).
 			File("rendered.yaml"),
 	)
 
+	if err != nil {
+		return nil, err
+	}
+
 	m.WetRepoDir = m.WetRepoDir.
-		WithoutDirectory(cluster+"/"+app).
-		WithDirectory(cluster+"/"+app, tmpDir)
+		WithoutDirectory("kubernetes/"+cluster+"/"+app).
+		WithDirectory("kubernetes/"+cluster+"/"+app, tmpDir)
+
+	envYaml, errEnvYaml := m.ValuesDir.File("kubernetes/" + cluster + "/" + app + ".yaml").Contents(ctx)
+
+	if errEnvYaml != nil {
+
+		return nil, errEnvYaml
+
+	}
+
+	envYamlStruct := EnvYaml{}
+
+	errUnmshEnv := yaml.Unmarshal([]byte(envYaml), &envYamlStruct)
+
+	if errUnmshEnv != nil {
+
+		return nil, errUnmshEnv
+
+	}
+
+	if envYamlStruct.RemoteArtifacts != nil {
+
+		for _, remoteArtifact := range envYamlStruct.RemoteArtifacts {
+
+			withRemotesArtifacts, err := m.Container.
+				WithExec([]string{
+					"curl",
+					"-o",
+					"/tmp/" + remoteArtifact.Filename, remoteArtifact.URL}).
+				Sync(ctx)
+
+			if err != nil {
+
+				return nil, err
+
+			}
+
+			m.ValuesDir = m.ValuesDir.WithFile(
+				"kubernetes/"+cluster+"/"+app+"/extra_artifacts/"+remoteArtifact.Filename,
+				withRemotesArtifacts.File("/tmp/"+remoteArtifact.Filename),
+			)
+
+		}
+
+	}
 
 	for _, regex := range []string{"*.yml", "*.yaml"} {
 
 		entries, err := m.ValuesDir.
-			Glob(ctx, cluster+"/"+app+"/extra_artifacts/"+regex)
+			Glob(ctx, "kubernetes/"+cluster+"/"+app+"/extra_artifacts/"+regex)
 
 		if err != nil {
 
-			panic(err)
+			return nil, err
 
 		}
 
 		for _, entry := range entries {
 
+			fmt.Printf("entry: %s\n", entry)
+
 			extraFile := m.ValuesDir.File(entry)
 
 			entry = strings.Replace(entry, "/extra_artifacts", "", 1)
+
+			fmt.Printf("entry replaced: %s\n", entry)
 
 			m.WetRepoDir = m.WetRepoDir.WithFile(entry, extraFile)
 
@@ -114,7 +166,7 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 
 	}
 
-	return m.WetRepoDir
+	return m.WetRepoDir, nil
 }
 
 func (m *HydrateKubernetes) DumpAppRenderToWetDir(
@@ -133,9 +185,9 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
 
-) *dagger.Directory {
+) (*dagger.Directory, error) {
 
-	renderedChartFile, renderErr := m.RenderApp(
+	renderedChartFile, err := m.RenderApp(
 		ctx,
 		env,
 		app,
@@ -144,17 +196,21 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 		newImagesMatrix,
 	)
 
-	if renderErr != nil {
+	if err != nil {
 
-		panic(renderErr)
+		return nil, err
 
 	}
 
-	tmpDir := m.SplitRenderInFiles(ctx,
+	tmpDir, err := m.SplitRenderInFiles(ctx,
 		dag.Directory().
 			WithNewFile("rendered.yaml", renderedChartFile).
 			File("rendered.yaml"),
 	)
+
+	if err != nil {
+		return nil, err
+	}
 
 	m.WetRepoDir = m.WetRepoDir.
 		WithoutDirectory("kubernetes/"+cluster+"/"+tenant+"/"+env).
@@ -163,6 +219,50 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 			tmpDir,
 		)
 
+	envYaml, errEnvYaml := m.ValuesDir.File("kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml").Contents(ctx)
+
+	if errEnvYaml != nil {
+
+		return nil, errEnvYaml
+
+	}
+
+	envYamlStruct := EnvYaml{}
+
+	errUnmshEnv := yaml.Unmarshal([]byte(envYaml), &envYamlStruct)
+
+	if errUnmshEnv != nil {
+
+		return nil, errUnmshEnv
+
+	}
+
+	if envYamlStruct.RemoteArtifacts != nil {
+
+		for _, remoteArtifact := range envYamlStruct.RemoteArtifacts {
+
+			withRemotesArtifacts, err := m.Container.
+				WithExec([]string{
+					"curl",
+					"-o",
+					"/tmp/" + remoteArtifact.Filename, remoteArtifact.URL}).
+				Sync(ctx)
+
+			if err != nil {
+
+				return nil, err
+
+			}
+
+			m.ValuesDir = m.ValuesDir.WithFile(
+				"kubernetes/"+cluster+"/"+tenant+"/"+env+"/extra_artifacts/"+remoteArtifact.Filename,
+				withRemotesArtifacts.File("/tmp/"+remoteArtifact.Filename),
+			)
+
+		}
+
+	}
+
 	for _, regex := range []string{"*.yml", "*.yaml"} {
 
 		entries, err := m.ValuesDir.
@@ -170,7 +270,7 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 
 		if err != nil {
 
-			panic(err)
+			return nil, err
 
 		}
 
@@ -186,5 +286,5 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 
 	}
 
-	return m.WetRepoDir
+	return m.WetRepoDir, nil
 }

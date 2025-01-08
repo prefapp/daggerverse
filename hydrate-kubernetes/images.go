@@ -7,12 +7,17 @@ import (
 	"strings"
 )
 
-func (m *HydrateKubernetes) GetImagesFile(ctx context.Context, cluster string, tenant string, env string) *dagger.File {
+func (m *HydrateKubernetes) GetImagesFile(
+	ctx context.Context,
+	cluster string,
+	tenant string,
+	env string,
+) (*dagger.File, error) {
 
 	entries, err := m.ValuesDir.Glob(ctx, "kubernetes/*/*/*/*")
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	targetDir := strings.Join([]string{"kubernetes", cluster, tenant, env}, "/")
@@ -21,7 +26,7 @@ func (m *HydrateKubernetes) GetImagesFile(ctx context.Context, cluster string, t
 
 		if slices.Contains(entries, targetDir+"/images"+ext) {
 
-			return m.ValuesDir.File(targetDir + "/images" + ext)
+			return m.ValuesDir.File(targetDir + "/images" + ext), nil
 
 		}
 
@@ -29,6 +34,6 @@ func (m *HydrateKubernetes) GetImagesFile(ctx context.Context, cluster string, t
 
 	return dag.Directory().
 		WithNewFile("images.yaml", "{}").
-		File("images.yaml")
+		File("images.yaml"), nil
 
 }

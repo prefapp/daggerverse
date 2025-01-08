@@ -19,19 +19,19 @@ func (m *HydrateKubernetes) BuildPreviousImagesApp(
 
 	env string,
 
-) string {
+) (string, error) {
 
 	entries, err := m.WetRepoDir.Glob(ctx, "kubernetes/*/*/*")
 
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	targetDir := strings.Join([]string{"kubernetes", cluster, tenant, env}, "/")
 
 	if !slices.Contains(entries, targetDir) {
 
-		return "{}"
+		return "{}", nil
 
 	}
 
@@ -47,7 +47,7 @@ func (m *HydrateKubernetes) BuildPreviousImagesApp(
 
 		if err != nil {
 
-			panic(err)
+			return "", err
 
 		}
 
@@ -63,21 +63,21 @@ func (m *HydrateKubernetes) BuildPreviousImagesApp(
 
 		if err != nil {
 
-			panic(err)
+			return "", err
 
 		}
 
-		errUnms := yaml.Unmarshal([]byte(content), &artifact)
+		err = yaml.Unmarshal([]byte(content), &artifact)
 
-		if errUnms != nil {
+		if err != nil {
 
-			panic(errUnms)
+			return "", err
 
 		}
 
 		if mapImages[artifact.Metadata.Annotations.MicroService] != nil {
 
-			panic(fmt.Sprintf("Duplicate microservice found: %s", artifact.Metadata.Annotations.MicroService))
+			return "", fmt.Errorf("Duplicate microservice found: %s", artifact.Metadata.Annotations.MicroService)
 
 		}
 
@@ -93,10 +93,10 @@ func (m *HydrateKubernetes) BuildPreviousImagesApp(
 
 	if err != nil {
 
-		panic(err)
+		return "", err
 
 	}
 
-	return string(marshaled)
+	return string(marshaled), nil
 
 }
