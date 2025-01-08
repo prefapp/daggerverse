@@ -73,7 +73,7 @@ func (m *HydrateOrchestrator) upsertPR(
 			"commit",
 			"-R", m.Repo,
 			"-b", branchWithId,
-			"-m", title,
+			"-m", "Update deployments",
 			"--delete-path", cleanupDir,
 		}).Sync(ctx)
 
