@@ -169,3 +169,20 @@ func (m *HydrateOrchestrator) getBranchInfo(
 		SHA:  sha,
 	}
 }
+
+func (m *HydrateOrchestrator) dirDiff(ctx context.Context, a *dagger.Directory, b *dagger.Directory) bool {
+
+	exitCode, err := dag.Container().From("alpine").WithDirectory("/a", a).WithDirectory("/b", b).WithExec([]string{
+		"diff",
+		"-r",
+		"/a",
+		"/b",
+	}).ExitCode(ctx)
+
+	if err != nil {
+		return false
+	}
+
+	return exitCode == 0
+
+}

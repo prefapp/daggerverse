@@ -12,14 +12,17 @@ type DeploymentSummaryRow struct {
 	// Status of the deployment
 	// +required
 	Status string `json:"status"`
+	// Description of the deployment
+	// +required
+	Description string `json:"description"`
 }
 
 type DeploymentSummary struct {
 	Items []DeploymentSummaryRow `json:"items"`
 }
 
-func (s *DeploymentSummary) addDeploymentSummaryRow(deploymentPath string, status string) {
-	s.Items = append(s.Items, DeploymentSummaryRow{DeploymentPath: deploymentPath, Status: status})
+func (s *DeploymentSummary) addDeploymentSummaryRow(deploymentPath string, status string, description string) {
+	s.Items = append(s.Items, DeploymentSummaryRow{DeploymentPath: deploymentPath, Status: status, Description: description})
 }
 
 // Function that converts a DeploymentSummary object to a markdown table

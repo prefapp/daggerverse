@@ -65,7 +65,8 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
-				fmt.Sprintf("Failed: %s", err.Error()),
+				"❌",
+				err.Error(),
 			)
 
 			continue
@@ -82,11 +83,13 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
+		renderedDeploymentDir := &renderedDeployment[0]
+
 		err = m.upsertPR(
 			ctx,
 			id,
 			branchName,
-			&renderedDeployment[0],
+			renderedDeploymentDir,
 			kdep.Labels(),
 			kdep.String(true),
 			prBody,
@@ -97,15 +100,21 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
-				fmt.Sprintf("Failed: %s", err.Error()),
+				"❌",
+				err.Error(),
 			)
 
-		} else {
-			summary.addDeploymentSummaryRow(
-				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
-				"Success",
-			)
+			continue
+
 		}
+
+		hasDiff := m.dirDiff(ctx, renderedDeploymentDir, m.WetStateDir)
+
+		summary.addDeploymentSummaryRow(
+			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+			"✅",
+			lo.Ternary(hasDiff, "Deployment created successfully", "No changes detected"),
+		)
 	}
 
 	return m.DeploymentSummaryToFile(ctx, summary)
