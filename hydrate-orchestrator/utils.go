@@ -183,6 +183,9 @@ func (m *HydrateOrchestrator) dirDiff(ctx context.Context, a *dagger.Directory, 
 		return false
 	}
 
-	return exitCode == 0
-
+	if exitCode == 0 {
+		return false
+	} else {
+		return true
+	}
 }
