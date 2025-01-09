@@ -47,6 +47,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	for _, kdep := range deployments.KubernetesDeployments {
 
 		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
+		deploymentPath := fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
 
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
@@ -64,7 +65,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 
 		if err != nil {
 			summary.addDeploymentSummaryRow(
-				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+				deploymentPath,
 				"❌",
 				err.Error(),
 			)
@@ -85,11 +86,11 @@ Created by @%s from %s within commit [%s](%s)
 
 		renderedDeploymentDir := &renderedDeployment[0]
 
-		hasDiff := m.dirDiff(ctx, renderedDeploymentDir.Directory("/kubernetes"), m.WetStateDir.Directory("/kubernetes"))
+		hasDiff := m.dirDiff(ctx, renderedDeploymentDir.Directory(deploymentPath), m.WetStateDir.Directory(deploymentPath))
 
 		if !hasDiff {
 			summary.addDeploymentSummaryRow(
-				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+				deploymentPath,
 				"✅",
 				"No changes detected",
 			)
@@ -104,13 +105,13 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.Labels(),
 			kdep.String(true),
 			prBody,
-			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+			deploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
 		)
 
 		if err != nil {
 			summary.addDeploymentSummaryRow(
-				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+				deploymentPath,
 				"❌",
 				err.Error(),
 			)
