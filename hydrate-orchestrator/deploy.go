@@ -85,6 +85,17 @@ Created by @%s from %s within commit [%s](%s)
 
 		renderedDeploymentDir := &renderedDeployment[0]
 
+		hasDiff := m.dirDiff(ctx, renderedDeploymentDir, m.WetStateDir)
+
+		if !hasDiff {
+			summary.addDeploymentSummaryRow(
+				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+				"✅",
+				"No changes detected",
+			)
+			continue
+		}
+
 		err = m.upsertPR(
 			ctx,
 			id,
@@ -108,12 +119,10 @@ Created by @%s from %s within commit [%s](%s)
 
 		}
 
-		hasDiff := m.dirDiff(ctx, renderedDeploymentDir, m.WetStateDir)
-
 		summary.addDeploymentSummaryRow(
 			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 			"✅",
-			lo.Ternary(hasDiff, "Deployment created successfully", "No changes detected"),
+			"Deployment created successfully",
 		)
 	}
 
