@@ -85,7 +85,7 @@ Created by @%s from %s within commit [%s](%s)
 
 		renderedDeploymentDir := &renderedDeployment[0]
 
-		hasDiff := m.dirDiff(ctx, renderedDeploymentDir, m.WetStateDir)
+		hasDiff := m.dirDiff(ctx, renderedDeploymentDir.Directory("/kubernetes"), m.WetStateDir.Directory("/kubernetes"))
 
 		if !hasDiff {
 			summary.addDeploymentSummaryRow(
