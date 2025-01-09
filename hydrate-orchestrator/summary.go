@@ -33,12 +33,12 @@ func (s DeploymentSummary) DeploymentSummaryToMarkdownTable() string {
 	}
 
 	// Markdown table header
-	table := "| Deployment Path | Status |\n"
-	table += "| --- | --- |\n"
+	table := "| Deployment Path | Status | Description |\n"
+	table += "| --- | --- | --- |\n"
 
 	// Iterate over each item in the DeploymentSummary object
 	for _, item := range s.Items {
-		table += "|" + item.DeploymentPath + "|" + item.Status + "|\n"
+		table += "|" + item.DeploymentPath + "|" + item.Status + "|" + item.Description + "|\n"
 	}
 
 	return table
