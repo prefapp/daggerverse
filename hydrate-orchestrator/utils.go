@@ -170,7 +170,7 @@ func (m *HydrateOrchestrator) getBranchInfo(
 	}
 }
 
-func (m *HydrateOrchestrator) dirDiff(ctx context.Context, a *dagger.Directory, b *dagger.Directory) bool {
+func (m *HydrateOrchestrator) DirDiff(ctx context.Context, a *dagger.Directory, b *dagger.Directory) bool {
 
 	exitCode, err := dag.Container().From("alpine").WithDirectory("/a", a).WithDirectory("/b", b).WithExec([]string{
 		"diff",

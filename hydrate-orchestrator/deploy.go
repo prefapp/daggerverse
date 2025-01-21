@@ -86,7 +86,7 @@ Created by @%s from %s within commit [%s](%s)
 
 		renderedDeploymentDir := &renderedDeployment[0]
 
-		hasDiff := m.dirDiff(ctx, renderedDeploymentDir.Directory(deploymentPath), m.WetStateDir.Directory(deploymentPath))
+		hasDiff := m.DirDiff(ctx, renderedDeploymentDir.Directory(deploymentPath), m.WetStateDir.Directory(deploymentPath))
 
 		if !hasDiff {
 			summary.addDeploymentSummaryRow(
