@@ -22,21 +22,10 @@ func (m *HydrateKubernetes) RenderSysService(
 		WithMountedFile("/values/values.yaml.gotmpl", m.ValuesGoTmpl).
 		WithEnvVariable("BUST", time.Now().String())
 
-	if m.HelmRegistryLoginNeeded {
+	if m.HelmConfigDir != nil {
 
-		ctr, err := prepareHelmLogin(
-			ctx,
-			helmfileCtr,
-			m.HelmRegistry,
-			m.HelmRegistryUser,
-			m.HelmRegistryPassword,
-		)
+		helmfileCtr = helmfileCtr.WithDirectory("/root/.config/helm", m.HelmConfigDir)
 
-		helmfileCtr = ctr
-
-		if err != nil {
-			return "", err
-		}
 	}
 
 	return helmfileCtr.

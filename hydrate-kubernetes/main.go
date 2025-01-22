@@ -16,9 +16,7 @@ type HydrateKubernetes struct {
 	Helmfile                *dagger.File
 	ValuesGoTmpl            *dagger.File
 	HelmRegistryLoginNeeded bool
-	HelmRegistry            string
-	HelmRegistryUser        string
-	HelmRegistryPassword    *dagger.Secret
+	HelmConfigDir           *dagger.Directory
 	RenderType              string
 }
 
@@ -45,13 +43,7 @@ func New(
 	helmRegistryLoginNeeded bool,
 
 	// +optional
-	helmRegistry string,
-
-	// +optional
-	helmRegistryUser string,
-
-	// +optional
-	helmRegistryPassword *dagger.Secret,
+	helmConfigDir *dagger.Directory,
 
 	// Type of the render, it can be apps or sys-apps
 	// +optional
@@ -110,11 +102,7 @@ func New(
 
 		HelmRegistryLoginNeeded: helmRegistryLoginNeeded,
 
-		HelmRegistry: helmRegistry,
-
-		HelmRegistryUser: helmRegistryUser,
-
-		HelmRegistryPassword: helmRegistryPassword,
+		HelmConfigDir: helmConfigDir,
 
 		RenderType: strings.Trim(
 			strings.ToLower(renderType),
@@ -161,7 +149,14 @@ func (m *HydrateKubernetes) Render(
 
 		}
 
-		dir, err := m.DumpAppRenderToWetDir(ctx, app, cluster, tenant, env, newImagesMatrix)
+		dir, err := m.DumpAppRenderToWetDir(
+			ctx,
+			app,
+			cluster,
+			tenant,
+			env,
+			newImagesMatrix,
+		)
 
 		return []*dagger.Directory{dir}, err
 

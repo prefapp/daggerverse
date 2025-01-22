@@ -47,32 +47,13 @@ func (m *HydrateKubernetes) RenderApp(
 		WithMountedFile("/values/helmfile.yaml", m.Helmfile).
 		WithMountedFile("/values/values.yaml.gotmpl", m.ValuesGoTmpl).
 		WithEnvVariable("BUST", time.Now().String()).
-		WithNewFile(
-			"/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/previous_images.yaml",
-			previousImagesFileContent,
-		).
-		WithFile(
-			"/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/images.yaml",
-			imagesFile,
-		).
-		WithFile(
-			"/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/new_images.yaml",
-			newImagesFile,
-		)
+		WithNewFile("/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/previous_images.yaml", previousImagesFileContent).
+		WithFile("/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/images.yaml", imagesFile).
+		WithFile("/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/new_images.yaml", newImagesFile)
 
-	if m.HelmRegistryLoginNeeded {
+	if m.HelmConfigDir != nil {
 
-		helmfileCtr, err = prepareHelmLogin(
-			ctx,
-			helmfileCtr,
-			m.HelmRegistry,
-			m.HelmRegistryUser,
-			m.HelmRegistryPassword,
-		)
-
-		if err != nil {
-			return "", err
-		}
+		helmfileCtr = helmfileCtr.WithDirectory("/helm/.config/helm", m.HelmConfigDir)
 	}
 
 	return helmfileCtr.
