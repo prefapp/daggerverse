@@ -39,6 +39,7 @@ func New(
 	ghToken *dagger.Secret,
 	// Application name
 	// +optional
+	// +default=""
 	app string,
 	// State values directory (e.g. state-app-<app>#main)
 	// +required
