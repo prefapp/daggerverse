@@ -11,28 +11,9 @@ func prepareHelmLogin(
 
 	ctr *dagger.Container,
 
-	helmRegistry string,
+	helmConfigDir *dagger.Directory,
 
-	helmRegistryUser string,
+) *dagger.Container {
 
-	helmRegistryPassword *dagger.Secret,
-
-) (*dagger.Container, error) {
-
-	pass, err := helmRegistryPassword.Plaintext(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return ctr.
-		WithExec([]string{
-			"helm", "registry", "login", helmRegistry,
-			"--username", helmRegistryUser,
-			"--password-stdin",
-		},
-			dagger.ContainerWithExecOpts{
-				Stdin: pass,
-			},
-		), nil
+	return ctr.WithDirectory("/root/.config/helm", helmConfigDir)
 }

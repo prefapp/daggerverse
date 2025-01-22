@@ -24,19 +24,11 @@ func (m *HydrateKubernetes) RenderSysService(
 
 	if m.HelmRegistryLoginNeeded {
 
-		ctr, err := prepareHelmLogin(
+		helmfileCtr = prepareHelmLogin(
 			ctx,
 			helmfileCtr,
-			m.HelmRegistry,
-			m.HelmRegistryUser,
-			m.HelmRegistryPassword,
+			m.HelmConfigDir,
 		)
-
-		helmfileCtr = ctr
-
-		if err != nil {
-			return "", err
-		}
 	}
 
 	return helmfileCtr.
