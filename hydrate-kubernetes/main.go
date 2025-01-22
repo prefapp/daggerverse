@@ -149,7 +149,14 @@ func (m *HydrateKubernetes) Render(
 
 		}
 
-		dir, err := m.DumpAppRenderToWetDir(ctx, app, cluster, tenant, env, newImagesMatrix)
+		dir, err := m.DumpAppRenderToWetDir(
+			ctx,
+			app,
+			cluster,
+			tenant,
+			env,
+			newImagesMatrix,
+		)
 
 		return []*dagger.Directory{dir}, err
 
