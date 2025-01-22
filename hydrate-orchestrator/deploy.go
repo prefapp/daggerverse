@@ -38,8 +38,6 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 
 	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, deploymentType, cluster, tenant, environment)
 
-	helmAuth := m.GetHelmAuth(ctx)
-
 	summary := &DeploymentSummary{
 		Items: []DeploymentSummaryRow{},
 	}
@@ -52,10 +50,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 			m.ValuesStateDir,
 			m.WetStateDir,
 			dagger.HydrateKubernetesOpts{
-				HelmRegistryLoginNeeded: helmAuth.NeedsAuth,
-				HelmRegistry:            helmAuth.Registry,
-				HelmRegistryUser:        helmAuth.Username,
-				HelmRegistryPassword:    helmAuth.Password,
+				HelmConfigDir: m.AuthDir,
 			},
 		).Render(ctx, m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
 			Tenant: kdep.Tenant,
@@ -122,18 +117,13 @@ func (m *HydrateOrchestrator) ValidateChanges(
 
 	deployments := m.processUpdatedDeployments(updatedDeployments)
 
-	helmAuth := m.GetHelmAuth(ctx)
-
 	for _, kdep := range deployments.KubernetesDeployments {
 
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
 			dagger.HydrateKubernetesOpts{
-				HelmRegistryLoginNeeded: helmAuth.NeedsAuth,
-				HelmRegistry:            helmAuth.Registry,
-				HelmRegistryUser:        helmAuth.Username,
-				HelmRegistryPassword:    helmAuth.Password,
+				HelmConfigDir: m.AuthDir,
 			},
 		).Render(ctx, m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
 			Tenant: kdep.Tenant,
