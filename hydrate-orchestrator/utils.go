@@ -29,6 +29,7 @@ func (d *Deployments) addDeployment(dep interface{}) {
 			return kd.Equals(*kdep)
 		}) {
 			d.KubernetesDeployments = append(d.KubernetesDeployments, *kdep)
+			
 		}
 	default:
 		panic(fmt.Sprintf("Unknown deployment type: %T", dep))
