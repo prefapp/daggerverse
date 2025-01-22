@@ -59,7 +59,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 
 		if err != nil {
 			summary.addDeploymentSummaryRow(
-				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+				kdep.DeploymentPath,
 				fmt.Sprintf("Failed: %s", err.Error()),
 			)
 
@@ -85,27 +85,83 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.Labels(),
 			kdep.String(true),
 			prBody,
-			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+			kdep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
 		)
 
 		if err != nil {
 			summary.addDeploymentSummaryRow(
-				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+				kdep.DeploymentPath,
 				fmt.Sprintf("Failed: %s", err.Error()),
 			)
 
 		} else {
 			summary.addDeploymentSummaryRow(
-				fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+				kdep.DeploymentPath,
 				"Success",
 			)
 		}
 	}
 
-	// for _, kdep := range deployments.KubernetesSysDeployments {
-	// 	branchName := fmt.Sprintf("kubernetes-sys-services-%s-%s", kdep.Cluster, kdep.SysServiceName)
-	// }
+	for _, kdep := range deployments.KubernetesSysDeployments {
+		branchName := fmt.Sprintf("kubernetes-sys-services-%s-%s", kdep.Cluster, kdep.SysServiceName)
+
+		renderedDeployment, err := dag.HydrateKubernetes(
+			m.ValuesStateDir,
+			m.WetStateDir,
+			dagger.HydrateKubernetesOpts{
+				HelmConfigDir: m.AuthDir,
+				RenderType: "sys-services",
+			},
+		).Render(ctx, kdep.SysServiceName, kdep.Cluster)
+
+		if err != nil {
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+			continue
+		}
+
+		prBody := fmt.Sprintf(`
+# New deployment manually triggered
+Created by @%s from %s within commit [%s](%s)
+%s
+`,
+			author,
+			branchInfo.Name,
+			branchInfo.SHA,
+			fmt.Sprintf("https://github.com/%s/commit/%s", m.Repo, branchInfo.SHA),
+			kdep.String(false),
+		)
+
+		err = m.upsertPR(
+			ctx,
+			id,
+			branchName,
+			&renderedDeployment[0],
+			kdep.Labels(),
+			kdep.String(true),
+			prBody,
+			kdep.DeploymentPath,
+			lo.Ternary(author == "author", []string{}, []string{author}),
+		)
+
+		if err != nil {
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+		} else {
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				"Success",
+			)
+		}
+
+	}
 
 	return m.DeploymentSummaryToFile(ctx, summary)
 
