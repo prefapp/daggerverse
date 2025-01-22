@@ -53,13 +53,12 @@ func (m *HydrateKubernetes) RenderApp(
 
 	if m.HelmConfigDir != nil {
 
-		helmfileCtr = helmfileCtr.WithDirectory("/root/.config/helm", m.HelmConfigDir)
+		helmfileCtr = helmfileCtr.WithDirectory("/helm/.config/helm", m.HelmConfigDir)
 	}
 
 	return helmfileCtr.
 		WithExec([]string{
 			"helmfile", "-e", env, "template",
-			"--registry-config", "/root/.config/helm/registry/config.json",
 			"--state-values-set-string", "tenant=" + tenant + ",app=" + app + ",cluster=" + cluster,
 			"--state-values-file", "./kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml",
 		}).
