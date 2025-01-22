@@ -30,6 +30,7 @@ func (d *Deployments) addDeployment(dep interface{}) {
 			return kd.Equals(*kdep)
 		}) {
 			d.KubernetesDeployments = append(d.KubernetesDeployments, *kdep)
+			
 		}
 	case *KubernetesSysDeployment:
 		if !lo.ContainsBy(d.KubernetesSysDeployments, func(kd KubernetesSysDeployment) bool {

@@ -27,7 +27,8 @@ type ImageData struct {
 	ServiceNameList  []string `json:"service_name_list"`
 	Image            string   `json:"image"`
 	Reviewers        []string `json:"reviewers"`
-	BaseFolder       string   `json:"base_folder"`
+	Cluster          string   `json:"platform"`
+	Technology       string   `json:"technology"`
 	RepositoryCaller string   `json:"repository_caller"`
 }
 

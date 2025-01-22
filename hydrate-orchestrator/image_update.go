@@ -22,7 +22,8 @@ type ImageData struct {
 	ServiceNameList  []string `json:"service_name_list"`
 	Image            string   `json:"image"`
 	Reviewers        []string `json:"reviewers"`
-	BaseFolder       string   `json:"base_folder"`
+	Platform         string   `json:"platform"`
+	Technology       string   `json:"technology"`
 	RepositoryCaller string   `json:"repository_caller"`
 }
 
@@ -44,8 +45,6 @@ func (m *HydrateOrchestrator) RunDispatch(
 	repositoryCaller, repoURL := m.getRepositoryCaller(newImagesMatrix)
 	reviewers := m.getReviewers(newImagesMatrix)
 
-	helmAuth := m.GetHelmAuth(ctx)
-
 	for _, kdep := range deployments.KubernetesDeployments {
 
 		branchName := fmt.Sprintf("%s-kubernetes-%s-%s-%s", repositoryCaller, kdep.Cluster, kdep.Tenant, kdep.Environment)
@@ -54,10 +53,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 			m.ValuesStateDir,
 			m.WetStateDir,
 			dagger.HydrateKubernetesOpts{
-				HelmRegistryLoginNeeded: helmAuth.NeedsAuth,
-				HelmRegistry:            helmAuth.Registry,
-				HelmRegistryUser:        helmAuth.Username,
-				HelmRegistryPassword:    helmAuth.Password,
+				HelmConfigDir: m.AuthDir,
 			},
 		).Render(ctx, m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
 			Tenant:          kdep.Tenant,
@@ -106,10 +102,10 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 	for _, image := range imagesMatrix.Images {
 
 		// At the moment the dispatch does not send the cluster so we extract it from the base folder
-		cluster := strings.Split(image.BaseFolder, "/")[1]
+
 		deploymentPath := filepath.Join(
 			"kubernetes",
-			cluster,
+			image.Platform,
 			image.Tenant,
 			image.Env,
 		)
@@ -118,7 +114,7 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 			Deployment: Deployment{
 				DeploymentPath: deploymentPath,
 			},
-			Cluster:     cluster,
+			Cluster:     image.Platform,
 			Tenant:      image.Tenant,
 			Environment: image.Env,
 		}

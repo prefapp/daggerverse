@@ -77,7 +77,7 @@ func (m *HydrateKubernetes) BuildPreviousImagesApp(
 
 		if mapImages[artifact.Metadata.Annotations.MicroService] != nil {
 
-			return "", fmt.Errorf("Duplicate microservice found: %s", artifact.Metadata.Annotations.MicroService)
+			return "", fmt.Errorf("duplicate microservice found: %s", artifact.Metadata.Annotations.MicroService)
 
 		}
 
