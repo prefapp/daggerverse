@@ -63,7 +63,6 @@ func (m *HydrateKubernetes) RenderApp(
 	if m.HelmRegistryLoginNeeded {
 
 		helmfileCtr = prepareHelmLogin(
-			ctx,
 			helmfileCtr,
 			m.HelmConfigDir,
 		)
