@@ -201,6 +201,27 @@ func (m *HydrateOrchestrator) ValidateChanges(
 		}
 
 	}
+
+	for _, kdep := range deployments.KubernetesSysDeployments {
+		renderedDeployment, err := dag.HydrateKubernetes(
+			m.ValuesStateDir,
+			m.WetStateDir,
+			dagger.HydrateKubernetesOpts{
+				HelmConfigDir: m.AuthDir,
+				RenderType: "sys-services",
+			},
+		).Render(ctx, m.App, kdep.Cluster)
+
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = renderedDeployment[0].Sync(ctx)
+
+		if err != nil {
+			panic(err)
+		}	}
+
 }
 
 // Function that returns a deployment object from a type, cluster, tenant and environment considering glob patterns
