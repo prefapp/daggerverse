@@ -34,7 +34,7 @@ func TestProcessImagesMatrix(t *testing.T) {
 
 	deployments := m.processImagesMatrix(string(newImagesMatrix))
 
-	expectedDpl := KubernetesDeployment{
+	expectedDpl := KubernetesAppDeployment{
 		Deployment: Deployment{
 			DeploymentPath: "kubernetes/cluster-name/tenant/env",
 		},

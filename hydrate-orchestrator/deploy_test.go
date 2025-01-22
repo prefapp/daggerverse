@@ -37,7 +37,7 @@ func TestProcessedUpdatedDeployments(t *testing.T) {
 		t.Errorf("Expected 1 deployment, got %v", len(deployments.KubernetesDeployments))
 	}
 
-	expectedDp := KubernetesDeployment{
+	expectedDp := KubernetesAppDeployment{
 		Deployment: Deployment{
 			DeploymentPath: "kubernetes/sample-cluster/sample-tenant/sample-env",
 		},
@@ -89,7 +89,7 @@ func TestProcessedUpdatedDeployments(t *testing.T) {
 	// should detect multiple deployments
 	paths = []string{"kubernetes/sample-cluster/sample-tenant/sample-env/foo.yaml", "kubernetes/sample-cluster/another-tenant/sample-env/foo.yaml"}
 
-	newDp := KubernetesDeployment{
+	newDp := KubernetesAppDeployment{
 		Deployment: Deployment{
 			DeploymentPath: "kubernetes/sample-cluster/another-tenant/sample-env",
 		},

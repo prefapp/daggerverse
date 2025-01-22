@@ -108,6 +108,10 @@ Created by @%s from %s within commit [%s](%s)
 		}
 	}
 
+	// for _, kdep := range deployments.KubernetesSysDeployments {
+	// 	branchName := fmt.Sprintf("kubernetes-sys-services-%s-%s", kdep.Cluster, kdep.SysServiceName)
+	// }
+
 	return m.DeploymentSummaryToFile(ctx, summary)
 
 }
@@ -201,7 +205,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 	}
 
 	result := &Deployments{
-		KubernetesDeployments: []KubernetesDeployment{},
+		KubernetesDeployments: []KubernetesAppDeployment{},
 	}
 
 	for _, deployment := range deployments {
@@ -223,6 +227,13 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 			kdep := kubernetesDepFromStr(deployment)
 			result.addDeployment(kdep)
 
+		case "kubernetes-sys-services":
+			// Process kubernetes sys service deployment
+			if lo.Contains([]string{"repositories.yaml", "environments.yaml"}, dirs[1]) {
+				continue
+			}
+			kdep := kubernetesSysDepFromStr(deployment)
+			result.addDeployment(kdep)
 		}
 
 	}

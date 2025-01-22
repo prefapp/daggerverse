@@ -17,19 +17,27 @@ struct to hold the updated deployments
 */
 
 type Deployments struct {
-	KubernetesDeployments []KubernetesDeployment
+	KubernetesDeployments []KubernetesAppDeployment
+	KubernetesSysDeployments []KubernetesSysDeployment
 }
 
 func (d *Deployments) addDeployment(dep interface{}) {
 	switch dep := dep.(type) {
-	case *KubernetesDeployment:
+	case *KubernetesAppDeployment:
 
 		kdep := dep
-		if !lo.ContainsBy(d.KubernetesDeployments, func(kd KubernetesDeployment) bool {
+		if !lo.ContainsBy(d.KubernetesDeployments, func(kd KubernetesAppDeployment) bool {
 			return kd.Equals(*kdep)
 		}) {
 			d.KubernetesDeployments = append(d.KubernetesDeployments, *kdep)
 		}
+	case *KubernetesSysDeployment:
+		if !lo.ContainsBy(d.KubernetesSysDeployments, func(kd KubernetesSysDeployment) bool {
+			return kd.Equals(*dep)
+		}) {
+			d.KubernetesSysDeployments = append(d.KubernetesSysDeployments, *dep)
+		}
+
 	default:
 		panic(fmt.Sprintf("Unknown deployment type: %T", dep))
 	}
@@ -40,25 +48,25 @@ type Deployment struct {
 }
 
 /*
-- kubernetes specific deployment struct
+- kubernetes app specific deployment struct
 */
 
-type KubernetesDeployment struct {
+type KubernetesAppDeployment struct {
 	Deployment
 	Cluster     string
 	Tenant      string
 	Environment string
 }
 
-// Check if two KubernetesDeployments are equal
-func (kd *KubernetesDeployment) Equals(other KubernetesDeployment) bool {
+// Check if two KubernetesAppDeployment are equal
+func (kd *KubernetesAppDeployment) Equals(other KubernetesAppDeployment) bool {
 	return kd.DeploymentPath == other.DeploymentPath &&
 		kd.Cluster == other.Cluster &&
 		kd.Tenant == other.Tenant &&
 		kd.Environment == other.Environment
 }
 
-func (kd *KubernetesDeployment) String(summary bool) string {
+func (kd *KubernetesAppDeployment) String(summary bool) string {
 
 	if summary {
 
@@ -74,7 +82,7 @@ func (kd *KubernetesDeployment) String(summary bool) string {
 	}
 }
 
-func (kd *KubernetesDeployment) Labels() []string {
+func (kd *KubernetesAppDeployment) Labels() []string {
 	return []string{
 		"type/kubernetes",
 		fmt.Sprintf("cluster/%s", kd.Cluster),
@@ -83,13 +91,50 @@ func (kd *KubernetesDeployment) Labels() []string {
 	}
 }
 
-func kubernetesDepFromStr(deployment string) *KubernetesDeployment {
+/*
+- Kubernetes sys service specific deployment struct
+*/
+
+type KubernetesSysDeployment struct {
+	Deployment
+	Cluster     	string
+	SysServiceName 	string
+}
+
+// Check if two KubernetesSysDeployments are equal
+func (kd *KubernetesSysDeployment) Equals(other KubernetesSysDeployment) bool {
+	return kd.DeploymentPath == other.DeploymentPath &&
+		kd.Cluster == other.Cluster &&
+		kd.SysServiceName == other.SysServiceName
+}
+
+func (kd *KubernetesSysDeployment) String(summary bool) string {
+	
+	if summary {
+
+		return fmt.Sprintf(
+			"Deployment in cluster: `%s`, sys service: `%s`",
+			kd.Cluster, kd.SysServiceName,
+		)
+	} else {
+		return "Deployment coordinates:" +
+			fmt.Sprintf("\n\t* Cluster: `%s`", kd.Cluster) +
+			fmt.Sprintf("\n\t* Sys Service: `%s`", kd.SysServiceName)
+	}
+}
+
+func (kd *KubernetesSysDeployment) Labels() []string {
+	return []string{
+		"type/kubernetes",
+		fmt.Sprintf("cluster/%s", kd.Cluster),
+		fmt.Sprintf("sys-service/%s", kd.SysServiceName),
+	}
+}
+
+
+func kubernetesDepFromStr(deployment string) *KubernetesAppDeployment {
 
 	dirs := splitPath(deployment)
-
-	if len(dirs) < 4 {
-		panic(fmt.Sprintf("Invalid kubernetes deployment path provided: %s", deployment))
-	}
 
 	// In this case the modified file is kubernetes/<cluster>/<tenant>/<env>.yaml
 	if len(dirs) == 4 {
@@ -97,7 +142,7 @@ func kubernetesDepFromStr(deployment string) *KubernetesDeployment {
 		envFile := filepath.Base(deployment)
 		env := strings.TrimSuffix(envFile, filepath.Ext(envFile))
 
-		return &KubernetesDeployment{
+		return &KubernetesAppDeployment{
 			Deployment: Deployment{
 				DeploymentPath: strings.Join(append(dirs[0:3], env), string(os.PathSeparator)),
 			},
@@ -106,8 +151,8 @@ func kubernetesDepFromStr(deployment string) *KubernetesDeployment {
 			Environment: env,
 		}
 
-	} else {
-		return &KubernetesDeployment{
+	} else if len(dirs) > 4 {
+		return &KubernetesAppDeployment{
 			Deployment: Deployment{
 				DeploymentPath: strings.Join(dirs[0:4], string(os.PathSeparator)),
 			},
@@ -117,6 +162,28 @@ func kubernetesDepFromStr(deployment string) *KubernetesDeployment {
 		}
 	}
 
+	panic(fmt.Sprintf("Invalid deployment path provided: %s", deployment))
+
+}
+
+func kubernetesSysDepFromStr(deployment string) *KubernetesSysDeployment {
+
+	dirs := splitPath(deployment)
+
+	// In this case the modified file is kubernetes/<cluster>/<sys-service>/values.yaml
+
+	if len(dirs) > 3 {
+		
+		return &KubernetesSysDeployment{
+			Deployment: Deployment{
+				DeploymentPath: strings.Join(dirs[0:3], string(os.PathSeparator)),
+			},
+			Cluster: dirs[1],
+			SysServiceName: dirs[2],
+		}
+	}
+
+	panic(fmt.Sprintf("Invalid deployment path provided: %s", deployment))
 }
 
 func splitPath(path string) []string {
