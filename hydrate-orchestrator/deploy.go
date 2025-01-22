@@ -210,7 +210,7 @@ func (m *HydrateOrchestrator) ValidateChanges(
 				HelmConfigDir: m.AuthDir,
 				RenderType: "sys-services",
 			},
-		).Render(ctx, m.App, kdep.Cluster)
+		).Render(ctx, kdep.SysServiceName, kdep.Cluster)
 
 		if err != nil {
 			panic(err)
