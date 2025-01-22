@@ -58,7 +58,7 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 		"cluster-name",
 		"test-tenant",
 		"dev",
-		"{\"images\":[{\"service_name_list\":[\"micro-a\"],\"image\":\"new-image:1.0.0\",\"env\":\"dev\",\"app\":\"sample-app\",\"tenant\":\"test-tenant\",\"base_folder\":\"kubernetes/cluster-name\"}]}",
+		"{\"images\":[{\"service_name_list\":[\"micro-a\"],\"image\":\"new-image:1.0.0\",\"env\":\"dev\",\"app\":\"sample-app\",\"tenant\":\"test-tenant\",\"technology\":\"kubernetes\",\"platform\":\"cluster-name\"}]}",
 	)
 
 	newDpRendered := renderedDir[0].File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
