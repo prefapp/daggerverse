@@ -44,12 +44,6 @@ type Config struct {
 	Commands [][]string `yaml:"commands"`
 }
 
-// chart: prefapp/argo-workflows-operations
-// version: v0.14.1
-// releaseName: argo-workflows-operations-central
-// hooks: []
-// extraPatches: []
-
 type EnvYaml struct {
 	Chart           string `yaml:"chart"`
 	Registry        string `yaml:"registry"`
