@@ -31,7 +31,8 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	// +default=""
 	tenant string,
 	// Environment name
-	// +required
+	// +optional
+	// +default=""
 	environment string,
 ) *dagger.File {
 
