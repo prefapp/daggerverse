@@ -1,6 +1,6 @@
 ---
 bases:
-  - repositories.yaml
+  - kubernetes-sys-services/repositories.yaml
 
 releases:
   - name:
