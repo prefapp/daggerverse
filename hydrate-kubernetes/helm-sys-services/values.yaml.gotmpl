@@ -1,8 +1,8 @@
 {{/* Init combined dict values */}}
 {{- $combined := dict }}
 
-{{/* Main coordinates dir ./kubernetes/<cluster>/<app> .  It will be used further to process files */}}
-{{- $mainCoordinatesDir := printf "./kubernetes/%s/%s" .StateValues.cluster .StateValues.app }}
+{{/* Main coordinates dir ./kubernetes-sys-services/<cluster>/<app> .  It will be used further to process files */}}
+{{- $mainCoordinatesDir := printf "./kubernetes-sys-services/%s/%s" .StateValues.cluster .StateValues.app }}
 
 {{/* ⚙️ Execs
 
@@ -54,4 +54,3 @@ execs:
 
 {{/* Print the values */}}
 {{ toYaml $combined | nindent 0 }}
-
