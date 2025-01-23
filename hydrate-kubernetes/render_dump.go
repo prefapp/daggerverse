@@ -95,7 +95,7 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 		WithoutDirectory("kubernetes/"+cluster+"/"+app).
 		WithDirectory("kubernetes/"+cluster+"/"+app, tmpDir)
 
-	envYaml, errEnvYaml := m.ValuesDir.File("kubernetes/" + cluster + "/" + app + ".yaml").Contents(ctx)
+	envYaml, errEnvYaml := m.ValuesDir.File("kubernetes/" + cluster + "/" + app + "/" + app + ".yaml").Contents(ctx)
 
 	if errEnvYaml != nil {
 
