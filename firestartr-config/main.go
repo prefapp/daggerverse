@@ -14,4 +14,37 @@
 
 package main
 
-type FirestartrConfig struct{}
+import (
+	"context"
+	"dagger/firestartr-config/internal/dagger"
+)
+
+type FirestartrConfig struct {
+	Registries       []Registry
+	DotFirestartrDir *dagger.Directory
+}
+
+func New(
+
+	ctx context.Context,
+
+	// The path to the values directory, where the helm values are stored
+	dotFirestartr *dagger.Directory,
+
+) (*FirestartrConfig, error) {
+
+	registries, err := loadRegistries(ctx, dotFirestartr)
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	return &FirestartrConfig{
+
+		DotFirestartrDir: dotFirestartr,
+
+		Registries: registries,
+	}, nil
+}

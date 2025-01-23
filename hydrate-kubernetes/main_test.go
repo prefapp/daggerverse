@@ -17,15 +17,18 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 
 	wetRepoDir := getDir("./fixtures/wet-repo-dir")
 
+	repositoryFileDir := getDir("./fixtures/repository_file")
+
 	helmDir := getDir("./helm-apps")
 
 	m := &HydrateKubernetes{
-		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir"),
-		WetRepoDir:   wetRepoDir.Directory("fixtures/wet-repo-dir"),
-		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
-		Helmfile:     helmDir.File("helm-apps/helmfile.yaml"),
-		ValuesGoTmpl: helmDir.File("helm-apps/values.yaml.gotmpl"),
-		RenderType:   "apps",
+		ValuesDir:        valuesRepoDir.Directory("fixtures/values-repo-dir"),
+		WetRepoDir:       wetRepoDir.Directory("fixtures/wet-repo-dir"),
+		Container:        dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
+		Helmfile:         helmDir.File("helm-apps/helmfile.yaml"),
+		ValuesGoTmpl:     helmDir.File("helm-apps/values.yaml.gotmpl"),
+		RenderType:       "apps",
+		RepositoriesFile: repositoryFileDir.File("fixtures/repository_file/repositories.yaml"),
 	}
 
 	config, errContents := valuesRepoDir.
@@ -144,15 +147,18 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 
 	wetRepoDir := getDir("./fixtures/wet-repo-dir")
 
+	repositoryFileDir := getDir("./fixtures/repository_file")
+
 	helmDir := getDir("./helm-apps")
 
 	m := &HydrateKubernetes{
-		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir"),
-		WetRepoDir:   wetRepoDir.Directory("fixtures/wet-repo-dir"),
-		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
-		Helmfile:     helmDir.File("helm-apps/helmfile.yaml"),
-		ValuesGoTmpl: helmDir.File("helm-apps/values.yaml.gotmpl"),
-		RenderType:   "apps",
+		ValuesDir:        valuesRepoDir.Directory("fixtures/values-repo-dir"),
+		WetRepoDir:       wetRepoDir.Directory("fixtures/wet-repo-dir"),
+		Container:        dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
+		Helmfile:         helmDir.File("helm-apps/helmfile.yaml"),
+		ValuesGoTmpl:     helmDir.File("helm-apps/values.yaml.gotmpl"),
+		RepositoriesFile: repositoryFileDir.File("fixtures/repository_file/repositories.yaml"),
+		RenderType:       "apps",
 	}
 
 	config, errContents := valuesRepoDir.
@@ -227,15 +233,18 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 
 	valuesRepoDir := getDir("./fixtures/values-repo-dir-sys-services")
 
+	repositoryFileDir := getDir("./fixtures/repository_file")
+
 	helmDir := getDir("./helm-sys-services")
 
 	m := &HydrateKubernetes{
-		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir-sys-services"),
-		WetRepoDir:   dag.Directory(),
-		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
-		Helmfile:     helmDir.File("helm-sys-services/helmfile.yaml"),
-		ValuesGoTmpl: helmDir.File("helm-sys-services/values.yaml.gotmpl"),
-		RenderType:   "sys-services",
+		ValuesDir:        valuesRepoDir.Directory("fixtures/values-repo-dir-sys-services"),
+		WetRepoDir:       dag.Directory(),
+		Container:        dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
+		Helmfile:         helmDir.File("helm-sys-services/helmfile.yaml"),
+		ValuesGoTmpl:     helmDir.File("helm-sys-services/values.yaml.gotmpl"),
+		RepositoriesFile: repositoryFileDir.File("fixtures/repository_file/repositories.yaml"),
+		RenderType:       "sys-services",
 	}
 
 	config, errContents := valuesRepoDir.
@@ -303,17 +312,20 @@ func TestRenderAppsCanRenderImages(t *testing.T) {
 
 	valuesRepoDir := getDir("./fixtures/values-repo-dir")
 
+	repositoryFileDir := getDir("./fixtures/repository_file")
+
 	wetRepoDir := getDir("./fixtures/wet-repo-dir")
 
 	helmDir := getDir("./helm-apps")
 
 	m := &HydrateKubernetes{
-		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir"),
-		WetRepoDir:   wetRepoDir.Directory("fixtures/wet-repo-dir"),
-		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
-		Helmfile:     helmDir.File("helm-apps/helmfile.yaml"),
-		ValuesGoTmpl: helmDir.File("helm-apps/values.yaml.gotmpl"),
-		RenderType:   "apps",
+		ValuesDir:        valuesRepoDir.Directory("fixtures/values-repo-dir"),
+		WetRepoDir:       wetRepoDir.Directory("fixtures/wet-repo-dir"),
+		Container:        dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
+		Helmfile:         helmDir.File("helm-apps/helmfile.yaml"),
+		ValuesGoTmpl:     helmDir.File("helm-apps/values.yaml.gotmpl"),
+		RepositoriesFile: repositoryFileDir.File("fixtures/repository_file/repositories.yaml"),
+		RenderType:       "apps",
 	}
 
 	config, errContents := valuesRepoDir.

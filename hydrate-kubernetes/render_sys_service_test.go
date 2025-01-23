@@ -16,15 +16,18 @@ func TestRenderSysServiceCanRender(t *testing.T) {
 
 	wetRepoDir := getDir("./fixtures/wet-repo-dir")
 
+	repositoryFileDir := getDir("./fixtures/repository_file")
+
 	helmDir := getDir("./helm-sys-services")
 
 	m := &HydrateKubernetes{
-		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir-sys-services"),
-		WetRepoDir:   wetRepoDir.Directory("fixtures/wet-repo-dir"),
-		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
-		Helmfile:     helmDir.File("helm-sys-services/helmfile.yaml"),
-		ValuesGoTmpl: helmDir.File("helm-sys-services/values.yaml.gotmpl"),
-		RenderType:   "sys-services",
+		ValuesDir:        valuesRepoDir.Directory("fixtures/values-repo-dir-sys-services"),
+		WetRepoDir:       wetRepoDir.Directory("fixtures/wet-repo-dir"),
+		Container:        dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
+		Helmfile:         helmDir.File("helm-sys-services/helmfile.yaml"),
+		ValuesGoTmpl:     helmDir.File("helm-sys-services/values.yaml.gotmpl"),
+		RepositoriesFile: repositoryFileDir.File("fixtures/repository_file/repositories.yaml"),
+		RenderType:       "sys-services",
 	}
 
 	config, errContents := valuesRepoDir.

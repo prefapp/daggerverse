@@ -11,11 +11,15 @@ func TestRegistries(t *testing.T) {
 
 	dotFirestartr := getDir("./fixtures/.firestartr")
 
-	m := &FirestartrConfig{}
-
 	t.Run("Can get registries", func(t *testing.T) {
 
-		registries := m.GetRegistries(ctx, dotFirestartr.Directory("/fixtures/.firestartr"))
+		registries, err := loadRegistries(ctx, dotFirestartr.Directory("/fixtures/.firestartr"))
+
+		if err != nil {
+
+			t.Errorf("Error loading registries: %s", err)
+
+		}
 
 		if len(registries) != 2 {
 			t.Errorf("Expected 2 registries, got %d", len(registries))

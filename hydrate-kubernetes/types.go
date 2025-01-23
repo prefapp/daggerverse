@@ -43,3 +43,18 @@ type Config struct {
 	Image    string     `yaml:"image"`
 	Commands [][]string `yaml:"commands"`
 }
+
+// chart: prefapp/argo-workflows-operations
+// version: v0.14.1
+// releaseName: argo-workflows-operations-central
+// hooks: []
+// extraPatches: []
+
+type EnvYaml struct {
+	Chart           string `yaml:"chart"`
+	Registry        string `yaml:"registry"`
+	RemoteArtifacts []struct {
+		Filename string `yaml:"filename"`
+		URL      string `yaml:"url"`
+	} `yaml:"remoteArtifacts,omitempty"`
+}

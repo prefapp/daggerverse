@@ -11,7 +11,7 @@ type Registry struct {
 	Name         string    `yaml:"name"`
 	Registry     string    `yaml:"registry"`
 	ImageTypes   []string  `yaml:"image_types"`
-	Default      bool      `yaml:"default"`
+	IsDefault    bool      `yaml:"default"`
 	AuthStrategy string    `yaml:"auth_strategy"`
 	BasePaths    BasePaths `yaml:"base_paths"`
 }
@@ -21,7 +21,7 @@ type BasePaths struct {
 	Charts   string `yaml:"charts"`
 }
 
-func (m *FirestartrConfig) GetRegistries(ctx context.Context, firestartrDir *dagger.Directory) []Registry {
+func loadRegistries(ctx context.Context, firestartrDir *dagger.Directory) ([]Registry, error) {
 
 	registries := []Registry{}
 
@@ -31,7 +31,7 @@ func (m *FirestartrConfig) GetRegistries(ctx context.Context, firestartrDir *dag
 
 		if err != nil {
 
-			panic(err)
+			return nil, err
 
 		}
 
@@ -41,7 +41,7 @@ func (m *FirestartrConfig) GetRegistries(ctx context.Context, firestartrDir *dag
 
 			if err != nil {
 
-				panic(err)
+				return nil, err
 
 			}
 
@@ -51,7 +51,7 @@ func (m *FirestartrConfig) GetRegistries(ctx context.Context, firestartrDir *dag
 
 			if err != nil {
 
-				panic(err)
+				return nil, err
 
 			}
 
@@ -61,6 +61,6 @@ func (m *FirestartrConfig) GetRegistries(ctx context.Context, firestartrDir *dag
 
 	}
 
-	return registries
+	return registries, nil
 
 }

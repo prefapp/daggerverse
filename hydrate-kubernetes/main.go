@@ -18,6 +18,8 @@ type HydrateKubernetes struct {
 	HelmRegistryLoginNeeded bool
 	HelmConfigDir           *dagger.Directory
 	RenderType              string
+	DotFirestartrDir        *dagger.Directory
+	RepositoriesFile        *dagger.File
 }
 
 func New(
@@ -49,6 +51,9 @@ func New(
 	// +optional
 	// +default="apps"
 	renderType string,
+
+	// Firestartr org directory, it should lives in the
+	dotFirestartr *dagger.Directory,
 
 ) (*HydrateKubernetes, error) {
 
@@ -98,9 +103,9 @@ func New(
 
 		Helmfile: helmfile,
 
-		ValuesGoTmpl: valuesGoTmpl,
+		DotFirestartrDir: dotFirestartr,
 
-		HelmRegistryLoginNeeded: helmRegistryLoginNeeded,
+		ValuesGoTmpl: valuesGoTmpl,
 
 		HelmConfigDir: helmConfigDir,
 
