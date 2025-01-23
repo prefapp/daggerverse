@@ -27,7 +27,8 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	// +required
 	cluster string,
 	// Tenant name
-	// +required
+	// +optional
+	// +default=""
 	tenant string,
 	// Environment name
 	// +required
