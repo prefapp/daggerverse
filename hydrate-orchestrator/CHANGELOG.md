@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.2.0...hydrate-orchestrator-v1.3.0) (2025-01-24)
+
+
+### Features
+
+* support firestartr configs, generate  `respositories.yaml` and  `environments.yaml` in runtime ([#96](https://github.com/prefapp/daggerverse/issues/96)) ([79d9cd9](https://github.com/prefapp/daggerverse/commit/79d9cd96cb37637f23751a87aa3c06802f1ad94b))
+* support multiple helm credentials with `~/.config/helm/registry/config.json` ([#90](https://github.com/prefapp/daggerverse/issues/90)) ([07733a2](https://github.com/prefapp/daggerverse/commit/07733a2db842a5e79b1c6680db691d22dcde28d2))
+* support sys services ([#92](https://github.com/prefapp/daggerverse/issues/92)) ([858c21d](https://github.com/prefapp/daggerverse/commit/858c21d7114ecca78fd0a017daa5df2ed6fe3992))
+
 ## [1.2.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.1.0...hydrate-orchestrator-v1.2.0) (2025-01-22)
 
 
