@@ -264,6 +264,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 
 	result := &Deployments{
 		KubernetesDeployments: []KubernetesAppDeployment{},
+		KubernetesSysDeployments: []KubernetesSysDeployment{},
 	}
 
 	for _, deployment := range deployments {
@@ -271,7 +272,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 		dirs := splitPath(deployment)
 
 		if len(dirs) == 0 {
-			panic(fmt.Sprintf("Invalid deployment path provided: %s", deployment))
+			panic(fmt.Sprintf("Invalid deployment path provided (dir count is zeri): %s", deployment))
 		}
 
 		deploymentType := dirs[0]

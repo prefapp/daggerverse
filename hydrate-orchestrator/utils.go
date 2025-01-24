@@ -163,7 +163,7 @@ func kubernetesDepFromStr(deployment string) *KubernetesAppDeployment {
 		}
 	}
 
-	panic(fmt.Sprintf("Invalid deployment path provided: %s", deployment))
+	panic(fmt.Sprintf("Invalid app deployment path provided: %s", deployment))
 
 }
 
@@ -184,7 +184,7 @@ func kubernetesSysDepFromStr(deployment string) *KubernetesSysDeployment {
 		}
 	}
 
-	panic(fmt.Sprintf("Invalid deployment path provided: %s", deployment))
+	panic(fmt.Sprintf("Invalid sys-service deployment path provided: %s", deployment))
 }
 
 func splitPath(path string) []string {
