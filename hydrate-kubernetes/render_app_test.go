@@ -16,15 +16,18 @@ func TestRenderAppCanRender(t *testing.T) {
 
 	wetRepoDir := getDir("./fixtures/wet-repo-dir")
 
+	repositoryFileDir := getDir("./fixtures/repository_file")
+
 	helmDir := getDir("./helm-apps")
 
 	m := &HydrateKubernetes{
-		ValuesDir:    valuesRepoDir.Directory("fixtures/values-repo-dir"),
-		WetRepoDir:   wetRepoDir.Directory("fixtures/wet-repo-dir"),
-		Container:    dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
-		Helmfile:     helmDir.File("helm-apps/helmfile.yaml"),
-		ValuesGoTmpl: helmDir.File("helm-apps/values.yaml.gotmpl"),
-		RenderType:   "apps",
+		ValuesDir:        valuesRepoDir.Directory("fixtures/values-repo-dir"),
+		WetRepoDir:       wetRepoDir.Directory("fixtures/wet-repo-dir"),
+		Container:        dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
+		Helmfile:         helmDir.File("helm-apps/helmfile.yaml"),
+		ValuesGoTmpl:     helmDir.File("helm-apps/values.yaml.gotmpl"),
+		RepositoriesFile: repositoryFileDir.File("fixtures/repository_file/repositories.yaml"),
+		RenderType:       "apps",
 	}
 
 	config, errContents := valuesRepoDir.

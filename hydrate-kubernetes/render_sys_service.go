@@ -15,16 +15,35 @@ func (m *HydrateKubernetes) RenderSysService(
 
 ) (string, error) {
 
+	if m.RepositoriesFile == nil {
+
+		reposFile, err := m.BuildHelmRepositoriesFile(
+			ctx,
+			m.DotFirestartrDir,
+			"./kubernetes/"+cluster+"/"+app+".yaml",
+		)
+
+		if err != nil {
+
+			return "", err
+
+		}
+
+		m.RepositoriesFile = reposFile
+
+	}
+
 	helmfileCtr := m.Container.
 		WithDirectory("/values", m.ValuesDir).
 		WithWorkdir("/values").
 		WithMountedFile("/values/helmfile.yaml", m.Helmfile).
+		WithFile("/values/repositories.yaml", m.RepositoriesFile).
 		WithMountedFile("/values/values.yaml.gotmpl", m.ValuesGoTmpl).
 		WithEnvVariable("BUST", time.Now().String())
 
 	if m.HelmConfigDir != nil {
 
-		helmfileCtr = helmfileCtr.WithDirectory("/root/.config/helm", m.HelmConfigDir)
+		helmfileCtr = helmfileCtr.WithDirectory("/helm/.config/helm", m.HelmConfigDir)
 
 	}
 

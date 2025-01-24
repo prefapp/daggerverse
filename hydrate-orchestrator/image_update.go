@@ -52,6 +52,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
+			m.DotFirestartr,
 			dagger.HydrateKubernetesOpts{
 				HelmConfigDir: m.AuthDir,
 			},

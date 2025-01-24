@@ -2,7 +2,11 @@ package main
 
 import (
 	"context"
+	"dagger/hydrate-kubernetes/internal/dagger"
+	"fmt"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 func (m *HydrateKubernetes) RenderApp(
@@ -22,6 +26,24 @@ func (m *HydrateKubernetes) RenderApp(
 	newImagesMatrix string,
 
 ) (string, error) {
+
+	if m.RepositoriesFile == nil {
+
+		reposFile, err := m.BuildHelmRepositoriesFile(
+			ctx,
+			m.DotFirestartrDir,
+			"./kubernetes/"+cluster+"/"+tenant+"/"+env+".yaml",
+		)
+
+		if err != nil {
+
+			return "", err
+
+		}
+
+		m.RepositoriesFile = reposFile
+
+	}
 
 	newImagesFile, err := m.BuildNewImages(ctx, newImagesMatrix)
 
@@ -47,6 +69,8 @@ func (m *HydrateKubernetes) RenderApp(
 		WithMountedFile("/values/helmfile.yaml", m.Helmfile).
 		WithMountedFile("/values/values.yaml.gotmpl", m.ValuesGoTmpl).
 		WithEnvVariable("BUST", time.Now().String()).
+		WithFile("/values/kubernetes/repositories.yaml", m.RepositoriesFile).
+		WithFile("/values/kubernetes/environments.yaml", m.CreateEnvironmentsFile(env)).
 		WithNewFile("/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/previous_images.yaml", previousImagesFileContent).
 		WithFile("/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/images.yaml", imagesFile).
 		WithFile("/values/kubernetes/"+cluster+"/"+tenant+"/"+env+"/new_images.yaml", newImagesFile)
@@ -65,10 +89,24 @@ func (m *HydrateKubernetes) RenderApp(
 		Stdout(ctx)
 }
 
-type EnvYaml struct {
-	RemoteArtifacts []struct {
-		Filename string `yaml:"filename"`
+func (m *HydrateKubernetes) CreateEnvironmentsFile(env string) *dagger.File {
 
-		URL string `yaml:"url"`
-	} `yaml:"remoteArtifacts,omitempty"`
+	envs := map[string]map[string]interface{}{
+		"environments": {
+			fmt.Sprintf("%v", env): make(map[string]interface{}),
+		},
+	}
+
+	contentFile, err := yaml.Marshal(envs)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	return dag.Directory().
+		WithNewFile("environments.yaml", string(contentFile)).
+		File("environments.yaml")
+
 }
