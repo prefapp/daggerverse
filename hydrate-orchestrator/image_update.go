@@ -90,7 +90,7 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 	updatedDeployments string,
 ) *Deployments {
 	result := &Deployments{
-		KubernetesDeployments: []KubernetesDeployment{},
+		KubernetesDeployments: []KubernetesAppDeployment{},
 	}
 
 	var imagesMatrix ImageMatrix
@@ -111,7 +111,7 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 			image.Env,
 		)
 
-		kdep := &KubernetesDeployment{
+		kdep := &KubernetesAppDeployment{
 			Deployment: Deployment{
 				DeploymentPath: deploymentPath,
 			},

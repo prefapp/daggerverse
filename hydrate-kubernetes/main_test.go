@@ -273,7 +273,7 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 
 	dir, _ := m.Render(ctx, "stakater", "cluster-name", "", "", "")
 
-	entries, errGlob := dir[0].Glob(ctx, "kubernetes/cluster-name/stakater/*.yml")
+	entries, errGlob := dir[0].Glob(ctx, "kubernetes-sys-services/cluster-name/stakater/*.yml")
 
 	if errGlob != nil {
 
@@ -282,11 +282,11 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 	}
 
 	mapEntries := map[string]bool{
-		"kubernetes/cluster-name/stakater/ClusterRole.stakater-reloader-role.yml":                true,
-		"kubernetes/cluster-name/stakater/ClusterRoleBinding.stakater-reloader-role-binding.yml": true,
-		"kubernetes/cluster-name/stakater/Deployment.stakater-reloader.yml":                      true,
-		"kubernetes/cluster-name/stakater/ServiceAccount.stakater-reloader.yml":                  true,
-		"kubernetes/cluster-name/stakater/ExternalSecret.a.yml":                                  true,
+		"kubernetes-sys-services/cluster-name/stakater/ClusterRole.stakater-reloader-role.yml":                true,
+		"kubernetes-sys-services/cluster-name/stakater/ClusterRoleBinding.stakater-reloader-role-binding.yml": true,
+		"kubernetes-sys-services/cluster-name/stakater/Deployment.stakater-reloader.yml":                      true,
+		"kubernetes-sys-services/cluster-name/stakater/ServiceAccount.stakater-reloader.yml":                  true,
+		"kubernetes-sys-services/cluster-name/stakater/ExternalSecret.a.yml":                                  true,
 	}
 
 	if len(entries) != 5 {

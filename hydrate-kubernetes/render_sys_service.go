@@ -20,7 +20,7 @@ func (m *HydrateKubernetes) RenderSysService(
 		reposFile, err := m.BuildHelmRepositoriesFile(
 			ctx,
 			m.DotFirestartrDir,
-			"./kubernetes/"+cluster+"/"+app+".yaml",
+			"./kubernetes-sys-services/"+cluster+"/"+app+".yaml",
 		)
 
 		if err != nil {
@@ -51,7 +51,7 @@ func (m *HydrateKubernetes) RenderSysService(
 		WithExec([]string{
 			"helmfile", "template",
 			"--state-values-set-string", "app=" + app + ",cluster=" + cluster,
-			"--state-values-file", "./kubernetes/" + cluster + "/" + app + ".yaml",
+			"--state-values-file", "./kubernetes-sys-services/" + cluster + "/" + app + ".yaml",
 		}).
 		Stdout(ctx)
 }
