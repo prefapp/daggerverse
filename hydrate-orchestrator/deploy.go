@@ -34,11 +34,15 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	// +optional
 	// +default=""
 	environment string,
+	// App name
+	// +optional
+	// +default=""
+	app string,
 ) *dagger.File {
 
 	branchInfo := m.getBranchInfo(ctx)
 
-	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, deploymentType, cluster, tenant, environment)
+	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, deploymentType, cluster, tenant, environment, app)
 
 	summary := &DeploymentSummary{
 		Items: []DeploymentSummaryRow{},
@@ -208,6 +212,15 @@ func (m *HydrateOrchestrator) ValidateChanges(
 	}
 
 	for _, kdep := range deployments.KubernetesSysDeployments {
+
+		appToRender := ""
+
+		if m.App != "" {
+			appToRender = m.App
+		} else {
+			appToRender = kdep.SysServiceName
+		}
+
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
@@ -216,7 +229,7 @@ func (m *HydrateOrchestrator) ValidateChanges(
 				HelmConfigDir: m.AuthDir,
 				RenderType:    "sys-services",
 			},
-		).Render(ctx, kdep.SysServiceName, kdep.Cluster)
+		).Render(ctx, appToRender, kdep.Cluster)
 
 		if err != nil {
 			panic(err)
@@ -249,6 +262,10 @@ func (m *HydrateOrchestrator) processDeploymentGlob(
 	// Environment name
 	// +required
 	environment string,
+	// App name
+	// +required
+	app string,
+
 ) *Deployments {
 
 	affected_files, err := valuesStateDir.Glob(ctx, fmt.Sprintf("%s/%s/%s/%s", deploymentType, cluster, tenant, environment))
