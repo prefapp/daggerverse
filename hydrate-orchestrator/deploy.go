@@ -20,29 +20,20 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	// +optional
 	// +default="author"
 	author string,
-	// Type of deployment
+	// Glob Pattern
 	// +required
-	deploymentType string,
-	// Cluster name
-	// +required
-	cluster string,
-	// Tenant name
-	// +optional
-	// +default=""
-	tenant string,
-	// Environment name
-	// +optional
-	// +default=""
-	environment string,
+	globPattern string,
 ) *dagger.File {
 
 	branchInfo := m.getBranchInfo(ctx)
 
-	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, deploymentType, cluster, tenant, environment)
 
 	summary := &DeploymentSummary{
 		Items: []DeploymentSummaryRow{},
 	}
+
+	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, globPattern)
+
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
@@ -240,20 +231,11 @@ func (m *HydrateOrchestrator) processDeploymentGlob(
 	valuesStateDir *dagger.Directory,
 	// Type of deployment
 	// +required
-	deploymentType string,
-	// Cluster name
-	// +required
-	cluster string,
-	// Tenant name
-	// +required
-	tenant string,
-	// Environment name
-	// +required
-	environment string,
+	globPattern string,
 
 ) *Deployments {
 
-	affected_files, err := valuesStateDir.Glob(ctx, fmt.Sprintf("%s/%s/%s/%s", deploymentType, cluster, tenant, environment))
+	affected_files, err := valuesStateDir.Glob(ctx, globPattern)
 
 	if err != nil {
 		panic(err)
