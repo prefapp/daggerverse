@@ -43,3 +43,12 @@ type Config struct {
 	Image    string     `yaml:"image"`
 	Commands [][]string `yaml:"commands"`
 }
+
+type EnvYaml struct {
+	Chart           string `yaml:"chart"`
+	Registry        string `yaml:"registry"`
+	RemoteArtifacts []struct {
+		Filename string `yaml:"filename"`
+		URL      string `yaml:"url"`
+	} `yaml:"remoteArtifacts,omitempty"`
+}

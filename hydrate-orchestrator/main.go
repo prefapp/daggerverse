@@ -27,6 +27,7 @@ type HydrateOrchestrator struct {
 	AuthDir          *dagger.Directory
 	DeploymentBranch string
 	Event            EventType
+	DotFirestartr    *dagger.Directory
 }
 
 func New(
@@ -58,6 +59,8 @@ func New(
 	// +default="pr"
 	event EventType,
 
+	dotFirestartr *dagger.Directory,
+
 ) *HydrateOrchestrator {
 	return &HydrateOrchestrator{
 		Repo:             repo,
@@ -68,5 +71,6 @@ func New(
 		DeploymentBranch: deploymentBranch,
 		AuthDir:          authDir,
 		Event:            event,
+		DotFirestartr:    dotFirestartr,
 	}
 }

@@ -49,6 +49,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
+			m.DotFirestartr,
 			dagger.HydrateKubernetesOpts{
 				HelmConfigDir: m.AuthDir,
 			},
@@ -122,6 +123,7 @@ func (m *HydrateOrchestrator) ValidateChanges(
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
+			m.DotFirestartr,
 			dagger.HydrateKubernetesOpts{
 				HelmConfigDir: m.AuthDir,
 			},

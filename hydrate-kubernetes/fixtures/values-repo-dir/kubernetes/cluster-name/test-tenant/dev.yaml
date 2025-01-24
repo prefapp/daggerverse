@@ -2,7 +2,6 @@
 version: 0.1.0
 chart: prefapp/aws-web-service-umbrella
 hooks: []
-
 extraPatches:
   - target:
       group: apps
