@@ -112,9 +112,10 @@ Created by @%s from %s within commit [%s](%s)
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
+			m.DotFirestartr,
 			dagger.HydrateKubernetesOpts{
 				HelmConfigDir: m.AuthDir,
-				RenderType: "sys-services",
+				RenderType:    "sys-services",
 			},
 		).Render(ctx, kdep.SysServiceName, kdep.Cluster)
 
@@ -210,9 +211,10 @@ func (m *HydrateOrchestrator) ValidateChanges(
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
+			m.DotFirestartr,
 			dagger.HydrateKubernetesOpts{
 				HelmConfigDir: m.AuthDir,
-				RenderType: "sys-services",
+				RenderType:    "sys-services",
 			},
 		).Render(ctx, kdep.SysServiceName, kdep.Cluster)
 
@@ -224,7 +226,8 @@ func (m *HydrateOrchestrator) ValidateChanges(
 
 		if err != nil {
 			panic(err)
-		}	}
+		}
+	}
 
 }
 
