@@ -59,7 +59,8 @@ func New(
 	// +optional
 	// +default="pr"
 	event EventType,
-
+	// .firestartr directory. It contains de org global configurations.
+	// +required
 	dotFirestartr *dagger.Directory,
 
 ) *HydrateOrchestrator {
