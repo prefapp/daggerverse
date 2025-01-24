@@ -20,7 +20,7 @@ func (m *HydrateKubernetes) RenderSysService(
 		reposFile, err := m.BuildHelmRepositoriesFile(
 			ctx,
 			m.DotFirestartrDir,
-			"./kubernetes/"+cluster+"/"+app+".yaml",
+			"./kubernetes-sys-services/"+cluster+"/"+app+".yaml",
 		)
 
 		if err != nil {
