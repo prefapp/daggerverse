@@ -173,7 +173,7 @@ func kubernetesSysDepFromStr(deployment string) *KubernetesSysDeployment {
 
 	// In this case the modified file is kubernetes/<cluster>/<sys-service>/values.yaml
 
-	if len(dirs) > 3 {
+	if len(dirs) >= 3 {
 		
 		return &KubernetesSysDeployment{
 			Deployment: Deployment{
