@@ -20,3 +20,7 @@ execs:
       "--ca_yml_path", 
       "./kubernetes/{{.StateValues.cluster}}/{{.StateValues.tenant}}/{{$.Environment.Name}}/ca.yaml"
     ]
+
+set:
+  - name: micro-b.image
+    value: "{{ .StateValues.version }}"
