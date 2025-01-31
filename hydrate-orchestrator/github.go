@@ -82,17 +82,25 @@ func (m *HydrateOrchestrator) upsertPR(
 	}
 
 	if !prExists {
-		labelArgs := ""
+		cmd := []string{
+			"gh",
+			"pr",
+			"create",
+			"-R", m.Repo,
+			"--base", m.DeploymentBranch,
+			"--title", title,
+			"--body", body,
+			"--head", branchWithId,
+		}
 
 		// Create labels and prepare the arguments for the PR creation
 		for _, label := range labels {
 			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create -R %s --force %s", m.Repo, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
-			labelArgs += fmt.Sprintf(" --label '%s'", label)
+			cmd = append(cmd, "--label", label)
 		}
 
-		reviewerArgs := ""
 		for _, reviewer := range reviewers {
-			reviewerArgs += fmt.Sprintf(" --reviewer '%s'", reviewer)
+			cmd = append(cmd, "--reviewer", reviewer)
 		}
 
 		// Create a PR for the updated deployment
@@ -105,18 +113,7 @@ func (m *HydrateOrchestrator) upsertPR(
 			).
 			WithDirectory(contentsDirPath, contents).
 			WithWorkdir(contentsDirPath).
-			WithExec([]string{
-				"gh",
-				"pr",
-				"create",
-				"-R", m.Repo,
-				"--base", m.DeploymentBranch,
-				"--title", title,
-				"--body", body,
-				"--head", branchWithId,
-				labelArgs,
-				reviewerArgs,
-			}).Sync(ctx)
+			WithExec(cmd).Sync(ctx)
 
 		if err != nil {
 			return err
