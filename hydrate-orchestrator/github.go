@@ -96,15 +96,26 @@ func (m *HydrateOrchestrator) upsertPR(
 		}
 
 		// Create a PR for the updated deployment
-		_, err := dag.Gh().Run(fmt.Sprintf(
-			"pr create -R '%s' --base '%s' --title '%s' --body '%s' --head %s %s %s",
-			m.Repo, m.DeploymentBranch, title, body, branchWithId, labelArgs, reviewerArgs,
-		),
-			dagger.GhRunOpts{
-				DisableCache: true,
-				Token:        m.GhToken,
-			},
-		).Sync(ctx)
+		_, err := dag.Gh().Container(dagger.GhContainerOpts{
+			Token: m.GhToken,
+		}).
+			WithEnvVariable(
+				"CACHE_BUSTER",
+				time.Now().String(),
+			).
+			WithDirectory(contentsDirPath, contents).
+			WithWorkdir(contentsDirPath).
+			WithExec([]string{
+				"gh",
+				"pr",
+				"-R", m.Repo,
+				"--base", m.DeploymentBranch,
+				"--title", title,
+				"--body", body,
+				"--head", branchWithId,
+				labelArgs,
+				reviewerArgs,
+			}).Sync(ctx)
 
 		if err != nil {
 			return err
