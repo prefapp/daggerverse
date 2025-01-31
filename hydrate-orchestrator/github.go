@@ -108,6 +108,7 @@ func (m *HydrateOrchestrator) upsertPR(
 			WithExec([]string{
 				"gh",
 				"pr",
+				"create",
 				"-R", m.Repo,
 				"--base", m.DeploymentBranch,
 				"--title", title,
