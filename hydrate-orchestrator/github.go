@@ -62,7 +62,9 @@ func (m *HydrateOrchestrator) upsertPR(
 	}
 
 	contentsDirPath := "/contents"
-	_, err = dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
+	_, err = dag.Gh(dagger.GhOpts{
+		Version: m.GhCliVersion,
+	}).Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
 		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
 			Exclude: []string{".git"},
 		}).
@@ -95,7 +97,11 @@ func (m *HydrateOrchestrator) upsertPR(
 
 		// Create labels and prepare the arguments for the PR creation
 		for _, label := range labels {
-			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create -R %s --force %s", m.Repo, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
+			dag.Gh(dagger.GhOpts{
+				Version: m.GhCliVersion,
+				Token:   m.GhToken,
+			}).Run(
+				fmt.Sprintf("label create -R %s --force %s", m.Repo, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
 			cmd = append(cmd, "--label", label)
 		}
 
@@ -105,7 +111,8 @@ func (m *HydrateOrchestrator) upsertPR(
 
 		// Create a PR for the updated deployment
 		_, err := dag.Gh().Container(dagger.GhContainerOpts{
-			Token: m.GhToken,
+			Version: m.GhCliVersion,
+			Token:   m.GhToken,
 		}).
 			WithEnvVariable(
 				"CACHE_BUSTER",
@@ -160,7 +167,12 @@ func (m *HydrateOrchestrator) getRepoPrs(ctx context.Context) ([]Pr, error) {
 		"-R", m.Repo},
 		" ")
 
-	content, err := dag.Gh().Run(command, dagger.GhRunOpts{DisableCache: true, Token: m.GhToken}).Stdout(ctx)
+	content, err := dag.Gh().Run(command,
+		dagger.GhRunOpts{
+			Version:      m.GhCliVersion,
+			DisableCache: true,
+			Token:        m.GhToken}).
+		Stdout(ctx)
 
 	if err != nil {
 
@@ -185,7 +197,8 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 ) {
 	gitDirPath := "/git_dir"
 	_, err := dag.Gh().Container(dagger.GhContainerOpts{
-		Token: m.GhToken,
+		Token:   m.GhToken,
+		Version: m.GhCliVersion,
 	}).
 		WithDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).

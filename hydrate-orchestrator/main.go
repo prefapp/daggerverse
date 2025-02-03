@@ -28,6 +28,7 @@ type HydrateOrchestrator struct {
 	DeploymentBranch string
 	Event            EventType
 	DotFirestartr    *dagger.Directory
+	GhCliVersion     string
 }
 
 func New(
@@ -62,6 +63,11 @@ func New(
 
 	dotFirestartr *dagger.Directory,
 
+	//Gh CLI Version
+	// +optional
+	// +default="v2.66.1"
+	ghCliVersion string,
+
 ) *HydrateOrchestrator {
 	return &HydrateOrchestrator{
 		Repo:             repo,
@@ -73,5 +79,6 @@ func New(
 		AuthDir:          authDir,
 		Event:            event,
 		DotFirestartr:    dotFirestartr,
+		GhCliVersion:     ghCliVersion,
 	}
 }

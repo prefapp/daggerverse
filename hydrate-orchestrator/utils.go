@@ -17,7 +17,7 @@ struct to hold the updated deployments
 */
 
 type Deployments struct {
-	KubernetesDeployments []KubernetesAppDeployment
+	KubernetesDeployments    []KubernetesAppDeployment
 	KubernetesSysDeployments []KubernetesSysDeployment
 }
 
@@ -30,7 +30,7 @@ func (d *Deployments) addDeployment(dep interface{}) {
 			return kd.Equals(*kdep)
 		}) {
 			d.KubernetesDeployments = append(d.KubernetesDeployments, *kdep)
-			
+
 		}
 	case *KubernetesSysDeployment:
 		if !lo.ContainsBy(d.KubernetesSysDeployments, func(kd KubernetesSysDeployment) bool {
@@ -98,8 +98,8 @@ func (kd *KubernetesAppDeployment) Labels() []string {
 
 type KubernetesSysDeployment struct {
 	Deployment
-	Cluster     	string
-	SysServiceName 	string
+	Cluster        string
+	SysServiceName string
 }
 
 // Check if two KubernetesSysDeployments are equal
@@ -110,7 +110,7 @@ func (kd *KubernetesSysDeployment) Equals(other KubernetesSysDeployment) bool {
 }
 
 func (kd *KubernetesSysDeployment) String(summary bool) string {
-	
+
 	if summary {
 
 		return fmt.Sprintf(
@@ -131,7 +131,6 @@ func (kd *KubernetesSysDeployment) Labels() []string {
 		fmt.Sprintf("sys-service/%s", kd.SysServiceName),
 	}
 }
-
 
 func kubernetesDepFromStr(deployment string) *KubernetesAppDeployment {
 
@@ -174,12 +173,12 @@ func kubernetesSysDepFromStr(deployment string) *KubernetesSysDeployment {
 	// In this case the modified file is kubernetes/<cluster>/<sys-service>/values.yaml
 
 	if len(dirs) >= 3 {
-		
+
 		return &KubernetesSysDeployment{
 			Deployment: Deployment{
 				DeploymentPath: strings.Join(dirs[0:3], string(os.PathSeparator)),
 			},
-			Cluster: dirs[1],
+			Cluster:        dirs[1],
 			SysServiceName: dirs[2],
 		}
 	}
@@ -202,7 +201,8 @@ func (m *HydrateOrchestrator) getBranchInfo(
 
 	gitDirPath := "/git_dir"
 	ctr := dag.Gh().Container(dagger.GhContainerOpts{
-		Token: m.GhToken,
+		Token:   m.GhToken,
+		Version: m.GhCliVersion,
 	}).
 		WithDirectory(gitDirPath, m.ValuesStateDir).
 		WithWorkdir(gitDirPath).
