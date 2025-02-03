@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.4.1...hydrate-orchestrator-v1.5.0) (2025-02-03)
+
+
+### Features
+
+* set fixed version gh cli ([#103](https://github.com/prefapp/daggerverse/issues/103)) ([ed7a364](https://github.com/prefapp/daggerverse/commit/ed7a3645d6aa7e97c57952a10aa52d787b77782d))
+
 ## [1.4.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.4.0...hydrate-orchestrator-v1.4.1) (2025-01-31)
 
 
