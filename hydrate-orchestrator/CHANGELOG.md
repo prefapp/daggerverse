@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.5.0...hydrate-orchestrator-v1.5.1) (2025-02-03)
+
+
+### Bug Fixes
+
+* add info about dotFirestartr parameter ([#97](https://github.com/prefapp/daggerverse/issues/97)) ([44f0f32](https://github.com/prefapp/daggerverse/commit/44f0f32da1e13a12153f7c5ef92497b99099ec19))
+
 ## [1.5.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.4.1...hydrate-orchestrator-v1.5.0) (2025-02-03)
 
 
