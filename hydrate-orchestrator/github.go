@@ -62,7 +62,9 @@ func (m *HydrateOrchestrator) upsertPR(
 	}
 
 	contentsDirPath := "/contents"
-	_, err = dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
+	_, err = dag.Gh(dagger.GhOpts{
+		Version: m.GhCliVersion,
+	}).Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
 		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
 			Exclude: []string{".git"},
 		}).
@@ -82,29 +84,43 @@ func (m *HydrateOrchestrator) upsertPR(
 	}
 
 	if !prExists {
-		labelArgs := ""
+		cmd := []string{
+			"gh",
+			"pr",
+			"create",
+			"-R", m.Repo,
+			"--base", m.DeploymentBranch,
+			"--title", title,
+			"--body", body,
+			"--head", branchWithId,
+		}
 
 		// Create labels and prepare the arguments for the PR creation
 		for _, label := range labels {
-			dag.Gh(dagger.GhOpts{Token: m.GhToken}).Run(fmt.Sprintf("label create -R %s --force %s", m.Repo, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
-			labelArgs += fmt.Sprintf(" --label '%s'", label)
+			dag.Gh(dagger.GhOpts{
+				Version: m.GhCliVersion,
+				Token:   m.GhToken,
+			}).Run(
+				fmt.Sprintf("label create -R %s --force %s", m.Repo, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
+			cmd = append(cmd, "--label", label)
 		}
 
-		reviewerArgs := ""
 		for _, reviewer := range reviewers {
-			reviewerArgs += fmt.Sprintf(" --reviewer '%s'", reviewer)
+			cmd = append(cmd, "--reviewer", reviewer)
 		}
 
 		// Create a PR for the updated deployment
-		_, err := dag.Gh().Run(fmt.Sprintf(
-			"pr create -R '%s' --base '%s' --title '%s' --body '%s' --head %s %s %s",
-			m.Repo, m.DeploymentBranch, title, body, branchWithId, labelArgs, reviewerArgs,
-		),
-			dagger.GhRunOpts{
-				DisableCache: true,
-				Token:        m.GhToken,
-			},
-		).Sync(ctx)
+		_, err := dag.Gh().Container(dagger.GhContainerOpts{
+			Version: m.GhCliVersion,
+			Token:   m.GhToken,
+		}).
+			WithEnvVariable(
+				"CACHE_BUSTER",
+				time.Now().String(),
+			).
+			WithDirectory(contentsDirPath, contents).
+			WithWorkdir(contentsDirPath).
+			WithExec(cmd).Sync(ctx)
 
 		if err != nil {
 			return err
@@ -151,7 +167,12 @@ func (m *HydrateOrchestrator) getRepoPrs(ctx context.Context) ([]Pr, error) {
 		"-R", m.Repo},
 		" ")
 
-	content, err := dag.Gh().Run(command, dagger.GhRunOpts{DisableCache: true, Token: m.GhToken}).Stdout(ctx)
+	content, err := dag.Gh().Run(command,
+		dagger.GhRunOpts{
+			Version:      m.GhCliVersion,
+			DisableCache: true,
+			Token:        m.GhToken}).
+		Stdout(ctx)
 
 	if err != nil {
 
@@ -176,7 +197,8 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 ) {
 	gitDirPath := "/git_dir"
 	_, err := dag.Gh().Container(dagger.GhContainerOpts{
-		Token: m.GhToken,
+		Token:   m.GhToken,
+		Version: m.GhCliVersion,
 	}).
 		WithDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).

@@ -17,7 +17,13 @@ releases:
     {{- if hasKey .StateValues "hooks" }}
     hooks: {{.StateValues.hooks | toYaml | nindent 6 -}}
     {{- end }}
-
+    namespace:  
+      {{- if hasKey .StateValues "namespace" -}}
+      {{.StateValues.namespace | quote | indent 1}}
+      {{- else -}}
+      {{- $nmspc := printf "%s" .StateValues.app -}}
+      {{- $nmspc | quote | indent 1 -}}
+      {{- end }}
     
     jsonPatches:
     {{- if hasKey .StateValues "patches" }}

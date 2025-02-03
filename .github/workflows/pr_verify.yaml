@@ -22,7 +22,7 @@ jobs:
 
     - name: Install Dagger CLI
       run: |
-        curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=0.15.2 sh
+        curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=0.15.3 sh
         sudo mv bin/dagger /usr/local/bin/
 
     - name: Run Unit Tests

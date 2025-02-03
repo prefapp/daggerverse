@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.5.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.4.1...hydrate-orchestrator-v1.5.0) (2025-02-03)
+
+
+### Features
+
+* set fixed version gh cli ([#103](https://github.com/prefapp/daggerverse/issues/103)) ([ed7a364](https://github.com/prefapp/daggerverse/commit/ed7a3645d6aa7e97c57952a10aa52d787b77782d))
+
+## [1.4.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.4.0...hydrate-orchestrator-v1.4.1) (2025-01-31)
+
+
+### Bug Fixes
+
+* add gh pr create subcommand ([22cc968](https://github.com/prefapp/daggerverse/commit/22cc9682cc007dad972f9c5e1be374bf7c0ece1a))
+* Bug with cmd args handling in pr creation ([30763f0](https://github.com/prefapp/daggerverse/commit/30763f0142320cf24262446751dad04fe7843ec2))
+* mount repo dir when using gh pr ([2beedcb](https://github.com/prefapp/daggerverse/commit/2beedcb6bcec353eea63592f95fcdd9721b98817))
+* update hydrate dependency ([145887c](https://github.com/prefapp/daggerverse/commit/145887c63ac0e559a9a9e400eab4b08ff4f7ccf8))
+
+## [1.4.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.3.0...hydrate-orchestrator-v1.4.0) (2025-01-29)
+
+
+### Features
+
+* update hydrate-kubernetes ([#99](https://github.com/prefapp/daggerverse/issues/99)) ([ce078c7](https://github.com/prefapp/daggerverse/commit/ce078c7bf250585c3c7593680fd4c41867536e6a))
+
 ## [1.3.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.2.0...hydrate-orchestrator-v1.3.0) (2025-01-24)
 
 

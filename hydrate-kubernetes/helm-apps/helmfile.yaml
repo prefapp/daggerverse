@@ -43,5 +43,9 @@ releases:
     {{- end }}
 
     {{- if hasKey .StateValues "set" }}
-    set: {{ .StateValues.set | toYaml | nindent 6 }}
+    set:
+      {{- range .StateValues.set }}
+      - name: {{.name}}
+        value: {{ tpl .value $}}
+      {{- end }}
     {{- end }}
