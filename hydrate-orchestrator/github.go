@@ -97,11 +97,12 @@ func (m *HydrateOrchestrator) upsertPR(
 
 		// Create labels and prepare the arguments for the PR creation
 		for _, label := range labels {
+			color := m.getColorForLabel(label)
 			dag.Gh(dagger.GhOpts{
 				Version: m.GhCliVersion,
 				Token:   m.GhToken,
 			}).Run(
-				fmt.Sprintf("label create -R %s --force %s", m.Repo, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
+				fmt.Sprintf("label create -R %s --force --color %s %s", m.Repo, color, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
 			cmd = append(cmd, "--label", label)
 		}
 
@@ -218,5 +219,24 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 
 	if err != nil {
 		panic(err)
+	}
+}
+
+func (m *HydrateOrchestrator) getColorForLabel(label string) string {
+	switch {
+	case strings.Contains(label, "app/"): // It is currently redundant but may be useful in the future.
+		return "AC1D1C"
+	case strings.Contains(label, "tenant/"):
+		return "234099"
+	case strings.Contains(label, "env/"):
+		return "33810B"
+	case strings.Contains(label, "service/"): // It is currently redundant but may be useful in the future.
+		return "F1C232"
+	case strings.Contains(label, "cluster/"):
+		return "AC1CAA"
+	case strings.Contains(label, "type/"):
+		return "6C3B2A"
+	default:
+		return "7E7C7A"
 	}
 }
