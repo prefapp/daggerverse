@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"dagger/hydrate-orchestrator/internal/dagger"
+	"dagger/firestartr-config/internal/dagger"
 	"fmt"
 
 	"gopkg.in/yaml.v3"
