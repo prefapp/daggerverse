@@ -39,10 +39,10 @@ func New(
 	// GitHub token
 	// +required
 	ghToken *dagger.Secret,
-	// Application name
+	// State repository name <owner>/<repo>
 	// +optional
 	// +default=""
-	app string,
+	stateRepo string,
 	// State values directory (e.g. state-app-<app>#main)
 	// +required
 	valuesStateDir *dagger.Directory,
@@ -70,10 +70,12 @@ func New(
 	ghCliVersion string,
 
 ) *HydrateOrchestrator {
+	appData := getAppFromStateRepo(ctx, dotFirestartr, stateRepo)
+
 	return &HydrateOrchestrator{
 		Repo:             repo,
 		GhToken:          ghToken,
-		App:              app,
+		App:              appData.name,
 		ValuesStateDir:   valuesStateDir,
 		WetStateDir:      wetStateDir,
 		DeploymentBranch: deploymentBranch,
