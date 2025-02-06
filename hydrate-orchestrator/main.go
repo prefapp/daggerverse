@@ -39,10 +39,6 @@ func New(
 	// GitHub token
 	// +required
 	ghToken *dagger.Secret,
-	// State repository name <owner>/<repo>
-	// +optional
-	// +default=""
-	stateRepo string,
 	// State values directory (e.g. state-app-<app>#main)
 	// +required
 	valuesStateDir *dagger.Directory,
@@ -84,7 +80,7 @@ func New(
 			panic(err)
 		}
 
-		if appStateRepo == stateRepo {
+		if appStateRepo == repo {
 			appName, _ = app.Name(ctx)
 		}
 	}
