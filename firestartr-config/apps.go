@@ -9,17 +9,20 @@ import (
 )
 
 type FirestartrApp struct {
-	Name      string    `yaml:"name"`
-	StateRepo string    `yaml:"state_repo"`
-	Services  []Service `yaml:"image_types"`
+	Name      string              `yaml:"name"`
+	StateRepo string              `yaml:"state_repo"`
+	Services  []FirestartrService `yaml:"image_types"`
 }
 
-type Service struct {
+type FirestartrService struct {
 	Repo         string   `yaml:"repo"`
 	ServiceNames []string `yaml:"service_names"`
 }
 
-func loadApps(ctx context.Context, firestartrDir *dagger.Directory) ([]FirestartrApp, error) {
+func loadApps(
+	ctx context.Context,
+	firestartrDir *dagger.Directory,
+) ([]FirestartrApp, error) {
 	applications := []FirestartrApp{}
 
 	for _, ext := range []string{".yaml", ".yml"} {
@@ -65,7 +68,6 @@ func getAppFromStateRepo(
 		if app.StateRepo == stateRepo {
 			return &app, nil
 		}
-
 	}
 
 	return nil, fmt.Errorf("No app found for state repo %s", stateRepo)
