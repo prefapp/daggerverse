@@ -272,7 +272,7 @@ func (m *HydrateOrchestrator) getColorForLabel(label string) string {
 
 func (m *HydrateOrchestrator) MergePullRequest(ctx context.Context, prLink string) error {
 
-	command := strings.Join([]string{"pr", "merge", prLink}, " ")
+	command := strings.Join([]string{"pr", "merge", prLink, "--merge"}, " ")
 
 	_, err := dag.Gh().Run(command, dagger.GhRunOpts{
 		Version:      m.GhCliVersion,
