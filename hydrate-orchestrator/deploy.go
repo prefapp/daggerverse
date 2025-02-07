@@ -160,6 +160,12 @@ Created by @%s from %s within commit [%s](%s)
 
 	if m.AutomergeFileExists(ctx, globPattern) {
 
+		if prLink == "" {
+
+			panic("PR link is empty, cannot merge PR")
+
+		}
+
 		m.MergePullRequest(ctx, prLink)
 
 	}
