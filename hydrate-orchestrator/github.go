@@ -281,12 +281,11 @@ func (m *HydrateOrchestrator) MergePullRequest(ctx context.Context, prLink strin
 		DisableCache: true,
 	}).Sync(ctx)
 
-	log.Printf("PR %s merged successfully", prLink)
-
 	if err != nil {
 		return err
 	}
 
-	return nil
+	log.Printf("PR %s merged successfully", prLink)
 
+	return nil
 }
