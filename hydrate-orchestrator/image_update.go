@@ -93,6 +93,8 @@ func (m *HydrateOrchestrator) RunDispatch(
 
 		if m.AutomergeFileExists(ctx, globPattern) {
 
+			fmt.Printf("Automerge file found, merging PR %s\n", prLink)
+
 			if prLink == "" {
 
 				panic("PR link is empty, cannot merge PR")
@@ -106,6 +108,10 @@ func (m *HydrateOrchestrator) RunDispatch(
 				panic(err)
 
 			}
+
+		} else {
+
+			fmt.Println("Automerge file does not exist, skipping automerge")
 
 		}
 
