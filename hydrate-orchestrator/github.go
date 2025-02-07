@@ -162,7 +162,7 @@ func (m *HydrateOrchestrator) checkPrExists(ctx context.Context, branchName stri
 func (m *HydrateOrchestrator) AutomergeFileExists(ctx context.Context, globPattern string) bool {
 	fmt.Println("Glob pattern")
 	fmt.Println(globPattern)
-	entries, err := m.ValuesStateDir.Glob(ctx, globPattern)
+	entries, err := m.ValuesStateDir.Glob(ctx, globPattern+"/*")
 
 	if err != nil {
 
