@@ -33,8 +33,6 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 
 	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, globPattern)
 
-	prLink := ""
-
 	for _, kdep := range deployments.KubernetesDeployments {
 
 		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
@@ -71,7 +69,7 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		prLink, err = m.upsertPR(
+		_, err = m.upsertPR(
 			ctx,
 			id,
 			branchName,
@@ -131,7 +129,7 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		prLink, err = m.upsertPR(
+		_, err = m.upsertPR(
 			ctx,
 			id,
 			branchName,
@@ -155,18 +153,6 @@ Created by @%s from %s within commit [%s](%s)
 				"Success",
 			)
 		}
-
-	}
-
-	if m.AutomergeFileExists(ctx, globPattern) {
-
-		if prLink == "" {
-
-			panic("PR link is empty, cannot merge PR")
-
-		}
-
-		m.MergePullRequest(ctx, prLink)
 
 	}
 
