@@ -71,7 +71,8 @@ func (m *HydrateOrchestrator) RunDispatch(
 %s
 `, repositoryCaller, repoURL, kdep.String(false))
 
-		globPattern := fmt.Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
+		globPattern := fmt.
+			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
 
 		prLink, err := m.upsertPR(
 			ctx,
