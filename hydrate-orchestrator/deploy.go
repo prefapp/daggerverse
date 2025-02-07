@@ -27,13 +27,13 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 
 	branchInfo := m.getBranchInfo(ctx)
 
-
 	summary := &DeploymentSummary{
 		Items: []DeploymentSummaryRow{},
 	}
 
 	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, globPattern)
 
+	prLink := ""
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
@@ -71,7 +71,7 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		err = m.upsertPR(
+		prLink, err = m.upsertPR(
 			ctx,
 			id,
 			branchName,
@@ -131,7 +131,7 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		err = m.upsertPR(
+		prLink, err = m.upsertPR(
 			ctx,
 			id,
 			branchName,
@@ -155,6 +155,12 @@ Created by @%s from %s within commit [%s](%s)
 				"Success",
 			)
 		}
+
+	}
+
+	if m.AutomergeFileExists(ctx, globPattern) {
+
+		m.MergePullRequest(ctx, prLink)
 
 	}
 
@@ -263,7 +269,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 	}
 
 	result := &Deployments{
-		KubernetesDeployments: []KubernetesAppDeployment{},
+		KubernetesDeployments:    []KubernetesAppDeployment{},
 		KubernetesSysDeployments: []KubernetesSysDeployment{},
 	}
 
