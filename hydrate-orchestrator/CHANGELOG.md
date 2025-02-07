@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.2](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.5.1...hydrate-orchestrator-v1.5.2) (2025-02-07)
+
+
+### Bug Fixes
+
+* add color to labels ([#110](https://github.com/prefapp/daggerverse/issues/110)) ([bf3b262](https://github.com/prefapp/daggerverse/commit/bf3b262c38c0ea2360ae8ee5556493b329e7deb2))
+* automerge [hydrate-orchestrator] ([#114](https://github.com/prefapp/daggerverse/issues/114)) ([3f653f5](https://github.com/prefapp/daggerverse/commit/3f653f55bf21e41692f3de59e536f7d1536f3b0a))
+
 ## [1.5.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.5.0...hydrate-orchestrator-v1.5.1) (2025-02-03)
 
 
