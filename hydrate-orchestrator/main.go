@@ -39,10 +39,6 @@ func New(
 	// GitHub token
 	// +required
 	ghToken *dagger.Secret,
-	// Application name
-	// +optional
-	// +default=""
-	app string,
 	// State values directory (e.g. state-app-<app>#main)
 	// +required
 	valuesStateDir *dagger.Directory,
@@ -70,10 +66,29 @@ func New(
 	ghCliVersion string,
 
 ) *HydrateOrchestrator {
+	appName := ""
+	appData, err := dag.FirestartrConfig(dotFirestartr).Apps(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, app := range appData {
+		appStateRepo, asrErr := app.StateRepo(ctx)
+
+		if asrErr != nil {
+			panic(err)
+		}
+
+		if appStateRepo == repo {
+			appName, _ = app.Name(ctx)
+		}
+	}
+
 	return &HydrateOrchestrator{
 		Repo:             repo,
 		GhToken:          ghToken,
-		App:              app,
+		App:              appName,
 		ValuesStateDir:   valuesStateDir,
 		WetStateDir:      wetStateDir,
 		DeploymentBranch: deploymentBranch,
