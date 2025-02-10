@@ -37,6 +37,8 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 
 		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
 
+		fmt.Printf(fmt.Sprintf("🍄 Processing deployment: %s\n", kdep.DeploymentPath))
+
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
