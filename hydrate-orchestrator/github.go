@@ -25,7 +25,7 @@ func (m *HydrateOrchestrator) upsertPR(
 	ctx context.Context,
 	// Branch ID
 	// +required
-	branchId int,
+	branchId string,
 	// Updated deployment branch name
 	// +required
 	newBranchName string,
@@ -50,16 +50,20 @@ func (m *HydrateOrchestrator) upsertPR(
 
 ) (string, error) {
 
-	prExists, err := m.checkPrExists(ctx, newBranchName, branchId)
-
-	if err != nil {
-		return "", err
-	}
-
 	branchWithId := fmt.Sprintf("%d-%s", branchId, newBranchName)
 
-	if !prExists {
+	prExists, err := m.prExists(ctx, branchWithId)
+
+	if err != nil {
+
+		return "", err
+
+	}
+
+	if prExists == nil {
+
 		m.createRemoteBranch(ctx, contents, branchWithId)
+
 	}
 
 	contentsDirPath := "/contents"
@@ -84,7 +88,7 @@ func (m *HydrateOrchestrator) upsertPR(
 		return "", err
 	}
 
-	if !prExists {
+	if prExists == nil {
 		cmd := []string{
 			"gh",
 			"pr",
@@ -130,33 +134,52 @@ func (m *HydrateOrchestrator) upsertPR(
 
 		return stdout, nil
 
+	} else {
+
+		fmt.Printf("Pr already exists for branch %s\n, updating the PR", newBranchName)
+
+		_, err := dag.Gh().Run(
+			fmt.Sprintf("pr edit %d --title %s --body %s --base %s", prExists.Url, title, body, m.DeploymentBranch),
+			dagger.GhRunOpts{
+				Version:      m.GhCliVersion,
+				Token:        m.GhToken,
+				DisableCache: true,
+			},
+		).Stdout(ctx)
+
+		if err != nil {
+
+			return "", err
+		}
+
+		return prExists.Url, nil
+
 	}
 
-	return "", fmt.Errorf("A problem occurred while creating the PR")
 }
 
-func (m *HydrateOrchestrator) checkPrExists(ctx context.Context, branchName string, branchId int) (bool, error) {
+func (m *HydrateOrchestrator) prExists(ctx context.Context, branchName string) (*Pr, error) {
 
 	// branch name depends on the deployment kind, the format is <depKindId>-<depKind>-<cluster>-<tenant>-<env>
-
+	//                                                           0-kubernetes-cluster-tenant-env
+	//														     code-repo-kubernetes-cluster-tenant-env
 	prs, err := m.getRepoPrs(ctx)
 
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	for _, pr := range prs {
-		if strings.HasSuffix(pr.HeadRefName, branchName) &&
-			!strings.HasPrefix(pr.HeadRefName, fmt.Sprintf("%d-", branchId)) &&
-			strings.ToLower(pr.State) == "open" {
-			return false, fmt.Errorf("Deployment pending (%s) with branch name %s", branchName, pr.HeadRefName)
-		} else if strings.HasSuffix(pr.HeadRefName, branchName) &&
-			strings.ToLower(pr.State) == "open" {
-			return true, nil
+
+		if pr.HeadRefName == branchName && strings.ToLower(pr.State) == "open" {
+
+			return &pr, nil
+
 		}
 
 	}
-	return false, nil
+
+	return nil, nil
 }
 
 func (m *HydrateOrchestrator) AutomergeFileExists(ctx context.Context, globPattern string) bool {
@@ -243,6 +266,7 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 		).WithExec([]string{
 		"git",
 		"push",
+		"--force",
 		"origin",
 		newBranch,
 	}).Sync(ctx)

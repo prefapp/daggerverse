@@ -31,7 +31,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 	ctx context.Context,
 	// Workflow run id
 	// +required
-	id int,
+	id string,
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
@@ -77,7 +77,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 
 		prLink, err := m.upsertPR(
 			ctx,
-			id,
+			repositoryCaller,
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
