@@ -50,7 +50,7 @@ func (m *HydrateOrchestrator) upsertPR(
 
 ) (string, error) {
 
-	branchWithId := fmt.Sprintf("%d-%s", branchId, newBranchName)
+	branchWithId := fmt.Sprintf("%s-%s", branchId, newBranchName)
 
 	prExists, err := m.prExists(ctx, branchWithId)
 
@@ -122,8 +122,7 @@ func (m *HydrateOrchestrator) upsertPR(
 		}).
 			WithEnvVariable(
 				"CACHE_BUSTER",
-				time.Now().String(),
-			).WithDirectory(contentsDirPath, contents).
+				time.Now().String()).WithDirectory(contentsDirPath, contents).
 			WithWorkdir(contentsDirPath).
 			WithExec(cmd).
 			Stdout(ctx)
@@ -139,7 +138,7 @@ func (m *HydrateOrchestrator) upsertPR(
 		fmt.Printf("Pr already exists for branch %s\n, updating the PR", newBranchName)
 
 		_, err := dag.Gh().Run(
-			fmt.Sprintf("pr edit %d --title %s --body %s --base %s", prExists.Url, title, body, m.DeploymentBranch),
+			fmt.Sprintf("pr edit %s--title %s --body %s --base %s", prExists.Url, title, body, m.DeploymentBranch),
 			dagger.GhRunOpts{
 				Version:      m.GhCliVersion,
 				Token:        m.GhToken,
