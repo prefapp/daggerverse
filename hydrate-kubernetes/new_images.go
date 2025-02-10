@@ -22,6 +22,12 @@ func (m *HydrateKubernetes) BuildNewImages(
 
 	mapNewImages := make(map[string]map[string]string)
 
+	if len(imageMatrix.Images) > 1 {
+
+		panic("Only one image per service is allowed")
+
+	}
+
 	for _, imageData := range imageMatrix.Images {
 
 		for _, serviceName := range imageData.ServiceNameList {
