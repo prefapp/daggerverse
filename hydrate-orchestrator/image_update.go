@@ -43,6 +43,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 	deployments := m.processImagesMatrix(newImagesMatrix)
 
 	repositoryCaller, repoURL := m.getRepositoryCaller(newImagesMatrix)
+
 	reviewers := m.getReviewers(newImagesMatrix)
 
 	for _, kdep := range deployments.KubernetesDeployments {
@@ -59,7 +60,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 		).Render(ctx, m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
 			Tenant:          kdep.Tenant,
 			Env:             kdep.Environment,
-			NewImagesMatrix: newImagesMatrix,
+			NewImagesMatrix: kdep.ImagesMatrix,
 		})
 
 		if err != nil {
@@ -144,13 +145,28 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 			image.Env,
 		)
 
+		uniqueImage := []ImageData{image}
+
+		uniqueImageMatrix := ImageMatrix{
+			Images: uniqueImage,
+		}
+
+		jsonUniqueImage, err := json.Marshal(uniqueImageMatrix)
+
+		if err != nil {
+
+			panic(err)
+
+		}
+
 		kdep := &KubernetesAppDeployment{
 			Deployment: Deployment{
 				DeploymentPath: deploymentPath,
 			},
-			Cluster:     image.Platform,
-			Tenant:      image.Tenant,
-			Environment: image.Env,
+			Cluster:      image.Platform,
+			Tenant:       image.Tenant,
+			Environment:  image.Env,
+			ImagesMatrix: string(jsonUniqueImage),
 		}
 
 		result.addDeployment(kdep)

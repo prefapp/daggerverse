@@ -54,9 +54,10 @@ type Deployment struct {
 
 type KubernetesAppDeployment struct {
 	Deployment
-	Cluster     string
-	Tenant      string
-	Environment string
+	Cluster      string
+	Tenant       string
+	Environment  string
+	ImagesMatrix string
 }
 
 // Check if two KubernetesAppDeployment are equal
