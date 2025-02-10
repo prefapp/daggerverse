@@ -34,6 +34,6 @@ jobs:
 
           echo $path_released | jq -cr '.[]' | while read release; do
             major=$(echo $releases_info | jq -cr ".\"$release--major\"")
-            git tag -fa "v$major"  -m "Update major version tag"
-            git push origin "v$major" --force
+            git tag -fa "$release-v$major"  -m "Update major version tag"
+            git push origin "$release-v$major" --force
           done
