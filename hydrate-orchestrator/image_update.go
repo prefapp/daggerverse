@@ -147,7 +147,11 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 
 		uniqueImage := []ImageData{image}
 
-		jsonUniqueImage, err := json.Marshal(uniqueImage)
+		uniqueImageMatrix := ImageMatrix{
+			Images: uniqueImage,
+		}
+
+		jsonUniqueImage, err := json.Marshal(uniqueImageMatrix)
 
 		if err != nil {
 
