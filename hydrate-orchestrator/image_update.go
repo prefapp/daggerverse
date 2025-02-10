@@ -144,13 +144,24 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 			image.Env,
 		)
 
+		uniqueImage := []ImageData{image}
+
+		jsonUniqueImage, err := json.Marshal(uniqueImage)
+
+		if err != nil {
+
+			panic(err)
+
+		}
+
 		kdep := &KubernetesAppDeployment{
 			Deployment: Deployment{
 				DeploymentPath: deploymentPath,
 			},
-			Cluster:     image.Platform,
-			Tenant:      image.Tenant,
-			Environment: image.Env,
+			Cluster:      image.Platform,
+			Tenant:       image.Tenant,
+			Environment:  image.Env,
+			ImagesMatrix: string(jsonUniqueImage),
 		}
 
 		result.addDeployment(kdep)

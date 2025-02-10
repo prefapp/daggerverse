@@ -45,8 +45,9 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 				HelmConfigDir: m.AuthDir,
 			},
 		).Render(ctx, m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
-			Tenant: kdep.Tenant,
-			Env:    kdep.Environment,
+			Tenant:          kdep.Tenant,
+			Env:             kdep.Environment,
+			NewImagesMatrix: kdep.ImagesMatrix,
 		})
 
 		if err != nil {
