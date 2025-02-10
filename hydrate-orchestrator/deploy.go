@@ -37,8 +37,6 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 
 		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
 
-		fmt.Printf(fmt.Sprintf("🍄 Processing deployment: %s\n", kdep.DeploymentPath))
-
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
@@ -47,9 +45,8 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 				HelmConfigDir: m.AuthDir,
 			},
 		).Render(ctx, m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
-			Tenant:          kdep.Tenant,
-			Env:             kdep.Environment,
-			NewImagesMatrix: kdep.ImagesMatrix,
+			Tenant: kdep.Tenant,
+			Env:    kdep.Environment,
 		})
 
 		if err != nil {
