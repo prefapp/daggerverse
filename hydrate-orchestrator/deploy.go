@@ -235,6 +235,12 @@ func (m *HydrateOrchestrator) processDeploymentGlob(
 
 	affected_files, err := valuesStateDir.Glob(ctx, globPattern)
 
+	if len(affected_files) == 0 {
+		panic(
+			fmt.Sprintf("error: your input glob pattern %s did not match any files", globPattern),
+		)
+	}
+
 	if err != nil {
 		panic(err)
 	}
