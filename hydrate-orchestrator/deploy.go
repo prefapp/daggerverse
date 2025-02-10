@@ -27,13 +27,11 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 
 	branchInfo := m.getBranchInfo(ctx)
 
-
 	summary := &DeploymentSummary{
 		Items: []DeploymentSummaryRow{},
 	}
 
 	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, globPattern)
-
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
@@ -71,7 +69,7 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		err = m.upsertPR(
+		_, err = m.upsertPR(
 			ctx,
 			id,
 			branchName,
@@ -131,7 +129,7 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		err = m.upsertPR(
+		_, err = m.upsertPR(
 			ctx,
 			id,
 			branchName,
@@ -263,7 +261,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 	}
 
 	result := &Deployments{
-		KubernetesDeployments: []KubernetesAppDeployment{},
+		KubernetesDeployments:    []KubernetesAppDeployment{},
 		KubernetesSysDeployments: []KubernetesSysDeployment{},
 	}
 

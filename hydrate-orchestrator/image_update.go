@@ -71,7 +71,10 @@ func (m *HydrateOrchestrator) RunDispatch(
 %s
 `, repositoryCaller, repoURL, kdep.String(false))
 
-		m.upsertPR(
+		globPattern := fmt.
+			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
+
+		prLink, err := m.upsertPR(
 			ctx,
 			id,
 			branchName,
@@ -82,6 +85,36 @@ func (m *HydrateOrchestrator) RunDispatch(
 			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 			reviewers,
 		)
+
+		if err != nil {
+
+			panic(err)
+		}
+
+		if m.AutomergeFileExists(ctx, globPattern) {
+
+			fmt.Printf("Automerge file found, merging PR %s\n", prLink)
+
+			if prLink == "" {
+
+				panic("PR link is empty, cannot merge PR")
+
+			}
+
+			err := m.MergePullRequest(ctx, prLink)
+
+			if err != nil {
+
+				panic(err)
+
+			}
+
+		} else {
+
+			fmt.Println("Automerge file does not exist, skipping automerge")
+
+		}
+
 	}
 
 }

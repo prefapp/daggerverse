@@ -5,6 +5,7 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 )
@@ -47,12 +48,12 @@ func (m *HydrateOrchestrator) upsertPR(
 	// +optional
 	reviewers []string,
 
-) error {
+) (string, error) {
 
 	prExists, err := m.checkPrExists(ctx, newBranchName, branchId)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	branchWithId := fmt.Sprintf("%d-%s", branchId, newBranchName)
@@ -80,7 +81,7 @@ func (m *HydrateOrchestrator) upsertPR(
 		}).Sync(ctx)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if !prExists {
@@ -111,25 +112,27 @@ func (m *HydrateOrchestrator) upsertPR(
 		}
 
 		// Create a PR for the updated deployment
-		_, err := dag.Gh().Container(dagger.GhContainerOpts{
+		stdout, err := dag.Gh().Container(dagger.GhContainerOpts{
 			Version: m.GhCliVersion,
 			Token:   m.GhToken,
 		}).
 			WithEnvVariable(
 				"CACHE_BUSTER",
 				time.Now().String(),
-			).
-			WithDirectory(contentsDirPath, contents).
+			).WithDirectory(contentsDirPath, contents).
 			WithWorkdir(contentsDirPath).
-			WithExec(cmd).Sync(ctx)
+			WithExec(cmd).
+			Stdout(ctx)
 
 		if err != nil {
-			return err
+			return "", err
 		}
+
+		return stdout, nil
 
 	}
 
-	return nil
+	return "", fmt.Errorf("A problem occurred while creating the PR")
 }
 
 func (m *HydrateOrchestrator) checkPrExists(ctx context.Context, branchName string, branchId int) (bool, error) {
@@ -154,6 +157,33 @@ func (m *HydrateOrchestrator) checkPrExists(ctx context.Context, branchName stri
 
 	}
 	return false, nil
+}
+
+func (m *HydrateOrchestrator) AutomergeFileExists(ctx context.Context, globPattern string) bool {
+
+	entries, err := m.ValuesStateDir.Glob(ctx, globPattern+"/*")
+
+	if err != nil {
+
+		panic(err)
+	}
+
+	automergeFileFound := false
+
+	for _, entry := range entries {
+
+		if fmt.Sprintf("%s/%s", globPattern, "AUTO_MERGE") == entry {
+
+			fmt.Printf("Automerge file found: %s\n", entry)
+
+			automergeFileFound = true
+
+			break
+		}
+	}
+
+	return automergeFileFound
+
 }
 
 func (m *HydrateOrchestrator) getRepoPrs(ctx context.Context) ([]Pr, error) {
@@ -239,4 +269,23 @@ func (m *HydrateOrchestrator) getColorForLabel(label string) string {
 	default:
 		return "7E7C7A"
 	}
+}
+
+func (m *HydrateOrchestrator) MergePullRequest(ctx context.Context, prLink string) error {
+
+	command := strings.Join([]string{"pr", "merge", "--merge", prLink}, " ")
+
+	_, err := dag.Gh().Run(command, dagger.GhRunOpts{
+		Version:      m.GhCliVersion,
+		Token:        m.GhToken,
+		DisableCache: true,
+	}).Sync(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("PR %s merged successfully", prLink)
+
+	return nil
 }
