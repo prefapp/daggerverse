@@ -71,7 +71,6 @@ Created by @%s from %s within commit [%s](%s)
 
 		_, err = m.upsertPR(
 			ctx,
-			id,
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
@@ -131,7 +130,6 @@ Created by @%s from %s within commit [%s](%s)
 
 		_, err = m.upsertPR(
 			ctx,
-			id,
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
