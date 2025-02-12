@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.0.0...hydrate-orchestrator-v2.0.1) (2025-02-12)
+
+
+### Bug Fixes
+
+* split-dirs ([#124](https://github.com/prefapp/daggerverse/issues/124)) ([a397adf](https://github.com/prefapp/daggerverse/commit/a397adf63486aa1ee144856de7a1cb7387e3f3c2))
+
 ## [2.0.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.5.1...hydrate-orchestrator-v2.0.0) (2025-02-10)
 
 
