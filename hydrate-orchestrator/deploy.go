@@ -12,10 +12,6 @@ import (
 // Hydrate deployments based on the updated deployments
 func (m *HydrateOrchestrator) GenerateDeployment(
 	ctx context.Context,
-	// Identifier that triggered the render, this could be a PR number or a workflow run id
-	// +optional
-	// +default="0"
-	id string,
 	// Author of the PR
 	// +optional
 	// +default="author"

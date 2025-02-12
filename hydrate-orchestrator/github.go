@@ -118,30 +118,6 @@ func (m *HydrateOrchestrator) upsertPR(
 
 }
 
-func (m *HydrateOrchestrator) prExists(ctx context.Context, branchName string) (*Pr, error) {
-
-	// branch name depends on the deployment kind, the format is <depKindId>-<depKind>-<cluster>-<tenant>-<env>
-	//                                                           0-kubernetes-cluster-tenant-env
-	//														     code-repo-kubernetes-cluster-tenant-env
-	prs, err := m.getRepoPrs(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, pr := range prs {
-
-		if pr.HeadRefName == branchName && strings.ToLower(pr.State) == "open" {
-
-			return &pr, nil
-
-		}
-
-	}
-
-	return nil, nil
-}
-
 func (m *HydrateOrchestrator) AutomergeFileExists(ctx context.Context, globPattern string) bool {
 
 	entries, err := m.ValuesStateDir.Glob(ctx, globPattern+"/*")
