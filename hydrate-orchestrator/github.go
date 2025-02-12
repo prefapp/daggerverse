@@ -23,9 +23,6 @@ Create or update a PR with the updated contents
 
 func (m *HydrateOrchestrator) upsertPR(
 	ctx context.Context,
-	// Branch ID
-	// +required
-	branchId string,
 	// Updated deployment branch name
 	// +required
 	newBranchName string,
@@ -52,24 +49,10 @@ func (m *HydrateOrchestrator) upsertPR(
 
 	branchWithId := newBranchName
 
-	if branchId != "" {
-
-		branchWithId = fmt.Sprintf("%s-%s", branchId, newBranchName)
-
-	}
-
-	prExists, err := m.prExists(ctx, branchWithId)
-
-	if err != nil {
-
-		return "", err
-
-	}
-
 	m.upsertRemoteBranch(ctx, contents, branchWithId)
 
 	contentsDirPath := "/contents"
-	_, err = dag.Gh(dagger.GhOpts{
+	_, err := dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
 		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
@@ -90,54 +73,48 @@ func (m *HydrateOrchestrator) upsertPR(
 		return "", err
 	}
 
-	if prExists == nil {
-		cmd := []string{
-			"gh",
-			"pr",
-			"create",
-			"-R", m.Repo,
-			"--base", m.DeploymentBranch,
-			"--title", title,
-			"--body", body,
-			"--head", branchWithId,
-		}
-
-		// Create labels and prepare the arguments for the PR creation
-		for _, label := range labels {
-			color := m.getColorForLabel(label)
-			dag.Gh(dagger.GhOpts{
-				Version: m.GhCliVersion,
-				Token:   m.GhToken,
-			}).Run(
-				fmt.Sprintf("label create -R %s --force --color %s %s", m.Repo, color, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
-			cmd = append(cmd, "--label", label)
-		}
-
-		for _, reviewer := range reviewers {
-			cmd = append(cmd, "--reviewer", reviewer)
-		}
-
-		// Create a PR for the updated deployment
-		stdout, err := dag.Gh().Container(dagger.GhContainerOpts{
-			Version: m.GhCliVersion,
-			Token:   m.GhToken,
-		}).
-			WithEnvVariable(
-				"CACHE_BUSTER",
-				time.Now().String()).WithDirectory(contentsDirPath, contents).
-			WithWorkdir(contentsDirPath).
-			WithExec(cmd).
-			Stdout(ctx)
-
-		if err != nil {
-			return "", err
-		}
-
-		return stdout, nil
-
+	cmd := []string{
+		"gh",
+		"pr",
+		"create",
+		"-R", m.Repo,
+		"--base", m.DeploymentBranch,
+		"--title", title,
+		"--body", body,
+		"--head", branchWithId,
 	}
 
-	return prExists.Url, nil
+	for _, label := range labels {
+		color := m.getColorForLabel(label)
+		dag.Gh(dagger.GhOpts{
+			Version: m.GhCliVersion,
+			Token:   m.GhToken,
+		}).Run(
+			fmt.Sprintf("label create -R %s --force --color %s %s", m.Repo, color, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
+		cmd = append(cmd, "--label", label)
+	}
+
+	for _, reviewer := range reviewers {
+		cmd = append(cmd, "--reviewer", reviewer)
+	}
+
+	// Create a PR for the updated deployment
+	stdout, err := dag.Gh().Container(dagger.GhContainerOpts{
+		Version: m.GhCliVersion,
+		Token:   m.GhToken,
+	}).
+		WithEnvVariable(
+			"CACHE_BUSTER",
+			time.Now().String()).WithDirectory(contentsDirPath, contents).
+		WithWorkdir(contentsDirPath).
+		WithExec(cmd).
+		Stdout(ctx)
+
+	if err != nil {
+		return "", err
+	}
+
+	return stdout, nil
 
 }
 
