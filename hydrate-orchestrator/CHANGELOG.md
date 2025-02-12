@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.0.1...hydrate-orchestrator-v2.1.0) (2025-02-12)
+
+
+### Features
+
+* update prs automatically ([#121](https://github.com/prefapp/daggerverse/issues/121)) ([754d587](https://github.com/prefapp/daggerverse/commit/754d5875dbdf3f96949b946d3f1371edd19c4c06))
+
 ## [2.0.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.0.0...hydrate-orchestrator-v2.0.1) (2025-02-12)
 
 
