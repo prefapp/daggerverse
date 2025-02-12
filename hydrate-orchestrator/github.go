@@ -47,16 +47,29 @@ func (m *HydrateOrchestrator) upsertPR(
 
 ) (string, error) {
 
-	m.upsertRemoteBranch(ctx, contents, newBranchName)
+	prExists, err := m.prExists(ctx, newBranchName)
+
+	if err != nil {
+
+		return "", err
+
+	}
+
+	if prExists == nil {
+
+		m.createRemoteBranch(ctx, contents, newBranchName)
+
+	}
 
 	contentsDirPath := "/contents"
-	_, err := dag.Gh(dagger.GhOpts{
+	_, err = dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
-	}).Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
-		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
-			Exclude: []string{".git"},
-		}).
-		WithWorkdir(contentsDirPath).
+	}).Container(dagger.GhContainerOpts{
+		Token:   m.GhToken,
+		Plugins: []string{"prefapp/gh-commit"},
+	}).WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
+		Exclude: []string{".git"},
+	}).WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
 			"gh",
@@ -71,48 +84,54 @@ func (m *HydrateOrchestrator) upsertPR(
 		return "", err
 	}
 
-	cmd := []string{
-		"gh",
-		"pr",
-		"create",
-		"-R", m.Repo,
-		"--base", m.DeploymentBranch,
-		"--title", title,
-		"--body", body,
-		"--head", newBranchName,
-	}
+	if prExists != nil {
 
-	for _, label := range labels {
-		color := m.getColorForLabel(label)
-		dag.Gh(dagger.GhOpts{
+		cmd := []string{
+			"gh",
+			"pr",
+			"create",
+			"-R", m.Repo,
+			"--base", m.DeploymentBranch,
+			"--title", title,
+			"--body", body,
+			"--head", newBranchName,
+		}
+
+		for _, label := range labels {
+			color := m.getColorForLabel(label)
+			dag.Gh(dagger.GhOpts{
+				Version: m.GhCliVersion,
+				Token:   m.GhToken,
+			}).Run(
+				fmt.Sprintf("label create -R %s --force --color %s %s", m.Repo, color, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
+			cmd = append(cmd, "--label", label)
+		}
+
+		for _, reviewer := range reviewers {
+			cmd = append(cmd, "--reviewer", reviewer)
+		}
+
+		// Create a PR for the updated deployment
+		stdout, err := dag.Gh().Container(dagger.GhContainerOpts{
 			Version: m.GhCliVersion,
 			Token:   m.GhToken,
-		}).Run(
-			fmt.Sprintf("label create -R %s --force --color %s %s", m.Repo, color, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
-		cmd = append(cmd, "--label", label)
+		}).
+			WithEnvVariable(
+				"CACHE_BUSTER",
+				time.Now().String()).WithDirectory(contentsDirPath, contents).
+			WithWorkdir(contentsDirPath).
+			WithExec(cmd).
+			Stdout(ctx)
+
+		if err != nil {
+			return "", err
+		}
+
+		return stdout, nil
+
 	}
 
-	for _, reviewer := range reviewers {
-		cmd = append(cmd, "--reviewer", reviewer)
-	}
-
-	// Create a PR for the updated deployment
-	stdout, err := dag.Gh().Container(dagger.GhContainerOpts{
-		Version: m.GhCliVersion,
-		Token:   m.GhToken,
-	}).
-		WithEnvVariable(
-			"CACHE_BUSTER",
-			time.Now().String()).WithDirectory(contentsDirPath, contents).
-		WithWorkdir(contentsDirPath).
-		WithExec(cmd).
-		Stdout(ctx)
-
-	if err != nil {
-		return "", err
-	}
-
-	return stdout, nil
+	return prExists.Url, nil
 
 }
 
@@ -174,7 +193,7 @@ func (m *HydrateOrchestrator) getRepoPrs(ctx context.Context) ([]Pr, error) {
 	return prs, nil
 }
 
-func (m *HydrateOrchestrator) upsertRemoteBranch(
+func (m *HydrateOrchestrator) createRemoteBranch(
 	ctx context.Context,
 	// Base branch name
 	// +required
@@ -187,8 +206,7 @@ func (m *HydrateOrchestrator) upsertRemoteBranch(
 	_, err := dag.Gh().Container(dagger.GhContainerOpts{
 		Token:   m.GhToken,
 		Version: m.GhCliVersion,
-	}).
-		WithDirectory(gitDirPath, gitDir).
+	}).WithDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
@@ -246,4 +264,28 @@ func (m *HydrateOrchestrator) MergePullRequest(ctx context.Context, prLink strin
 	log.Printf("PR %s merged successfully", prLink)
 
 	return nil
+}
+
+func (m *HydrateOrchestrator) prExists(ctx context.Context, branchName string) (*Pr, error) {
+
+	// branch name depends on the deployment kind, the format is <depKindId>-<depKind>-<cluster>-<tenant>-<env>
+	//                                                           0-kubernetes-cluster-tenant-env
+	//														     code-repo-kubernetes-cluster-tenant-env
+	prs, err := m.getRepoPrs(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pr := range prs {
+
+		if pr.HeadRefName == branchName && strings.ToLower(pr.State) == "open" {
+
+			return &pr, nil
+
+		}
+
+	}
+
+	return nil, nil
 }
