@@ -148,8 +148,8 @@ func (m *HydrateOrchestrator) upsertPR(
 			"pr",
 			"edit", prExists.Url,
 			"--title", title,
-			"--body", body,
 			"--base", m.DeploymentBranch,
+			"--body", body,
 		}
 
 		fmt.Printf("Running command %s\n", cmd)
