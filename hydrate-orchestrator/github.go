@@ -47,9 +47,7 @@ func (m *HydrateOrchestrator) upsertPR(
 
 ) (string, error) {
 
-	branchWithId := newBranchName
-
-	m.upsertRemoteBranch(ctx, contents, branchWithId)
+	m.upsertRemoteBranch(ctx, contents, newBranchName)
 
 	contentsDirPath := "/contents"
 	_, err := dag.Gh(dagger.GhOpts{
@@ -64,7 +62,7 @@ func (m *HydrateOrchestrator) upsertPR(
 			"gh",
 			"commit",
 			"-R", m.Repo,
-			"-b", branchWithId,
+			"-b", newBranchName,
 			"-m", "Update deployments",
 			"--delete-path", cleanupDir,
 		}).Sync(ctx)
@@ -81,7 +79,7 @@ func (m *HydrateOrchestrator) upsertPR(
 		"--base", m.DeploymentBranch,
 		"--title", title,
 		"--body", body,
-		"--head", branchWithId,
+		"--head", newBranchName,
 	}
 
 	for _, label := range labels {
