@@ -144,7 +144,7 @@ func (m *HydrateOrchestrator) upsertPR(
 		fmt.Printf("Pr already exists for branch %s\n, updating the PR", newBranchName)
 
 		_, err := dag.Gh().Run(
-			fmt.Sprintf("pr edit %s--title %s --body %s --base %s", prExists.Url, title, body, m.DeploymentBranch),
+			fmt.Sprintf("pr edit %s --title %s --body %s --base %s", prExists.Url, title, body, m.DeploymentBranch),
 			dagger.GhRunOpts{
 				Version:      m.GhCliVersion,
 				Token:        m.GhToken,
