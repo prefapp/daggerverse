@@ -139,47 +139,9 @@ func (m *HydrateOrchestrator) upsertPR(
 
 		return stdout, nil
 
-	} else {
-
-		fmt.Printf("Pr already exists for branch %s\n, updating the PR", newBranchName)
-
-		cmd := []string{
-			"gh",
-			"pr",
-			"edit", prExists.Url,
-			"--title", title,
-			"--base", m.DeploymentBranch,
-			"--body", body,
-		}
-
-		fmt.Printf("Running command %s\n", cmd)
-
-		prEdited, err := dag.Gh().
-			Container(dagger.GhContainerOpts{
-				Version: m.GhCliVersion,
-				Token:   m.GhToken,
-			}).
-			WithEnvVariable(
-				"CACHE_BUSTER",
-				time.Now().String()).
-			WithDirectory(contentsDirPath, contents).
-			WithWorkdir(contentsDirPath).
-			WithExec(cmd).
-			Stdout(ctx)
-
-		if err != nil {
-
-			fmt.Printf("Error editing PR %s\n", err)
-
-			return "", err
-
-		}
-
-		fmt.Printf("PR edited successfully %s\n", prEdited)
-
-		return prExists.Url, nil
-
 	}
+
+	return prExists.Url, nil
 
 }
 
