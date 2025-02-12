@@ -29,15 +29,9 @@ type ImageData struct {
 
 func (m *HydrateOrchestrator) RunDispatch(
 	ctx context.Context,
-	// Workflow run id
-	// +required
-	id int,
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
-	// // Pr that triggered the render
-	// // +required
-	// workflowRun int,
 ) {
 
 	deployments := m.processImagesMatrix(newImagesMatrix)
@@ -77,7 +71,6 @@ func (m *HydrateOrchestrator) RunDispatch(
 
 		prLink, err := m.upsertPR(
 			ctx,
-			id,
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
