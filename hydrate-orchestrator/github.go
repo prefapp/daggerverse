@@ -154,18 +154,22 @@ func (m *HydrateOrchestrator) upsertPR(
 
 		fmt.Printf("Running command %s\n", cmd)
 
-		prEdited, err := dag.Gh().Container(dagger.GhContainerOpts{
-			Version: m.GhCliVersion,
-			Token:   m.GhToken,
-		}).WithEnvVariable(
-			"CACHE_BUSTER",
-			time.Now().String()).
+		prEdited, err := dag.Gh().
+			Container(dagger.GhContainerOpts{
+				Version: m.GhCliVersion,
+				Token:   m.GhToken,
+			}).
+			WithEnvVariable(
+				"CACHE_BUSTER",
+				time.Now().String()).
 			WithDirectory(contentsDirPath, contents).
 			WithWorkdir(contentsDirPath).
 			WithExec(cmd).
 			Stdout(ctx)
 
 		if err != nil {
+
+			fmt.Printf("Error editing PR %s\n", err)
 
 			return "", err
 
