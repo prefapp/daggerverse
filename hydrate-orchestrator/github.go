@@ -50,7 +50,13 @@ func (m *HydrateOrchestrator) upsertPR(
 
 ) (string, error) {
 
-	branchWithId := fmt.Sprintf("%s-%s", branchId, newBranchName)
+	branchWithId := newBranchName
+
+	if branchId != "" {
+
+		branchWithId = fmt.Sprintf("%s-%s", branchId, newBranchName)
+
+	}
 
 	prExists, err := m.prExists(ctx, branchWithId)
 

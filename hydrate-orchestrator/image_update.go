@@ -77,7 +77,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 
 		prLink, err := m.upsertPR(
 			ctx,
-			repositoryCaller,
+			"",
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
