@@ -165,11 +165,13 @@ func (m *HydrateOrchestrator) upsertPR(
 			WithExec(cmd).
 			Stdout(ctx)
 
-		fmt.Printf("PR edited successfully %s\n", prEdited)
-
 		if err != nil {
+
 			return "", err
+
 		}
+
+		fmt.Printf("PR edited successfully %s\n", prEdited)
 
 		return prExists.Url, nil
 
