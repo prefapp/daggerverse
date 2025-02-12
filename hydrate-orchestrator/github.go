@@ -66,11 +66,7 @@ func (m *HydrateOrchestrator) upsertPR(
 
 	}
 
-	if prExists == nil {
-
-		m.createRemoteBranch(ctx, contents, branchWithId)
-
-	}
+	m.upsertRemoteBranch(ctx, contents, branchWithId)
 
 	contentsDirPath := "/contents"
 	_, err = dag.Gh(dagger.GhOpts{
@@ -227,7 +223,7 @@ func (m *HydrateOrchestrator) getRepoPrs(ctx context.Context) ([]Pr, error) {
 	return prs, nil
 }
 
-func (m *HydrateOrchestrator) createRemoteBranch(
+func (m *HydrateOrchestrator) upsertRemoteBranch(
 	ctx context.Context,
 	// Base branch name
 	// +required
