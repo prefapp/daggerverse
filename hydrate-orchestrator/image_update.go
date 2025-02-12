@@ -29,15 +29,9 @@ type ImageData struct {
 
 func (m *HydrateOrchestrator) RunDispatch(
 	ctx context.Context,
-	// Workflow run id
-	// +required
-	id string,
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
-	// // Pr that triggered the render
-	// // +required
-	// workflowRun int,
 ) {
 
 	deployments := m.processImagesMatrix(newImagesMatrix)
