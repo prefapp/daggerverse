@@ -177,7 +177,9 @@ func kubernetesSysDepFromStr(deployment string) *KubernetesSysDeployment {
 
 		sysServiceName := dirs[2]
 
-		if len(dirs) == 3 && (filepath.Ext(sysServiceName) == ".yaml" || filepath.Ext(sysServiceName) == ".yml") {
+		if len(dirs) == 3 &&
+
+			(filepath.Ext(sysServiceName) == ".yaml" || filepath.Ext(sysServiceName) == ".yml") {
 
 			sysServiceName = strings.TrimSuffix(sysServiceName, filepath.Ext(sysServiceName))
 
