@@ -59,10 +59,6 @@ func (m *HydrateOrchestrator) upsertPR(
 
 		m.createRemoteBranch(ctx, contents, newBranchName)
 
-	} else {
-
-		m.updateRemoteBranch(ctx, contents, newBranchName)
-
 	}
 
 	contentsDirPath := "/contents"
