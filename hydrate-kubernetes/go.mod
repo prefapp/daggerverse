@@ -5,6 +5,7 @@ go 1.23.2
 require (
 	github.com/99designs/gqlgen v0.17.57
 	github.com/Khan/genqlient v0.7.0
+	github.com/evanphx/json-patch v0.5.2
 	github.com/vektah/gqlparser/v2 v2.5.20
 	go.opentelemetry.io/otel v1.32.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.8.0
@@ -24,6 +25,8 @@ require (
 	golang.org/x/sync v0.10.0
 	google.golang.org/grpc v1.68.0
 )
+
+require github.com/pkg/errors v0.9.1 // indirect
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
