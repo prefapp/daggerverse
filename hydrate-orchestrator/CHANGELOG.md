@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.1.0...hydrate-orchestrator-v2.1.1) (2025-02-13)
+
+
+### Bug Fixes
+
+* check remote branch exists ([#128](https://github.com/prefapp/daggerverse/issues/128)) ([6e14059](https://github.com/prefapp/daggerverse/commit/6e14059097344667ec928ea557a7d9680f08cdac))
+
 ## [2.1.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.0.1...hydrate-orchestrator-v2.1.0) (2025-02-12)
 
 
