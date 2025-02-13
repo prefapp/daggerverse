@@ -81,7 +81,7 @@ func (m *HydrateOrchestrator) upsertPR(
 
 	}
 
-	if strings.Contains(stdoutlsRemote, newBranchName) {
+	if !strings.Contains(stdoutlsRemote, newBranchName) {
 
 		log.Printf("Branch %s exists", newBranchName)
 
