@@ -55,13 +55,37 @@ func (m *HydrateOrchestrator) upsertPR(
 
 	}
 
-	if prExists == nil {
+	// check branch exists
+	contentsDirPath := "/contents"
+
+	stdoutlsRemote, err := dag.Gh(dagger.GhOpts{
+		Version: m.GhCliVersion,
+	}).Container(dagger.GhContainerOpts{
+		Token:   m.GhToken,
+		Plugins: []string{"prefapp/gh-commit"},
+	}).WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{}).
+		WithWorkdir(contentsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{
+			"git",
+			"ls-remote",
+			"origin",
+			fmt.Sprintf("refs/heads/%s", newBranchName),
+		}).
+		Stdout(ctx)
+
+	if err != nil {
+
+		return "", err
+
+	}
+
+	if strings.Contains(stdoutlsRemote, newBranchName) {
 
 		m.createRemoteBranch(ctx, contents, newBranchName)
 
 	}
 
-	contentsDirPath := "/contents"
 	_, err = dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
