@@ -209,46 +209,13 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 		WithDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{"git", "checkout", "-b", newBranch,
-			"||", "git", "checkout", "origin/" + newBranch,
-		}, dagger.ContainerWithExecOpts{}).
+		WithExec([]string{"git", "checkout", "-b", newBranch}, dagger.ContainerWithExecOpts{}).
 		WithExec([]string{"git", "push", "--force", "origin", newBranch}).
 		Sync(ctx)
 
 	if err != nil {
 		panic(err)
 	}
-}
-
-func (m *HydrateOrchestrator) updateRemoteBranch(
-	ctx context.Context,
-
-	// Base branch name
-	// +required
-	gitDir *dagger.Directory,
-	// New branch name
-	// +required
-	newBranch string,
-) {
-
-	gitDirPath := "/git_dir"
-
-	_, err := dag.Gh().
-		Container(dagger.GhContainerOpts{Token: m.GhToken, Version: m.GhCliVersion}).
-		WithDirectory(gitDirPath, gitDir).
-		WithWorkdir(gitDirPath).
-		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{"git", "stash"}, dagger.ContainerWithExecOpts{}).
-		WithExec([]string{"git", "fetch", newBranch}, dagger.ContainerWithExecOpts{}).
-		WithExec([]string{"git", "pull", "origin", newBranch}).
-		Sync(ctx)
-
-	if err != nil {
-
-		panic(err)
-
-	}
-
 }
 
 func (m *HydrateOrchestrator) getColorForLabel(label string) string {
