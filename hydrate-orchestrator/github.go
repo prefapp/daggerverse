@@ -85,7 +85,7 @@ func (m *HydrateOrchestrator) upsertPR(
 		return "", err
 	}
 
-	if prExists != nil {
+	if prExists == nil {
 
 		cmd := []string{
 			"gh",
