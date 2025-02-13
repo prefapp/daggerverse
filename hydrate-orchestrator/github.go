@@ -56,7 +56,7 @@ func (m *HydrateOrchestrator) upsertPR(
 
 	contentsDirPath := "/contents"
 
-	fmt.Println("Checking if branch %s exists", newBranchName)
+	fmt.Printf("Checking if branch %s exists\n", newBranchName)
 
 	stdoutlsRemote, err := dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
@@ -80,17 +80,17 @@ func (m *HydrateOrchestrator) upsertPR(
 
 	}
 
-	fmt.Println("stdoutlsRemote: %s\n", stdoutlsRemote)
+	fmt.Printf("stdoutlsRemote: %s\n", stdoutlsRemote)
 
 	if !strings.Contains(stdoutlsRemote, newBranchName) {
 
-		fmt.Println("Branch %s exists", newBranchName)
+		fmt.Printf("Branch %s exists\n", newBranchName)
 
 		m.createRemoteBranch(ctx, contents, newBranchName)
 
 	} else {
 
-		fmt.Println("Branch %s does not exist, skipping creation", newBranchName)
+		fmt.Printf("Branch %s does not exist, skipping creation\n", newBranchName)
 	}
 
 	_, err = dag.Gh(dagger.GhOpts{
@@ -182,7 +182,7 @@ func (m *HydrateOrchestrator) AutomergeFileExists(ctx context.Context, globPatte
 
 		if fmt.Sprintf("%s/%s", globPattern, "AUTO_MERGE") == entry {
 
-			fmt.Println("Automerge file found: %s\n", entry)
+			fmt.Printf("Automerge file found: %s\n", entry)
 
 			automergeFileFound = true
 
@@ -234,7 +234,7 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 	// +required
 	newBranch string,
 ) {
-	fmt.Println("Creating remote branch %s", newBranch)
+	fmt.Printf("Creating remote branch %s\n", newBranch)
 
 	gitDirPath := "/git_dir"
 
@@ -284,13 +284,13 @@ func (m *HydrateOrchestrator) MergePullRequest(ctx context.Context, prLink strin
 		return err
 	}
 
-	fmt.Println("PR %s merged successfully", prLink)
+	fmt.Printf("PR %s merged successfully\n", prLink)
 
 	return nil
 }
 
 func (m *HydrateOrchestrator) prExists(ctx context.Context, branchName string) (*Pr, error) {
-	fmt.Println("Checking if PR exists for branch %s", branchName)
+	fmt.Printf("Checking if PR exists for branch %s\n", branchName)
 	// branch name depends on the deployment kind, the format is <depKindId>-<depKind>-<cluster>-<tenant>-<env>
 	//                                                           0-kubernetes-cluster-tenant-env
 	//														     code-repo-kubernetes-cluster-tenant-env
@@ -304,7 +304,7 @@ func (m *HydrateOrchestrator) prExists(ctx context.Context, branchName string) (
 
 		if pr.HeadRefName == branchName && strings.ToLower(pr.State) == "open" {
 
-			fmt.Println("PR %s already exists", branchName)
+			fmt.Printf("PR %s already exists\n", branchName)
 
 			return &pr, nil
 
@@ -312,7 +312,7 @@ func (m *HydrateOrchestrator) prExists(ctx context.Context, branchName string) (
 
 	}
 
-	fmt.Println("PR %s does not exist", branchName)
+	fmt.Printf("PR %s does not exist\n", branchName)
 
 	return nil, nil
 }
