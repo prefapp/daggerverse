@@ -159,6 +159,8 @@ func (m *HydrateOrchestrator) upsertPR(
 			return "", err
 		}
 
+		fmt.Printf("☢️ PR created: %s\n", stdout)
+
 		return stdout, nil
 
 	}
