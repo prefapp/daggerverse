@@ -5,7 +5,6 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 )
@@ -57,7 +56,7 @@ func (m *HydrateOrchestrator) upsertPR(
 
 	contentsDirPath := "/contents"
 
-	log.Printf("Checking if branch %s exists", newBranchName)
+	fmt.Printf("Checking if branch %s exists", newBranchName)
 
 	stdoutlsRemote, err := dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
@@ -81,15 +80,17 @@ func (m *HydrateOrchestrator) upsertPR(
 
 	}
 
+	fmt.Printf("stdoutlsRemote: %s\n", stdoutlsRemote)
+
 	if !strings.Contains(stdoutlsRemote, newBranchName) {
 
-		log.Printf("Branch %s exists", newBranchName)
+		fmt.Printf("Branch %s exists", newBranchName)
 
 		m.createRemoteBranch(ctx, contents, newBranchName)
 
 	} else {
 
-		log.Printf("Branch %s does not exist, skipping creation", newBranchName)
+		fmt.Printf("Branch %s does not exist, skipping creation", newBranchName)
 	}
 
 	_, err = dag.Gh(dagger.GhOpts{
@@ -233,7 +234,7 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 	// +required
 	newBranch string,
 ) {
-	log.Printf("Creating remote branch %s", newBranch)
+	fmt.Printf("Creating remote branch %s", newBranch)
 
 	gitDirPath := "/git_dir"
 
@@ -283,13 +284,13 @@ func (m *HydrateOrchestrator) MergePullRequest(ctx context.Context, prLink strin
 		return err
 	}
 
-	log.Printf("PR %s merged successfully", prLink)
+	fmt.Printf("PR %s merged successfully", prLink)
 
 	return nil
 }
 
 func (m *HydrateOrchestrator) prExists(ctx context.Context, branchName string) (*Pr, error) {
-	log.Printf("Checking if PR exists for branch %s", branchName)
+	fmt.Printf("Checking if PR exists for branch %s", branchName)
 	// branch name depends on the deployment kind, the format is <depKindId>-<depKind>-<cluster>-<tenant>-<env>
 	//                                                           0-kubernetes-cluster-tenant-env
 	//														     code-repo-kubernetes-cluster-tenant-env
@@ -303,7 +304,7 @@ func (m *HydrateOrchestrator) prExists(ctx context.Context, branchName string) (
 
 		if pr.HeadRefName == branchName && strings.ToLower(pr.State) == "open" {
 
-			log.Printf("PR %s already exists", branchName)
+			fmt.Printf("PR %s already exists", branchName)
 
 			return &pr, nil
 
@@ -311,7 +312,7 @@ func (m *HydrateOrchestrator) prExists(ctx context.Context, branchName string) (
 
 	}
 
-	log.Printf("PR %s does not exist", branchName)
+	fmt.Printf("PR %s does not exist", branchName)
 
 	return nil, nil
 }
