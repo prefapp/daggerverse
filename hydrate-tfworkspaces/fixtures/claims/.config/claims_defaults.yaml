@@ -1,0 +1,50 @@
+ComponentClaim:
+  version: "1.0"
+  type: service
+  lifecycle: "production"
+  system: "system:councilbox-system"
+  platformOwner: "group:infra"
+  maintainedBy: []
+  providers:
+    github:
+      sync:
+        enabled: true
+        period: 24h
+      org: councilbox
+      branchStrategy: gitflow
+      orgVisibility: true
+      orgContributions: false
+      visibility: private
+      defaultBranch: master
+      technology:
+        stack: "node"
+        version: "16"
+      features: []
+
+GroupClaim:
+  providers:
+    github:
+      org: councilbox
+      privacy: closed
+
+UserClaim:
+  providers:
+    github:
+     org: councilbox
+
+SystemClaim:
+  providers:
+    catalog:
+
+DomainClaim:
+  providers:
+    catalog:
+
+TFWorkspaceClaim:
+  providers:
+    terraform:
+      sync:
+        policy: observe
+        period: 24h
+        enabled: true
+      policy: apply

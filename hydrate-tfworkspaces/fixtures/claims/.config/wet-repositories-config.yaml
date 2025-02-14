@@ -1,0 +1,30 @@
+states:
+  github:
+    repo: councilbox/state-github
+    crKinds:
+      FirestartrGithubRepository:
+      FirestartrGithubGroup:
+      FirestartrGithubMembership:
+      FirestartrGithubRepositoryFeature:
+    workflows: 
+      hydrate: "hydrate_and_notify.yaml"
+      notify: "notify_and_hydrate.yaml"
+  catalog:
+    repo: councilbox/catalog
+    crKinds:
+      Domain:
+      User:
+      System:
+      Component:
+      Group:
+      Resource:
+    workflows: 
+      hydrate: "hydrate.yaml"
+      notify: "notify.yaml"
+  terraform:
+    repo: councilbox/state-infra
+    crKinds:
+      FirestartrTerraformWorkspace:
+    workflows:
+      hydrate: "hydrate.yaml"
+      notify: "notify_and_hydrate.yaml"
