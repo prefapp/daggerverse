@@ -26,7 +26,10 @@ require (
 	google.golang.org/grpc v1.68.0
 )
 
-require github.com/pkg/errors v0.9.1 // indirect
+require (
+	github.com/pkg/errors v0.9.1 // indirect
+	sigs.k8s.io/yaml v1.4.0 // indirect
+)
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect

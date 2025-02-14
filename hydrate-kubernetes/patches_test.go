@@ -1,48 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 )
 
 func TestCanPatches(t *testing.T) {
 
-	// ctx := context.Background()
-
 	m := &HydrateKubernetes{}
 
-	completePath := "/micro-a/image/a/b/c"
+	completePath := "/a/b/c/d/e"
 
-	splitted := strings.Split(completePath, "/")
+	res := m.GenerateValue(completePath, "test")
 
-	fmt.Printf("splitted: %v\n", splitted)
+	if res != "{\"a\":{\"b\":{\"c\":{\"d\":{\"e\":\"test\"}}}}}" {
 
-	splittedWithoutLast := splitted[:len(splitted)-1]
-
-	jsonObj := "{}"
-
-	path := ""
-
-	for _, s := range splittedWithoutLast {
-
-		if s == "" {
-
-			continue
-
-		}
-
-		path = path + "/" + s
-
-		patch := fmt.Sprintf("[{\"op\": \"add\", \"path\": \"%s\", \"value\": {}}]", path)
-
-		jsonObj = m.ApplyPatch(jsonObj, patch)
+		t.Errorf("Expected {\"a\":{\"b\":{\"c\":{\"d\":{\"e\":\"test\"}}}}}, got %v", res)
 
 	}
-
-	patch := fmt.Sprintf("[{\"op\": \"add\", \"path\": \"%s\", \"value\": \"my-image:latest\"}]", completePath)
-
-	jsonObj = m.ApplyPatch(jsonObj, patch)
-
-	fmt.Printf("jsonObj: %v\n", jsonObj)
 }
