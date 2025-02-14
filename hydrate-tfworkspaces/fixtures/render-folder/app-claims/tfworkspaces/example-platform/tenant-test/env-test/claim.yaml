@@ -1,7 +1,7 @@
 kind: TFWorkspaceClaim
 lifecycle: production
 name: example-platform
-system: "system:corpme"
+system: "system:test"
 version: "1.0"
 providers: 
   terraform:
@@ -15,18 +15,18 @@ providers:
         location: "westeurope"
         secure_boot_enabled: false
         tags:
-          cliente: "corpme"
-          tenant: "corpme"
-          Producto: "shutter"
-          application: "shutter"
-          env: "pre"
+          cliente: "test"
+          tenant: "test"
+          Producto: "test"
+          application: "test"
+          env: "test"
       run_script:
         file: "/data/run_script.sh"
         vmss_mi_id: "test"
-        registry: "acrnoreleases"
-        keyvault: "test-soups-pre-kv"
+        registry: "acrtest"
+        keyvault: "test-pre-kv"
         soup:
-          docker_image: "my-test.azurecr.io/service/mytest/my-test:v1.22.0-pre_default" #providers/terraform/values
+          docker_image: "my-test.azurecr.io/service/mytest/my-test:v1.22.0-pre_default"
     context:
       providers:
         - name: azure-provider-test
