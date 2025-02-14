@@ -24,13 +24,11 @@ func (m *HydrateKubernetes) ApplyPatch(document string, patch string) string {
 	return string(modified)
 }
 
-func (m *HydrateKubernetes) GenerateValue(fullPath string, value string) string {
+func (m *HydrateKubernetes) GenerateOjectFromPath(fullPath string, value string, jsonObj string) string {
 
 	splitted := strings.Split(fullPath, "/")
 
 	splittedWithoutLast := splitted[:len(splitted)-1]
-
-	jsonObj := "{}"
 
 	path := ""
 

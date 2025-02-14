@@ -24,12 +24,10 @@ require (
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
 	golang.org/x/sync v0.10.0
 	google.golang.org/grpc v1.68.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
-require (
-	github.com/pkg/errors v0.9.1 // indirect
-	sigs.k8s.io/yaml v1.4.0 // indirect
-)
+require github.com/pkg/errors v0.9.1 // indirect
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect

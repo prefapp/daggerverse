@@ -4,17 +4,18 @@ import (
 	"testing"
 )
 
-func TestCanPatches(t *testing.T) {
+func TestGenerateOjectFromPath(t *testing.T) {
 
 	m := &HydrateKubernetes{}
 
-	completePath := "/a/b/c/d/e"
+	fullPath := "/a/b/c/d/e"
 
-	res := m.GenerateValue(completePath, "test")
+	res := m.GenerateOjectFromPath(fullPath, "test", "{}")
 
 	if res != "{\"a\":{\"b\":{\"c\":{\"d\":{\"e\":\"test\"}}}}}" {
 
 		t.Errorf("Expected {\"a\":{\"b\":{\"c\":{\"d\":{\"e\":\"test\"}}}}}, got %v", res)
 
 	}
+
 }

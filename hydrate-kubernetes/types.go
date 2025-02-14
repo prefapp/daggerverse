@@ -25,6 +25,7 @@ type ImageData struct {
 	App              string   `json:"app"`
 	Env              string   `json:"env"`
 	ServiceNameList  []string `json:"service_name_list"`
+	ImageKeys        []string `json:"image_keys"`
 	Image            string   `json:"image"`
 	Reviewers        []string `json:"reviewers"`
 	Cluster          string   `json:"platform"`
