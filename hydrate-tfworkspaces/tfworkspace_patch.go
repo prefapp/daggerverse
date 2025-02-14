@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func (m *HydrateTfworkspaces) UpdateKeyInTfWorkspace(ctx context.Context, jsonMatrix string, appDir *dagger.Directory) (*dagger.Directory, error) {
+func (m *HydrateTfworkspaces) PatchTfWorkspace(ctx context.Context, jsonMatrix string, appDir *dagger.Directory) (*dagger.Directory, error) {
 
 	matrix := ImageMatrix{}
 
@@ -73,12 +73,17 @@ func (m *HydrateTfworkspaces) UpdateKeyInTfWorkspace(ctx context.Context, jsonMa
 			break
 		}
 
-		return nil, fmt.Errorf("no claim found in app dir with platform %s", imageData.Platform)
+	}
+
+	if jsonObj == "" {
+
+		return nil, fmt.Errorf("no claim found for platform %s", imageData.Platform)
+
 	}
 
 	if len(entries) == 0 {
 
-		return nil, fmt.Errorf("no claims found in app dir with id %s", appDir.ID)
+		return nil, fmt.Errorf("no claims found in app dir")
 
 	}
 
