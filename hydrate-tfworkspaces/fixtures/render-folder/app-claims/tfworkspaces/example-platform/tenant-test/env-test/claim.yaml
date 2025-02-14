@@ -1,12 +1,12 @@
 kind: TFWorkspaceClaim
 lifecycle: production
-name: test-soups-pre-vmss
+name: example-platform
 system: "system:corpme"
 version: "1.0"
-providers:
+providers: 
   terraform:
     tfStateKey: e951e631-305a-414e-be4f-5562fc952121
-    name: test-soups-pre-vmss
+    name: example-platform
     source: remote
     module: git::https://github.com/test/tfm.git//modules/vmss-soups?ref=vmss-soups-v0.2.4
     values:
@@ -22,11 +22,11 @@ providers:
           env: "pre"
       run_script:
         file: "/data/run_script.sh"
-        vmss_mi_id: ${{ tfworkspace:test-soups-pre-iam:outputs.id }}
+        vmss_mi_id: "test"
         registry: "acrnoreleases"
         keyvault: "test-soups-pre-kv"
         soup:
-          docker_image: "my-test.azurecr.io/service/mytest/my-test:v1.22.0-pre_default"
+          docker_image: "my-test.azurecr.io/service/mytest/my-test:v1.22.0-pre_default" #providers/terraform/values
     context:
       providers:
         - name: azure-provider-test

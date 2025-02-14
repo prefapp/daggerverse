@@ -15,130 +15,120 @@
 package main
 
 import (
+	"context"
 	"dagger/hydrate-tfworkspaces/internal/dagger"
 	"fmt"
 	"path"
 )
 
 type HydrateTfworkspaces struct {
-	FirestarterImage            string
-	FirestarterImageTag         string
-	GithubAppID                 string
-	GithubInstallationID        string
-	GithubPrefappInstallationID string
-	GithubPrivateKey            *dagger.Secret
-	GithubOrganization          string
-	GhToken                     *dagger.Secret
-	ClaimsDefaultBranch         string // +default="main"
+	ValuesDir        *dagger.Directory
+	WetRepoDir       *dagger.Directory
+	DotFirestartrDir *dagger.Directory
 }
 
 func New(
-	// +optional
-	// +default="latest-slim"
-	firestarterImageTag string,
-	// +optional
-	// +default="ghcr.io/prefapp/gitops-k8s"
-	firestarterImage string,
-	// +required
-	// Github application ID
-	githubAppID string,
-	// +required
-	// Github installation ID
-	githubInstallationID string,
-	// +required
-	// Github prefapp installation ID
-	githubPrefappInstallationID string,
-	// +required
-	// Github private key
-	githubPrivateKey *dagger.Secret,
-	// +required
-	// Github organization
-	githubOrganization string,
-	// +required
-	// Github token
-	ghToken *dagger.Secret,
-	// +default="main"
-	claimsDefaultBranch string,
+	// The path to the values directory, where the helm values are stored
+	valuesDir *dagger.Directory,
+
+	// The path to the wet repo directory, where the wet manifests are stored
+	wetRepoDir *dagger.Directory,
+
+	dotFirestartrDir *dagger.Directory,
 
 ) *HydrateTfworkspaces {
 	return &HydrateTfworkspaces{
-		FirestarterImage: firestarterImage,
 
-		FirestarterImageTag: firestarterImageTag,
+		ValuesDir: valuesDir,
 
-		GithubAppID: githubAppID,
+		WetRepoDir: wetRepoDir,
 
-		GithubInstallationID: githubInstallationID,
-
-		GithubPrefappInstallationID: githubPrefappInstallationID,
-
-		GithubPrivateKey: githubPrivateKey,
-
-		GithubOrganization: githubOrganization,
-
-		GhToken: ghToken,
-
-		ClaimsDefaultBranch: claimsDefaultBranch,
+		DotFirestartrDir: dotFirestartrDir,
 	}
 }
 
-func (m *HydrateTfworkspaces) CmdHydrate(
-	// Claims repository name
-	// +required
-	claimsRepo string,
-	// Claims directory
-	// +required
-	claimsDir *dagger.Directory,
-	// Previous CRs directory
-	// +required
-	crsDir *dagger.Directory,
-	// Provider to render
-	// +required
-	provider string,
-	// GitHub application ID
-	// +required
-) *dagger.Directory {
+func (m *HydrateTfworkspaces) Render(
+	ctx context.Context,
 
-	fmt.Printf(fmt.Sprintf("Hydrating CRs for %s", provider))
+	env string,
 
-	claimsTargetDir := "/claims"
-	crsTargetDir := "/crs"
-	outputDir := "/output"
+	platform string,
+
+	tenant string,
+
+	// +optional
+	// +default="{\"images\":[]}"
+	newImagesMatrix string,
+
+) ([]*dagger.Directory, error) {
+
+	platformClaimsPath := "platform-claims/claims/tfworkspaces"
+
+	coordinatesPath := fmt.Sprintf("app-claims/tfworkspaces/%s/%s/%s", platform, tenant, env)
+
+	platformClaimsDir := m.ValuesDir.Directory(platformClaimsPath)
+
+	appClaimsDir := m.ValuesDir.Directory(coordinatesPath)
+
+	combDirs := dag.Directory().
+		WithDirectory("platform", platformClaimsDir).
+		WithDirectory("app", appClaimsDir)
+
+	platformFound := dag.
+		FirestartrConfig(m.DotFirestartrDir).
+		FindPlatformByName(platform)
+
+	if platformFound == nil {
+
+		return nil, fmt.Errorf("platform %s not found", platform)
+
+	}
+
+	entries, err := appClaimsDir.Glob(ctx, "**.yaml")
+
+	fmt.Printf("entries: %v\n", entries)
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	if len(entries) == 0 {
+
+		return nil, fmt.Errorf("no claims found in %s", platformClaimsPath)
+
+	}
 
 	cmd := m.CmdContainer().
-		WithMountedDirectory(claimsTargetDir, claimsDir).
-		WithMountedDirectory(crsTargetDir, crsDir).
-		WithEnvVariable("GITHUB_APP_ID", m.GithubAppID).
-		WithEnvVariable("GITHUB_INSTALLATION_ID", m.GithubInstallationID).
-		WithEnvVariable("GITHUB_APP_INSTALLATION_ID_PREFAPP", m.GithubPrefappInstallationID).
-		WithSecretVariable("GITHUB_APP_PEM_FILE", m.GithubPrivateKey).
-		WithEnvVariable("ORG", m.GithubOrganization).
-		WithEnvVariable("DEBUG", "firestartr-test:*").
+		WithMountedDirectory("claims", combDirs).
+		WithMountedDirectory("/crs", m.WetRepoDir).
+		WithDirectory("/.config", m.ValuesDir.Directory("platform-claims/.config")).
+		WithEnvVariable("DEBUG", "firestartr:*").
 		WithExec(
 			[]string{
 				"./run.sh",
 				"cdk8s",
 				"--render",
 				"--disableRenames",
-				"--globals", path.Join(crsTargetDir, ".config"),
-				"--initializers", path.Join(crsTargetDir, ".config"),
-				"--claims", path.Join(claimsTargetDir, "claims"),
-				"--previousCRs", crsTargetDir,
-				"--excludePath", path.Join(crsTargetDir, ".github"),
-				"--claimsDefaults", path.Join(claimsTargetDir, ".config"),
-				"--outputCrDir", outputDir,
-				"--validateReferentialIntegrity", "disabled",
-				"--provider", provider,
+				"--globals", path.Join("/crs", ".config"),
+				"--initializers", path.Join("/crs", ".config"),
+				"--claims", "claims",
+				"--previousCRs", "/crs",
+				"--excludePath", path.Join("/crs", ".github"),
+				"--claimsDefaults", "/.config",
+				"--outputCrDir", "/output",
+				"--provider", "terraform",
 			},
 		)
 
-	return cmd.Directory(outputDir)
+	return []*dagger.Directory{cmd.Directory("/output")}, nil
 
 }
 
 func (m *HydrateTfworkspaces) CmdContainer() *dagger.Container {
 
 	return dag.Container().
-		From(fmt.Sprintf("%s:%s", m.FirestarterImage, m.FirestarterImageTag))
+		From("ghcr.io/prefapp/gitops-k8s:v1.26.2_slim")
 
 }
