@@ -4,8 +4,10 @@ import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
+	yamlsigs "sigs.k8s.io/yaml"
 )
 
 func (m *HydrateKubernetes) BuildNewImages(
@@ -22,7 +24,34 @@ func (m *HydrateKubernetes) BuildNewImages(
 
 	mapNewImages := make(map[string]map[string]string)
 
-	for _, imageData := range imageMatrix.Images {
+	if len(imageMatrix.Images) > 1 {
+
+		panic("Only one image per service is allowed")
+
+	} else if len(imageMatrix.Images) == 0 {
+
+		return dag.Directory().
+			WithNewFile("current-images.yaml", "{}").
+			File("current-images.yaml"), nil
+
+	}
+
+	imagesYaml := "{}"
+
+	imageData := imageMatrix.Images[0]
+
+	if len(imageData.ServiceNameList) == 0 && len(imageData.ImageKeys) == 0 {
+
+		return nil, fmt.Errorf("service_names and image_keys cannot be empty")
+
+	}
+
+	if len(imageData.ServiceNameList) > 0 && len(imageData.ImageKeys) > 0 {
+
+		return nil, fmt.Errorf("service_names and image_keys cannot be used together")
+	}
+
+	if len(imageData.ServiceNameList) > 0 {
 
 		for _, serviceName := range imageData.ServiceNameList {
 
@@ -30,17 +59,40 @@ func (m *HydrateKubernetes) BuildNewImages(
 
 		}
 
+		marshaled, err := yaml.Marshal(mapNewImages)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		imagesYaml = string(marshaled)
 	}
 
-	marshaled, err := yaml.Marshal(mapNewImages)
+	if len(imageData.ImageKeys) > 0 {
 
-	if err != nil {
+		jsonObj := "{}"
 
-		return nil, err
+		for _, imageKey := range imageData.ImageKeys {
+
+			jsonObj = m.GenerateOjectFromPath(imageKey, imageData.Image, jsonObj)
+
+		}
+
+		yamlObj, err := yamlsigs.JSONToYAML([]byte(jsonObj))
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		imagesYaml = string(yamlObj)
 
 	}
 
 	return dag.Directory().
-		WithNewFile("current-images.yaml", string(marshaled)).
+		WithNewFile("current-images.yaml", string(imagesYaml)).
 		File("current-images.yaml"), nil
 }

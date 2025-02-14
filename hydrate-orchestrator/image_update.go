@@ -20,6 +20,7 @@ type ImageData struct {
 	App              string   `json:"app"`
 	Env              string   `json:"env"`
 	ServiceNameList  []string `json:"service_name_list"`
+	ImageKeys        []string `json:"image_keys"`
 	Image            string   `json:"image"`
 	Reviewers        []string `json:"reviewers"`
 	Platform         string   `json:"platform"`
@@ -29,20 +30,15 @@ type ImageData struct {
 
 func (m *HydrateOrchestrator) RunDispatch(
 	ctx context.Context,
-	// Workflow run id
-	// +required
-	id int,
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
-	// // Pr that triggered the render
-	// // +required
-	// workflowRun int,
 ) {
 
 	deployments := m.processImagesMatrix(newImagesMatrix)
 
 	repositoryCaller, repoURL := m.getRepositoryCaller(newImagesMatrix)
+
 	reviewers := m.getReviewers(newImagesMatrix)
 
 	for _, kdep := range deployments.KubernetesDeployments {
@@ -59,7 +55,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 		).Render(ctx, m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
 			Tenant:          kdep.Tenant,
 			Env:             kdep.Environment,
-			NewImagesMatrix: newImagesMatrix,
+			NewImagesMatrix: kdep.ImagesMatrix,
 		})
 
 		if err != nil {
@@ -71,9 +67,11 @@ func (m *HydrateOrchestrator) RunDispatch(
 %s
 `, repositoryCaller, repoURL, kdep.String(false))
 
-		m.upsertPR(
+		globPattern := fmt.
+			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
+
+		prLink, err := m.upsertPR(
 			ctx,
-			id,
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
@@ -82,6 +80,36 @@ func (m *HydrateOrchestrator) RunDispatch(
 			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 			reviewers,
 		)
+
+		if err != nil {
+
+			panic(err)
+		}
+
+		if m.AutomergeFileExists(ctx, globPattern) {
+
+			fmt.Printf("Automerge file found, merging PR %s\n", prLink)
+
+			if prLink == "" {
+
+				panic("PR link is empty, cannot merge PR")
+
+			}
+
+			err := m.MergePullRequest(ctx, prLink)
+
+			if err != nil {
+
+				panic(err)
+
+			}
+
+		} else {
+
+			fmt.Println("Automerge file does not exist, skipping automerge")
+
+		}
+
 	}
 
 }
@@ -111,13 +139,28 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 			image.Env,
 		)
 
+		uniqueImage := []ImageData{image}
+
+		uniqueImageMatrix := ImageMatrix{
+			Images: uniqueImage,
+		}
+
+		jsonUniqueImage, err := json.Marshal(uniqueImageMatrix)
+
+		if err != nil {
+
+			panic(err)
+
+		}
+
 		kdep := &KubernetesAppDeployment{
 			Deployment: Deployment{
 				DeploymentPath: deploymentPath,
 			},
-			Cluster:     image.Platform,
-			Tenant:      image.Tenant,
-			Environment: image.Env,
+			Cluster:      image.Platform,
+			Tenant:       image.Tenant,
+			Environment:  image.Env,
+			ImagesMatrix: string(jsonUniqueImage),
 		}
 
 		result.addDeployment(kdep)

@@ -22,9 +22,6 @@ Create or update a PR with the updated contents
 
 func (m *HydrateOrchestrator) upsertPR(
 	ctx context.Context,
-	// Branch ID
-	// +required
-	branchId int,
 	// Updated deployment branch name
 	// +required
 	newBranchName string,
@@ -47,43 +44,80 @@ func (m *HydrateOrchestrator) upsertPR(
 	// +optional
 	reviewers []string,
 
-) error {
+) (string, error) {
 
-	prExists, err := m.checkPrExists(ctx, newBranchName, branchId)
+	prExists, err := m.prExists(ctx, newBranchName)
 
 	if err != nil {
-		return err
-	}
 
-	branchWithId := fmt.Sprintf("%d-%s", branchId, newBranchName)
+		return "", err
 
-	if !prExists {
-		m.createRemoteBranch(ctx, contents, branchWithId)
 	}
 
 	contentsDirPath := "/contents"
+
+	fmt.Printf("Checking if branch %s exists\n", newBranchName)
+
+	stdoutlsRemote, err := dag.Gh(dagger.GhOpts{
+		Version: m.GhCliVersion,
+	}).Container(dagger.GhContainerOpts{
+		Token:   m.GhToken,
+		Plugins: []string{"prefapp/gh-commit"},
+	}).WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{}).
+		WithWorkdir(contentsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{
+			"git",
+			"ls-remote",
+			"origin",
+			fmt.Sprintf("refs/heads/%s", newBranchName),
+		}).
+		Stdout(ctx)
+
+	if err != nil {
+
+		return "", err
+
+	}
+
+	fmt.Printf("☢️ git ls-remote: %s\n", stdoutlsRemote)
+
+	if !strings.Contains(stdoutlsRemote, newBranchName) {
+
+		fmt.Printf("☢️ Branch %s does not exists\n", newBranchName)
+
+		m.createRemoteBranch(ctx, contents, newBranchName)
+
+	} else {
+
+		fmt.Printf("☢️ Branch %s exists, skipping creation\n", newBranchName)
+	}
+
 	_, err = dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
-	}).Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
-		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
-			Exclude: []string{".git"},
-		}).
-		WithWorkdir(contentsDirPath).
+	}).Container(dagger.GhContainerOpts{
+		Token:   m.GhToken,
+		Plugins: []string{"prefapp/gh-commit"},
+	}).WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
+		Exclude: []string{".git"},
+	}).WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
 			"gh",
 			"commit",
 			"-R", m.Repo,
-			"-b", branchWithId,
+			"-b", newBranchName,
 			"-m", "Update deployments",
 			"--delete-path", cleanupDir,
-		}).Sync(ctx)
+		}).
+		Sync(ctx)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	if !prExists {
+	if prExists == nil {
+
 		cmd := []string{
 			"gh",
 			"pr",
@@ -92,16 +126,16 @@ func (m *HydrateOrchestrator) upsertPR(
 			"--base", m.DeploymentBranch,
 			"--title", title,
 			"--body", body,
-			"--head", branchWithId,
+			"--head", newBranchName,
 		}
 
-		// Create labels and prepare the arguments for the PR creation
 		for _, label := range labels {
+			color := m.getColorForLabel(label)
 			dag.Gh(dagger.GhOpts{
 				Version: m.GhCliVersion,
 				Token:   m.GhToken,
 			}).Run(
-				fmt.Sprintf("label create -R %s --force %s", m.Repo, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
+				fmt.Sprintf("label create -R %s --force --color %s %s", m.Repo, color, label), dagger.GhRunOpts{DisableCache: true}).Sync(ctx)
 			cmd = append(cmd, "--label", label)
 		}
 
@@ -110,49 +144,58 @@ func (m *HydrateOrchestrator) upsertPR(
 		}
 
 		// Create a PR for the updated deployment
-		_, err := dag.Gh().Container(dagger.GhContainerOpts{
+		stdout, err := dag.Gh().Container(dagger.GhContainerOpts{
 			Version: m.GhCliVersion,
 			Token:   m.GhToken,
 		}).
 			WithEnvVariable(
 				"CACHE_BUSTER",
-				time.Now().String(),
-			).
-			WithDirectory(contentsDirPath, contents).
+				time.Now().String()).WithDirectory(contentsDirPath, contents).
 			WithWorkdir(contentsDirPath).
-			WithExec(cmd).Sync(ctx)
+			WithExec(cmd).
+			Stdout(ctx)
 
 		if err != nil {
-			return err
+			return "", err
 		}
+
+		fmt.Printf("☢️ PR created: %s\n", stdout)
+
+		return stdout, nil
 
 	}
 
-	return nil
+	return prExists.Url, nil
+
 }
 
-func (m *HydrateOrchestrator) checkPrExists(ctx context.Context, branchName string, branchId int) (bool, error) {
+func (m *HydrateOrchestrator) AutomergeFileExists(ctx context.Context, globPattern string) bool {
 
-	// branch name depends on the deployment kind, the format is <depKindId>-<depKind>-<cluster>-<tenant>-<env>
-
-	prs, err := m.getRepoPrs(ctx)
+	entries, err := m.ValuesStateDir.Glob(ctx, globPattern+"/*")
 
 	if err != nil {
-		return false, err
+
+		panic(err)
 	}
 
-	for _, pr := range prs {
-		if strings.HasSuffix(pr.HeadRefName, branchName) &&
-			!strings.HasPrefix(pr.HeadRefName, fmt.Sprintf("%d-", branchId)) &&
-			strings.ToLower(pr.State) == "open" {
-			return false, fmt.Errorf("Deployment pending (%s) with branch name %s", branchName, pr.HeadRefName)
-		} else if strings.HasSuffix(pr.HeadRefName, branchName) &&
-			strings.ToLower(pr.State) == "open" {
-			return true, nil
+	automergeFileFound := false
+
+	for _, entry := range entries {
+
+		if fmt.Sprintf("%s/%s", globPattern, "AUTO_MERGE") == entry {
+
+			fmt.Printf("☢️ Automerge file found: %s\n", entry)
+
+			automergeFileFound = true
+
+			break
 		}
-
 	}
-	return false, nil
+
+	fmt.Printf("☢️ Automerge file not found\n")
+
+	return automergeFileFound
+
 }
 
 func (m *HydrateOrchestrator) getRepoPrs(ctx context.Context) ([]Pr, error) {
@@ -195,28 +238,85 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 	// +required
 	newBranch string,
 ) {
+	fmt.Printf("☢️ Creating remote branch %s\n", newBranch)
+
 	gitDirPath := "/git_dir"
-	_, err := dag.Gh().Container(dagger.GhContainerOpts{
-		Token:   m.GhToken,
-		Version: m.GhCliVersion,
-	}).
+
+	_, err := dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Version: m.GhCliVersion}).
 		WithDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{
-			"git",
-			"checkout",
-			"-b",
-			newBranch,
-		}, dagger.ContainerWithExecOpts{},
-		).WithExec([]string{
-		"git",
-		"push",
-		"origin",
-		newBranch,
-	}).Sync(ctx)
+		WithExec([]string{"git", "checkout", "-b", newBranch}, dagger.ContainerWithExecOpts{}).
+		WithExec([]string{"git", "push", "--force", "origin", newBranch}).
+		Sync(ctx)
 
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (m *HydrateOrchestrator) getColorForLabel(label string) string {
+	switch {
+	case strings.Contains(label, "app/"): // It is currently redundant but may be useful in the future.
+		return "AC1D1C"
+	case strings.Contains(label, "tenant/"):
+		return "234099"
+	case strings.Contains(label, "env/"):
+		return "33810B"
+	case strings.Contains(label, "service/"): // It is currently redundant but may be useful in the future.
+		return "F1C232"
+	case strings.Contains(label, "cluster/"):
+		return "AC1CAA"
+	case strings.Contains(label, "type/"):
+		return "6C3B2A"
+	default:
+		return "7E7C7A"
+	}
+}
+
+func (m *HydrateOrchestrator) MergePullRequest(ctx context.Context, prLink string) error {
+
+	command := strings.Join([]string{"pr", "merge", "--merge", prLink}, " ")
+
+	_, err := dag.Gh().Run(command, dagger.GhRunOpts{
+		Version:      m.GhCliVersion,
+		Token:        m.GhToken,
+		DisableCache: true,
+	}).Sync(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("☢️ PR %s merged successfully\n", prLink)
+
+	return nil
+}
+
+func (m *HydrateOrchestrator) prExists(ctx context.Context, branchName string) (*Pr, error) {
+	fmt.Printf("☢️ Checking if PR exists for branch %s\n", branchName)
+	// branch name depends on the deployment kind, the format is <depKindId>-<depKind>-<cluster>-<tenant>-<env>
+	//                                                           0-kubernetes-cluster-tenant-env
+	//														     code-repo-kubernetes-cluster-tenant-env
+	prs, err := m.getRepoPrs(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pr := range prs {
+
+		if pr.HeadRefName == branchName && strings.ToLower(pr.State) == "open" {
+
+			fmt.Printf("☢️ PR %s already exists\n", branchName)
+
+			return &pr, nil
+
+		}
+
+	}
+
+	fmt.Printf("☢️ PR %s does not exist\n", branchName)
+
+	return nil, nil
 }

@@ -1,5 +1,49 @@
 # Changelog
 
+## [2.1.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.1.0...hydrate-orchestrator-v2.1.1) (2025-02-13)
+
+
+### Bug Fixes
+
+* check remote branch exists ([#128](https://github.com/prefapp/daggerverse/issues/128)) ([6e14059](https://github.com/prefapp/daggerverse/commit/6e14059097344667ec928ea557a7d9680f08cdac))
+
+## [2.1.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.0.1...hydrate-orchestrator-v2.1.0) (2025-02-12)
+
+
+### Features
+
+* update prs automatically ([#121](https://github.com/prefapp/daggerverse/issues/121)) ([754d587](https://github.com/prefapp/daggerverse/commit/754d5875dbdf3f96949b946d3f1371edd19c4c06))
+
+## [2.0.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.0.0...hydrate-orchestrator-v2.0.1) (2025-02-12)
+
+
+### Bug Fixes
+
+* split-dirs ([#124](https://github.com/prefapp/daggerverse/issues/124)) ([a397adf](https://github.com/prefapp/daggerverse/commit/a397adf63486aa1ee144856de7a1cb7387e3f3c2))
+
+## [2.0.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.5.1...hydrate-orchestrator-v2.0.0) (2025-02-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* Removed app parameter from hydrate-orchestrator
+* Merge pull request #113 from prefapp/fix/remove-app-parameter-from-orchestrator
+
+### Features
+
+* Merge pull request [#113](https://github.com/prefapp/daggerverse/issues/113) from prefapp/fix/remove-app-parameter-from-orchestrator ([5cf8816](https://github.com/prefapp/daggerverse/commit/5cf8816b651c5cd7e345cb0ab29640ce7fdc041d))
+
+
+### Bug Fixes
+
+* add color to labels ([#110](https://github.com/prefapp/daggerverse/issues/110)) ([bf3b262](https://github.com/prefapp/daggerverse/commit/bf3b262c38c0ea2360ae8ee5556493b329e7deb2))
+* automerge [hydrate-orchestrator] ([#114](https://github.com/prefapp/daggerverse/issues/114)) ([3f653f5](https://github.com/prefapp/daggerverse/commit/3f653f55bf21e41692f3de59e536f7d1536f3b0a))
+* images matrix ([#115](https://github.com/prefapp/daggerverse/issues/115)) ([1f15ed1](https://github.com/prefapp/daggerverse/commit/1f15ed1108bfe8e84dfd2363517088af733bf109))
+* Inferred app name from state repo param ([ad246a9](https://github.com/prefapp/daggerverse/commit/ad246a9b78c4a0ad24c30d82fb7ec86fd17c35f0))
+* Removed app parameter from hydrate-orchestrator ([5cf8816](https://github.com/prefapp/daggerverse/commit/5cf8816b651c5cd7e345cb0ab29640ce7fdc041d))
+* Removed app parameter from hydrate-orchestrator ([5965504](https://github.com/prefapp/daggerverse/commit/5965504279be7ca3edd3642962cc095d75c07e22))
+* Removed useless parameter as repo is the state repo ([da738ae](https://github.com/prefapp/daggerverse/commit/da738aed5c4d43a3065ef35d5915c0f71f060044))
+
 ## [1.5.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v1.5.0...hydrate-orchestrator-v1.5.1) (2025-02-03)
 
 

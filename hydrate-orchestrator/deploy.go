@@ -12,10 +12,6 @@ import (
 // Hydrate deployments based on the updated deployments
 func (m *HydrateOrchestrator) GenerateDeployment(
 	ctx context.Context,
-	// Identifier that triggered the render, this could be a PR number or a workflow run id
-	// +optional
-	// +default=0
-	id int,
 	// Author of the PR
 	// +optional
 	// +default="author"
@@ -27,13 +23,11 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 
 	branchInfo := m.getBranchInfo(ctx)
 
-
 	summary := &DeploymentSummary{
 		Items: []DeploymentSummaryRow{},
 	}
 
 	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, globPattern)
-
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
@@ -71,9 +65,8 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		err = m.upsertPR(
+		_, err = m.upsertPR(
 			ctx,
-			id,
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
@@ -131,9 +124,8 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		err = m.upsertPR(
+		_, err = m.upsertPR(
 			ctx,
-			id,
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
@@ -237,6 +229,12 @@ func (m *HydrateOrchestrator) processDeploymentGlob(
 
 	affected_files, err := valuesStateDir.Glob(ctx, globPattern)
 
+	if len(affected_files) == 0 {
+		panic(
+			fmt.Sprintf("error: your input glob pattern %s did not match any files", globPattern),
+		)
+	}
+
 	if err != nil {
 		panic(err)
 	}
@@ -263,7 +261,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 	}
 
 	result := &Deployments{
-		KubernetesDeployments: []KubernetesAppDeployment{},
+		KubernetesDeployments:    []KubernetesAppDeployment{},
 		KubernetesSysDeployments: []KubernetesSysDeployment{},
 	}
 
