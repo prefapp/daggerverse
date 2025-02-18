@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dagger/hydrate-tfworkspaces/internal/dagger"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -13,17 +12,7 @@ import (
 	sigsyaml "sigs.k8s.io/yaml"
 )
 
-func (m *HydrateTfworkspaces) PatchClaimsWithNewImageValues(ctx context.Context, jsonMatrix string, appDir *dagger.Directory) (*dagger.Directory, error) {
-
-	matrix := ImageMatrix{}
-
-	err := json.Unmarshal([]byte(jsonMatrix), &matrix)
-
-	if err != nil {
-
-		return nil, err
-
-	}
+func (m *HydrateTfworkspaces) PatchClaimsWithNewImageValues(ctx context.Context, matrix ImageMatrix, appDir *dagger.Directory) (*dagger.Directory, error) {
 
 	if len(matrix.Images) == 0 {
 
@@ -98,7 +87,7 @@ func (m *HydrateTfworkspaces) PatchClaimsWithNewImageValues(ctx context.Context,
 	for _, imgKey := range imageData.ImageKeys {
 
 		patchJSON := []byte(fmt.Sprintf(
-			`[{"op": "replace", "path": "/providers/terraform/values/%s", "value": "%s"}]`,
+			`[{"op": "add", "path": "/providers/terraform/values/%s", "value": "%s"}]`,
 			imgKey,
 			imageData.Image,
 		))

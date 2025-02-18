@@ -1,22 +1,9 @@
-// A generated module for HydrateTfworkspaces functions
-//
-// This module has been generated via dagger init and serves as a reference to
-// basic module structure as you get started with Dagger.
-//
-// Two functions have been pre-created. You can modify, delete, or add to them,
-// as needed. They demonstrate usage of arguments and return types using simple
-// echo and grep commands. The functions can be called from the dagger CLI or
-// from one of the SDKs.
-//
-// The first line in this comment block is a short description line and the
-// rest is a long description with more detail on the module's purpose or usage,
-// if appropriate. All modules should have a short description.
-
 package main
 
 import (
 	"context"
 	"dagger/hydrate-tfworkspaces/internal/dagger"
+	"encoding/json"
 	"fmt"
 	"path"
 	"slices"
@@ -32,14 +19,11 @@ type HydrateTfworkspaces struct {
 }
 
 func New(
-	// The path to the values directory, where the helm values are stored
 	valuesDir *dagger.Directory,
 
-	// The path to the wet repo directory, where the wet manifests are stored
 	wetRepoDir *dagger.Directory,
 
 	dotFirestartrDir *dagger.Directory,
-
 ) *HydrateTfworkspaces {
 	return &HydrateTfworkspaces{
 
@@ -66,15 +50,9 @@ func (m *HydrateTfworkspaces) Render(
 
 ) ([]*dagger.Directory, error) {
 
-	platformClaimsPath := "platform-claims/claims/tfworkspaces"
+	matrix := ImageMatrix{}
 
-	coordinatesPath := "app-claims/tfworkspaces"
-
-	platformClaimsDir := m.ValuesDir.Directory(platformClaimsPath)
-
-	appClaimsDir := m.ValuesDir.Directory(coordinatesPath)
-
-	claimNames, err := m.GetAppClaimNames(ctx)
+	err := json.Unmarshal([]byte(newImagesMatrix), &matrix)
 
 	if err != nil {
 
@@ -82,7 +60,11 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	crsWithMicroserviceAnnotation, err := m.GetCrsWithMicroserviceAnnotation(ctx)
+	platformClaimsDir := m.ValuesDir.Directory("platform-claims/claims/tfworkspaces")
+
+	appClaimsDir := m.ValuesDir.Directory("app-claims/tfworkspaces")
+
+	crsWithPreviousImages, err := m.GetPreviousImagesFromCrs(ctx, matrix)
 
 	if err != nil {
 
@@ -92,7 +74,7 @@ func (m *HydrateTfworkspaces) Render(
 
 	appClaimsDir, err = m.PatchClaimsWithPreviousImages(
 		ctx,
-		crsWithMicroserviceAnnotation,
+		crsWithPreviousImages,
 		appClaimsDir,
 	)
 
@@ -104,7 +86,7 @@ func (m *HydrateTfworkspaces) Render(
 
 	appClaimsDir, err = m.PatchClaimsWithNewImageValues(
 		ctx,
-		newImagesMatrix,
+		matrix,
 		appClaimsDir,
 	)
 
@@ -138,11 +120,12 @@ func (m *HydrateTfworkspaces) Render(
 
 	if len(entries) == 0 {
 
-		return nil, fmt.Errorf("no claims found in %s", platformClaimsPath)
+		return nil, fmt.Errorf("no claims found in %s", "platform-claims/claims/tfworkspaces")
 
 	}
 
-	cmd, err := m.CmdContainer().
+	fsCtr, err := dag.Container().
+		From("ghcr.io/prefapp/gitops-k8s:v1.26.2_slim").
 		WithMountedDirectory("claims", combDirs).
 		WithMountedDirectory("/crs", m.WetRepoDir).
 		WithDirectory("/.config", m.ValuesDir.Directory("platform-claims/.config")).
@@ -171,9 +154,17 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	outputDir := cmd.Directory("/output")
+	outputDir := fsCtr.Directory("/output")
 
 	entries, err = outputDir.Glob(ctx, "**.yaml")
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	claimNames, err := m.GetAppClaimNames(ctx)
 
 	if err != nil {
 
@@ -210,104 +201,35 @@ func (m *HydrateTfworkspaces) Render(
 		}
 	}
 
+	for _, cr := range crsWithPreviousImages {
+
+		outputDir, err = m.AddAnnotationsToCr(
+			ctx,
+			strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1],
+			cr.Metadata.Annotations.Image,
+			cr.Metadata.Annotations.MicroService,
+			outputDir,
+		)
+	}
+
+	if len(matrix.Images) == 1 {
+
+		outputDir, err = m.AddAnnotationsToCr(
+			ctx,
+			matrix.Images[0].Platform,
+			matrix.Images[0].Image,
+			matrix.Images[0].ImageKeys[0],
+			outputDir,
+		)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+	}
+
 	return []*dagger.Directory{outputDir}, nil
 
-}
-
-func (m *HydrateTfworkspaces) CmdContainer() *dagger.Container {
-
-	return dag.Container().
-		From("ghcr.io/prefapp/gitops-k8s:v1.26.2_slim")
-
-}
-
-func (m *HydrateTfworkspaces) GetAppClaimNames(
-
-	ctx context.Context,
-
-) ([]string, error) {
-
-	coordinatesPath := "app-claims/tfworkspaces"
-
-	appClaimsDir := m.ValuesDir.Directory(coordinatesPath)
-
-	claimNamesFromAppDir := []string{}
-
-	entries, err := appClaimsDir.Glob(ctx, "**.yaml")
-
-	if err != nil {
-
-		return nil, err
-
-	}
-
-	for _, entry := range entries {
-
-		claim := Claim{}
-
-		fileContent, err := appClaimsDir.File(entry).Contents(ctx)
-
-		if err != nil {
-
-			return nil, err
-
-		}
-
-		err = yaml.Unmarshal([]byte(fileContent), &claim)
-
-		if err != nil {
-
-			return nil, err
-
-		}
-
-		claimNamesFromAppDir = append(claimNamesFromAppDir, claim.Name)
-
-	}
-
-	return claimNamesFromAppDir, nil
-
-}
-
-func (m *HydrateTfworkspaces) GetCrsWithMicroserviceAnnotation(ctx context.Context) ([]Cr, error) {
-
-	entries, err := m.WetRepoDir.Glob(ctx, "**.yaml")
-
-	if err != nil {
-
-		return nil, err
-
-	}
-
-	crs := []Cr{}
-
-	for _, entry := range entries {
-
-		fileContent, err := m.WetRepoDir.File(entry).Contents(ctx)
-
-		if err != nil {
-
-			return nil, err
-
-		}
-
-		cr := Cr{}
-
-		err = yaml.Unmarshal([]byte(fileContent), &cr)
-
-		if err != nil {
-
-			return nil, err
-
-		}
-
-		if cr.Metadata.Annotations.MicroService != "" {
-
-			crs = append(crs, cr)
-
-		}
-
-	}
-
-	return crs, nil
 }

@@ -15,9 +15,26 @@ func TestPatchTfWorkspace(t *testing.T) {
 
 	m := HydrateTfworkspaces{}
 
+	imageMatrix := ImageMatrix{
+		Images: []ImageData{
+			{
+				Tenant:           "test",
+				App:              "test",
+				Env:              "test",
+				ServiceNameList:  []string{"test"},
+				ImageKeys:        []string{"test"},
+				Image:            "test-image:latest",
+				Reviewers:        []string{"test"},
+				Platform:         "example-platform",
+				Technology:       "test",
+				RepositoryCaller: "test",
+			},
+		},
+	}
+
 	resultDir, error := m.PatchClaimsWithNewImageValues(
 		ctx,
-		"{\"images\": [{\"image_keys\": [\"test\"], \"image\": \"test-image:latest\", \"platform\": \"example-platform\"}]}",
+		imageMatrix,
 		appDir.Directory("fixtures/render-folder/app-claims/tfworkspaces/example-platform/tenant-test/env-test"),
 	)
 

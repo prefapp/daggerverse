@@ -25,8 +25,6 @@ providers:
         vmss_mi_id: "test"
         registry:  ${{ tfworkspace:claim-from-platform:outputs.registry }}
         keyvault: "test-soups-pre-kv"
-        soup:
-          docker_image: "my-test.azurecr.io/service/mytest/my-test:v1.22.0-pre_default"
     context:
       providers:
         - name: azure-provider-test

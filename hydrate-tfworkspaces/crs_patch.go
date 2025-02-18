@@ -11,13 +11,15 @@ import (
 	sigsyaml "sigs.k8s.io/yaml"
 )
 
-func (m *HydrateTfworkspaces) AddAnnotations(
+func (m *HydrateTfworkspaces) AddAnnotationsToCr(
 
 	ctx context.Context,
 
 	claimName string,
 
 	image string,
+
+	path string,
 
 	crsDir *dagger.Directory,
 
@@ -65,7 +67,7 @@ func (m *HydrateTfworkspaces) AddAnnotations(
 				`[{"op": "add", "path": "/metadata/annotations/firestartr.dev~1image", "value": "%s"},
 				{"op": "add", "path": "/metadata/annotations/firestartr.dev~1microservice", "value": "%s"}]`,
 				image,
-				claimName,
+				path,
 			))
 
 			patch, err := jsonpatch.DecodePatch(patchJSON)
