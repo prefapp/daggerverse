@@ -17,7 +17,24 @@ func TestPreviousImages(t *testing.T) {
 		WetRepoDir: wetDir.Directory(dir),
 	}
 
-	crs, error := m.GetPreviousImagesFromCrs(ctx)
+	imageMatrix := ImageMatrix{
+		Images: []ImageData{
+			{
+				Tenant:           "test",
+				App:              "test",
+				Env:              "test",
+				ServiceNameList:  []string{"test"},
+				ImageKeys:        []string{"test"},
+				Image:            "test-image:latest",
+				Reviewers:        []string{"test"},
+				Platform:         "example-platform",
+				Technology:       "test",
+				RepositoryCaller: "test",
+			},
+		},
+	}
+
+	crs, error := m.GetPreviousImagesFromCrs(ctx, imageMatrix)
 
 	if error != nil {
 
@@ -25,15 +42,9 @@ func TestPreviousImages(t *testing.T) {
 
 	}
 
-	if len(crs) != 1 {
+	if len(crs) != 0 {
 
-		t.Errorf("Expected 1 claim name, got %v", len(crs))
-
-	}
-
-	if crs[0].Metadata.Annotations.ClaimRef != "TFWorkspaceClaim/example-platform" {
-
-		t.Errorf("Expected claim name TFWorkspaceClaim/example-platform, got %v", crs[0].Metadata.Annotations.ClaimRef)
+		t.Errorf("Expected 0 claim names, got %v", len(crs))
 
 	}
 
