@@ -25,6 +25,8 @@ require (
 	google.golang.org/grpc v1.68.0
 )
 
+require gopkg.in/yaml.v3 v3.0.1 // indirect
+
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/evanphx/json-patch/v5 v5.9.11

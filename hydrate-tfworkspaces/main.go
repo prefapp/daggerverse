@@ -19,6 +19,10 @@ import (
 	"dagger/hydrate-tfworkspaces/internal/dagger"
 	"fmt"
 	"path"
+	"slices"
+	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 type HydrateTfworkspaces struct {
@@ -64,11 +68,19 @@ func (m *HydrateTfworkspaces) Render(
 
 	platformClaimsPath := "platform-claims/claims/tfworkspaces"
 
-	coordinatesPath := fmt.Sprintf("app-claims/tfworkspaces/%s/%s/%s", platform, tenant, env)
+	coordinatesPath := "app-claims/tfworkspaces"
 
 	platformClaimsDir := m.ValuesDir.Directory(platformClaimsPath)
 
 	appClaimsDir := m.ValuesDir.Directory(coordinatesPath)
+
+	claimNames, err := m.GetAppClaimNames(ctx)
+
+	if err != nil {
+
+		return nil, err
+
+	}
 
 	combDirs := dag.Directory().
 		WithDirectory("platform", platformClaimsDir).
@@ -86,8 +98,6 @@ func (m *HydrateTfworkspaces) Render(
 
 	entries, err := appClaimsDir.Glob(ctx, "**.yaml")
 
-	fmt.Printf("entries: %v\n", entries)
-
 	if err != nil {
 
 		return nil, err
@@ -100,7 +110,7 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	cmd := m.CmdContainer().
+	cmd, err := m.CmdContainer().
 		WithMountedDirectory("claims", combDirs).
 		WithMountedDirectory("/crs", m.WetRepoDir).
 		WithDirectory("/.config", m.ValuesDir.Directory("platform-claims/.config")).
@@ -120,9 +130,54 @@ func (m *HydrateTfworkspaces) Render(
 				"--outputCrDir", "/output",
 				"--provider", "terraform",
 			},
-		)
+		).Sync(ctx)
 
-	return []*dagger.Directory{cmd.Directory("/output")}, nil
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	outputDir := cmd.Directory("/output")
+
+	entries, err = outputDir.Glob(ctx, "**.yaml")
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	for _, entry := range entries {
+
+		fileContent, err := outputDir.File(entry).Contents(ctx)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		cr := Cr{}
+
+		err = yaml.Unmarshal([]byte(fileContent), &cr)
+
+		claimName := strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1]
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		if !slices.Contains(claimNames, claimName) {
+
+			outputDir = outputDir.WithoutFile(entry)
+
+		}
+	}
+
+	return []*dagger.Directory{outputDir}, nil
 
 }
 
@@ -130,5 +185,53 @@ func (m *HydrateTfworkspaces) CmdContainer() *dagger.Container {
 
 	return dag.Container().
 		From("ghcr.io/prefapp/gitops-k8s:v1.26.2_slim")
+
+}
+
+func (m *HydrateTfworkspaces) GetAppClaimNames(
+
+	ctx context.Context,
+
+) ([]string, error) {
+
+	coordinatesPath := "app-claims/tfworkspaces"
+
+	appClaimsDir := m.ValuesDir.Directory(coordinatesPath)
+
+	claimNamesFromAppDir := []string{}
+
+	entries, err := appClaimsDir.Glob(ctx, "**.yaml")
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	for _, entry := range entries {
+
+		claim := Claim{}
+
+		fileContent, err := appClaimsDir.File(entry).Contents(ctx)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		err = yaml.Unmarshal([]byte(fileContent), &claim)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		claimNamesFromAppDir = append(claimNamesFromAppDir, claim.Name)
+
+	}
+
+	return claimNamesFromAppDir, nil
 
 }

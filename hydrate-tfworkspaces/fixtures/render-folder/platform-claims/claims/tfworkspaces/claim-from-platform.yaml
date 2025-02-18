@@ -1,12 +1,12 @@
 kind: TFWorkspaceClaim
 lifecycle: production
-name: example-platform
+name: claim-from-platform
 system: "system:corpme"
 version: "1.0"
 providers: 
   terraform:
-    tfStateKey: e951e631-305a-414e-be4f-5562fc952121
-    name: example-platform
+    tfStateKey: e951e631-305a-414e-be4f-5562fc952126
+    name: claim-from-platform
     source: remote
     module: git::https://github.com/test/tfm.git//modules/vmss-soups?ref=vmss-soups-v0.2.4
     values:
@@ -15,15 +15,15 @@ providers:
         location: "westeurope"
         secure_boot_enabled: false
         tags:
-          cliente: "test"
-          tenant: "test"
-          Producto: "test"
-          application: "test"
-          env: "test"
+          cliente: "corpme"
+          tenant: "corpme"
+          Producto: "shutter"
+          application: "shutter"
+          env: "pre"
       run_script:
         file: "/data/run_script.sh"
         vmss_mi_id: "test"
-        registry:  ${{ tfworkspace:claim-from-platform:outputs.registry }}
+        registry: "acrnoreleases"
         keyvault: "test-soups-pre-kv"
         soup:
           docker_image: "my-test.azurecr.io/service/mytest/my-test:v1.22.0-pre_default" #providers/terraform/values

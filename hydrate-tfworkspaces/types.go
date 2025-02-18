@@ -4,7 +4,6 @@ type ImageMatrix struct {
 	Images []ImageData `json:"images"`
 }
 
-// JSON Types
 type ImageData struct {
 	Tenant           string   `json:"tenant"`
 	App              string   `json:"app"`
@@ -20,4 +19,20 @@ type ImageData struct {
 
 type Claim struct {
 	Name string `yaml:"name"`
+}
+
+type Cr struct {
+	Kind       string   `yaml:"kind"`
+	Metadata   Metadata `yaml:"metadata"`
+	ApiVersion string   `yaml:"apiVersion"`
+}
+
+type Metadata struct {
+	Annotations Annotations `yaml:"annotations"`
+}
+
+type Annotations struct {
+	MicroService string `yaml:"firestartr.dev/microservice"`
+	Image        string `yaml:"firestartr.dev/image"`
+	ClaimRef     string `yaml:"firestartr.dev/claim-ref"`
 }
