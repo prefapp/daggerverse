@@ -9,6 +9,8 @@ metadata:
     firestartr.dev/sync-enabled: "true"
     firestartr.dev/sync-period: 24h
     firestartr.dev/sync-policy: observe
+    firestartr.dev/microservice: "test/docker_image"
+    firestartr.dev/image: "test.azurecr.io/my-test:v1.22.0-pre_default"
   labels:
     claim-ref: example-platform
   name: example-platform-e951e631-305a-414e-be4f-5562fc952121

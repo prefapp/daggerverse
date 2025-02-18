@@ -15,7 +15,7 @@ func TestPatchTfWorkspace(t *testing.T) {
 
 	m := HydrateTfworkspaces{}
 
-	resultDir, error := m.PatchTfWorkspace(
+	resultDir, error := m.PatchClaimsWithNewImageValues(
 		ctx,
 		"{\"images\": [{\"image_keys\": [\"test\"], \"image\": \"test-image:latest\", \"platform\": \"example-platform\"}]}",
 		appDir.Directory("fixtures/render-folder/app-claims/tfworkspaces/example-platform/tenant-test/env-test"),

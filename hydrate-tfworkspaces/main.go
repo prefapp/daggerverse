@@ -82,6 +82,38 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
+	crsWithMicroserviceAnnotation, err := m.GetCrsWithMicroserviceAnnotation(ctx)
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	appClaimsDir, err = m.PatchClaimsWithPreviousImages(
+		ctx,
+		crsWithMicroserviceAnnotation,
+		appClaimsDir,
+	)
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	appClaimsDir, err = m.PatchClaimsWithNewImageValues(
+		ctx,
+		newImagesMatrix,
+		appClaimsDir,
+	)
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
 	combDirs := dag.Directory().
 		WithDirectory("platform", platformClaimsDir).
 		WithDirectory("app", appClaimsDir)
@@ -130,7 +162,8 @@ func (m *HydrateTfworkspaces) Render(
 				"--outputCrDir", "/output",
 				"--provider", "terraform",
 			},
-		).Sync(ctx)
+		).
+		Sync(ctx)
 
 	if err != nil {
 
@@ -234,4 +267,47 @@ func (m *HydrateTfworkspaces) GetAppClaimNames(
 
 	return claimNamesFromAppDir, nil
 
+}
+
+func (m *HydrateTfworkspaces) GetCrsWithMicroserviceAnnotation(ctx context.Context) ([]Cr, error) {
+
+	entries, err := m.WetRepoDir.Glob(ctx, "**.yaml")
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	crs := []Cr{}
+
+	for _, entry := range entries {
+
+		fileContent, err := m.WetRepoDir.File(entry).Contents(ctx)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		cr := Cr{}
+
+		err = yaml.Unmarshal([]byte(fileContent), &cr)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		if cr.Metadata.Annotations.MicroService != "" {
+
+			crs = append(crs, cr)
+
+		}
+
+	}
+
+	return crs, nil
 }
