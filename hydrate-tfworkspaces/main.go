@@ -124,16 +124,6 @@ func (m *HydrateTfworkspaces) Render(
 		WithDirectory("platform", platformClaimsDir).
 		WithDirectory("app", appClaimsDir)
 
-	platformFound := dag.
-		FirestartrConfig(m.DotFirestartrDir).
-		FindPlatformByName(platform)
-
-	if platformFound == nil {
-
-		return nil, fmt.Errorf("platform %s not found", platform)
-
-	}
-
 	entries, err := appClaimsDir.Glob(ctx, "**.yaml")
 
 	if err != nil {
@@ -261,6 +251,47 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	return []*dagger.Directory{outputDir}, nil
+	entries, err = outputDir.Glob(ctx, "**.yaml")
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	for _, entry := range entries {
+
+		file := outputDir.File(entry)
+
+		fileContent, err := file.Contents(ctx)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		cr := Cr{}
+
+		err = yaml.Unmarshal([]byte(fileContent), &cr)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		if strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1] == matrix.Images[0].Platform {
+
+			m.WetRepoDir = m.WetRepoDir.
+				WithoutFile(entry).
+				WithFile(entry, file)
+
+			break
+		}
+
+	}
+
+	return []*dagger.Directory{m.WetRepoDir}, nil
 
 }
