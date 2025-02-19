@@ -12,7 +12,7 @@ import (
 	sigsyaml "sigs.k8s.io/yaml"
 )
 
-func (m *HydrateTfworkspaces) PatchClaimsWithNewImageValues(ctx context.Context, matrix ImageMatrix, appDir *dagger.Directory) (*dagger.Directory, error) {
+func (m *HydrateTfworkspaces) PatchClaimWithNewImageValues(ctx context.Context, matrix ImageMatrix, appDir *dagger.Directory) (*dagger.Directory, error) {
 
 	if len(matrix.Images) == 0 {
 
@@ -127,11 +127,11 @@ func (m *HydrateTfworkspaces) PatchClaimsWithNewImageValues(ctx context.Context,
 
 }
 
-func (m *HydrateTfworkspaces) PatchClaimsWithPreviousImages(
+func (m *HydrateTfworkspaces) PatchClaimWithPreviousImages(
 
 	ctx context.Context,
 
-	crs []Cr,
+	cr *Cr,
 
 	appClaimsDir *dagger.Directory,
 
@@ -144,6 +144,11 @@ func (m *HydrateTfworkspaces) PatchClaimsWithPreviousImages(
 		return nil, err
 
 	}
+
+	fmt.Printf(
+		"🔍 Looking for claim %s to patch it with previous image\n",
+		cr.Metadata.Annotations.ClaimRef,
+	)
 
 	for _, entry := range entries {
 
@@ -165,35 +170,35 @@ func (m *HydrateTfworkspaces) PatchClaimsWithPreviousImages(
 
 		}
 
-		for _, cr := range crs {
+		if claim.Name == strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1] {
 
-			if claim.Name == strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1] {
+			fmt.Printf("🔍 Found claim %s\n", claim.Name)
 
-				contentsFile, err := appClaimsDir.File(entry).Contents(ctx)
+			contentsFile, err := appClaimsDir.File(entry).Contents(ctx)
 
-				if err != nil {
+			if err != nil {
 
-					return nil, err
-
-				}
-
-				patchedClaim, err := m.PatchClaim(
-					cr.Metadata.Annotations.MicroService,
-					cr.Metadata.Annotations.Image,
-					contentsFile,
-				)
-
-				if err != nil {
-
-					return nil, err
-
-				}
-
-				appClaimsDir = appClaimsDir.
-					WithoutFile(entry).
-					WithNewFile(entry, patchedClaim)
+				return nil, err
 
 			}
+
+			patchedClaim, err := m.PatchClaim(
+				cr.Metadata.Annotations.MicroServicePointer,
+				cr.Metadata.Annotations.Image,
+				contentsFile,
+			)
+
+			if err != nil {
+
+				return nil, err
+
+			}
+
+			fmt.Printf("🔧 Patching claim %s with previous images\n", claim.Name)
+			fmt.Printf("🍀 PATCHED CLAIM: %s\n", patchedClaim)
+			appClaimsDir = appClaimsDir.
+				WithoutFile(entry).
+				WithNewFile(entry, patchedClaim)
 
 		}
 
@@ -221,7 +226,7 @@ func (m *HydrateTfworkspaces) PatchClaim(
 	}
 
 	patchJSON := []byte(fmt.Sprintf(
-		`[{"op": "add", "path": "%s", "value": "%s"}]`,
+		`[{"op": "add", "path": "/providers/terraform/values/%s", "value": "%s"}]`,
 		path,
 		value,
 	))

@@ -5,8 +5,6 @@ import (
 	"dagger/hydrate-tfworkspaces/internal/dagger"
 	"encoding/json"
 	"fmt"
-	"path"
-	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -60,13 +58,10 @@ func New(
 }
 
 func (m *HydrateTfworkspaces) Render(
+
 	ctx context.Context,
 
-	env string,
-
-	platform string,
-
-	tenant string,
+	claimName string,
 
 	// +optional
 	// +default="{\"images\":[]}"
@@ -84,11 +79,15 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
+	// Prepare directories
+
 	platformClaimsDir := m.ValuesDir.Directory("platform-claims/claims/tfworkspaces")
 
 	appClaimsDir := m.ValuesDir.Directory("app-claims/tfworkspaces")
 
-	crsWithPreviousImages, err := m.GetPreviousImagesFromCrs(ctx, matrix)
+	// Patch claim with previous images
+
+	previousCr, err := m.GetPreviousCr(ctx, claimName)
 
 	if err != nil {
 
@@ -96,11 +95,29 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	appClaimsDir, err = m.PatchClaimsWithPreviousImages(
-		ctx,
-		crsWithPreviousImages,
-		appClaimsDir,
-	)
+	if previousCr != nil {
+
+		fmt.Printf("☢️ Patching claim %s with previous images\n", claimName)
+
+		appClaimsDir, err = m.PatchClaimWithPreviousImages(
+			ctx,
+			previousCr,
+			appClaimsDir,
+		)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+	} else {
+
+		fmt.Printf("☢️ Skipping patching claim %s with previous images\n", claimName)
+
+	}
+
+	appClaimsDir, err = m.PatchClaimWithNewImageValues(ctx, matrix, appClaimsDir)
 
 	if err != nil {
 
@@ -108,17 +125,7 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	appClaimsDir, err = m.PatchClaimsWithNewImageValues(
-		ctx,
-		matrix,
-		appClaimsDir,
-	)
-
-	if err != nil {
-
-		return nil, err
-
-	}
+	// Combine platform and app claims directories
 
 	combDirs := dag.Directory().
 		WithDirectory("platform", platformClaimsDir).
@@ -138,29 +145,7 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	fsCtr, err := dag.Container().
-		From(m.Config.Image).
-		WithMountedDirectory("claims", combDirs).
-		WithMountedDirectory("/crs", m.WetRepoDir).
-		WithDirectory("/.config", m.ValuesDir.Directory("platform-claims/.config")).
-		WithEnvVariable("DEBUG", "firestartr:*").
-		WithExec(
-			[]string{
-				"./run.sh",
-				"cdk8s",
-				"--render",
-				"--disableRenames",
-				"--globals", path.Join("/crs", ".config"),
-				"--initializers", path.Join("/crs", ".config"),
-				"--claims", "claims",
-				"--previousCRs", "/crs",
-				"--excludePath", path.Join("/crs", ".github"),
-				"--claimsDefaults", "/.config",
-				"--outputCrDir", "/output",
-				"--provider", "terraform",
-			},
-		).
-		Sync(ctx)
+	outputDir, err := m.RenderWithFirestartrContainer(ctx, combDirs)
 
 	if err != nil {
 
@@ -168,60 +153,16 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	outputDir := fsCtr.Directory("/output")
+	// Add annotations to cr if no new dispatch is present
+	if previousCr != nil && len(matrix.Images) == 0 {
 
-	entries, err = outputDir.Glob(ctx, "**.yaml")
-
-	if err != nil {
-
-		return nil, err
-
-	}
-
-	claimNames, err := m.GetAppClaimNames(ctx)
-
-	if err != nil {
-
-		return nil, err
-
-	}
-
-	for _, entry := range entries {
-
-		fileContent, err := outputDir.File(entry).Contents(ctx)
-
-		if err != nil {
-
-			return nil, err
-
-		}
-
-		cr := Cr{}
-
-		err = yaml.Unmarshal([]byte(fileContent), &cr)
-
-		claimName := strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1]
-
-		if err != nil {
-
-			return nil, err
-
-		}
-
-		if !slices.Contains(claimNames, claimName) {
-
-			outputDir = outputDir.WithoutFile(entry)
-
-		}
-	}
-
-	for _, cr := range crsWithPreviousImages {
+		fmt.Printf("☢️ Adding annotations to cr %s from previous images\n", claimName)
 
 		outputDir, err = m.AddAnnotationsToCr(
 			ctx,
-			strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1],
-			cr.Metadata.Annotations.Image,
-			cr.Metadata.Annotations.MicroService,
+			strings.Split(previousCr.Metadata.Annotations.ClaimRef, "/")[1],
+			previousCr.Metadata.Annotations.Image,
+			previousCr.Metadata.Annotations.MicroServicePointer,
 			outputDir,
 		)
 
@@ -230,10 +171,12 @@ func (m *HydrateTfworkspaces) Render(
 			return nil, err
 
 		}
-
 	}
 
+	// Add annotations to cr if new dispatch is present
 	if len(matrix.Images) == 1 {
+
+		fmt.Printf("☢️ Adding annotations to cr %s from new image\n", claimName)
 
 		outputDir, err = m.AddAnnotationsToCr(
 			ctx,
@@ -251,7 +194,8 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	entries, err = outputDir.Glob(ctx, "**.yaml")
+	// Extract the specific cr file that was pointed from the input
+	crFile, err := m.GetCrFileByClaimName(ctx, claimName, outputDir)
 
 	if err != nil {
 
@@ -259,38 +203,17 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	for _, entry := range entries {
+	crFileName, err := crFile.Name(ctx)
 
-		file := outputDir.File(entry)
+	if err != nil {
 
-		fileContent, err := file.Contents(ctx)
-
-		if err != nil {
-
-			return nil, err
-
-		}
-
-		cr := Cr{}
-
-		err = yaml.Unmarshal([]byte(fileContent), &cr)
-
-		if err != nil {
-
-			return nil, err
-
-		}
-
-		if strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1] == matrix.Images[0].Platform {
-
-			m.WetRepoDir = m.WetRepoDir.
-				WithoutFile(entry).
-				WithFile(entry, file)
-
-			break
-		}
+		return nil, err
 
 	}
+
+	m.WetRepoDir = m.WetRepoDir.
+		WithoutFile(crFileName).
+		WithFile(crFileName, crFile)
 
 	return []*dagger.Directory{m.WetRepoDir}, nil
 

@@ -32,15 +32,15 @@ func TestPatchTfWorkspace(t *testing.T) {
 		},
 	}
 
-	resultDir, error := m.PatchClaimsWithNewImageValues(
+	resultDir, err := m.PatchClaimWithNewImageValues(
 		ctx,
 		imageMatrix,
 		appDir.Directory("fixtures/render-folder/app-claims/tfworkspaces/example-platform/tenant-test/env-test"),
 	)
 
-	if error != nil {
+	if err != nil {
 
-		t.Errorf("Error patching workspace: %v", error)
+		t.Errorf("Error patching workspace: %v", err)
 
 	}
 

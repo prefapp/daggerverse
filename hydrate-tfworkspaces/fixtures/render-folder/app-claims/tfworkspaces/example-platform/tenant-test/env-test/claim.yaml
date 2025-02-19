@@ -10,6 +10,7 @@ providers:
     source: remote
     module: git::https://github.com/test/tfm.git//modules/vmss-soups?ref=vmss-soups-v0.2.4
     values:
+      docker_image: my-test
       common:
         resource_group_name: "test-shutter-pre"
         location: "westeurope"

@@ -32,9 +32,9 @@ type Metadata struct {
 }
 
 type Annotations struct {
-	MicroService string `yaml:"firestartr.dev/microservice"`
-	Image        string `yaml:"firestartr.dev/image"`
-	ClaimRef     string `yaml:"firestartr.dev/claim-ref"`
+	MicroServicePointer string `yaml:"firestartr.dev/microservice"`
+	Image               string `yaml:"firestartr.dev/image"`
+	ClaimRef            string `yaml:"firestartr.dev/claim-ref"`
 }
 
 type Config struct {

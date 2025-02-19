@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (m *HydrateTfworkspaces) GetPreviousImagesFromCrs(ctx context.Context, matrix ImageMatrix) ([]Cr, error) {
+func (m *HydrateTfworkspaces) GetPreviousCr(ctx context.Context, claimName string) (*Cr, error) {
 
 	entries, err := m.WetRepoDir.Glob(ctx, "**.yaml")
 
@@ -16,8 +16,6 @@ func (m *HydrateTfworkspaces) GetPreviousImagesFromCrs(ctx context.Context, matr
 		return nil, err
 
 	}
-
-	crs := []Cr{}
 
 	for _, entry := range entries {
 
@@ -39,20 +37,18 @@ func (m *HydrateTfworkspaces) GetPreviousImagesFromCrs(ctx context.Context, matr
 
 		}
 
-		if cr.Metadata.Annotations.MicroService != "" && cr.Metadata.Annotations.Image != "" {
+		if cr.Metadata.Annotations.MicroServicePointer != "" && cr.Metadata.Annotations.Image != "" {
 
-			claimName := strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1]
+			claimNameFromRef := strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1]
 
-			if len(matrix.Images) > 0 && claimName == matrix.Images[0].Platform {
+			if claimName == claimNameFromRef {
 
-				continue
+				return &cr, nil
 			}
-
-			crs = append(crs, cr)
 
 		}
 
 	}
 
-	return crs, nil
+	return nil, nil
 }
