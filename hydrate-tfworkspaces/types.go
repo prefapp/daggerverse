@@ -36,3 +36,7 @@ type Annotations struct {
 	Image        string `yaml:"firestartr.dev/image"`
 	ClaimRef     string `yaml:"firestartr.dev/claim-ref"`
 }
+
+type Config struct {
+	Image string `yaml:"image"`
+}

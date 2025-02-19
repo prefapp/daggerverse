@@ -16,15 +16,37 @@ type HydrateTfworkspaces struct {
 	ValuesDir        *dagger.Directory
 	WetRepoDir       *dagger.Directory
 	DotFirestartrDir *dagger.Directory
+	Config           Config
 }
 
 func New(
+	ctx context.Context,
+
 	valuesDir *dagger.Directory,
 
 	wetRepoDir *dagger.Directory,
 
 	dotFirestartrDir *dagger.Directory,
 ) *HydrateTfworkspaces {
+
+	configContents, err := valuesDir.File("app-claims/.github/hydrate_tfworkspaces_config.yaml").Contents(ctx)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	config := Config{}
+
+	err = yaml.Unmarshal([]byte(configContents), &config)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
 	return &HydrateTfworkspaces{
 
 		ValuesDir: valuesDir,
@@ -32,6 +54,8 @@ func New(
 		WetRepoDir: wetRepoDir,
 
 		DotFirestartrDir: dotFirestartrDir,
+
+		Config: config,
 	}
 }
 
@@ -125,7 +149,7 @@ func (m *HydrateTfworkspaces) Render(
 	}
 
 	fsCtr, err := dag.Container().
-		From("ghcr.io/prefapp/gitops-k8s:v1.26.2_slim").
+		From(m.Config.Image).
 		WithMountedDirectory("claims", combDirs).
 		WithMountedDirectory("/crs", m.WetRepoDir).
 		WithDirectory("/.config", m.ValuesDir.Directory("platform-claims/.config")).
@@ -210,6 +234,13 @@ func (m *HydrateTfworkspaces) Render(
 			cr.Metadata.Annotations.MicroService,
 			outputDir,
 		)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
 	}
 
 	if len(matrix.Images) == 1 {
