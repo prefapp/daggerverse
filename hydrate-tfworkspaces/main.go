@@ -80,13 +80,11 @@ func (m *HydrateTfworkspaces) Render(
 	}
 
 	// Prepare directories
-
 	platformClaimsDir := m.ValuesDir.Directory("platform-claims/claims/tfworkspaces")
 
 	appClaimsDir := m.ValuesDir.Directory("app-claims/tfworkspaces")
 
 	// Patch claim with previous images
-
 	previousCr, err := m.GetPreviousCr(ctx, claimName)
 
 	if err != nil {
@@ -126,7 +124,6 @@ func (m *HydrateTfworkspaces) Render(
 	}
 
 	// Combine platform and app claims directories
-
 	combDirs := dag.Directory().
 		WithDirectory("platform", platformClaimsDir).
 		WithDirectory("app", appClaimsDir)
