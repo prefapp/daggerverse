@@ -275,7 +275,8 @@ func (m *HydrateOrchestrator) updateRemoteBranch(
 		WithDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{"git", "switch", branchName}, dagger.ContainerWithExecOpts{}).
+		WithExec([]string{"git", "fetch", "origin", branchName}, dagger.ContainerWithExecOpts{}).
+		WithExec([]string{"git", "checkout", branchName}).
 		WithExec([]string{"git", "pull", "origin", "deployment"}, dagger.ContainerWithExecOpts{}).
 		WithExec([]string{"git", "push", "--force", "origin", branchName}).
 		Sync(ctx)
