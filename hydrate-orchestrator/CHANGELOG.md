@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.2.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.1.1...hydrate-orchestrator-v2.2.0) (2025-02-20)
+
+
+### Features
+
+* jsonpatch for image keys ([#131](https://github.com/prefapp/daggerverse/issues/131)) ([7ade374](https://github.com/prefapp/daggerverse/commit/7ade3749b1cc6aa7a818086d2dc80918daccfb03))
+
+
+### Bug Fixes
+
+* update pending branches ([#133](https://github.com/prefapp/daggerverse/issues/133)) ([1e58dd7](https://github.com/prefapp/daggerverse/commit/1e58dd7dfe09338503da70cb19eab19ce7e050d5))
+
 ## [2.1.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.1.0...hydrate-orchestrator-v2.1.1) (2025-02-13)
 
 
