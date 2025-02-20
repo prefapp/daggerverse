@@ -88,11 +88,27 @@ func (m *HydrateOrchestrator) upsertPR(
 
 		m.createRemoteBranch(ctx, contents, newBranchName)
 
-	} else {
+	} else if strings.Contains(stdoutlsRemote, newBranchName) && prExists == nil {
 
 		fmt.Printf("☢️ Branch %s exists, updating branch\n", newBranchName)
 
-		m.updateRemoteBranch(ctx, contents, newBranchName)
+		m.regenerateRemoteBranch(ctx, contents, newBranchName)
+
+	} else if strings.Contains(stdoutlsRemote, newBranchName) && prExists != nil {
+
+		_, err = dag.Gh(dagger.GhOpts{
+			Version: m.GhCliVersion,
+		}).Container(dagger.GhContainerOpts{
+			Token: m.GhToken,
+		}).WithWorkdir(contentsDirPath).
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithExec([]string{
+				"gh",
+				"pr",
+				"update-branch",
+				prExists.Url,
+			}).
+			Sync(ctx)
 
 	}
 
@@ -258,7 +274,7 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 	}
 }
 
-func (m *HydrateOrchestrator) updateRemoteBranch(
+func (m *HydrateOrchestrator) regenerateRemoteBranch(
 	ctx context.Context,
 	// Base branch name
 	// +required
@@ -275,9 +291,8 @@ func (m *HydrateOrchestrator) updateRemoteBranch(
 		WithDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{"git", "fetch", "origin", branchName}, dagger.ContainerWithExecOpts{}).
-		WithExec([]string{"git", "checkout", branchName}).
-		WithExec([]string{"git", "pull", "origin", "deployment"}, dagger.ContainerWithExecOpts{}).
+		WithExec([]string{"git", "push", "origin", "--delete", branchName}, dagger.ContainerWithExecOpts{}).
+		WithExec([]string{"git", "checkout", "-b", branchName}, dagger.ContainerWithExecOpts{}).
 		WithExec([]string{"git", "push", "--force", "origin", branchName}).
 		Sync(ctx)
 
