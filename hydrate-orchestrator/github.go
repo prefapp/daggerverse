@@ -96,6 +96,8 @@ func (m *HydrateOrchestrator) upsertPR(
 
 	} else if strings.Contains(stdoutlsRemote, newBranchName) && prExists != nil {
 
+		fmt.Printf("☢️ Branch %s exists, updating PR through gh cli\n", newBranchName)
+
 		_, err = dag.Gh(dagger.GhOpts{
 			Version: m.GhCliVersion,
 		}).Container(dagger.GhContainerOpts{
