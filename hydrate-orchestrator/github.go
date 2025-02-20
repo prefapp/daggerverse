@@ -247,6 +247,33 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{"git", "checkout", "-b", newBranch}, dagger.ContainerWithExecOpts{}).
+		WithExec([]string{"git", "pull", "origin", "deployment"}, dagger.ContainerWithExecOpts{}).
+		WithExec([]string{"git", "push", "--force", "origin", newBranch}).
+		Sync(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (m *HydrateOrchestrator) removeRemoteBranch(
+	ctx context.Context,
+	// Base branch name
+	// +required
+	gitDir *dagger.Directory,
+	// New branch name
+	// +required
+	newBranch string,
+) {
+	fmt.Printf("☢️ Creating remote branch %s\n", newBranch)
+
+	gitDirPath := "/git_dir"
+
+	_, err := dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Version: m.GhCliVersion}).
+		WithDirectory(gitDirPath, gitDir).
+		WithWorkdir(gitDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{"git", "checkout", "-b", newBranch}, dagger.ContainerWithExecOpts{}).
 		WithExec([]string{"git", "push", "--force", "origin", newBranch}).
 		Sync(ctx)
 
