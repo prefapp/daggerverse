@@ -88,9 +88,30 @@ func (m *HydrateOrchestrator) upsertPR(
 
 		m.createRemoteBranch(ctx, contents, newBranchName)
 
-	} else {
+	} else if strings.Contains(stdoutlsRemote, newBranchName) && prExists == nil {
 
-		fmt.Printf("☢️ Branch %s exists, skipping creation\n", newBranchName)
+		fmt.Printf("☢️ Branch %s exists without PR, regenerating branch\n", newBranchName)
+
+		m.regenerateRemoteBranch(ctx, contents, newBranchName)
+
+	} else if prExists != nil {
+
+		fmt.Printf("☢️ Pull request exists, ensure branch %s is up to date\n", newBranchName)
+
+		_, err = dag.Gh(dagger.GhOpts{
+			Version: m.GhCliVersion,
+		}).Container(dagger.GhContainerOpts{
+			Token: m.GhToken,
+		}).WithWorkdir(contentsDirPath).
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithExec([]string{
+				"gh",
+				"pr",
+				"update-branch",
+				prExists.Url,
+			}).
+			Sync(ctx)
+
 	}
 
 	_, err = dag.Gh(dagger.GhOpts{
@@ -248,6 +269,33 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{"git", "checkout", "-b", newBranch}, dagger.ContainerWithExecOpts{}).
 		WithExec([]string{"git", "push", "--force", "origin", newBranch}).
+		Sync(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (m *HydrateOrchestrator) regenerateRemoteBranch(
+	ctx context.Context,
+	// Base branch name
+	// +required
+	gitDir *dagger.Directory,
+	// New branch name
+	// +required
+	branchName string,
+) {
+	fmt.Printf("☢️ Updating remote branch %s\n", branchName)
+
+	gitDirPath := "/git_dir"
+
+	_, err := dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Version: m.GhCliVersion}).
+		WithDirectory(gitDirPath, gitDir).
+		WithWorkdir(gitDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{"git", "push", "origin", "--delete", branchName}, dagger.ContainerWithExecOpts{}).
+		WithExec([]string{"git", "checkout", "-b", branchName}, dagger.ContainerWithExecOpts{}).
+		WithExec([]string{"git", "push", "--force", "origin", branchName}).
 		Sync(ctx)
 
 	if err != nil {
