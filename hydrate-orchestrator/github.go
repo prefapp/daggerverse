@@ -90,13 +90,13 @@ func (m *HydrateOrchestrator) upsertPR(
 
 	} else if strings.Contains(stdoutlsRemote, newBranchName) && prExists == nil {
 
-		fmt.Printf("☢️ Branch %s exists, updating branch\n", newBranchName)
+		fmt.Printf("☢️ Branch %s exists without PR, regenerating branch\n", newBranchName)
 
 		m.regenerateRemoteBranch(ctx, contents, newBranchName)
 
-	} else if strings.Contains(stdoutlsRemote, newBranchName) && prExists != nil {
+	} else if prExists != nil {
 
-		fmt.Printf("☢️ Branch %s exists, updating PR through gh cli\n", newBranchName)
+		fmt.Printf("☢️ Pull request exists, ensure branch %s is up to date\n", newBranchName)
 
 		_, err = dag.Gh(dagger.GhOpts{
 			Version: m.GhCliVersion,
