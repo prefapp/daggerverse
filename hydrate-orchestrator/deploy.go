@@ -19,7 +19,14 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	// Glob Pattern
 	// +required
 	globPattern string,
+	// Aritfact ref. This param could be used to reference the artifact that triggered the deployment
+	// It contains the image tag, sha, etc.
+	// +optional
+	// +default=""
+	artifactRef string,
 ) *dagger.File {
+
+	m.ArtifactRef = artifactRef
 
 	branchInfo := m.getBranchInfo(ctx)
 
@@ -240,9 +247,11 @@ func (m *HydrateOrchestrator) processDeploymentGlob(
 	}
 
 	jsonString, err := json.Marshal(affected_files)
+
 	if err != nil {
 		panic(err)
 	}
+
 	return m.processUpdatedDeployments(string(jsonString))
 }
 
@@ -291,6 +300,16 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 			}
 			kdep := kubernetesSysDepFromStr(deployment)
 			result.addDeployment(kdep)
+		case "tfworkspaces":
+			// Process terraform workspace deployment
+			tfDep := TfWorkspaceDeployment{
+				Deployment: Deployment{
+					DeploymentPath: deployment,
+				},
+				ClaimName: m.ArtifactRef,
+			}
+
+			result.addDeployment(tfDep)
 		}
 
 	}

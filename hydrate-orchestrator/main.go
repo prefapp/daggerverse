@@ -29,6 +29,7 @@ type HydrateOrchestrator struct {
 	Event            EventType
 	DotFirestartr    *dagger.Directory
 	GhCliVersion     string
+	ArtifactRef      string
 }
 
 func New(
