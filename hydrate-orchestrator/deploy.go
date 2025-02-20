@@ -157,6 +157,61 @@ Created by @%s from %s within commit [%s](%s)
 
 	}
 
+	for _, tfDep := range deployments.TfWorkspaceDeployments {
+
+		renderedDep, err := dag.
+			HydrateTfworkspaces(
+				m.ValuesStateDir,
+				m.WetStateDir,
+				m.DotFirestartr,
+			).
+			Render(ctx, tfDep.ClaimName)
+
+		if err != nil {
+			panic(err)
+		}
+
+		branchName := fmt.Sprintf("tfworkspaces-%s", tfDep.ClaimName)
+
+		prBody := fmt.Sprintf(`
+# New deployment manually triggered
+Created by @%s from %s within commit [%s](%s)
+%s
+`,
+			author,
+			branchInfo.Name,
+			branchInfo.SHA,
+			fmt.Sprintf("https://github.com/%s/commit/%s", m.Repo, branchInfo.SHA),
+			tfDep.String(false),
+		)
+
+		_, err = m.upsertPR(
+			ctx,
+			branchName,
+			&renderedDep[0],
+			tfDep.Labels(),
+			tfDep.String(true),
+			prBody,
+			tfDep.DeploymentPath,
+			lo.Ternary(author == "author", []string{}, []string{author}),
+		)
+
+		if err != nil {
+
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+		} else {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				"Success",
+			)
+		}
+
+	}
+
 	return m.DeploymentSummaryToFile(ctx, summary)
 
 }
