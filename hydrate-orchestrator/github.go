@@ -90,7 +90,10 @@ func (m *HydrateOrchestrator) upsertPR(
 
 	} else {
 
-		fmt.Printf("☢️ Branch %s exists, skipping creation\n", newBranchName)
+		fmt.Printf("☢️ Branch %s exists, updating branch\n", newBranchName)
+
+		m.updateRemoteBranch(ctx, contents, newBranchName)
+
 	}
 
 	_, err = dag.Gh(dagger.GhOpts{
@@ -247,7 +250,6 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{"git", "checkout", "-b", newBranch}, dagger.ContainerWithExecOpts{}).
-		WithExec([]string{"git", "pull", "origin", "deployment"}, dagger.ContainerWithExecOpts{}).
 		WithExec([]string{"git", "push", "--force", "origin", newBranch}).
 		Sync(ctx)
 
@@ -256,16 +258,16 @@ func (m *HydrateOrchestrator) createRemoteBranch(
 	}
 }
 
-func (m *HydrateOrchestrator) removeRemoteBranch(
+func (m *HydrateOrchestrator) updateRemoteBranch(
 	ctx context.Context,
 	// Base branch name
 	// +required
 	gitDir *dagger.Directory,
 	// New branch name
 	// +required
-	newBranch string,
+	branchName string,
 ) {
-	fmt.Printf("☢️ Creating remote branch %s\n", newBranch)
+	fmt.Printf("☢️ Updating remote branch %s\n", branchName)
 
 	gitDirPath := "/git_dir"
 
@@ -273,8 +275,9 @@ func (m *HydrateOrchestrator) removeRemoteBranch(
 		WithDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{"git", "checkout", "-b", newBranch}, dagger.ContainerWithExecOpts{}).
-		WithExec([]string{"git", "push", "--force", "origin", newBranch}).
+		WithExec([]string{"git", "switch", branchName}, dagger.ContainerWithExecOpts{}).
+		WithExec([]string{"git", "pull", "origin", "deployment"}, dagger.ContainerWithExecOpts{}).
+		WithExec([]string{"git", "push", "--force", "origin", branchName}).
 		Sync(ctx)
 
 	if err != nil {
