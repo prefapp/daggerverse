@@ -1,0 +1,7 @@
+regoFile: soups-app.rego
+applicableClaims:
+  - name: "*"
+    kind: "TFWorkspaceClaim"
+data:
+  prefixName: soups-
+  
