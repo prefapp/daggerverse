@@ -83,7 +83,7 @@ func (tfd *TfWorkspaceDeployment) Equals(other TfWorkspaceDeployment) bool {
 func (tfd *TfWorkspaceDeployment) String(summary bool) string {
 	if summary {
 		return fmt.Sprintf(
-			"Deployment in claim: `%s`",
+			"TFWorkspace deployment: `%s`",
 			tfd.ClaimName,
 		)
 	} else {
