@@ -94,8 +94,8 @@ func (tfd *TfWorkspaceDeployment) String(summary bool) string {
 
 func (tfd *TfWorkspaceDeployment) Labels() []string {
 	return []string{
-		"type/tfworkspace",
-		fmt.Sprintf("claim/%s", tfd.ClaimName),
+		"type/tfworkspaces",
+		fmt.Sprintf("tfworkspace/%s", tfd.ClaimName),
 	}
 }
 
