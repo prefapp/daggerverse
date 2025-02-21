@@ -357,7 +357,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 			result.addDeployment(kdep)
 		case "tfworkspaces":
 			// Process terraform workspace deployment
-			tfDep := TfWorkspaceDeployment{
+			tfDep := &TfWorkspaceDeployment{
 				Deployment: Deployment{
 					DeploymentPath: deployment,
 				},
