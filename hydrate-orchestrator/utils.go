@@ -72,6 +72,8 @@ type KubernetesAppDeployment struct {
 type TfWorkspaceDeployment struct {
 	Deployment
 	ClaimName    string
+	Tenant       string
+	Environment  string
 	ImagesMatrix string
 }
 
