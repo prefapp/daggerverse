@@ -12,7 +12,7 @@ func (m *HydrateTfworkspaces) RenderWithFirestartrContainer(ctx context.Context,
 		From(m.Config.Image).
 		WithMountedDirectory("claims", claimsDir).
 		WithMountedDirectory("/crs", m.WetRepoDir).
-		WithDirectory("/.config", m.ValuesDir.Directory("platform-claims/.config")).
+		WithDirectory("/.config", m.ValuesDir.Directory(".config")).
 		WithEnvVariable("DEBUG", "firestartr:*").
 		WithExec(
 			[]string{

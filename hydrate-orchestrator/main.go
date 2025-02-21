@@ -47,7 +47,7 @@ func New(
 	// +required
 	wetStateDir *dagger.Directory,
 	// Auth directory
-	// +required
+	// +optional
 	authDir *dagger.Directory,
 	// Deployment branch to hydrate
 	// +optional
