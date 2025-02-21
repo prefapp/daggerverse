@@ -27,7 +27,7 @@ func New(
 	dotFirestartrDir *dagger.Directory,
 ) *HydrateTfworkspaces {
 
-	configContents, err := valuesDir.File("app-claims/.github/hydrate_tfworkspaces_config.yaml").Contents(ctx)
+	configContents, err := valuesDir.File(".github/hydrate_tfworkspaces_config.yaml").Contents(ctx)
 
 	if err != nil {
 
