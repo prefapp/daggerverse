@@ -37,8 +37,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 %s
 `, repositoryCaller, repoURL, tfDep.String(false))
 
-		globPattern := fmt.
-			Sprintf("%s/%s/%s/%s", "tfworkspaces", tfDep.ClaimName)
+		globPattern := fmt.Sprintf("%s/%s/%s/%s", "tfworkspaces", tfDep.ClaimName, "*", "*")
 
 		prLink, err := m.upsertPR(
 			ctx,
