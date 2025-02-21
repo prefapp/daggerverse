@@ -24,15 +24,11 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	// +optional
 	// +default=""
 	artifactRef string,
-	// Values dir path
-	// +optional
-	// +default=""
-	valuesGitDirPath string,
 ) *dagger.File {
 
 	m.ArtifactRef = artifactRef
 
-	branchInfo := m.getBranchInfo(ctx, valuesGitDirPath)
+	branchInfo := m.getBranchInfo(ctx)
 
 	summary := &DeploymentSummary{
 		Items: []DeploymentSummaryRow{},

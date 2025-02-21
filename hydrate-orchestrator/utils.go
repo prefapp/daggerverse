@@ -247,23 +247,14 @@ type BranchInfo struct {
 
 func (m *HydrateOrchestrator) getBranchInfo(
 	ctx context.Context,
-	valuesGitDirPath string,
 ) *BranchInfo {
-
-	valuesDir := m.ValuesStateDir
-
-	if valuesGitDirPath != "" {
-
-		valuesDir = m.ValuesStateDir.Directory(valuesGitDirPath)
-
-	}
 
 	gitDirPath := "/git_dir"
 	ctr := dag.Gh().Container(dagger.GhContainerOpts{
 		Token:   m.GhToken,
 		Version: m.GhCliVersion,
 	}).
-		WithDirectory(gitDirPath, valuesDir).
+		WithDirectory(gitDirPath, m.ValuesStateDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String())
 
