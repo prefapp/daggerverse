@@ -317,6 +317,8 @@ func (m *HydrateOrchestrator) getColorForLabel(label string) string {
 		return "AC1CAA"
 	case strings.Contains(label, "type/"):
 		return "6C3B2A"
+	case strings.Contains(label, "tfworkspace/"):
+		return "7B42BC"
 	default:
 		return "7E7C7A"
 	}

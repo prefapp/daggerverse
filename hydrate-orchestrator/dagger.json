@@ -15,6 +15,10 @@
     {
       "name": "hydrate-kubernetes",
       "source": "../hydrate-kubernetes"
+    },
+    {
+      "name": "hydrate-tfworkspaces",
+      "source": "../hydrate-tfworkspaces"
     }
   ],
   "source": "."

@@ -29,6 +29,7 @@ type HydrateOrchestrator struct {
 	Event            EventType
 	DotFirestartr    *dagger.Directory
 	GhCliVersion     string
+	ArtifactRef      string
 }
 
 func New(
@@ -46,7 +47,8 @@ func New(
 	// +required
 	wetStateDir *dagger.Directory,
 	// Auth directory
-	// +required
+	// +optional
+	// +defaultPath="/tmp"
 	authDir *dagger.Directory,
 	// Deployment branch to hydrate
 	// +optional

@@ -19,6 +19,7 @@ struct to hold the updated deployments
 type Deployments struct {
 	KubernetesDeployments    []KubernetesAppDeployment
 	KubernetesSysDeployments []KubernetesSysDeployment
+	TfWorkspaceDeployments   []TfWorkspaceDeployment
 }
 
 func (d *Deployments) addDeployment(dep interface{}) {
@@ -38,7 +39,12 @@ func (d *Deployments) addDeployment(dep interface{}) {
 		}) {
 			d.KubernetesSysDeployments = append(d.KubernetesSysDeployments, *dep)
 		}
-
+	case *TfWorkspaceDeployment:
+		if !lo.ContainsBy(d.TfWorkspaceDeployments, func(tfd TfWorkspaceDeployment) bool {
+			return tfd.Equals(*dep)
+		}) {
+			d.TfWorkspaceDeployments = append(d.TfWorkspaceDeployments, *dep)
+		}
 	default:
 		panic(fmt.Sprintf("Unknown deployment type: %T", dep))
 	}
@@ -58,6 +64,41 @@ type KubernetesAppDeployment struct {
 	Tenant       string
 	Environment  string
 	ImagesMatrix string
+}
+
+/*
+- TfWorkspaceDeployment specific deployment struct
+*/
+type TfWorkspaceDeployment struct {
+	Deployment
+	ClaimName    string
+	Tenant       string
+	Environment  string
+	ImagesMatrix string
+}
+
+func (tfd *TfWorkspaceDeployment) Equals(other TfWorkspaceDeployment) bool {
+	return tfd.DeploymentPath == other.DeploymentPath &&
+		tfd.ClaimName == other.ClaimName
+}
+
+func (tfd *TfWorkspaceDeployment) String(summary bool) string {
+	if summary {
+		return fmt.Sprintf(
+			"TFWorkspace deployment: `%s`",
+			tfd.ClaimName,
+		)
+	} else {
+		return "Deployment coordinates:" +
+			fmt.Sprintf("\n\t* Claim: `%s`", tfd.ClaimName)
+	}
+}
+
+func (tfd *TfWorkspaceDeployment) Labels() []string {
+	return []string{
+		"type/tfworkspaces",
+		fmt.Sprintf("tfworkspace/%s", tfd.ClaimName),
+	}
 }
 
 // Check if two KubernetesAppDeployment are equal

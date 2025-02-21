@@ -19,7 +19,14 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	// Glob Pattern
 	// +required
 	globPattern string,
+	// Aritfact ref. This param could be used to reference the artifact that triggered the deployment
+	// It contains the image tag, sha, etc.
+	// +optional
+	// +default=""
+	artifactRef string,
 ) *dagger.File {
+
+	m.ArtifactRef = artifactRef
 
 	branchInfo := m.getBranchInfo(ctx)
 
@@ -150,6 +157,61 @@ Created by @%s from %s within commit [%s](%s)
 
 	}
 
+	for _, tfDep := range deployments.TfWorkspaceDeployments {
+
+		renderedDep, err := dag.
+			HydrateTfworkspaces(
+				m.ValuesStateDir,
+				m.WetStateDir,
+				m.DotFirestartr,
+			).
+			Render(ctx, tfDep.ClaimName)
+
+		if err != nil {
+			panic(err)
+		}
+
+		branchName := fmt.Sprintf("tfworkspaces-%s", tfDep.ClaimName)
+
+		prBody := fmt.Sprintf(`
+# New deployment manually triggered
+Created by @%s from %s within commit [%s](%s)
+%s
+`,
+			author,
+			branchInfo.Name,
+			branchInfo.SHA,
+			fmt.Sprintf("https://github.com/%s/commit/%s", m.Repo, branchInfo.SHA),
+			tfDep.String(false),
+		)
+
+		_, err = m.upsertPR(
+			ctx,
+			branchName,
+			&renderedDep[0],
+			tfDep.Labels(),
+			tfDep.String(true),
+			prBody,
+			tfDep.DeploymentPath,
+			lo.Ternary(author == "author", []string{}, []string{author}),
+		)
+
+		if err != nil {
+
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+		} else {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				"Success",
+			)
+		}
+
+	}
+
 	return m.DeploymentSummaryToFile(ctx, summary)
 
 }
@@ -240,9 +302,11 @@ func (m *HydrateOrchestrator) processDeploymentGlob(
 	}
 
 	jsonString, err := json.Marshal(affected_files)
+
 	if err != nil {
 		panic(err)
 	}
+
 	return m.processUpdatedDeployments(string(jsonString))
 }
 
@@ -291,6 +355,16 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 			}
 			kdep := kubernetesSysDepFromStr(deployment)
 			result.addDeployment(kdep)
+		case "tfworkspaces":
+			// Process terraform workspace deployment
+			tfDep := &TfWorkspaceDeployment{
+				Deployment: Deployment{
+					DeploymentPath: deployment,
+				},
+				ClaimName: m.ArtifactRef,
+			}
+
+			result.addDeployment(tfDep)
 		}
 
 	}

@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"strings"
 )
 
@@ -33,141 +31,35 @@ func (m *HydrateOrchestrator) RunDispatch(
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
+	// +required
+	// +default="kubernetes"
+	platformType string,
 ) {
-
-	deployments := m.processImagesMatrix(newImagesMatrix)
-
 	repositoryCaller, repoURL := m.getRepositoryCaller(newImagesMatrix)
 
 	reviewers := m.getReviewers(newImagesMatrix)
 
-	for _, kdep := range deployments.KubernetesDeployments {
-
-		branchName := fmt.Sprintf("%s-kubernetes-%s-%s-%s", repositoryCaller, kdep.Cluster, kdep.Tenant, kdep.Environment)
-
-		renderedDeployment, err := dag.HydrateKubernetes(
-			m.ValuesStateDir,
-			m.WetStateDir,
-			m.DotFirestartr,
-			dagger.HydrateKubernetesOpts{
-				HelmConfigDir: m.AuthDir,
-			},
-		).Render(ctx, m.App, kdep.Cluster, dagger.HydrateKubernetesRenderOpts{
-			Tenant:          kdep.Tenant,
-			Env:             kdep.Environment,
-			NewImagesMatrix: kdep.ImagesMatrix,
-		})
-
-		if err != nil {
-			panic(err)
-		}
-
-		prBody := fmt.Sprintf(`
-# New deployment from new image in repository [*%s*](%s)
-%s
-`, repositoryCaller, repoURL, kdep.String(false))
-
-		globPattern := fmt.
-			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
-
-		prLink, err := m.upsertPR(
+	switch platformType {
+	case "kubernetes":
+		m.GenerateKubernetesDeployments(
 			ctx,
-			branchName,
-			&renderedDeployment[0],
-			kdep.Labels(),
-			kdep.String(true),
-			prBody,
-			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
+			newImagesMatrix,
+			repositoryCaller,
+			repoURL,
 			reviewers,
 		)
-
-		if err != nil {
-
-			panic(err)
-		}
-
-		if m.AutomergeFileExists(ctx, globPattern) {
-
-			fmt.Printf("Automerge file found, merging PR %s\n", prLink)
-
-			if prLink == "" {
-
-				panic("PR link is empty, cannot merge PR")
-
-			}
-
-			err := m.MergePullRequest(ctx, prLink)
-
-			if err != nil {
-
-				panic(err)
-
-			}
-
-		} else {
-
-			fmt.Println("Automerge file does not exist, skipping automerge")
-
-		}
-
-	}
-
-}
-
-func (m *HydrateOrchestrator) processImagesMatrix(
-	updatedDeployments string,
-) *Deployments {
-	result := &Deployments{
-		KubernetesDeployments: []KubernetesAppDeployment{},
-	}
-
-	var imagesMatrix ImageMatrix
-	err := json.Unmarshal([]byte(updatedDeployments), &imagesMatrix)
-
-	if err != nil {
-		panic(err)
-	}
-
-	for _, image := range imagesMatrix.Images {
-
-		// At the moment the dispatch does not send the cluster so we extract it from the base folder
-
-		deploymentPath := filepath.Join(
-			"kubernetes",
-			image.Platform,
-			image.Tenant,
-			image.Env,
+	case "tfworkspaces":
+		m.GenerateTfWorkspacesDeployments(
+			ctx,
+			newImagesMatrix,
+			repositoryCaller,
+			repoURL,
+			reviewers,
 		)
-
-		uniqueImage := []ImageData{image}
-
-		uniqueImageMatrix := ImageMatrix{
-			Images: uniqueImage,
-		}
-
-		jsonUniqueImage, err := json.Marshal(uniqueImageMatrix)
-
-		if err != nil {
-
-			panic(err)
-
-		}
-
-		kdep := &KubernetesAppDeployment{
-			Deployment: Deployment{
-				DeploymentPath: deploymentPath,
-			},
-			Cluster:      image.Platform,
-			Tenant:       image.Tenant,
-			Environment:  image.Env,
-			ImagesMatrix: string(jsonUniqueImage),
-		}
-
-		result.addDeployment(kdep)
-
+	default:
+		panic(fmt.Sprintf("Platform type %s not supported", platformType))
 	}
 
-	return result
 }
 
 func (m *HydrateOrchestrator) getRepositoryCaller(newImagesMatrix string) (string, string) {

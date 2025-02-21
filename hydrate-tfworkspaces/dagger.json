@@ -1,0 +1,12 @@
+{
+  "name": "hydrate-tfworkspaces",
+  "engineVersion": "v0.15.3",
+  "sdk": "go",
+  "dependencies": [
+    {
+      "name": "firestartr-config",
+      "source": "../firestartr-config"
+    }
+  ],
+  "source": "."
+}

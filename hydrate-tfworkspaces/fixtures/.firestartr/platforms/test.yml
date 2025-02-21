@@ -1,0 +1,4 @@
+type: tfworkspaces
+name: example-platform
+tenants: [test-tenant]
+envs: [test-env]
