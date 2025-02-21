@@ -209,8 +209,13 @@ func (m *HydrateTfworkspaces) Render(
 	}
 
 	m.WetRepoDir = m.WetRepoDir.
-		WithoutFile(crFileName).
-		WithFile(crFileName, crFile)
+		WithoutFile(
+			fmt.Sprintf("tfworkspaces/%s", crFileName),
+		).
+		WithFile(
+			fmt.Sprintf("tfworkspaces/%s", crFileName),
+			crFile,
+		)
 
 	return []*dagger.Directory{m.WetRepoDir}, nil
 
