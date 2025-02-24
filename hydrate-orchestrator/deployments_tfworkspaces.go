@@ -24,7 +24,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			m.ValuesStateDir,
 			m.WetStateDir,
 			m.DotFirestartr,
-		).Render(ctx, tfDep.ClaimName, dagger.HydrateTfworkspacesRenderOpts{
+		).Render(ctx, tfDep.ClaimName, m.App, dagger.HydrateTfworkspacesRenderOpts{
 			NewImagesMatrix: tfDep.ImagesMatrix,
 		})
 

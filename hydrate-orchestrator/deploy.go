@@ -165,7 +165,7 @@ Created by @%s from %s within commit [%s](%s)
 				m.WetStateDir,
 				m.DotFirestartr,
 			).
-			Render(ctx, tfDep.ClaimName)
+			Render(ctx, tfDep.ClaimName, m.App)
 
 		if err != nil {
 			panic(err)
