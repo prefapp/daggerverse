@@ -93,8 +93,6 @@ func (m *Opa) FindApplicableClaims(claims []ClaimClassification, data ClaimsData
 				fmt.Printf("ACPROPVAL: %s\n", aCpropVal)
 				fmt.Printf("CLAIMPROPVAL: %s\n", claimPropVal)
 
-				// fmt.Printf("validating property %s: %s == %s\n", property, aCpropVal, claimPropVal)
-
 				if aCpropVal != "" && aCpropVal != claimPropVal {
 
 					fmt.Printf("❌ property %s does not match\n", property)
