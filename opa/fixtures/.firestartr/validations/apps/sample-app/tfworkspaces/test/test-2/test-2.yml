@@ -1,0 +1,10 @@
+name: "prefix-soups-2"
+description: "Prefix all workspace names with soups-"
+regoFile: soups-app.rego
+applyTo:
+  - env: "env-2"
+    tenant: "tenant"
+    kind: "TFWorkspaceClaim" # redundant
+    resourceType: "az-vmss" # required
+data:
+  prefixName: soups-
