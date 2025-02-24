@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"dagger/opa/internal/dagger"
-	"slices"
+	"fmt"
+	"reflect"
 )
 
 func (m *Opa) ValidateClaims(
@@ -11,52 +12,99 @@ func (m *Opa) ValidateClaims(
 	claimsDir *dagger.Directory,
 	validationsDir *dagger.Directory,
 	policiesDir *dagger.Directory,
-) (*dagger.Directory, error) {
+) error {
 
-	return claimsDir, nil
+	claims, err := m.ClassifyClaims(ctx, claimsDir)
 
-}
+	if err != nil {
 
-func (m *Opa) PolicyIsApplicableToClaim(claimDataFile ClaimsDataFile, claim Claim) bool {
+		return err
 
-	for _, applicableClaim := range claimDataFile.ApplicableClaims {
+	}
 
-		applicable := false
+	dataRules, err := m.LoadDataRules(ctx, validationsDir, m.App)
 
-		for _, field := range getFieldsFromInstance(claim) {
+	if err != nil {
+		return err
+	}
 
-			if applicable {
+	for _, dataRule := range dataRules {
 
-				return true
+		applicableClaims := m.FindApplicableClaims(claims, dataRule)
+
+		for _, claim := range applicableClaims {
+
+			ctr, err := m.Validate(
+				ctx,
+				policiesDir.File(dataRule.RegoFile),
+				dataRule.File,
+				claim.File,
+			)
+
+			if err != nil {
+
+				return err
 
 			}
 
-			value := getValueFromField(&claim, field)
+			exitCode, err := ctr.ExitCode(ctx)
 
-			applicableClaimFields := getFieldsFromInstance(applicableClaim)
+			if err != nil {
 
-			if slices.Contains(applicableClaimFields, field) {
+				return err
 
-				valueFromApplicableClaim := getValueFromField(applicableClaim, field)
+			}
 
-				if value == "*" || value == valueFromApplicableClaim {
+			fmt.Printf("Exit code: %d\n", exitCode)
+		}
+	}
 
-					applicable = true
+	return nil
 
-				} else {
+}
+
+func (m *Opa) FindApplicableClaims(claims []ClaimClassification, data ClaimsDataRules) []ClaimClassification {
+
+	var applicableClaims []ClaimClassification
+
+	for _, claim := range claims {
+
+		for _, applicableRule := range data.ApplyTo {
+
+			applicable := true
+
+			matchProperties := []string{
+				"Name",
+				"Kind",
+				"ResourceType",
+				"Environment",
+				"Tenant",
+				"Platform",
+			}
+
+			for _, property := range matchProperties {
+
+				aCpropVal := reflect.ValueOf(applicableRule).FieldByName(property).String()
+
+				claimPropVal := reflect.ValueOf(claim).FieldByName(property).String()
+
+				if aCpropVal != "" && aCpropVal != claimPropVal {
 
 					applicable = false
-
-					break
 
 				}
 
 			}
 
+			if applicable {
+
+				applicableClaims = append(applicableClaims, claim)
+
+			}
 		}
 
 	}
 
-	return false
+	return applicableClaims
 
 }

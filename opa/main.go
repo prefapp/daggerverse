@@ -16,29 +16,20 @@ package main
 
 import (
 	"context"
-	"dagger/opa/internal/dagger"
 )
 
-type Opa struct{}
+type Opa struct {
+	App string
+}
 
-func (m *Opa) Validate(
+func New(
 	ctx context.Context,
-	policy *dagger.File,
-	data *dagger.File,
-	input *dagger.File,
-) (*dagger.Container, error) {
-	return dag.Container().
-		From("openpolicyagent/conftest").
-		WithMountedFile("/validation/policy.rego", policy).
-		WithMountedFile("/validation/data.yaml", data).
-		WithMountedFile("/validation/input.yaml", input).
-		WithWorkdir("/validation").
-		WithExec([]string{
-			"conftest",
-			"--rego-version", "v1",
-			"test", "input.yaml",
-			"--data", "data.yaml",
-			"--policy", "policy.rego",
-		}), nil
 
+	app string,
+
+) *Opa {
+
+	return &Opa{
+		App: app,
+	}
 }

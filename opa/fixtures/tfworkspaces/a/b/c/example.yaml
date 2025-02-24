@@ -1,3 +1,0 @@
-name: fake-workspace
-kind: TFWorkspaceClaim
-description: "This is a fake workspace"
