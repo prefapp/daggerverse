@@ -63,6 +63,8 @@ func (m *HydrateTfworkspaces) Render(
 
 	claimName string,
 
+	app string,
+
 	// +optional
 	// +default="{\"images\":[]}"
 	newImagesMatrix string,
@@ -83,6 +85,19 @@ func (m *HydrateTfworkspaces) Render(
 	platformClaimsDir := m.ValuesDir.Directory("claims/tfworkspaces")
 
 	appClaimsDir := m.ValuesDir.Directory("tfworkspaces")
+
+	err = dag.Opa(app).ValidateClaims(
+		ctx,
+		appClaimsDir,
+		m.DotFirestartrDir.Directory("validations"),
+		m.DotFirestartrDir.Directory("validations/policies"),
+	)
+
+	if err != nil {
+
+		return nil, err
+
+	}
 
 	// Patch claim with previous images
 	previousCr, err := m.GetPreviousCr(ctx, claimName)
