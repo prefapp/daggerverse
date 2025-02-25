@@ -6,5 +6,6 @@ applyTo:
     tenant: "tenant"
     kind: "TFWorkspaceClaim" # redundant
     resourceType: "az-vmss" # required
+    app: sample-app
 data:
   prefixName: soups-

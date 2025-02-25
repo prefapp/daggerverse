@@ -74,6 +74,7 @@ func (m *Opa) FindApplicableClaims(claims []ClaimClassification, data ClaimsData
 			applicable := true
 
 			matchProperties := []string{
+				"App",
 				"Name",
 				"Kind",
 				"ResourceType",
@@ -88,10 +89,20 @@ func (m *Opa) FindApplicableClaims(claims []ClaimClassification, data ClaimsData
 
 				claimPropVal := reflect.ValueOf(claim).FieldByName(property).String()
 
+				fmt.Printf("PROPERTY: %s\n", property)
+				fmt.Printf("ACPROPVAL: %s\n", aCpropVal)
+				fmt.Printf("CLAIMPROPVAL: %s\n", claimPropVal)
+
 				if aCpropVal != "" && aCpropVal != claimPropVal {
+
+					fmt.Printf("❌ property %s does not match\n", property)
 
 					applicable = false
 
+					break
+
+				} else {
+					fmt.Printf("✅ property is skipped or matches, property: '%s', value from rule: '%s', value from claim: '%s'\n", property, aCpropVal, claimPropVal)
 				}
 
 			}

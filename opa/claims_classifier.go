@@ -44,6 +44,12 @@ func (m *Opa) ClassifyClaims(ctx context.Context, claimsDir *dagger.Directory) (
 
 		err = yaml.Unmarshal([]byte(contents), claim)
 
+		if err != nil {
+
+			return nil, err
+
+		}
+
 		splitted := strings.Split(entry, "/")
 
 		classifications = append(
@@ -55,6 +61,7 @@ func (m *Opa) ClassifyClaims(ctx context.Context, claimsDir *dagger.Directory) (
 				ResourceType: claim.ResourceType,
 				Tenant:       splitted[1],
 				Platform:     splitted[0],
+				App:          m.App,
 			})
 
 		fmt.Printf("Classifying claims in %s\n", entry)

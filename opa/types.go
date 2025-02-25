@@ -11,6 +11,7 @@ type ClaimsDataRules struct {
 }
 
 type ApplicableRule struct {
+	App          string `yaml:"app"`
 	Name         string `yaml:"name"`
 	Kind         string `yaml:"kind"`
 	ResourceType string `yaml:"resourceType"`
@@ -32,5 +33,6 @@ type ClaimClassification struct {
 	ResourceType string
 	Tenant       string
 	Platform     string
+	App          string
 	File         *dagger.File
 }
