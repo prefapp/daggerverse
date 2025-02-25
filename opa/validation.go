@@ -30,21 +30,30 @@ func (m *Opa) Validate(
 
 	}
 
+	dataFileName, err := data.Name(ctx)
+
+	if err != nil {
+
+		return "", err
+
+	}
+
 	fmt.Printf("Validating file %s against policy %s\n", fileName, policyFileName)
 
-	ctr, err := dag.Container().
+	ctr, _ := dag.Container().
 		From("openpolicyagent/conftest").
-		WithMountedFile("/validation/policy.rego", policy).
-		WithMountedFile("/validation/data.yaml", data).
-		WithMountedFile("/validation/input.yaml", file).
+		WithMountedFile(fmt.Sprintf("/validation/%s", policyFileName), policy).
+		WithMountedFile(fmt.Sprintf("/validation/%s", dataFileName), data).
+		WithMountedFile(fmt.Sprintf("/validation/%s", fileName), file).
 		WithWorkdir("/validation").
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"conftest",
 			"--rego-version", "v1",
-			"test", "input.yaml",
-			"--data", "data.yaml",
-			"--policy", "policy.rego",
+			"--output", "table",
+			"test", fileName,
+			"--data", dataFileName,
+			"--policy", policyFileName,
 		}, dagger.ContainerWithExecOpts{
 			RedirectStderr: "/tmp/stderr",
 			RedirectStdout: "/tmp/stdout",
