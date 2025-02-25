@@ -8,4 +8,4 @@ applyTo:
     resourceType: "az-vmss" # required
     app: sample-app
 data:
-  prefixName: kaka-
+  prefixName: soups-
