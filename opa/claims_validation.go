@@ -34,7 +34,7 @@ func (m *Opa) ValidateClaims(
 
 		for _, claim := range applicableClaims {
 
-			ctr, err := m.Validate(
+			_, err := m.Validate(
 				ctx,
 				policiesDir.File(dataRule.RegoFile),
 				dataRule.File,
@@ -46,16 +46,6 @@ func (m *Opa) ValidateClaims(
 				return err
 
 			}
-
-			exitCode, err := ctr.ExitCode(ctx)
-
-			if err != nil {
-
-				return err
-
-			}
-
-			fmt.Printf("Exit code: %d\n", exitCode)
 		}
 	}
 
@@ -64,6 +54,8 @@ func (m *Opa) ValidateClaims(
 }
 
 func (m *Opa) FindApplicableClaims(claims []ClaimClassification, data ClaimsDataRules) []ClaimClassification {
+
+	fmt.Printf("Finding applicable claims for data rule %v\n", data)
 
 	var applicableClaims []ClaimClassification
 
@@ -115,6 +107,8 @@ func (m *Opa) FindApplicableClaims(claims []ClaimClassification, data ClaimsData
 		}
 
 	}
+
+	fmt.Printf("Applicable claims: %v\n", applicableClaims)
 
 	return applicableClaims
 

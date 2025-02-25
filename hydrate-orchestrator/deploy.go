@@ -55,7 +55,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				err.Error(),
 			)
 
 			continue
@@ -168,7 +168,12 @@ Created by @%s from %s within commit [%s](%s)
 			Render(ctx, tfDep.ClaimName, m.App)
 
 		if err != nil {
-			panic(err)
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+			continue
 		}
 
 		branchName := fmt.Sprintf("tfworkspaces-%s", tfDep.ClaimName)

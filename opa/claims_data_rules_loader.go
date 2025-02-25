@@ -12,6 +12,8 @@ func (m *Opa) LoadDataRules(ctx context.Context, validationsDir *dagger.Director
 
 	var data []ClaimsDataRules
 
+	fmt.Printf("loading data rules for app %s\n", app)
+
 	for _, ext := range []string{".yml", ".yaml"} {
 
 		entries, err := validationsDir.Glob(ctx, fmt.Sprintf("apps/%s/tfworkspaces/**/*%s", app, ext))
@@ -50,6 +52,8 @@ func (m *Opa) LoadDataRules(ctx context.Context, validationsDir *dagger.Director
 
 		}
 	}
+
+	fmt.Printf("loaded %v data rules\n", data)
 
 	return data, nil
 }
