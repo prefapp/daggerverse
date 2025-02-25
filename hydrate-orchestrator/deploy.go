@@ -5,6 +5,7 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
+	"regexp"
 
 	"github.com/samber/lo"
 )
@@ -55,7 +56,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				err.Error(),
+				regexp.MustCompile(`\n`).ReplaceAllString(err.Error(), ""),
 			)
 
 			continue

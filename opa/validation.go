@@ -95,5 +95,8 @@ func strip(str string) string {
 	// remove line feed
 	str = regexp.MustCompile(`\f`).ReplaceAllString(str, "")
 
+	// remove end of line
+	str = regexp.MustCompile(`\r\n`).ReplaceAllString(str, "")
+
 	return str
 }
