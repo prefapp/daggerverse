@@ -89,5 +89,8 @@ func strip(str string) string {
 
 	str = regexp.MustCompile(`\n`).ReplaceAllString(str, "")
 
+	// remove \t
+	str = regexp.MustCompile(`\t`).ReplaceAllString(str, "")
+
 	return str
 }
