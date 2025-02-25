@@ -65,6 +65,8 @@ func (m *Opa) ValidateClaims(
 
 func (m *Opa) FindApplicableClaims(claims []ClaimClassification, data ClaimsDataRules) []ClaimClassification {
 
+	fmt.Printf("Finding applicable claims for data rule %v\n", data)
+
 	var applicableClaims []ClaimClassification
 
 	for _, claim := range claims {
@@ -115,6 +117,8 @@ func (m *Opa) FindApplicableClaims(claims []ClaimClassification, data ClaimsData
 		}
 
 	}
+
+	fmt.Printf("Applicable claims: %v\n", applicableClaims)
 
 	return applicableClaims
 
