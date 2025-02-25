@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/opa/internal/dagger"
 	"fmt"
+	"regexp"
 	"time"
 )
 
@@ -12,13 +13,13 @@ func (m *Opa) Validate(
 	policy *dagger.File,
 	data *dagger.File,
 	file *dagger.File,
-) (string, error) {
+) (*dagger.Container, error) {
 
 	fileName, err := file.Name(ctx)
 
 	if err != nil {
 
-		return "", err
+		return nil, err
 
 	}
 
@@ -26,7 +27,7 @@ func (m *Opa) Validate(
 
 	if err != nil {
 
-		return "", err
+		return nil, err
 
 	}
 
@@ -34,7 +35,7 @@ func (m *Opa) Validate(
 
 	if err != nil {
 
-		return "", err
+		return nil, err
 
 	}
 
@@ -50,7 +51,7 @@ func (m *Opa) Validate(
 		WithExec([]string{
 			"conftest",
 			"--rego-version", "v1",
-			"--output", "tap",
+			"--output", "stdout",
 			"test", fileName,
 			"--data", dataFileName,
 			"--policy", policyFileName,
@@ -64,17 +65,25 @@ func (m *Opa) Validate(
 
 	if err != nil {
 
-		return "", err
+		return nil, err
 
 	}
 
 	if eC != 0 {
 
-		// stderr, _ := ctr.File("/tmp/stderr").Contents(ctx)
+		stderr, _ := ctr.File("/tmp/stderr").Contents(ctx)
 		stdout, _ := ctr.File("/tmp/stdout").Contents(ctx)
 
-		return "", fmt.Errorf("%s", stdout)
+		return nil, fmt.Errorf("%s\n%s", strip(stdout), strip(stderr))
 	}
 
-	return "", nil
+	return ctr, nil
+}
+
+func strip(str string) string {
+	const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
+
+	var re = regexp.MustCompile(ansi)
+
+	return re.ReplaceAllString(str, "")
 }
