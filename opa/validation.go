@@ -50,7 +50,7 @@ func (m *Opa) Validate(
 		WithExec([]string{
 			"conftest",
 			"--rego-version", "v1",
-			"--output", "table",
+			"--output", "json",
 			"test", fileName,
 			"--data", dataFileName,
 			"--policy", policyFileName,
