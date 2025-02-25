@@ -10,13 +10,5 @@ func strip(str string) string {
 
 	str = re.ReplaceAllString(str, "")
 
-	str = regexp.MustCompile(`\n`).ReplaceAllString(str, "")
-
-	// remove carriage return
-	str = regexp.MustCompile(`\r`).ReplaceAllString(str, "")
-
-	// remove line feed
-	str = regexp.MustCompile(`\f`).ReplaceAllString(str, "")
-
 	return str
 }
