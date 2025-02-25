@@ -34,7 +34,7 @@ func (m *Opa) ValidateClaims(
 
 		for _, claim := range applicableClaims {
 
-			ctr, err := m.Validate(
+			_, err := m.Validate(
 				ctx,
 				policiesDir.File(dataRule.RegoFile),
 				dataRule.File,
@@ -46,16 +46,6 @@ func (m *Opa) ValidateClaims(
 				return err
 
 			}
-
-			exitCode, err := ctr.ExitCode(ctx)
-
-			if err != nil {
-
-				return err
-
-			}
-
-			fmt.Printf("Exit code: %d\n", exitCode)
 		}
 	}
 

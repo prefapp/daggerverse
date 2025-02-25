@@ -12,13 +12,13 @@ func (m *Opa) Validate(
 	policy *dagger.File,
 	data *dagger.File,
 	file *dagger.File,
-) (*dagger.Container, error) {
+) (string, error) {
 
 	fileName, err := file.Name(ctx)
 
 	if err != nil {
 
-		return nil, err
+		return "", err
 
 	}
 
@@ -26,7 +26,7 @@ func (m *Opa) Validate(
 
 	if err != nil {
 
-		return nil, err
+		return "", err
 
 	}
 
@@ -45,22 +45,27 @@ func (m *Opa) Validate(
 			"test", "input.yaml",
 			"--data", "data.yaml",
 			"--policy", "policy.rego",
-		}).
-		Sync(ctx)
+		}, dagger.ContainerWithExecOpts{
+			RedirectStderr: "/tmp/stderr",
+			RedirectStdout: "/tmp/stdout",
+			Expect:         "ANY",
+		}).Sync(ctx)
+
+	eC, err := ctr.ExitCode(ctx)
 
 	if err != nil {
 
-		stderr, err := ctr.Stderr(ctx)
-
-		if err != nil {
-
-			return nil, err
-
-		}
-
-		return nil, fmt.Errorf("failed to run conftest: \n%s", stderr)
+		return "", err
 
 	}
 
-	return ctr, nil
+	if eC != 0 {
+
+		stderr, _ := ctr.File("/tmp/stderr").Contents(ctx)
+		stdout, _ := ctr.File("/tmp/stdout").Contents(ctx)
+
+		return "", fmt.Errorf("%s\n%s", stdout, stderr)
+	}
+
+	return "", nil
 }
