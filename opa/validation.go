@@ -70,10 +70,10 @@ func (m *Opa) Validate(
 
 	if eC != 0 {
 
-		stderr, _ := ctr.File("/tmp/stderr").Contents(ctx)
+		// stderr, _ := ctr.File("/tmp/stderr").Contents(ctx)
 		stdout, _ := ctr.File("/tmp/stdout").Contents(ctx)
 
-		return "", fmt.Errorf("%s\n%s", stdout, stderr)
+		return "", fmt.Errorf("%s", stdout)
 	}
 
 	return "", nil
