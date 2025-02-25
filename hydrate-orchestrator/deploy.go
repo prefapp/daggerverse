@@ -167,6 +167,11 @@ Created by @%s from %s within commit [%s](%s)
 			).
 			Render(ctx, tfDep.ClaimName, m.App)
 
+		summary.addDeploymentSummaryRow(
+			tfDep.DeploymentPath,
+			fmt.Sprintf("Failed: %s", err.Error()),
+		)
+
 		if err != nil {
 			panic(err)
 		}
