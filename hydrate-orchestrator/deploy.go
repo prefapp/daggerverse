@@ -55,7 +55,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				err.Error(),
 			)
 
 			continue
