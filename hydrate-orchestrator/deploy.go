@@ -167,7 +167,7 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				err.Error(),
 			)
 
 			continue
