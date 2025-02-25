@@ -32,7 +32,7 @@ func (m *Opa) Validate(
 
 	fmt.Printf("Validating file %s against policy %s\n", fileName, policyFileName)
 
-	return dag.Container().
+	ctr, err := dag.Container().
 		From("openpolicyagent/conftest").
 		WithMountedFile("/validation/policy.rego", policy).
 		WithMountedFile("/validation/data.yaml", data).
@@ -47,4 +47,20 @@ func (m *Opa) Validate(
 			"--policy", "policy.rego",
 		}).
 		Sync(ctx)
+
+	if err != nil {
+
+		stderr, err := ctr.Stderr(ctx)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		return nil, fmt.Errorf("failed to run conftest: \n%s", stderr)
+
+	}
+
+	return ctr, nil
 }
