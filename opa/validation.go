@@ -85,5 +85,9 @@ func strip(str string) string {
 
 	var re = regexp.MustCompile(ansi)
 
-	return re.ReplaceAllString(str, "")
+	str = re.ReplaceAllString(str, "")
+
+	str = regexp.MustCompile(`\n`).ReplaceAllString(str, "")
+
+	return str
 }
