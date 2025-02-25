@@ -111,7 +111,10 @@ Created by @%s from %s within commit [%s](%s)
 		).Render(ctx, kdep.SysServiceName, kdep.Cluster)
 
 		if err != nil {
-			summary.addDeploymentSummaryRow(kdep.DeploymentPath, err.Error())
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
 
 			continue
 		}
@@ -167,7 +170,7 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				err.Error(),
+				fmt.Sprintf("Failed: %s", err.Error()),
 			)
 
 			continue
