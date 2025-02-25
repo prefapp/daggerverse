@@ -74,13 +74,14 @@ func (m *Opa) Validate(
 		stderr, _ := ctr.File("/tmp/stderr").Contents(ctx)
 		stdout, _ := ctr.File("/tmp/stdout").Contents(ctx)
 
-		return nil, fmt.Errorf("%s%s", strip(stdout), strip(stderr))
+		return nil, fmt.Errorf("OPA validation failed: %s%s", strip(stdout), strip(stderr))
 	}
 
 	return ctr, nil
 }
 
 func strip(str string) string {
+
 	const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
 
 	var re = regexp.MustCompile(ansi)
@@ -94,9 +95,6 @@ func strip(str string) string {
 
 	// remove line feed
 	str = regexp.MustCompile(`\f`).ReplaceAllString(str, "")
-
-	// remove end of line
-	str = regexp.MustCompile(`\r\n`).ReplaceAllString(str, "")
 
 	return str
 }
