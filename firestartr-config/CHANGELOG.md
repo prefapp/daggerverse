@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/prefapp/daggerverse/compare/firestartr-config-v2.0.0...firestartr-config-v2.1.0) (2025-02-26)
+
+
+### Features
+
+* hydrate-tfworkspaces ([#109](https://github.com/prefapp/daggerverse/issues/109)) ([ef17ee4](https://github.com/prefapp/daggerverse/commit/ef17ee4795dc8ff0d3308eb22d5f24092df1fc47))
+
 ## [2.0.0](https://github.com/prefapp/daggerverse/compare/firestartr-config-v1.0.0...firestartr-config-v2.0.0) (2025-02-10)
 
 
