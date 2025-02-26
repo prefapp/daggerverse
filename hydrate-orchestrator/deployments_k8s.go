@@ -14,8 +14,12 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 	repositoryCaller string,
 	repoURL string,
 	reviewers []string,
-) {
+) (*dagger.File, error) {
 	deployments := m.processImagesMatrix(newImagesMatrix)
+
+	summary := &DeploymentSummary{
+		Items: []DeploymentSummaryRow{},
+	}
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
@@ -35,7 +39,12 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 		})
 
 		if err != nil {
-			panic(err)
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+			continue
 		}
 
 		prBody := fmt.Sprintf(`
@@ -59,7 +68,12 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 		if err != nil {
 
-			panic(err)
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+			continue
 		}
 
 		if m.AutomergeFileExists(ctx, globPattern) {
@@ -68,7 +82,12 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 			if prLink == "" {
 
-				panic("PR link is empty, cannot merge PR")
+				summary.addDeploymentSummaryRow(
+					kdep.DeploymentPath,
+					"Failed: PR link is empty, cannot merge PR",
+				)
+
+				continue
 
 			}
 
@@ -76,17 +95,41 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 			if err != nil {
 
-				panic(err)
+				summary.addDeploymentSummaryRow(
+					kdep.DeploymentPath,
+					fmt.Sprintf("Failed: %s", err.Error()),
+				)
+
+				continue
 
 			}
+
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf(
+					"Success, pr merged: <a href=\"%s\">%s</a>",
+					prLink,
+					prLink,
+				),
+			)
 
 		} else {
 
 			fmt.Println("Automerge file does not exist, skipping automerge")
 
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf(
+					"Success, pr created: <a href=\"%s\">%s</a>",
+					prLink,
+					prLink,
+				),
+			)
 		}
 
 	}
+
+	return m.DeploymentSummaryToFile(ctx, summary), nil
 }
 
 func (m *HydrateOrchestrator) processImagesMatrix(
