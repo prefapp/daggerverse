@@ -73,7 +73,12 @@ func (m *Opa) Validate(
 		stderr, _ := ctr.File("/tmp/stderr").Contents(ctx)
 		stdout, _ := ctr.File("/tmp/stdout").Contents(ctx)
 
-		return nil, fmt.Errorf("OPA validation failed: %s%s", strip(stdout), strip(stderr))
+		return nil, fmt.Errorf(`<br/><br/><p>OPA validation failed:</p>
+		<p>%s</p>
+		<p>%s</p>`,
+			strip(stdout),
+			strip(stderr),
+		)
 	}
 
 	return ctr, nil
