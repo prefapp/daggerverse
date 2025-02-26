@@ -106,7 +106,11 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Success, pr merged: %s", prLink),
+				fmt.Sprintf(
+					"Success, pr merged: <a href=\"%s\">%s</a>",
+					prLink,
+					prLink,
+				),
 			)
 
 		} else {
@@ -115,7 +119,11 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Success, pr created: %s", prLink),
+				fmt.Sprintf(
+					"Success, pr created: <a href=\"%s\">%s</a>",
+					prLink,
+					prLink,
+				),
 			)
 		}
 
