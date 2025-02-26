@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.3.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.2.0...hydrate-orchestrator-v2.3.0) (2025-02-26)
+
+
+### Features
+
+* add deployment info ([#144](https://github.com/prefapp/daggerverse/issues/144)) ([2c7e3a3](https://github.com/prefapp/daggerverse/commit/2c7e3a3ec4c52e8a8f5f4f23c071b66eee7576e4))
+* hydrate-tfworkspaces ([#109](https://github.com/prefapp/daggerverse/issues/109)) ([ef17ee4](https://github.com/prefapp/daggerverse/commit/ef17ee4795dc8ff0d3308eb22d5f24092df1fc47))
+* integrate opa validation in tfworkspaces hydrator ([#137](https://github.com/prefapp/daggerverse/issues/137)) ([85e3eca](https://github.com/prefapp/daggerverse/commit/85e3eca690cce4f37d61351d0bd0a8b5fba3f1d2))
+* opa module show container log and fix summary table ([34a2681](https://github.com/prefapp/daggerverse/commit/34a2681edf4385f96148e6394d208be57276ea55))
+* support summary file on image update ([#143](https://github.com/prefapp/daggerverse/issues/143)) ([5fb8231](https://github.com/prefapp/daggerverse/commit/5fb8231f8b350ccedab9a8a4f321e761f5457f3d))
+
 ## [2.2.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.1.1...hydrate-orchestrator-v2.2.0) (2025-02-20)
 
 
