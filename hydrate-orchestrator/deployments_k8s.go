@@ -104,10 +104,19 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 			}
 
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf("Success, pr merged: %s", prLink),
+			)
+
 		} else {
 
 			fmt.Println("Automerge file does not exist, skipping automerge")
 
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf("Success, pr created: %s", prLink),
+			)
 		}
 
 	}
