@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.0.0](https://github.com/prefapp/daggerverse/compare/hydrate-kubernetes-v1.0.0...hydrate-kubernetes-v2.0.0) (2025-02-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* Removed app parameter from hydrate-orchestrator
+* Merge pull request #113 from prefapp/fix/remove-app-parameter-from-orchestrator
+
+### Features
+
+* [state-repo] Deploy under demand ([#85](https://github.com/prefapp/daggerverse/issues/85)) ([e28b555](https://github.com/prefapp/daggerverse/commit/e28b555dd4da84d0c2335b527284c18c7b480eca))
+* Add sys service namespace ([#101](https://github.com/prefapp/daggerverse/issues/101)) ([db44a4e](https://github.com/prefapp/daggerverse/commit/db44a4ef6956ceddd68cf27e53866ecc00237911))
+* jsonpatch for image keys ([#131](https://github.com/prefapp/daggerverse/issues/131)) ([7ade374](https://github.com/prefapp/daggerverse/commit/7ade3749b1cc6aa7a818086d2dc80918daccfb03))
+* Merge pull request [#113](https://github.com/prefapp/daggerverse/issues/113) from prefapp/fix/remove-app-parameter-from-orchestrator ([5cf8816](https://github.com/prefapp/daggerverse/commit/5cf8816b651c5cd7e345cb0ab29640ce7fdc041d))
+* support firestartr configs, generate  `respositories.yaml` and  `environments.yaml` in runtime ([#96](https://github.com/prefapp/daggerverse/issues/96)) ([79d9cd9](https://github.com/prefapp/daggerverse/commit/79d9cd96cb37637f23751a87aa3c06802f1ad94b))
+* support for release name and images file priority ([#88](https://github.com/prefapp/daggerverse/issues/88)) ([ec49028](https://github.com/prefapp/daggerverse/commit/ec4902885cfc88e61a933918c7149cf18bd1b59b))
+* support images file on values dir ([#82](https://github.com/prefapp/daggerverse/issues/82)) ([4a627ed](https://github.com/prefapp/daggerverse/commit/4a627edfe0eda86f3818a701fbbc8d7452611071))
+* support multiple helm credentials with `~/.config/helm/registry/config.json` ([#90](https://github.com/prefapp/daggerverse/issues/90)) ([07733a2](https://github.com/prefapp/daggerverse/commit/07733a2db842a5e79b1c6680db691d22dcde28d2))
+* support sys services ([#92](https://github.com/prefapp/daggerverse/issues/92)) ([858c21d](https://github.com/prefapp/daggerverse/commit/858c21d7114ecca78fd0a017daa5df2ed6fe3992))
+
+
+### Bug Fixes
+
+* images matrix ([#115](https://github.com/prefapp/daggerverse/issues/115)) ([1f15ed1](https://github.com/prefapp/daggerverse/commit/1f15ed1108bfe8e84dfd2363517088af733bf109))
+* Inferred app name from state repo param ([ad246a9](https://github.com/prefapp/daggerverse/commit/ad246a9b78c4a0ad24c30d82fb7ec86fd17c35f0))
+* Removed app parameter from hydrate-orchestrator ([5cf8816](https://github.com/prefapp/daggerverse/commit/5cf8816b651c5cd7e345cb0ab29640ce7fdc041d))
+* tpl sets ([#98](https://github.com/prefapp/daggerverse/issues/98)) ([bb328dd](https://github.com/prefapp/daggerverse/commit/bb328dd193df0f8c70e907488ec05c4aee615e23))
+
 ## 1.0.0 (2024-12-20)
 
 
