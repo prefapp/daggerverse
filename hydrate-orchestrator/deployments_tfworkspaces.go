@@ -16,6 +16,8 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 ) (*dagger.File, error) {
 	deployments := m.processImagesMatrixForTfworkspaces(newImagesMatrix)
 
+	kind := "FirestartrTerraformWorkspace"
+
 	summary := &DeploymentSummary{
 		Items: []DeploymentSummaryRow{},
 	}
@@ -99,9 +101,35 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 			}
 
+			summary.addDeploymentSummaryRow(
+				fmt.Sprintf("%s/%s.%s.yaml",
+					tfDep.DeploymentPath,
+					kind,
+					tfDep.ClaimName,
+				),
+				fmt.Sprintf(
+					"Success, pr merged: <a href=\"%s\">%s</a>",
+					prLink,
+					prLink,
+				),
+			)
+
 		} else {
 
 			fmt.Println("Automerge file does not exist, skipping automerge")
+
+			summary.addDeploymentSummaryRow(
+				fmt.Sprintf("%s/%s.%s.yaml",
+					tfDep.DeploymentPath,
+					kind,
+					tfDep.ClaimName,
+				),
+				fmt.Sprintf(
+					"Success, pr created: <a href=\"%s\">%s</a>",
+					prLink,
+					prLink,
+				),
+			)
 
 		}
 
