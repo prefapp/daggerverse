@@ -13,8 +13,12 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 	repositoryCaller string,
 	repoURL string,
 	reviewers []string,
-) {
+) (*dagger.File, error) {
 	deployments := m.processImagesMatrixForTfworkspaces(newImagesMatrix)
+
+	summary := &DeploymentSummary{
+		Items: []DeploymentSummaryRow{},
+	}
 
 	for _, tfDep := range deployments.TfWorkspaceDeployments {
 
@@ -29,7 +33,13 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 		})
 
 		if err != nil {
-			panic(err)
+
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+			continue
 		}
 
 		prBody := fmt.Sprintf(`
@@ -52,7 +62,13 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 		if err != nil {
 
-			panic(err)
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+			continue
+
 		}
 
 		if m.AutomergeFileExists(ctx, globPattern) {
@@ -61,7 +77,12 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 			if prLink == "" {
 
-				panic("PR link is empty, cannot merge PR")
+				summary.addDeploymentSummaryRow(
+					tfDep.DeploymentPath,
+					"Failed: PR link is empty, cannot merge PR",
+				)
+
+				continue
 
 			}
 
@@ -69,7 +90,12 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 			if err != nil {
 
-				panic(err)
+				summary.addDeploymentSummaryRow(
+					tfDep.DeploymentPath,
+					fmt.Sprintf("Failed: %s", err.Error()),
+				)
+
+				continue
 
 			}
 
@@ -80,6 +106,8 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 		}
 
 	}
+
+	return m.DeploymentSummaryToFile(ctx, summary), nil
 }
 
 func (m *HydrateOrchestrator) processImagesMatrixForTfworkspaces(

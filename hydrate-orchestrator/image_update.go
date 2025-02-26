@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -34,14 +35,18 @@ func (m *HydrateOrchestrator) RunDispatch(
 	// +required
 	// +default="kubernetes"
 	platformType string,
-) {
+) *dagger.File {
+
 	repositoryCaller, repoURL := m.getRepositoryCaller(newImagesMatrix)
 
 	reviewers := m.getReviewers(newImagesMatrix)
 
+	var summaryFile *dagger.File
+	var err error
+
 	switch platformType {
 	case "kubernetes":
-		m.GenerateKubernetesDeployments(
+		summaryFile, err = m.GenerateKubernetesDeployments(
 			ctx,
 			newImagesMatrix,
 			repositoryCaller,
@@ -49,7 +54,7 @@ func (m *HydrateOrchestrator) RunDispatch(
 			reviewers,
 		)
 	case "tfworkspaces":
-		m.GenerateTfWorkspacesDeployments(
+		summaryFile, err = m.GenerateTfWorkspacesDeployments(
 			ctx,
 			newImagesMatrix,
 			repositoryCaller,
@@ -59,6 +64,13 @@ func (m *HydrateOrchestrator) RunDispatch(
 	default:
 		panic(fmt.Sprintf("Platform type %s not supported", platformType))
 	}
+
+	if err != nil {
+
+		panic(err)
+	}
+
+	return summaryFile
 
 }
 
