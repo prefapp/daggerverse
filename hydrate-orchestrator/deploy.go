@@ -280,27 +280,6 @@ func (m *HydrateOrchestrator) ValidateChanges(
 		}
 	}
 
-	for _, tfDep := range deployments.TfWorkspaceDeployments {
-
-		renderedDep, err := dag.
-			HydrateTfworkspaces(
-				m.ValuesStateDir,
-				m.WetStateDir,
-				m.DotFirestartr,
-			).Render(ctx, tfDep.ClaimName, m.App)
-
-		if err != nil {
-			panic(err)
-		}
-
-		_, err = renderedDep[0].Sync(ctx)
-
-		if err != nil {
-			panic(err)
-		}
-
-	}
-
 }
 
 // Function that returns a deployment object from a type, cluster, tenant and environment considering glob patterns
