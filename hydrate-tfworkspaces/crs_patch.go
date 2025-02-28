@@ -125,8 +125,6 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 
 	entries, err := crsDir.Glob(ctx, "tfworkspaces/*.yaml")
 
-	fmt.Printf("🔁 Entries: %v\n", entries)
-
 	if err != nil {
 
 		return nil, err
