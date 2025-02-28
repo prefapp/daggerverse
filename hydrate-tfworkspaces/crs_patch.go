@@ -123,7 +123,7 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 
 ) (*dagger.Directory, error) {
 
-	entries, err := crsDir.Glob(ctx, "**.yaml")
+	entries, err := crsDir.Glob(ctx, "tfworkspaces/**.yaml")
 
 	if err != nil {
 
