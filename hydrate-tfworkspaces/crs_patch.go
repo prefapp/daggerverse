@@ -106,3 +106,101 @@ func (m *HydrateTfworkspaces) AddAnnotationsToCr(
 	return crsDir, nil
 
 }
+
+func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
+
+	ctx context.Context,
+
+	claimName string,
+
+	prNumber string,
+
+	org string,
+
+	repo string,
+
+	crsDir *dagger.Directory,
+
+) (*dagger.Directory, error) {
+
+	entries, err := crsDir.Glob(ctx, "tfworkspaces/*.yaml")
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	for _, entry := range entries {
+
+		fileContent, err := crsDir.File(entry).Contents(ctx)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		cr := Cr{}
+
+		err = yaml.Unmarshal([]byte(fileContent), &cr)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		if strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1] == claimName {
+
+			toJson, err := sigsyaml.YAMLToJSON([]byte(fileContent))
+
+			if err != nil {
+
+				return nil, err
+
+			}
+
+			annotationValue := fmt.Sprintf("%s/%s#%s", org, repo, prNumber)
+
+			patchJSON := []byte(fmt.Sprintf(
+				`[{"op": "add", "path": "/metadata/annotations/firestartr.dev~1last-state-pr", "value": "%s"}]`,
+				annotationValue,
+			))
+
+			patch, err := jsonpatch.DecodePatch(patchJSON)
+
+			if err != nil {
+
+				panic(err)
+
+			}
+
+			patched, err := patch.Apply([]byte(toJson))
+
+			if err != nil {
+
+				panic(err)
+
+			}
+
+			patchedToYaml, err := sigsyaml.JSONToYAML(patched)
+
+			if err != nil {
+
+				return nil, err
+
+			}
+
+			crsDir = crsDir.
+				WithoutFile(entry).
+				WithNewFile(entry, string(patchedToYaml))
+
+			break
+		}
+
+	}
+
+	return crsDir, nil
+
+}
