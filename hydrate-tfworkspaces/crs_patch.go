@@ -165,7 +165,7 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 
 			}
 
-			annotationValue := fmt.Sprintf("%s/%s#%s", org, repo, prNumber)
+			annotationValue := sanitizePrString(fmt.Sprintf("%s/%s#%s", org, repo, prNumber))
 
 			fmt.Printf("Adding annotation %s to %s\n", annotationValue, entry)
 
@@ -211,4 +211,14 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 
 	return crsDir, nil
 
+}
+
+func sanitizePrString(pr string) string {
+
+	// remove /n from the string
+	pr = strings.ReplaceAll(pr, "\n", "")
+	pr = strings.ReplaceAll(pr, " ", "")
+	pr = strings.ReplaceAll(pr, "\t", "")
+
+	return pr
 }
