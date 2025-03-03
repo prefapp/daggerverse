@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.3.0...hydrate-orchestrator-v2.4.0) (2025-03-03)
+
+
+### Features
+
+* support last state pr ([#146](https://github.com/prefapp/daggerverse/issues/146)) ([77b93ba](https://github.com/prefapp/daggerverse/commit/77b93ba05cc39b93c9db54e0a6232505b185164c))
+
 ## [2.3.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.2.0...hydrate-orchestrator-v2.3.0) (2025-02-26)
 
 
