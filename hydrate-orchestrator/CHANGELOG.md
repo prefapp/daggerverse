@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.4.0...hydrate-orchestrator-v2.4.1) (2025-03-03)
+
+
+### Bug Fixes
+
+* cr annotation `firestartr.dev/last-state-pr` does not work properly ([#149](https://github.com/prefapp/daggerverse/issues/149)) ([97bc2e2](https://github.com/prefapp/daggerverse/commit/97bc2e287e934d2df50a8486f1990231a609c63d))
+
 ## [2.4.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.3.0...hydrate-orchestrator-v2.4.0) (2025-03-03)
 
 
