@@ -75,9 +75,17 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 		}
 
+		// https://github.com/org/app-repo/pull/8
+		// parts:    [https:, , github.com, org, app-repo, pull, 8]
+		// positions:  0     1       2        3     4        5   6
 		prNumber := strings.Split(prLink, "/")[6]
 		repo := strings.Split(prLink, "/")[4]
 		org := strings.Split(prLink, "/")[3]
+		fmt.Printf("🔗 Getting PR number from PR link\n")
+		fmt.Printf("PR link: %s\n", prLink)
+		fmt.Printf("PR number: %s\n", prNumber)
+		fmt.Printf("Repo: %s\n", repo)
+		fmt.Printf("Org: %s\n", org)
 
 		updatedDir := dag.HydrateTfworkspaces(
 			m.ValuesStateDir,
