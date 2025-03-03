@@ -203,6 +203,17 @@ Created by @%s from %s within commit [%s](%s)
 			lo.Ternary(author == "author", []string{}, []string{author}),
 		)
 
+		if err != nil {
+
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+			continue
+
+		}s
+
 		// https://github.com/org/app-repo/pull/8
 		// parts:    [https:, , github.com, org, app-repo, pull, 8]
 		// positions:  0     1       2        3     4        5   6
