@@ -214,8 +214,6 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 }
 
 func sanitizePrString(pr string) string {
-
-	// remove /n from the string
 	pr = strings.ReplaceAll(pr, "\n", "")
 	pr = strings.ReplaceAll(pr, " ", "")
 	pr = strings.ReplaceAll(pr, "\t", "")
