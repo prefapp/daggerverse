@@ -163,6 +163,8 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 
 			annotationValue := fmt.Sprintf("%s/%s#%s", org, repo, prNumber)
 
+			fmt.Printf("Adding annotation %s to %s\n", annotationValue, entry)
+
 			patchJSON := []byte(fmt.Sprintf(
 				`[{"op": "add", "path": "/metadata/annotations/firestartr.dev~1last-state-pr", "value": "%s"}]`,
 				annotationValue,
