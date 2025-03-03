@@ -212,7 +212,7 @@ Created by @%s from %s within commit [%s](%s)
 
 			continue
 
-		}s
+		}
 
 		// https://github.com/org/app-repo/pull/8
 		// parts:    [https:, , github.com, org, app-repo, pull, 8]
