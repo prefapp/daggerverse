@@ -155,18 +155,26 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 
 			toJson, err := sigsyaml.YAMLToJSON([]byte(fileContent))
 
+			fmt.Printf("🖊️ Adding annotation to %s\n", entry)
+
+			fmt.Printf("🌀 To JSON: %s\n", toJson)
+
 			if err != nil {
 
 				return nil, err
 
 			}
 
-			annotationValue := fmt.Sprintf("%s/%s#%s", org, repo, prNumber)
+			annotationValue := sanitizePrString(fmt.Sprintf("%s/%s#%s", org, repo, prNumber))
+
+			fmt.Printf("Adding annotation %s to %s\n", annotationValue, entry)
 
 			patchJSON := []byte(fmt.Sprintf(
 				`[{"op": "add", "path": "/metadata/annotations/firestartr.dev~1last-state-pr", "value": "%s"}]`,
 				annotationValue,
 			))
+
+			fmt.Printf("｛🖋️} Patch JSON: %s\n", patchJSON)
 
 			patch, err := jsonpatch.DecodePatch(patchJSON)
 
@@ -203,4 +211,12 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 
 	return crsDir, nil
 
+}
+
+func sanitizePrString(pr string) string {
+	pr = strings.ReplaceAll(pr, "\n", "")
+	pr = strings.ReplaceAll(pr, " ", "")
+	pr = strings.ReplaceAll(pr, "\t", "")
+
+	return pr
 }

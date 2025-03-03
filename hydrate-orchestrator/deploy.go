@@ -5,6 +5,8 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/samber/lo"
 )
@@ -190,7 +192,7 @@ Created by @%s from %s within commit [%s](%s)
 			tfDep.String(false),
 		)
 
-		_, err = m.upsertPR(
+		prLink, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDep[0],
@@ -200,6 +202,62 @@ Created by @%s from %s within commit [%s](%s)
 			tfDep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
 		)
+
+		if err != nil {
+
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+			continue
+
+		}
+
+		// https://github.com/org/app-repo/pull/8
+		// parts:    [https:, , github.com, org, app-repo, pull, 8]
+		// positions:  0     1       2        3     4        5   6
+		prNumber := strings.Split(prLink, "/")[6]
+		repo := strings.Split(prLink, "/")[4]
+		org := strings.Split(prLink, "/")[3]
+		fmt.Printf("🔗 Getting PR number from PR link\n")
+		fmt.Printf("PR link: %s\n", prLink)
+		fmt.Printf("PR number: %s\n", prNumber)
+		fmt.Printf("Repo: %s\n", repo)
+		fmt.Printf("Org: %s\n", org)
+
+		updatedDir := dag.HydrateTfworkspaces(
+			m.ValuesStateDir,
+			&renderedDep[0],
+			m.DotFirestartr,
+		).AddPrAnnotationToCr(
+			tfDep.ClaimName,
+			prNumber,
+			org,
+			repo,
+			&renderedDep[0],
+		)
+
+		contentsDirPath := "/contents"
+
+		_, err = dag.Gh(dagger.GhOpts{
+			Version: m.GhCliVersion,
+		}).Container(dagger.GhContainerOpts{
+			Token:   m.GhToken,
+			Plugins: []string{"prefapp/gh-commit"},
+		}).WithDirectory(contentsDirPath, updatedDir, dagger.ContainerWithDirectoryOpts{
+			Exclude: []string{".git"},
+		}).WithWorkdir(contentsDirPath).
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithExec([]string{
+				"gh",
+				"commit",
+				"-R", m.Repo,
+				"-b", branchName,
+				"-m", "Update deployments",
+				"--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+			}).
+			Sync(ctx)
 
 		if err != nil {
 
