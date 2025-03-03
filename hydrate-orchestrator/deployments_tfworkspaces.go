@@ -5,6 +5,8 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
 )
 
 func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
@@ -61,6 +63,54 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
 			reviewers,
 		)
+
+		if err != nil {
+
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+			continue
+
+		}
+
+		prNumber := strings.Split(prLink, "/")[6]
+		repo := strings.Split(prLink, "/")[4]
+		org := strings.Split(prLink, "/")[3]
+
+		updatedDir := dag.HydrateTfworkspaces(
+			m.ValuesStateDir,
+			&renderedDeployment[0],
+			m.DotFirestartr,
+		).AddPrAnnotationToCr(
+			tfDep.ClaimName,
+			prNumber,
+			org,
+			repo,
+			&renderedDeployment[0],
+		)
+
+		contentsDirPath := "/contents"
+
+		_, err = dag.Gh(dagger.GhOpts{
+			Version: m.GhCliVersion,
+		}).Container(dagger.GhContainerOpts{
+			Token:   m.GhToken,
+			Plugins: []string{"prefapp/gh-commit"},
+		}).WithDirectory(contentsDirPath, updatedDir, dagger.ContainerWithDirectoryOpts{
+			Exclude: []string{".git"},
+		}).WithWorkdir(contentsDirPath).
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithExec([]string{
+				"gh",
+				"commit",
+				"-R", m.Repo,
+				"-b", branchName,
+				"-m", "Update deployments",
+				"--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+			}).
+			Sync(ctx)
 
 		if err != nil {
 
