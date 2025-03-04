@@ -19,7 +19,8 @@ type ImageData struct {
 }
 
 type Claim struct {
-	Name string `yaml:"name"`
+	Name         string `yaml:"name"`
+	ResourceType string `yaml:"resourceType"`
 }
 
 type Cr struct {

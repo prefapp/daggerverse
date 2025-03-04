@@ -11,6 +11,14 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+type Providers struct {
+	Providers []Provider `json:"providers"`
+}
+
+type Provider struct {
+	Name string `json:"name"`
+}
+
 func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 
 	ctx context.Context,
@@ -24,13 +32,15 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 	entries, err := claimsDir.Glob(ctx, "tfworkspaces/*/*/*/*.yaml")
 	//                                   tfworkspaces/platform/tenant/env/claim.yaml
 
+	fmt.Printf("🦖 Entries: %s\n", entries)
+
 	if err != nil {
 
 		return nil, err
 
 	}
 
-	var foundClaim Claim
+	var foundClaim *Claim
 
 	var claimFileContents string
 
@@ -39,6 +49,8 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 	var tenant string
 
 	var env string
+
+	var trappedEntry string
 
 	for _, entry := range entries {
 
@@ -50,7 +62,7 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 
 		}
 
-		claim := Claim{}
+		claim := &Claim{}
 
 		err = yaml.Unmarshal([]byte(fileContent), claim)
 
@@ -60,11 +72,15 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 
 		}
 
+		fmt.Printf("🦖 Claim name %s from entry: %s\n", claim.Name, entry)
+		fmt.Printf("Claim name from input: %s\n", claimName)
 		if claim.Name == claimName {
 
 			foundClaim = claim
 
 			claimFileContents = fileContent
+
+			trappedEntry = entry
 
 			splitted := strings.Split(entry, "/")
 
@@ -74,17 +90,51 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 
 			env = splitted[3]
 
+			fmt.Printf("Claim found! 🥮 %s\n", claim.Name)
+
+			fmt.Printf("Platform: %s\n", platform)
+			fmt.Printf("Tenant: %s\n", tenant)
+			fmt.Printf("Env: %s\n", env)
 			break
 
 		}
 
 	}
 
-	if foundClaim == (Claim{}) || claimFileContents == "" {
+	if foundClaim == nil || claimFileContents == "" {
 
 		return nil, fmt.Errorf("claim not found")
 
 	}
+
+	providers, err := m.FindProvidersBy(
+		ctx,
+		foundClaim.ResourceType,
+		platform,
+		tenant,
+		env,
+	)
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	fmt.Printf("🦖 Providers TO PATCH: %s\n", providers)
+
+	// providers : [{name: "hola"}]
+
+	providersValue := Providers{}
+
+	providersValue.Providers = []Provider{}
+
+	for _, pv := range providers {
+
+		providersValue.Providers = append(providersValue.Providers, Provider{Name: pv})
+
+	}
+
+	providersToJson, err := json.Marshal(providersValue)
 
 	if err != nil {
 
@@ -92,20 +142,25 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 
 	}
 
+	yamlContent, err := m.PatchClaim(
+		"/providers/terraform/context",
+		string(providersToJson),
+		claimFileContents,
+	)
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	claimsDir = claimsDir.
+		WithoutFile(trappedEntry).
+		WithNewFile(trappedEntry, yamlContent)
+
 	return claimsDir, nil
 
 }
-
-// type: tfworkspaces
-// name: example-platform
-// tenants: [test-tenant]
-// envs: [test-env]
-// allowedClaims:
-//   - resourceTypes:
-//       - az-vmss
-//     providers:
-//       - azure-provider-corpme
-//     backend: azure-backend-terraform
 
 func (m *HydrateTfworkspaces) FindProvidersBy(
 
@@ -119,7 +174,7 @@ func (m *HydrateTfworkspaces) FindProvidersBy(
 
 	env string,
 
-) (string, error) {
+) ([]string, error) {
 
 	platforms, err := dag.
 		FirestartrConfig(m.DotFirestartrDir).
@@ -127,7 +182,7 @@ func (m *HydrateTfworkspaces) FindProvidersBy(
 
 	if err != nil {
 
-		return "", err
+		return nil, err
 
 	}
 
@@ -139,7 +194,7 @@ func (m *HydrateTfworkspaces) FindProvidersBy(
 
 		if err != nil {
 
-			return "", err
+			return nil, err
 
 		}
 
@@ -147,7 +202,7 @@ func (m *HydrateTfworkspaces) FindProvidersBy(
 
 		if err != nil {
 
-			return "", err
+			return nil, err
 
 		}
 
@@ -155,7 +210,7 @@ func (m *HydrateTfworkspaces) FindProvidersBy(
 
 		if err != nil {
 
-			return "", err
+			return nil, err
 
 		}
 
@@ -163,33 +218,45 @@ func (m *HydrateTfworkspaces) FindProvidersBy(
 
 		if err != nil {
 
-			return "", err
+			return nil, err
 
 		}
+
+		fmt.Printf("Coordinates: %s %s %s\n", pName, pTenants, pEnvs)
 
 		if pName == platform && slices.Contains(pTenants, tenant) && slices.Contains(pEnvs, env) {
 
 			providers, err = getProviders(ctx, resourceType, pAllowedClaims)
 
+			fmt.Printf("Providers: %s\n", providers)
+
 			if err != nil {
 
-				return "", err
+				return nil, err
 
 			}
 
 			if len(providers) > 0 {
 
-				marshaledJson, err := json.Marshal(providers)
+				if err != nil {
 
-				return string(marshaledJson), err
+					return nil, err
+
+				}
+
+				return providers, nil
 
 			}
+
+		} else {
+
+			fmt.Printf("Skipping platform %s\n", pName)
 
 		}
 
 	}
 
-	return "", nil
+	return []string{}, nil
 }
 
 func getProviders(ctx context.Context, resourceType string, allowedClaims []dagger.FirestartrConfigAllowedClaim) ([]string, error) {

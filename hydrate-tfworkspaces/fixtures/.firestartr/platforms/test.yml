@@ -6,5 +6,5 @@ allowedClaims:
   - resourceTypes: 
       - az-vmss
     providers:
-      - azure-provider-corpme
+      - azure-provider-example
     backend: azure-backend-terraform

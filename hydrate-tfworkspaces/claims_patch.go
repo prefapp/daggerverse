@@ -183,7 +183,7 @@ func (m *HydrateTfworkspaces) PatchClaimWithPreviousImages(
 			}
 
 			patchedClaim, err := m.PatchClaim(
-				cr.Metadata.Annotations.MicroServicePointer,
+				"/providers/terraform/values/"+cr.Metadata.Annotations.MicroServicePointer,
 				cr.Metadata.Annotations.Image,
 				contentsFile,
 			)
@@ -219,6 +219,8 @@ func (m *HydrateTfworkspaces) PatchClaim(
 
 	tojson, err := sigsyaml.YAMLToJSON([]byte(yamlContent))
 
+	fmt.Printf("Patch Claim - JSON, %s\n", tojson)
+
 	if err != nil {
 
 		return "", err
@@ -226,10 +228,12 @@ func (m *HydrateTfworkspaces) PatchClaim(
 	}
 
 	patchJSON := []byte(fmt.Sprintf(
-		`[{"op": "add", "path": "/providers/terraform/values/%s", "value": "%s"}]`,
+		`[{"op": "add", "path": "%s", "value": %s}]`,
 		path,
 		value,
 	))
+
+	fmt.Printf("Patch Claim - Patch JSON, %s\n", patchJSON)
 
 	patch, err := jsonpatch.DecodePatch(patchJSON)
 

@@ -220,5 +220,3 @@ func sanitizePrString(pr string) string {
 
 	return pr
 }
-
-func 
