@@ -13,6 +13,7 @@ type ImageData struct {
 	Image            string   `json:"image"`
 	Reviewers        []string `json:"reviewers"`
 	Platform         string   `json:"platform"`
+	Claim            string   `json:"claim"`
 	Technology       string   `json:"technology"`
 	RepositoryCaller string   `json:"repository_caller"`
 }

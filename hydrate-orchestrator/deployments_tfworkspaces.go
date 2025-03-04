@@ -230,7 +230,7 @@ func (m *HydrateOrchestrator) processImagesMatrixForTfworkspaces(
 			Deployment: Deployment{
 				DeploymentPath: "tfworkspaces",
 			},
-			ClaimName:    image.Platform,
+			ClaimName:    image.Claim,
 			ImagesMatrix: string(jsonUniqueImage),
 			Tenant:       image.Tenant,
 			Environment:  image.Env,

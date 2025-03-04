@@ -9,10 +9,17 @@ import (
 
 type Platform struct {
 	// Cannot use `Type` as a field name, it seems to be a reserved keyword for Dagger.io
-	PlatformType string   `yaml:"type"`
-	Name         string   `yaml:"name"`
-	Tenants      []string `yaml:"tenants"`
-	Envs         []string `yaml:"envs"`
+	PlatformType  string         `yaml:"type"`
+	Name          string         `yaml:"name"`
+	Tenants       []string       `yaml:"tenants"`
+	Envs          []string       `yaml:"envs"`
+	AllowedClaims []AllowedClaim `yaml:"allowedClaims"`
+}
+
+type AllowedClaim struct {
+	ResourceTypes []string `yaml:"resourceTypes"`
+	Providers     []string `yaml:"providers"`
+	Backend       string   `yaml:"backend"`
 }
 
 func loadPlatforms(ctx context.Context, firestartrDir *dagger.Directory) ([]Platform, error) {

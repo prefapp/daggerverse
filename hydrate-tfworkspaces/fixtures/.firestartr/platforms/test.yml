@@ -2,3 +2,9 @@ type: tfworkspaces
 name: example-platform
 tenants: [test-tenant]
 envs: [test-env]
+allowedClaims:
+  - resourceTypes: 
+      - az-vmss
+    providers:
+      - azure-provider-corpme
+    backend: azure-backend-terraform
