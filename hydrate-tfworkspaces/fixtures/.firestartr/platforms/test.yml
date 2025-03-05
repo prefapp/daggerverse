@@ -1,7 +1,7 @@
 type: tfworkspaces
 name: example-platform
-tenants: [test-tenant]
-envs: [test-env]
+tenants: [tenant-test]
+envs: [env-test]
 allowedClaims:
   - resourceTypes: 
       - az-vmss

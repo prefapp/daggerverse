@@ -35,7 +35,7 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 ) (*dagger.Directory, error) {
 
 	entries, err := claimsDir.Glob(ctx, "*/*/*/*.yaml")
-	//                                   tfworkspaces/platform/tenant/env/claim.yaml
+	//                                  ./platform/tenant/env/claim.yaml
 
 	fmt.Printf("🦖 Entries: %s\n", entries)
 
@@ -78,7 +78,9 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 		}
 
 		fmt.Printf("🦖 Claim name %s from entry: %s\n", claim.Name, entry)
+
 		fmt.Printf("Claim name from input: %s\n", claimName)
+
 		if claim.Name == claimName {
 
 			foundClaim = claim
@@ -98,9 +100,38 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 			fmt.Printf("Claim found! 🥮 %s\n", claim.Name)
 
 			fmt.Printf("Platform: %s\n", platform)
+
 			fmt.Printf("Tenant: %s\n", tenant)
+
 			fmt.Printf("Env: %s\n", env)
-			break
+
+		} else {
+
+			fmt.Println(
+				"claim does not match, patching with dummy providers",
+			)
+
+			yamlContent, err := m.PatchClaim(
+				"/providers/terraform/context",
+				`{"providers": [{"name": "dummy"}], "backend": {"name": "dummy"}}`,
+				fileContent,
+			)
+
+			fmt.Printf("🦖 Patched dummy claim: %s\n", yamlContent)
+
+			if err != nil {
+
+				return nil, err
+
+			}
+
+			claimsDir = claimsDir.
+				WithoutFile(entry).
+				WithNewFile(entry, yamlContent)
+
+			contents, _ := claimsDir.File(entry).Contents(ctx)
+
+			fmt.Printf("🦖 Contents: %s\n", contents)
 
 		}
 
@@ -125,7 +156,7 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 
 	}
 
-	providersToJson, err := json.Marshal(context)
+	contextToJson, err := json.Marshal(context)
 
 	if err != nil {
 
@@ -133,9 +164,11 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 
 	}
 
+	fmt.Printf("🦖 Context patch: %s", contextToJson)
+
 	yamlContent, err := m.PatchClaim(
 		"/providers/terraform/context",
-		string(providersToJson),
+		string(contextToJson),
 		claimFileContents,
 	)
 
@@ -252,6 +285,8 @@ func getContext(
 
 	context := &Context{}
 
+	fmt.Printf("🦖 Allowed claims: %v\n", allowedClaims)
+
 	for _, allowedClaim := range allowedClaims {
 
 		resourceTypes, err := allowedClaim.ResourceTypes(ctx)
@@ -263,6 +298,8 @@ func getContext(
 		}
 
 		if slices.Contains(resourceTypes, resourceType) {
+
+			fmt.Printf("Found allowed claim for resource type %s\n", resourceType)
 
 			providers, err := allowedClaim.Providers(ctx)
 
@@ -290,6 +327,8 @@ func getContext(
 
 			return context, nil
 
+		} else {
+			fmt.Printf("No allowed claim for resource type %s\n", resourceType)
 		}
 
 	}

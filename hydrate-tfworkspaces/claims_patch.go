@@ -24,6 +24,8 @@ func (m *HydrateTfworkspaces) PatchClaimWithNewImageValues(ctx context.Context, 
 
 	entries, err := appDir.Glob(ctx, "**.yaml")
 
+	fmt.Printf("Entries from app dir: %s\n", entries)
+
 	if err != nil {
 
 		panic(err)
