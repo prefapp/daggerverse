@@ -1,13 +1,13 @@
 kind: TFWorkspaceClaim
 lifecycle: production
-name: example-platform
+name: example-claim
 resourceType: az-vmss
 system: "system:test"
 version: "1.0"
 providers: 
   terraform:
     tfStateKey: e951e631-305a-414e-be4f-5562fc952121
-    name: example-platform
+    name: example-claim
     source: remote
     module: git::https://github.com/test/tfm.git//modules/vmss-soups?ref=vmss-soups-v0.2.4
     values:

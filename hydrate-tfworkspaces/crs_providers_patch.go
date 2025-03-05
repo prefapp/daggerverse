@@ -34,7 +34,7 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 
 ) (*dagger.Directory, error) {
 
-	entries, err := claimsDir.Glob(ctx, "tfworkspaces/*/*/*/*.yaml")
+	entries, err := claimsDir.Glob(ctx, "*/*/*/*.yaml")
 	//                                   tfworkspaces/platform/tenant/env/claim.yaml
 
 	fmt.Printf("🦖 Entries: %s\n", entries)
@@ -89,11 +89,11 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 
 			splitted := strings.Split(entry, "/")
 
-			platform = splitted[1]
+			platform = splitted[0]
 
-			tenant = splitted[2]
+			tenant = splitted[1]
 
-			env = splitted[3]
+			env = splitted[2]
 
 			fmt.Printf("Claim found! 🥮 %s\n", claim.Name)
 

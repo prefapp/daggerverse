@@ -53,7 +53,7 @@ func (m *HydrateTfworkspaces) PatchClaimWithNewImageValues(ctx context.Context, 
 
 		}
 
-		if claim.Name == imageData.Platform {
+		if claim.Name == imageData.Claim {
 
 			trappedEntry = entry
 
@@ -74,7 +74,7 @@ func (m *HydrateTfworkspaces) PatchClaimWithNewImageValues(ctx context.Context, 
 
 	if jsonObj == "" {
 
-		return nil, fmt.Errorf("no claim found for platform %s", imageData.Platform)
+		return nil, fmt.Errorf("no claim found '%s'", imageData.Claim)
 
 	}
 
