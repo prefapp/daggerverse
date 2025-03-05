@@ -13,12 +13,14 @@ type ImageData struct {
 	Image            string   `json:"image"`
 	Reviewers        []string `json:"reviewers"`
 	Platform         string   `json:"platform"`
+	Claim            string   `json:"claim"`
 	Technology       string   `json:"technology"`
 	RepositoryCaller string   `json:"repository_caller"`
 }
 
 type Claim struct {
-	Name string `yaml:"name"`
+	Name         string `yaml:"name"`
+	ResourceType string `yaml:"resourceType"`
 }
 
 type Cr struct {

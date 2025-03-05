@@ -29,6 +29,6 @@ providers:
           docker_image: "my-test.azurecr.io/service/mytest/my-test:v1.22.0-pre_default" #providers/terraform/values
     context:
       providers:
-        - name: azure-provider-test
+        - name: azure-provider-corpme
       backend:
         name: azure-backend-terraform

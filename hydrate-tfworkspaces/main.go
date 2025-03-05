@@ -130,7 +130,23 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	appClaimsDir, err = m.PatchClaimWithNewImageValues(ctx, matrix, appClaimsDir)
+	appClaimsDir, err = m.PatchClaimWithNewImageValues(
+		ctx,
+		matrix,
+		appClaimsDir,
+	)
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	appClaimsDir, err = m.PatchClaimWithInferredProviders(
+		ctx,
+		claimName,
+		appClaimsDir,
+	)
 
 	if err != nil {
 
@@ -192,7 +208,7 @@ func (m *HydrateTfworkspaces) Render(
 
 		outputDir, err = m.AddAnnotationsToCr(
 			ctx,
-			matrix.Images[0].Platform,
+			matrix.Images[0].Claim,
 			matrix.Images[0].Image,
 			matrix.Images[0].ImageKeys[0],
 			outputDir,

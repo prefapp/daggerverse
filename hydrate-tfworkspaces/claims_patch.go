@@ -24,6 +24,8 @@ func (m *HydrateTfworkspaces) PatchClaimWithNewImageValues(ctx context.Context, 
 
 	entries, err := appDir.Glob(ctx, "**.yaml")
 
+	fmt.Printf("Entries from app dir: %s\n", entries)
+
 	if err != nil {
 
 		panic(err)
@@ -53,7 +55,7 @@ func (m *HydrateTfworkspaces) PatchClaimWithNewImageValues(ctx context.Context, 
 
 		}
 
-		if claim.Name == imageData.Platform {
+		if claim.Name == imageData.Claim {
 
 			trappedEntry = entry
 
@@ -74,7 +76,7 @@ func (m *HydrateTfworkspaces) PatchClaimWithNewImageValues(ctx context.Context, 
 
 	if jsonObj == "" {
 
-		return nil, fmt.Errorf("no claim found for platform %s", imageData.Platform)
+		return nil, fmt.Errorf("no claim found '%s'", imageData.Claim)
 
 	}
 
@@ -183,8 +185,14 @@ func (m *HydrateTfworkspaces) PatchClaimWithPreviousImages(
 			}
 
 			patchedClaim, err := m.PatchClaim(
-				cr.Metadata.Annotations.MicroServicePointer,
-				cr.Metadata.Annotations.Image,
+				fmt.Sprintf(
+					"/providers/terraform/values/%s",
+					cr.Metadata.Annotations.MicroServicePointer,
+				),
+				fmt.Sprintf(
+					`"%s"`,
+					cr.Metadata.Annotations.Image,
+				),
 				contentsFile,
 			)
 
@@ -219,6 +227,8 @@ func (m *HydrateTfworkspaces) PatchClaim(
 
 	tojson, err := sigsyaml.YAMLToJSON([]byte(yamlContent))
 
+	fmt.Printf("Patch Claim - JSON, %s\n", tojson)
+
 	if err != nil {
 
 		return "", err
@@ -226,10 +236,12 @@ func (m *HydrateTfworkspaces) PatchClaim(
 	}
 
 	patchJSON := []byte(fmt.Sprintf(
-		`[{"op": "add", "path": "/providers/terraform/values/%s", "value": "%s"}]`,
+		`[{"op": "add", "path": "%s", "value": %s}]`,
 		path,
 		value,
 	))
+
+	fmt.Printf("Patch Claim - Patch JSON, %s\n", patchJSON)
 
 	patch, err := jsonpatch.DecodePatch(patchJSON)
 

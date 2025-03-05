@@ -26,6 +26,7 @@ func TestPatchTfWorkspace(t *testing.T) {
 				Image:            "test-image:latest",
 				Reviewers:        []string{"test"},
 				Platform:         "example-platform",
+				Claim:            "example-claim",
 				Technology:       "test",
 				RepositoryCaller: "test",
 			},
