@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.4.1...hydrate-orchestrator-v3.0.0) (2025-03-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* support infer providers ([#152](https://github.com/prefapp/daggerverse/issues/152))
+
+### Features
+
+* support infer providers ([#152](https://github.com/prefapp/daggerverse/issues/152)) ([cc34318](https://github.com/prefapp/daggerverse/commit/cc343181a57a2c74d2a5cab95b259a6e0d5b01f2))
+
 ## [2.4.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.4.0...hydrate-orchestrator-v2.4.1) (2025-03-03)
 
 
