@@ -183,8 +183,14 @@ func (m *HydrateTfworkspaces) PatchClaimWithPreviousImages(
 			}
 
 			patchedClaim, err := m.PatchClaim(
-				"/providers/terraform/values/"+cr.Metadata.Annotations.MicroServicePointer,
-				cr.Metadata.Annotations.Image,
+				fmt.Sprintf(
+					"/providers/terraform/values/%s",
+					cr.Metadata.Annotations.MicroServicePointer,
+				),
+				fmt.Sprintf(
+					`"%s"`,
+					cr.Metadata.Annotations.Image,
+				),
 				contentsFile,
 			)
 
