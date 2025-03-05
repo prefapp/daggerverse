@@ -27,8 +27,4 @@ providers:
         vmss_mi_id: "test"
         registry:  ${{ tfworkspace:claim-from-platform:outputs.registry }}
         keyvault: "test-soups-pre-kv"
-    context:
-      providers:
-        - name: azure-provider-test
-      backend:
-        name: azure-backend-terraform
+

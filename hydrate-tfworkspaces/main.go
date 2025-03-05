@@ -130,7 +130,23 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	appClaimsDir, err = m.PatchClaimWithNewImageValues(ctx, matrix, appClaimsDir)
+	appClaimsDir, err = m.PatchClaimWithNewImageValues(
+		ctx,
+		matrix,
+		appClaimsDir,
+	)
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	appClaimsDir, err = m.PatchClaimWithInferredProviders(
+		ctx,
+		claimName,
+		appClaimsDir,
+	)
 
 	if err != nil {
 

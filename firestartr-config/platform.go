@@ -22,6 +22,10 @@ type AllowedClaim struct {
 	Backend       string   `yaml:"backend"`
 }
 
+type Provider struct {
+	Name string `yaml:"name"`
+}
+
 func loadPlatforms(ctx context.Context, firestartrDir *dagger.Directory) ([]Platform, error) {
 
 	platforms := []Platform{}

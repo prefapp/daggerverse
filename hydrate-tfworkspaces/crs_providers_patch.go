@@ -11,11 +11,16 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type Providers struct {
+type Context struct {
 	Providers []Provider `json:"providers"`
+	Backend   Backend    `json:"backend"`
 }
 
 type Provider struct {
+	Name string `json:"name"`
+}
+
+type Backend struct {
 	Name string `json:"name"`
 }
 
@@ -107,7 +112,7 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 
 	}
 
-	providers, err := m.FindProvidersBy(
+	context, err := m.FindProvidersBy(
 		ctx,
 		foundClaim.ResourceType,
 		platform,
@@ -120,21 +125,7 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 
 	}
 
-	fmt.Printf("🦖 Providers TO PATCH: %s\n", providers)
-
-	// providers : [{name: "hola"}]
-
-	providersValue := Providers{}
-
-	providersValue.Providers = []Provider{}
-
-	for _, pv := range providers {
-
-		providersValue.Providers = append(providersValue.Providers, Provider{Name: pv})
-
-	}
-
-	providersToJson, err := json.Marshal(providersValue)
+	providersToJson, err := json.Marshal(context)
 
 	if err != nil {
 
@@ -174,7 +165,7 @@ func (m *HydrateTfworkspaces) FindProvidersBy(
 
 	env string,
 
-) ([]string, error) {
+) (*Context, error) {
 
 	platforms, err := dag.
 		FirestartrConfig(m.DotFirestartrDir).
@@ -186,7 +177,7 @@ func (m *HydrateTfworkspaces) FindProvidersBy(
 
 	}
 
-	var providers []string
+	var context *Context
 
 	for _, p := range platforms {
 
@@ -222,13 +213,9 @@ func (m *HydrateTfworkspaces) FindProvidersBy(
 
 		}
 
-		fmt.Printf("Coordinates: %s %s %s\n", pName, pTenants, pEnvs)
-
 		if pName == platform && slices.Contains(pTenants, tenant) && slices.Contains(pEnvs, env) {
 
-			providers, err = getProviders(ctx, resourceType, pAllowedClaims)
-
-			fmt.Printf("Providers: %s\n", providers)
+			context, err = getContext(ctx, resourceType, pAllowedClaims)
 
 			if err != nil {
 
@@ -236,15 +223,9 @@ func (m *HydrateTfworkspaces) FindProvidersBy(
 
 			}
 
-			if len(providers) > 0 {
+			if len(context.Providers) > 0 {
 
-				if err != nil {
-
-					return nil, err
-
-				}
-
-				return providers, nil
+				return context, nil
 
 			}
 
@@ -256,10 +237,20 @@ func (m *HydrateTfworkspaces) FindProvidersBy(
 
 	}
 
-	return []string{}, nil
+	return context, nil
 }
 
-func getProviders(ctx context.Context, resourceType string, allowedClaims []dagger.FirestartrConfigAllowedClaim) ([]string, error) {
+func getContext(
+
+	ctx context.Context,
+
+	resourceType string,
+
+	allowedClaims []dagger.FirestartrConfigAllowedClaim,
+
+) (*Context, error) {
+
+	context := &Context{}
 
 	for _, allowedClaim := range allowedClaims {
 
@@ -281,12 +272,28 @@ func getProviders(ctx context.Context, resourceType string, allowedClaims []dagg
 
 			}
 
-			return providers, nil
+			for _, provider := range providers {
+
+				context.Providers = append(context.Providers, Provider{Name: provider})
+
+			}
+
+			backend, err := allowedClaim.Backend(ctx)
+
+			if err != nil {
+
+				return nil, err
+
+			}
+
+			context.Backend = Backend{Name: backend}
+
+			return context, nil
 
 		}
 
 	}
 
-	return []string{}, nil
+	return context, nil
 
 }
