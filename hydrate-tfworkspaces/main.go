@@ -147,18 +147,24 @@ func (m *HydrateTfworkspaces) Render(
 		claimName,
 		appClaimsDir,
 	)
-
 	if err != nil {
-
 		return nil, err
+	}
 
+	secretsDir, err := m.InferSecretsClaimData(
+		ctx,
+		app,
+		m.ValuesDir.Directory("secrets"),
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	// Combine platform and app claims directories
 	combDirs := dag.Directory().
 		WithDirectory("platform", platformClaimsDir).
 		WithDirectory("app", appClaimsDir).
-		WithDirectory("app/secrets", m.ValuesDir.Directory("secrets"))
+		WithDirectory("app/secrets", secretsDir)
 
 	entries, err := appClaimsDir.Glob(ctx, "**.yaml")
 
