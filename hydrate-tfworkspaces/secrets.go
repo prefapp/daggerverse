@@ -19,9 +19,9 @@ func (m *HydrateTfworkspaces) InferSecretsClaimData(
 	}
 
 	for _, entry := range entries {
-		splited := strings.Split(entry, "/")
-		tenant := splited[0]
-		env := splited[1]
+		splitted := strings.Split(entry, "/")
+		tenant := splitted[0]
+		env := splitted[1]
 		claimData, err := secretsDir.File(entry).Contents(ctx)
 		if err != nil {
 			return nil, err
