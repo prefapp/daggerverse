@@ -25,6 +25,7 @@ providers:
         vmss_mi_id: "test"
         registry: "acrnoreleases"
         keyvault: "test-soups-pre-kv"
+        password: "${{ secret:app-tenant-env.rds_conn }}"
         soup:
           docker_image: "my-test.azurecr.io/service/mytest/my-test:v1.22.0-pre_default" #providers/terraform/values
     context:

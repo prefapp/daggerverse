@@ -82,9 +82,12 @@ func (m *HydrateTfworkspaces) Render(
 	}
 
 	// Prepare directories
-	platformClaimsDir := m.ValuesDir.Directory("claims/tfworkspaces")
+	platformClaimsDir := m.ValuesDir.
+		Directory("claims").
+		WithoutDirectory("kubernetes")
 
-	appClaimsDir := m.ValuesDir.Directory("tfworkspaces")
+	appClaimsDir := m.ValuesDir.
+		WithoutDirectory("kubernetes")
 
 	err = dag.Opa(app).ValidateClaims(
 		ctx,
