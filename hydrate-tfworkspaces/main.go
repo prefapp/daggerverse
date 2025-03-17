@@ -82,12 +82,9 @@ func (m *HydrateTfworkspaces) Render(
 	}
 
 	// Prepare directories
-	platformClaimsDir := m.ValuesDir.
-		Directory("claims").
-		WithoutDirectory("kubernetes")
+	platformClaimsDir := m.ValuesDir.Directory("claims")
 
-	appClaimsDir := m.ValuesDir.
-		WithoutDirectory("kubernetes")
+	appClaimsDir := m.ValuesDir.Directory("tfworkspaces")
 
 	err = dag.Opa(app).ValidateClaims(
 		ctx,
@@ -160,7 +157,8 @@ func (m *HydrateTfworkspaces) Render(
 	// Combine platform and app claims directories
 	combDirs := dag.Directory().
 		WithDirectory("platform", platformClaimsDir).
-		WithDirectory("app", appClaimsDir)
+		WithDirectory("app", appClaimsDir).
+		WithDirectory("app/secrets", m.ValuesDir.Directory("secrets"))
 
 	entries, err := appClaimsDir.Glob(ctx, "**.yaml")
 
