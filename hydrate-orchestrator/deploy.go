@@ -275,6 +275,60 @@ Created by @%s from %s within commit [%s](%s)
 
 	}
 
+	for _, secDep := range deployments.SecretsDeployment {
+		branchName := fmt.Sprintf("secrets-%s-%s", secDep.Tenant, secDep.Environment)
+
+		renderedDeployment, err := dag.HydrateSecrets(
+			m.ValuesStateDir,
+			m.WetStateDir,
+			m.DotFirestartr,
+		).Render(ctx, m.App, secDep.Tenant, secDep.Environment)
+
+		if err != nil {
+			summary.addDeploymentSummaryRow(
+				secDep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+			continue
+		}
+		prBody := fmt.Sprintf(`
+# New deployment manually triggered
+Created by @%s from %s within commit [%s](%s)
+%s
+`,
+			author,
+			branchInfo.Name,
+			branchInfo.SHA,
+			fmt.Sprintf("https://github.com/%s/commit/%s", m.Repo, branchInfo.SHA),
+			secDep.String(false),
+		)
+
+		_, err = m.upsertPR(
+			ctx,
+			branchName,
+			&renderedDeployment[0],
+			secDep.Labels(),
+			secDep.String(true),
+			prBody,
+			secDep.DeploymentPath,
+			lo.Ternary(author == "author", []string{}, []string{author}),
+		)
+
+		if err != nil {
+			summary.addDeploymentSummaryRow(
+				secDep.DeploymentPath,
+				fmt.Sprintf("Failed: %s", err.Error()),
+			)
+
+		} else {
+			summary.addDeploymentSummaryRow(
+				secDep.DeploymentPath,
+				"Success",
+			)
+		}
+	}
+
 	return m.DeploymentSummaryToFile(ctx, summary)
 
 }
@@ -390,6 +444,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 	result := &Deployments{
 		KubernetesDeployments:    []KubernetesAppDeployment{},
 		KubernetesSysDeployments: []KubernetesSysDeployment{},
+		SecretsDeployment:        []SecretsDeployment{},
 	}
 
 	for _, deployment := range deployments {
@@ -428,6 +483,11 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 			}
 
 			result.addDeployment(tfDep)
+		case "secrets":
+			// Process secrets deployment
+			secDep := secretsDepFromStr(deployment)
+
+			result.addDeployment(secDep)
 		}
 
 	}

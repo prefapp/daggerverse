@@ -20,6 +20,7 @@ type Deployments struct {
 	KubernetesDeployments    []KubernetesAppDeployment
 	KubernetesSysDeployments []KubernetesSysDeployment
 	TfWorkspaceDeployments   []TfWorkspaceDeployment
+	SecretsDeployment        []SecretsDeployment
 }
 
 func (d *Deployments) addDeployment(dep interface{}) {
@@ -44,6 +45,12 @@ func (d *Deployments) addDeployment(dep interface{}) {
 			return tfd.Equals(*dep)
 		}) {
 			d.TfWorkspaceDeployments = append(d.TfWorkspaceDeployments, *dep)
+		}
+	case *SecretsDeployment:
+		if !lo.ContainsBy(d.SecretsDeployment, func(sd SecretsDeployment) bool {
+			return sd.Equals(*dep)
+		}) {
+			d.SecretsDeployment = append(d.SecretsDeployment, *dep)
 		}
 	default:
 		panic(fmt.Sprintf("Unknown deployment type: %T", dep))
@@ -77,6 +84,18 @@ type TfWorkspaceDeployment struct {
 	ImagesMatrix string
 }
 
+type SecretsDeployment struct {
+	Deployment
+	Tenant      string
+	Environment string
+}
+
+func (sd *SecretsDeployment) Equals(other SecretsDeployment) bool {
+	return sd.DeploymentPath == other.DeploymentPath &&
+		sd.Tenant == other.Tenant &&
+		sd.Environment == other.Environment
+}
+
 func (tfd *TfWorkspaceDeployment) Equals(other TfWorkspaceDeployment) bool {
 	return tfd.DeploymentPath == other.DeploymentPath &&
 		tfd.ClaimName == other.ClaimName
@@ -94,10 +113,31 @@ func (tfd *TfWorkspaceDeployment) String(summary bool) string {
 	}
 }
 
+func (sd *SecretsDeployment) String(summary bool) string {
+	if summary {
+		return fmt.Sprintf(
+			"Secrets deployment tenant: `%s`, env: `%s`",
+			sd.Tenant, sd.Environment,
+		)
+	} else {
+		return "Deployment coordinates:" +
+			fmt.Sprintf("\n\t* Tenant: `%s`", sd.Tenant) +
+			fmt.Sprintf("\n\t* Environment: `%s`", sd.Environment)
+	}
+}
+
 func (tfd *TfWorkspaceDeployment) Labels() []string {
 	return []string{
 		"type/tfworkspaces",
 		fmt.Sprintf("tfworkspace/%s", tfd.ClaimName),
+	}
+}
+
+func (sd *SecretsDeployment) Labels() []string {
+	return []string{
+		"type/secrets",
+		fmt.Sprintf("tenant/%s", sd.Tenant),
+		fmt.Sprintf("env/%s", sd.Environment),
 	}
 }
 
@@ -236,6 +276,25 @@ func kubernetesSysDepFromStr(deployment string) *KubernetesSysDeployment {
 	}
 
 	panic(fmt.Sprintf("Invalid sys-service deployment path provided: %s", deployment))
+}
+
+func secretsDepFromStr(deployment string) *SecretsDeployment {
+
+	dirs := splitPath(deployment)
+
+	if len(dirs) == 3 {
+
+		return &SecretsDeployment{
+			Deployment: Deployment{
+				DeploymentPath: strings.Join(dirs, string(os.PathSeparator)),
+			},
+			Tenant:      dirs[1],
+			Environment: dirs[2],
+		}
+
+	}
+
+	panic(fmt.Sprintf("Invalid secrets deployment path provided: %s", deployment))
 }
 
 func splitPath(path string) []string {
