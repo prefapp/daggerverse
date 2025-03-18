@@ -17,21 +17,111 @@ package main
 import (
 	"context"
 	"dagger/hydrate-secrets/internal/dagger"
+	"fmt"
+
+	"gopkg.in/yaml.v3"
 )
 
-type HydrateSecrets struct{}
-
-// Returns a container that echoes whatever string argument is provided
-func (m *HydrateSecrets) ContainerEcho(stringArg string) *dagger.Container {
-	return dag.Container().From("alpine:latest").WithExec([]string{"echo", stringArg})
+type HydrateSecrets struct {
+	ValuesDir        *dagger.Directory
+	WetRepoDir       *dagger.Directory
+	DotFirestartrDir *dagger.Directory
+	Config           Config
 }
 
-// Returns lines that match a pattern in the files of the provided Directory
-func (m *HydrateSecrets) GrepDir(ctx context.Context, directoryArg *dagger.Directory, pattern string) (string, error) {
-	return dag.Container().
-		From("alpine:latest").
-		WithMountedDirectory("/mnt", directoryArg).
-		WithWorkdir("/mnt").
-		WithExec([]string{"grep", "-R", pattern, "."}).
-		Stdout(ctx)
+func New(
+	ctx context.Context,
+
+	valuesDir *dagger.Directory,
+
+	wetRepoDir *dagger.Directory,
+
+	dotFirestartrDir *dagger.Directory,
+) *HydrateSecrets {
+
+	configContents, err := valuesDir.File(".github/hydrate_tfworkspaces_config.yaml").Contents(ctx)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	config := Config{}
+
+	err = yaml.Unmarshal([]byte(configContents), &config)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	return &HydrateSecrets{
+
+		ValuesDir: valuesDir,
+
+		WetRepoDir: wetRepoDir,
+
+		DotFirestartrDir: dotFirestartrDir,
+
+		Config: config,
+	}
+}
+
+func (m *HydrateSecrets) Render(ctx context.Context, app string, tenant string, env string) ([]*dagger.Directory, error) {
+
+	claimName := fmt.Sprintf(`%s-%s-%s`, app, tenant, env)
+
+	targetEntry := fmt.Sprintf("secrets/%s/%s/", tenant, env)
+	_, err := m.ValuesDir.Entries(ctx, dagger.DirectoryEntriesOpts{
+		Path: targetEntry,
+	})
+	if err != nil {
+		return nil, fmt.Errorf(
+			"claim not found in tenant: %s env: %s",
+			tenant,
+			env,
+		)
+	}
+
+	secretsDir, err := m.InferSecretsClaimData(
+		ctx,
+		app,
+		m.ValuesDir.Directory("secrets"),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	outputDir, err := m.RenderWithFirestartrContainer(
+		ctx,
+		secretsDir,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	crFiles, err := m.GetCrsFileByClaimName(
+		ctx,
+		claimName,
+		outputDir,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, crFile := range crFiles {
+		crFileName, err := crFile.Name(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		m.WetRepoDir = m.WetRepoDir.
+			WithoutFile(fmt.Sprintf("secrets/%s", crFileName)).
+			WithFile(fmt.Sprintf("secrets/%s", crFileName), crFile)
+	}
+
+	return []*dagger.Directory{m.WetRepoDir}, nil
+
 }
