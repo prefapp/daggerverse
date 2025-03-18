@@ -70,7 +70,6 @@ func New(
 ) *HydrateOrchestrator {
 	appName := ""
 	appData, err := dag.FirestartrConfig(dotFirestartr).Apps(ctx)
-
 	if err != nil {
 		panic(err)
 	}
