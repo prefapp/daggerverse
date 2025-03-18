@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/prefapp/daggerverse/compare/firestartr-config-v2.1.0...firestartr-config-v3.0.0) (2025-03-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* support infer providers ([#152](https://github.com/prefapp/daggerverse/issues/152))
+
+### Features
+
+* support infer providers ([#152](https://github.com/prefapp/daggerverse/issues/152)) ([cc34318](https://github.com/prefapp/daggerverse/commit/cc343181a57a2c74d2a5cab95b259a6e0d5b01f2))
+
 ## [2.1.0](https://github.com/prefapp/daggerverse/compare/firestartr-config-v2.0.0...firestartr-config-v2.1.0) (2025-02-26)
 
 

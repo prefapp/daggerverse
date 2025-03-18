@@ -4,5 +4,5 @@
    "notify-and-hydrate-state": "1.4.1",
    "hydrate-orchestrator": "3.0.0",
    "hydrate-kubernetes": "1.0.0",
-   "firestartr-config": "2.1.0"
+   "firestartr-config": "3.0.0"
 }
