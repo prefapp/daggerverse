@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.0.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v3.0.0...hydrate-orchestrator-v4.0.0) (2025-03-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* provoke major
+
+### Features
+
+* provoke major ([a375b88](https://github.com/prefapp/daggerverse/commit/a375b88e1c41ef59457ab8ba79e00a7f39f58e0d))
+* support secrets render on module ([#155](https://github.com/prefapp/daggerverse/issues/155)) ([02543a1](https://github.com/prefapp/daggerverse/commit/02543a191ccbe2a4f61b1775f49e7d7b9c57dd4f))
+
 ## [3.0.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v2.4.1...hydrate-orchestrator-v3.0.0) (2025-03-05)
 
 
