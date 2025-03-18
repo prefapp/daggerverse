@@ -1,0 +1,32 @@
+apiVersion: firestartr.dev/v1
+kind: FirestartrTerraformWorkspace
+metadata:
+  annotations:
+    firestartr.dev/claim-ref: TFWorkspaceClaim/example-platform
+    firestartr.dev/external-name: example-platform
+    firestartr.dev/policy: apply
+    firestartr.dev/revision: "1"
+    firestartr.dev/sync-enabled: "true"
+    firestartr.dev/sync-period: 24h
+    firestartr.dev/sync-policy: observe
+    firestartr.dev/microservice: "docker_image"
+    firestartr.dev/image: "test.azurecr.io/my-test:v1.22.0-pre_default"
+  labels:
+    claim-ref: example-platform
+  name: example-platform-e951e631-305a-414e-be4f-5562fc952121
+spec:
+  context:
+    backend:
+      ref:
+        kind: FirestartrProviderConfig
+        name: azure-backend-terraform
+    providers:
+      - ref:
+          kind: FirestartrProviderConfig
+          name: azure-provider-test
+  firestartr:
+    tfStateKey: e951e631-305a-414e-be4f-5562fc952121
+  module: git::https://github.com/test/tfm.git//modules/vmss-soups?ref=vmss-soups-v0.2.4
+  source: Remote
+  values: '{"common":{"resource_group_name":"test-shutter-pre","location":"westeurope","secure_boot_enabled":false,"tags":{"cliente":"corpme","tenant":"corpme","Producto":"shutter","application":"shutter","env":"pre"}},"run_script":{"file":"/data/run_script.sh","vmss_mi_id":"test","registry":"acrnoreleases","keyvault":"test-soups-pre-kv","soup":{"docker_image":"my-test.azurecr.io/service/mytest/my-test:v1.22.0-pre_default"}}}'
+  references: []

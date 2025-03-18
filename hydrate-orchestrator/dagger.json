@@ -17,6 +17,10 @@
       "source": "../hydrate-kubernetes"
     },
     {
+      "name": "hydrate-secrets",
+      "source": "../hydrate-secrets"
+    },
+    {
       "name": "hydrate-tfworkspaces",
       "source": "../hydrate-tfworkspaces"
     }

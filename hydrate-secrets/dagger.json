@@ -1,0 +1,5 @@
+{
+  "name": "hydrate-secrets",
+  "engineVersion": "v0.15.3",
+  "sdk": "go"
+}
