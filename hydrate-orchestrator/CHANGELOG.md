@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v4.0.0...hydrate-orchestrator-v5.0.0) (2025-03-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* upgrade dagger v0.16.3 ([#160](https://github.com/prefapp/daggerverse/issues/160))
+
+### Features
+
+* upgrade dagger v0.16.3 ([#160](https://github.com/prefapp/daggerverse/issues/160)) ([9ec5dae](https://github.com/prefapp/daggerverse/commit/9ec5daeed83845320550ac5689bc7cb622d56db3))
+
 ## [4.0.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v3.0.0...hydrate-orchestrator-v4.0.0) (2025-03-18)
 
 
