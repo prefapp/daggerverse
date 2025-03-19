@@ -1,5 +1,5 @@
 {
   "name": "hydrate-secrets",
-  "engineVersion": "v0.15.3",
+  "engineVersion": "v0.16.3",
   "sdk": "go"
 }
