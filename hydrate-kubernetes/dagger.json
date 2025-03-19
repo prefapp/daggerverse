@@ -1,6 +1,6 @@
 {
   "name": "hydrate-kubernetes",
-  "engineVersion": "v0.15.3",
+  "engineVersion": "v0.16.3",
   "sdk": "go",
   "dependencies": [
     {
