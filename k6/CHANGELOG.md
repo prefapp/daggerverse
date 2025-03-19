@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/prefapp/daggerverse/compare/k6-v1.3.0...k6-v2.0.0) (2025-03-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* upgrade dagger v0.16.3 ([#160](https://github.com/prefapp/daggerverse/issues/160))
+
+### Features
+
+* upgrade dagger v0.16.3 ([#160](https://github.com/prefapp/daggerverse/issues/160)) ([9ec5dae](https://github.com/prefapp/daggerverse/commit/9ec5daeed83845320550ac5689bc7cb622d56db3))
+
 ## [1.3.0](https://github.com/prefapp/daggerverse/compare/k6-v1.2.0...k6-v1.3.0) (2024-12-16)
 
 
