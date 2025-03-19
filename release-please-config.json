@@ -14,17 +14,9 @@
            "package-name": "notify-and-hydrate-state",
            "release-type": "go"
        },
-        "hydrate-kubernetes": {
-           "package-name": "hydrate-kubernetes",
-           "release-type": "go"
-       },
        "hydrate-orchestrator": {
             "package-name": "hydrate-orchestrator",
             "release-type": "go"
-       },
-       "firestartr-config": {
-          "package-name": "firestartr-config",
-          "release-type": "go"
        }
     }
 }
