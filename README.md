@@ -3,7 +3,7 @@
 # Prefapp daggerverse
 
 ### Requirements to develop
-- dagger v0.15.3
+- dagger v0.16.3
 - go 1.23.4+
 
 ### Develop an existing dagger module
