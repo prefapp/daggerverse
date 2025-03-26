@@ -35,7 +35,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		WithWorkdir(claimsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
-			"git",
+			"gh",
 			"release",
 			"list",
 			"--exclude-drafts",
