@@ -30,8 +30,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	featuresList, err := dag.Gh(dagger.GhOpts{
 		Version: ghCliVersion,
 	}).Container(dagger.GhContainerOpts{
-		Token:   ghToken,
-		Plugins: []string{"prefapp/gh-commit"},
+		Token: ghToken,
 	}).WithDirectory(claimsDirPath, claimsDir, dagger.ContainerWithDirectoryOpts{}).
 		WithWorkdir(claimsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
