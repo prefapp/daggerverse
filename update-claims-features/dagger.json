@@ -1,0 +1,14 @@
+{
+  "name": "update-claims-features",
+  "engineVersion": "v0.17.1",
+  "sdk": {
+    "source": "go"
+  },
+  "dependencies": [
+    {
+      "name": "gh",
+      "source": "github.com/prefapp/aweris-daggerverse/gh",
+      "pin": "b301adc888e6c420b46e5b71f48ea4ea68023865"
+    }
+  ]
+}
