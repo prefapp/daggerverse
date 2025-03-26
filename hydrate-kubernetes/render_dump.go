@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -25,10 +26,7 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 	}
 
-	k8sManifests := strings.Split(
-		string(content),
-		"---\n",
-	)
+	k8sManifests := regexp.MustCompile(`(?m)^(---\n)`).Split(string(content), -1)
 
 	dir := dag.Directory()
 
@@ -39,6 +37,8 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 		err := yaml.Unmarshal([]byte(manifest), &k8sresource)
 
 		if err != nil {
+
+			panic(manifest)
 
 			return nil, err
 
