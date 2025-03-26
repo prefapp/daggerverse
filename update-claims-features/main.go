@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
+	"fmt"
 	"time"
 )
 
@@ -50,6 +51,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	// Get all ComponentClaim claims
 
 	// Update individually, create PR
+
+	fmt.Printf("Features list: %s", featuresList)
 
 	return featuresList, nil
 }
