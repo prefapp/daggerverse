@@ -38,8 +38,6 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 		if err != nil {
 
-			panic(manifest)
-
 			return nil, err
 
 		}
