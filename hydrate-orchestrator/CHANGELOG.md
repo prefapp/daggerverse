@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.0.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v5.0.0...hydrate-orchestrator-v5.0.1) (2025-03-26)
+
+
+### Bug Fixes
+
+* kubernetes version ([#168](https://github.com/prefapp/daggerverse/issues/168)) ([31c00f6](https://github.com/prefapp/daggerverse/commit/31c00f6fb4aaf1cfc080b524b97feb308a7f5fc4))
+
 ## [5.0.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v4.0.0...hydrate-orchestrator-v5.0.0) (2025-03-19)
 
 
