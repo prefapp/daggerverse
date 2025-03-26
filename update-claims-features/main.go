@@ -38,8 +38,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			"gh",
 			"release",
 			"list",
-			"--exclude-drafts",
-			"--exclude-pre-releases",
+			// "--exclude-drafts",
+			// "--exclude-pre-releases",
 		}).
 		Stdout(ctx)
 
