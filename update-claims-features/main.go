@@ -55,8 +55,7 @@ func (m *UpdateClaimsFeatures) New(
 	ghCliVersion string,
 
 	// Claims repo name
-	// +optional
-	// +default="claims"
+	// +required
 	repo string,
 
 	// Name of the default branch of the claims repo
