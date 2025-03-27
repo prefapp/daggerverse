@@ -72,7 +72,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 	for _, ext := range []string{".yml", ".yaml"} {
 
-		extClaims, err := claimsDir.Glob(ctx, fmt.Sprintf("*/*/*/*%s", ext))
+		extClaims, err := claimsDir.Glob(ctx, fmt.Sprintf("*/*/*%s", ext))
 
 		if err != nil {
 
@@ -107,7 +107,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		splitted := strings.Split(entry, "/")
 
-		fmt.Printf("Splitted: %s", splitted)
+		fmt.Printf("Splitted: %s\n", splitted)
 
 		fmt.Printf("Classifying claims in %s\n", entry)
 
