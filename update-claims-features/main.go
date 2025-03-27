@@ -149,6 +149,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 			}
 
+			claim.Providers.Github.Features = updatedFeaturesList
+
 			marshalledClaim, err := yaml.Marshal(claim)
 
 			if err != nil {
