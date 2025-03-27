@@ -10,12 +10,13 @@ import (
 )
 
 type UpdateClaimsFeatures struct {
-	Repo          string
-	GhToken       *dagger.Secret
-	GhCliVersion  string
-	ClaimsDirPath string
-	ClaimsDir     *dagger.Directory
-	DefaultBranch string
+	Repo                 string
+	GhToken              *dagger.Secret
+	GhCliVersion         string
+	ClaimsDirPath        string
+	ClaimsDir            *dagger.Directory
+	DefaultBranch        string
+	ComponentsFolderName string
 }
 
 type Claim struct {
@@ -87,6 +88,11 @@ func (m *UpdateClaimsFeatures) New(
 	// +optional
 	// +default="main"
 	defaultBranch string,
+
+	// Name of the components folder name
+	// +optional
+	// +default="components"
+	componentsFolderName string,
 ) (*UpdateClaimsFeatures, error) {
 	return &UpdateClaimsFeatures{
 		Repo:          repo,
@@ -127,7 +133,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 	for _, ext := range []string{".yml", ".yaml"} {
 
-		extClaims, err := m.ClaimsDir.Glob(ctx, fmt.Sprintf("claims/*/*%s", ext))
+		extClaims, err := m.ClaimsDir.Glob(
+			ctx,
+			fmt.Sprintf("claims/%s/*%s", m.ComponentsFolderName, ext),
+		)
 
 		if err != nil {
 
