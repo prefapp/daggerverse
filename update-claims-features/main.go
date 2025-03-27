@@ -119,8 +119,12 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			"gh",
 			"release",
 			"list",
+			"--json",
+			"name",
 		}).
 		Stdout(ctx)
+
+	fmt.Printf("☢️ FEATURES LIST >>>>>>>>>>>>>>>>>> %s\n", featuresList)
 
 	if err != nil {
 		return "", err
