@@ -78,7 +78,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 	for _, ext := range []string{".yml", ".yaml"} {
 
-		extClaims, err := claimsDir.Glob(ctx, fmt.Sprintf("*/*/*%s", ext))
+		extClaims, err := claimsDir.Glob(ctx, fmt.Sprintf("claims/*/*%s", ext))
 
 		if err != nil {
 
