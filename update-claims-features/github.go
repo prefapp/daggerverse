@@ -190,35 +190,6 @@ func (m *UpdateClaimsFeatures) upsertPR(
 
 }
 
-func (m *UpdateClaimsFeatures) AutomergeFileExists(ctx context.Context, globPattern string) bool {
-
-	entries, err := m.ValuesStateDir.Glob(ctx, globPattern+"/*")
-
-	if err != nil {
-
-		panic(err)
-	}
-
-	automergeFileFound := false
-
-	for _, entry := range entries {
-
-		if fmt.Sprintf("%s/%s", globPattern, "AUTO_MERGE") == entry {
-
-			fmt.Printf("☢️ Automerge file found: %s\n", entry)
-
-			automergeFileFound = true
-
-			break
-		}
-	}
-
-	fmt.Printf("☢️ Automerge file not found\n")
-
-	return automergeFileFound
-
-}
-
 func (m *UpdateClaimsFeatures) getRepoPrs(ctx context.Context) ([]Pr, error) {
 
 	command := strings.Join([]string{
