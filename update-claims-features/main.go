@@ -4,7 +4,6 @@ import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
 	"fmt"
-	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -85,6 +84,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 	for _, entry := range claims {
 
+		fmt.Printf("Classifying claims in %s\n", entry)
+
 		file := claimsDir.File(entry)
 
 		contents, err := file.Contents(ctx)
@@ -105,11 +106,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		}
 
-		splitted := strings.Split(entry, "/")
-
-		fmt.Printf("Splitted: %s\n", splitted)
-
-		fmt.Printf("Classifying claims in %s\n", entry)
+		fmt.Printf("Splitted: %s\n", claim)
 
 	}
 
