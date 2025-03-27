@@ -21,6 +21,10 @@ type UpdateClaimsFeatures struct {
 type Claim struct {
 	Name      string    `yaml:"name"`
 	Kind      string    `yaml:"kind"`
+	Version   string    `yaml:"version"`
+	Type      string    `yaml:"type"`
+	Lifecycle string    `yaml:"lifecycle"`
+	System    string    `yaml:"system"`
 	Providers Providers `yaml:"providers"`
 }
 
@@ -29,12 +33,33 @@ type Providers struct {
 }
 
 type Github struct {
-	Features []Feature `yaml:"features"`
+	Description    string         `yaml:"description"`
+	Name           string         `yaml:"name"`
+	Org            string         `yaml:"org"`
+	Visibility     string         `yaml:"visibility"`
+	BranchStrategy BranchStrategy `yaml:"branchStrategy"`
+	Actions        Actions        `yaml:"actions"`
+	Features       []Feature      `yaml:"features"`
+}
+
+type BranchStrategy struct {
+	Name          string `yaml:"name"`
+	DefaultBranch string `yaml:"defaultBranch"`
+}
+
+type Actions struct {
+	Oidc OIDC `yaml:"oidc"`
+}
+
+type OIDC struct {
+	UseDefault       bool     `yaml:"useDefault"`
+	IncludeClaimKeys []string `yaml:"includeClaimKeys"`
 }
 
 type Feature struct {
-	Name    string `yaml:"name"`
-	Version string `yaml:"version"`
+	Name    string            `yaml:"name"`
+	Version string            `yaml:"version"`
+	Args    map[string]string `yaml:"args"`
 }
 
 func (m *UpdateClaimsFeatures) New(
