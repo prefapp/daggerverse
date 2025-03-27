@@ -19,12 +19,12 @@ type UpdateClaimsFeatures struct {
 }
 
 type Claim struct {
-	Name      string    `yaml:"name"`
 	Kind      string    `yaml:"kind"`
 	Version   string    `yaml:"version"`
 	Type      string    `yaml:"type"`
 	Lifecycle string    `yaml:"lifecycle"`
 	System    string    `yaml:"system"`
+	Name      string    `yaml:"name"`
 	Providers Providers `yaml:"providers"`
 }
 
