@@ -144,7 +144,7 @@ func (m *UpdateClaimsFeatures) upsertPR(
 			"pr",
 			"create",
 			"-R", m.Repo,
-			"--base", m.DeploymentBranch,
+			"--base", m.DefaultBranch,
 			"--title", title,
 			"--body", body,
 			"--head", newBranchName,

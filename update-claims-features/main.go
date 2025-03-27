@@ -10,10 +10,12 @@ import (
 )
 
 type UpdateClaimsFeatures struct {
-	Repo             string
-	GhToken          *dagger.Secret
-	DeploymentBranch string
-	GhCliVersion     string
+	Repo          string
+	GhToken       *dagger.Secret
+	GhCliVersion  string
+	ClaimsDirPath string
+	ClaimsDir     *dagger.Directory
+	DefaultBranch string
 }
 
 type Claim struct {
@@ -35,7 +37,7 @@ type Feature struct {
 	Version string `yaml:"version"`
 }
 
-func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
+func (m *UpdateClaimsFeatures) New(
 	ctx context.Context,
 	claimsDir *dagger.Directory,
 
@@ -47,18 +49,41 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	// +required
 	ghToken *dagger.Secret,
 
-	//Gh CLI Version
+	// Gh CLI Version
 	// +optional
 	// +default="v2.66.1"
 	ghCliVersion string,
+
+	// Claims repo name
+	// +optional
+	// +default="claims"
+	repo string,
+
+	// Name of the default branch of the claims repo
+	// +optional
+	// +default="main"
+	defaultBranch string,
+) (*UpdateClaimsFeatures, error) {
+	return &UpdateClaimsFeatures{
+		Repo:          repo,
+		GhToken:       ghToken,
+		GhCliVersion:  ghCliVersion,
+		ClaimsDir:     claimsDir,
+		ClaimsDirPath: claimsDirPath,
+		DefaultBranch: defaultBranch,
+	}, nil
+}
+
+func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
+	ctx context.Context,
 ) (string, error) {
 	// Get latest feature version
 	featuresList, err := dag.Gh(dagger.GhOpts{
-		Version: ghCliVersion,
+		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
-		Token: ghToken,
-	}).WithDirectory(claimsDirPath, claimsDir, dagger.ContainerWithDirectoryOpts{}).
-		WithWorkdir(claimsDirPath).
+		Token: m.GhToken,
+	}).WithDirectory(m.ClaimsDirPath, m.ClaimsDir, dagger.ContainerWithDirectoryOpts{}).
+		WithWorkdir(m.ClaimsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
 			"gh",
@@ -78,7 +103,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 	for _, ext := range []string{".yml", ".yaml"} {
 
-		extClaims, err := claimsDir.Glob(ctx, fmt.Sprintf("claims/*/*%s", ext))
+		extClaims, err := m.ClaimsDir.Glob(ctx, fmt.Sprintf("claims/*/*%s", ext))
 
 		if err != nil {
 
@@ -93,7 +118,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		fmt.Printf("Classifying claims in %s\n", entry)
 
-		file := claimsDir.File(entry)
+		file := m.ClaimsDir.File(entry)
 
 		contents, err := file.Contents(ctx)
 
@@ -133,7 +158,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 			}
 
-			updatedDir := claimsDir.WithNewFile(entry, string(marshalledClaim))
+			updatedDir := m.ClaimsDir.WithNewFile(entry, string(marshalledClaim))
 
 			// create PR
 			prLink, err := m.upsertPR(
