@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	"yaml"
 
 	"gopkg.in/yaml.v3"
 )
