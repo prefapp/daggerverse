@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -17,6 +19,10 @@ type UpdateClaimsFeatures struct {
 	ClaimsDir            *dagger.Directory
 	DefaultBranch        string
 	ComponentsFolderName string
+}
+
+type ReleasesList struct {
+	Name string `json:"name"`
 }
 
 type Claim struct {
@@ -108,7 +114,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	ctx context.Context,
 ) (string, error) {
 	// Get latest feature version
-	featuresList, err := dag.Gh(dagger.GhOpts{
+	ghReleaseListResult, err := dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
 		Token: m.GhToken,
@@ -124,19 +130,33 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}).
 		Stdout(ctx)
 
-	fmt.Printf("☢️ FEATURES LIST >>>>>>>>>>>>>>>>>> %s\n", featuresList)
+	fmt.Printf("☢️ FEATURES LIST >>>>>>>>>>>>>>>>>> %s\n", ghReleaseListResult)
 
 	if err != nil {
 		return "", err
 	}
 
 	var featuresMap map[string]string
+	var releasesList []ReleasesList
+	err = json.Unmarshal([]byte(ghReleaseListResult), &releasesList)
+
+	if err != nil {
+		return "", err
+	}
+
+	for _, feature := range releasesList {
+		featureData := strings.Split(feature.Name, " ")
+
+		featureName := strings.Trim(featureData[0], ":")
+		featureVersion := strings.Trim(featureData[1], "v")
+
+		featuresMap[featureName] = featureVersion
+	}
 
 	// Get all ComponentClaim claims
 	var claims []string
 
 	for _, ext := range []string{".yml", ".yaml"} {
-
 		extClaims, err := m.ClaimsDir.Glob(
 			ctx,
 			fmt.Sprintf("claims/%s/*%s", m.ComponentsFolderName, ext),
@@ -217,7 +237,5 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 	}
 
-	fmt.Printf("Features list: %s", featuresList)
-
-	return featuresList, nil
+	return "ok", nil
 }
