@@ -9,7 +9,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type UpdateClaimsFeatures struct{}
+type UpdateClaimsFeatures struct {
+	Repo             string
+	GhToken          *dagger.Secret
+	DeploymentBranch string
+	GhCliVersion     string
+}
 
 type Claim struct {
 	Name      string    `yaml:"name"`
@@ -66,6 +71,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		return "", err
 	}
 
+	var featuresMap map[string]string
+
 	// Get all ComponentClaim claims
 	var claims []string
 
@@ -106,11 +113,45 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		}
 
-		fmt.Printf("Splitted: %s\n", claim)
+		var updatedFeaturesList []Feature
+
+		if claim.Kind == "ComponentClaim" {
+
+			for _, feature := range claim.Providers.Github.Features {
+
+				feature.Version = featuresMap[feature.Name]
+
+				updatedFeaturesList = append(updatedFeaturesList, feature)
+
+			}
+
+			marshalledClaim, err := yaml.Marshal(claim)
+
+			if err != nil {
+
+				return "", err
+
+			}
+
+			updatedDir := claimsDir.WithNewFile(entry, string(marshalledClaim))
+
+			// create PR
+			prLink, err := m.upsertPR(
+				ctx,
+				fmt.Sprintf("update-%s-%s", claim.Name, claim.Kind),
+				updatedDir,
+				[]string{},
+				fmt.Sprintf("Update %s features to latest version", claim.Name),
+				fmt.Sprintf("Update %s features to latest version", claim.Name),
+				fmt.Sprintf("kubernetes"),
+				[]string{},
+			)
+
+			fmt.Printf("PR LINK: %s", prLink)
+
+		}
 
 	}
-
-	// Update individually, create PR
 
 	fmt.Printf("Features list: %s", featuresList)
 
