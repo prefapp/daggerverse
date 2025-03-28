@@ -68,7 +68,6 @@ func New(
 	ghCliVersion string,
 
 ) *HydrateOrchestrator {
-
 	appName := ""
 	appData, err := dag.FirestartrConfig(dotFirestartr).Apps(ctx)
 	if err != nil {
