@@ -164,14 +164,16 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				return "", err
 			}
 
-			fmt.Sprintf("FEATURE INFO>>>>>>>>>>>>>>%s, %s", featureName, featureVersion)
-
 			if versionIsGreater.Check(featureVersionSemver) {
 				featuresMap[featureName] = featureVersion
 			}
 		} else {
 			featuresMap[featureName] = featureVersion
 		}
+	}
+
+	for k, v := range featuresMap {
+		fmt.Sprintf("FEATURE INFO>>>>>>>>>>>>>>%s, %s", k, v)
 	}
 
 	// Get all ComponentClaim claims
