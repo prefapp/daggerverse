@@ -118,6 +118,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
 		Token: m.GhToken,
+		Repo:  "prefapp/features",
 	}).WithDirectory(m.ClaimsDirPath, m.ClaimsDir, dagger.ContainerWithDirectoryOpts{}).
 		WithWorkdir(m.ClaimsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
@@ -130,9 +131,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}).
 		Stdout(ctx)
 
-	token, err := m.GhToken.Plaintext(ctx)
-
-	fmt.Printf("☢️ GH TOKEN >>>>>>>>>>>>>>>>>> %s\n", token)
 	fmt.Printf("☢️ FEATURES LIST >>>>>>>>>>>>>>>>>> %s\n", ghReleaseListResult)
 
 	if err != nil {
