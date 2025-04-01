@@ -130,6 +130,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}).
 		Stdout(ctx)
 
+	fmt.Printf("☢️ GH TOKEN >>>>>>>>>>>>>>>>>> %s\n", m.GhToken)
 	fmt.Printf("☢️ FEATURES LIST >>>>>>>>>>>>>>>>>> %s\n", ghReleaseListResult)
 
 	if err != nil {
