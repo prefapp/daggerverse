@@ -187,6 +187,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		}
 
+		for _, claim := range extClaims {
+			fmt.Printf("CLAIM ADDED----------------------------------- %s", claim)
+		}
+
 		claims = append(claims, extClaims...)
 	}
 
