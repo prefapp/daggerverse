@@ -149,9 +149,9 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		featureName := strings.Trim(featureData[0], ":")
 		featureVersion := strings.Trim(featureData[1], "v")
 
-		featuresMap[featureName] = featureVersion
-
 		fmt.Printf("☢️ MAP ENTRY>>>>>>>>>>>>>>>>>> %s, %s\n", featureName, featureVersion)
+
+		featuresMap[featureName] = featureVersion
 	}
 
 	// Get all ComponentClaim claims
