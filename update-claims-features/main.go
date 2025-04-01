@@ -131,8 +131,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}).
 		Stdout(ctx)
 
-	fmt.Printf("☢️ FEATURES LIST >>>>>>>>>>>>>>>>>> %s\n", ghReleaseListResult)
-
 	if err != nil {
 		return "", err
 	}
@@ -152,6 +150,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		featureVersion := strings.Trim(featureData[1], "v")
 
 		featuresMap[featureName] = featureVersion
+
+		fmt.Printf("☢️ MAP ENTRY>>>>>>>>>>>>>>>>>> %s, %s\n", featureName, featureVersion)
 	}
 
 	// Get all ComponentClaim claims
