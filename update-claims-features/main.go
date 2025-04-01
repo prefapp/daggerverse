@@ -175,8 +175,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	// Get all ComponentClaim claims
 	var claims []string
 
-	fmt.Printf("ADDING CLAIMS-----------------------------------")
-
 	for _, ext := range []string{".yml", ".yaml"} {
 		extClaims, err := m.ClaimsDir.Glob(
 			ctx,
@@ -189,9 +187,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		}
 
-		fmt.Printf("ADDED CLAIM-----------------------------------")
 		claims = append(claims, extClaims...)
 	}
+
+	fmt.Printf("CLAIMS ADDED----------------------------------- %s", claims)
 
 	for _, entry := range claims {
 
@@ -218,6 +217,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 
 		var updatedFeaturesList []Feature
+
+		fmt.Printf("CLAIM KIND----------------------------------- %s", claim.Kind)
 
 		if claim.Kind == "ComponentClaim" {
 
