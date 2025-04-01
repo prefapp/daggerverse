@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"gopkg.in/yaml.v3"
 )
 
@@ -148,10 +149,27 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		featureName := strings.Trim(featureData[0], ":")
 		featureVersion := strings.Trim(featureData[1], "v")
+		featureVersionSemver, err := semver.NewVersion(featureData[1])
 
-		fmt.Printf("☢️ MAP ENTRY>>>>>>>>>>>>>>>>>> %s, %s\n", featureName, featureVersion)
+		if err != nil {
+			return "", err
+		}
 
-		featuresMap[featureName] = featureVersion
+		currentVersion, hasVersion := featuresMap[featureName]
+
+		if hasVersion {
+			versionIsGreater, err := semver.NewConstraint(fmt.Sprintf("> %s", currentVersion))
+
+			if err != nil {
+				return "", err
+			}
+
+			if versionIsGreater.Check(featureVersionSemver) {
+				featuresMap[featureName] = featureVersion
+			}
+		} else {
+			featuresMap[featureName] = featureVersion
+		}
 	}
 
 	// Get all ComponentClaim claims
