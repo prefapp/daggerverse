@@ -164,6 +164,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				return "", err
 			}
 
+			fmt.Sprintf("FEATURE INFO>>>>>>>>>>>>>>%s, %s", featureName, featureVersion)
+
 			if versionIsGreater.Check(featureVersionSemver) {
 				featuresMap[featureName] = featureVersion
 			}
