@@ -172,13 +172,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 	}
 
-	fmt.Printf("FEATURE LIST-----------------------------------------")
-	for k, v := range featuresMap {
-		fmt.Printf("FEATURE INFO>>>>>>>>>>>>>>%s, %s", k, v)
-	}
-
 	// Get all ComponentClaim claims
 	var claims []string
+
+	fmt.Printf("ADDING CLAIMS-----------------------------------")
 
 	for _, ext := range []string{".yml", ".yaml"} {
 		extClaims, err := m.ClaimsDir.Glob(
@@ -192,6 +189,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		}
 
+		fmt.Printf("ADDED CLAIM-----------------------------------")
 		claims = append(claims, extClaims...)
 	}
 
