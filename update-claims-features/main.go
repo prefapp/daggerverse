@@ -135,7 +135,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		return "", err
 	}
 
-	var featuresMap map[string]string
+	var featuresMap = make(map[string]string)
 	var releasesList []ReleasesList
 	err = json.Unmarshal([]byte(ghReleaseListResult), &releasesList)
 
