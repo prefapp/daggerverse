@@ -172,8 +172,9 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 	}
 
+	fmt.Printf("FEATURE LIST-----------------------------------------")
 	for k, v := range featuresMap {
-		fmt.Sprintf("FEATURE INFO>>>>>>>>>>>>>>%s, %s", k, v)
+		fmt.Printf("FEATURE INFO>>>>>>>>>>>>>>%s, %s", k, v)
 	}
 
 	// Get all ComponentClaim claims
