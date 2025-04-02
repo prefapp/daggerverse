@@ -277,6 +277,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				// 		return "", err
 				// 	}
 
+				buffer.Reset()
 				yamlEncoder.Encode(&claim)
 
 				updatedDir := m.ClaimsDir.WithNewFile(entry, string(buffer.Bytes()))
