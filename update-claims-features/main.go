@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"dagger/update-claims-features/internal/dagger"
 	"encoding/json"
@@ -28,54 +29,54 @@ type ReleasesList struct {
 }
 
 type Claim struct {
-	Kind      string    `yaml:"kind"`
-	Version   string    `yaml:"version"`
-	Type      string    `yaml:"type"`
-	Lifecycle string    `yaml:"lifecycle"`
-	System    string    `yaml:"system"`
-	Name      string    `yaml:"name"`
-	Providers Providers `yaml:"providers"`
-	Owner     string    `yaml:"owner"`
+	Kind      string    `yaml:"kind,omitempty"`
+	Version   string    `yaml:"version,omitempty"`
+	Type      string    `yaml:"type,omitempty"`
+	Lifecycle string    `yaml:"lifecycle,omitempty"`
+	System    string    `yaml:"system,omitempty"`
+	Name      string    `yaml:"name,omitempty"`
+	Providers Providers `yaml:"providers,omitempty"`
+	Owner     string    `yaml:"owner,omitempty"`
 }
 
 type Providers struct {
-	Github Github `yaml:"github"`
+	Github Github `yaml:"github,omitempty"`
 }
 
 type Github struct {
-	Description        string         `yaml:"description"`
-	Name               string         `yaml:"name"`
-	Org                string         `yaml:"org"`
-	Visibility         string         `yaml:"visibility"`
-	BranchStrategy     BranchStrategy `yaml:"branchStrategy"`
-	Actions            Actions        `yaml:"actions"`
-	Features           []Feature      `yaml:"features"`
-	AdditionalBranches []Branch       `yaml:"additionalBranches"`
+	Description        string         `yaml:"description,omitempty"`
+	Name               string         `yaml:"name,omitempty"`
+	Org                string         `yaml:"org,omitempty"`
+	Visibility         string         `yaml:"visibility,omitempty"`
+	BranchStrategy     BranchStrategy `yaml:"branchStrategy,omitempty"`
+	Actions            Actions        `yaml:"actions,omitempty"`
+	Features           []Feature      `yaml:"features,omitempty"`
+	AdditionalBranches []Branch       `yaml:"additionalBranches,omitempty"`
 }
 
 type BranchStrategy struct {
-	Name          string `yaml:"name"`
-	DefaultBranch string `yaml:"defaultBranch"`
+	Name          string `yaml:"name,omitempty"`
+	DefaultBranch string `yaml:"defaultBranch,omitempty"`
 }
 
 type Actions struct {
-	Oidc OIDC `yaml:"oidc"`
+	Oidc OIDC `yaml:"oidc,omitempty"`
 }
 
 type OIDC struct {
-	UseDefault       bool     `yaml:"useDefault"`
-	IncludeClaimKeys []string `yaml:"includeClaimKeys"`
+	UseDefault       bool     `yaml:"useDefault,omitempty"`
+	IncludeClaimKeys []string `yaml:"includeClaimKeys,omitempty"`
 }
 
 type Feature struct {
-	Name    string            `yaml:"name"`
-	Version string            `yaml:"version"`
-	Args    map[string]string `yaml:"args"`
+	Name    string            `yaml:"name,omitempty"`
+	Version string            `yaml:"version,omitempty"`
+	Args    map[string]string `yaml:"args,omitempty"`
 }
 
 type Branch struct {
-	Name   string `yaml:"name"`
-	Orphan bool   `yaml:"orphan"`
+	Name   string `yaml:"name,omitempty"`
+	Orphan bool   `yaml:"orphan,omitempty"`
 }
 
 func (m *UpdateClaimsFeatures) New(
@@ -207,6 +208,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		claims = append(claims, extClaims...)
 	}
 
+	var buffer bytes.Buffer
+	yamlEncoder := yaml.NewEncoder(&buffer)
+	yamlEncoder.SetIndent(2)
+
 	for _, entry := range claims {
 
 		fmt.Printf("Classifying claims in %s\n", entry)
@@ -266,13 +271,15 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 			if createPR {
 				claim.Providers.Github.Features = updatedFeaturesList
-				marshalledClaim, err := yaml.Marshal(claim)
+				// marshalledClaim, err := yaml.Marshal(claim)
 
-				if err != nil {
-					return "", err
-				}
+				// 	if err != nil {
+				// 		return "", err
+				// 	}
 
-				updatedDir := m.ClaimsDir.WithNewFile(entry, string(marshalledClaim))
+				yamlEncoder.Encode(&claim)
+
+				updatedDir := m.ClaimsDir.WithNewFile(entry, string(buffer.Bytes()))
 
 				// create PR
 				prLink, err := m.upsertPR(
@@ -285,6 +292,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					fmt.Sprintf("kubernetes"),
 					[]string{},
 				)
+
+				if err != nil {
+					return "", err
+				}
 
 				fmt.Printf("PR LINK: %s", prLink)
 			}
