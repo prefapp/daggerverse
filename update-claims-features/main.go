@@ -15,6 +15,7 @@ import (
 type UpdateClaimsFeatures struct {
 	Repo                 string
 	GhToken              *dagger.Secret
+	PrefappGhToken       *dagger.Secret
 	GhCliVersion         string
 	ClaimsDirPath        string
 	ClaimsDir            *dagger.Directory
@@ -82,6 +83,10 @@ func (m *UpdateClaimsFeatures) New(
 	// +required
 	ghToken *dagger.Secret,
 
+	// Prefapp org GitHub token
+	// +required
+	prefappGhToken *dagger.Secret,
+
 	// Gh CLI Version
 	// +optional
 	// +default="v2.66.1"
@@ -104,6 +109,7 @@ func (m *UpdateClaimsFeatures) New(
 	return &UpdateClaimsFeatures{
 		Repo:                 repo,
 		GhToken:              ghToken,
+		PrefappGhToken:       prefappGhToken,
 		GhCliVersion:         ghCliVersion,
 		ClaimsDir:            claimsDir,
 		ClaimsDirPath:        claimsDirPath,
@@ -188,14 +194,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		}
 
-		for _, claim := range extClaims {
-			fmt.Printf("CLAIM ADDED----------------------------------- %s", claim)
-		}
-
 		claims = append(claims, extClaims...)
 	}
-
-	fmt.Printf("CLAIMS ADDED----------------------------------- %s", claims)
 
 	for _, entry := range claims {
 
@@ -222,8 +222,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 
 		var updatedFeaturesList []Feature
-
-		fmt.Printf("CLAIM KIND----------------------------------- %s", claim.Kind)
 
 		if claim.Kind == "ComponentClaim" {
 
