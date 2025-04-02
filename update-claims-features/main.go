@@ -52,6 +52,7 @@ type Github struct {
 	Actions            Actions        `yaml:"actions,omitempty"`
 	Features           []Feature      `yaml:"features,omitempty"`
 	AdditionalBranches []Branch       `yaml:"additionalBranches,omitempty"`
+	Overrides          Overrides      `yaml:"overrides,omitempty"`
 }
 
 type BranchStrategy struct {
@@ -64,7 +65,7 @@ type Actions struct {
 }
 
 type OIDC struct {
-	UseDefault       bool     `yaml:"useDefault,omitempty"`
+	UseDefault       bool     `yaml:"useDefault"`
 	IncludeClaimKeys []string `yaml:"includeClaimKeys,omitempty"`
 }
 
@@ -76,7 +77,14 @@ type Feature struct {
 
 type Branch struct {
 	Name   string `yaml:"name,omitempty"`
-	Orphan bool   `yaml:"orphan,omitempty"`
+	Orphan bool   `yaml:"orphan"`
+}
+
+type Overrides struct {
+	AdditionalAdmins      []string `yaml:"additionalAdmins,omitempty"`
+	AdditionalMaintainers []string `yaml:"additionalMaintainers,omitempty"`
+	AdditionalWriters     []string `yaml:"additionalWriters,omitempty"`
+	AdditionalReaders     []string `yaml:"additionalReaders,omitempty"`
 }
 
 func (m *UpdateClaimsFeatures) New(
@@ -208,10 +216,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		claims = append(claims, extClaims...)
 	}
 
-	var buffer bytes.Buffer
-	yamlEncoder := yaml.NewEncoder(&buffer)
-	yamlEncoder.SetIndent(2)
-
 	for _, entry := range claims {
 
 		fmt.Printf("Classifying claims in %s\n", entry)
@@ -271,18 +275,14 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 			if createPR {
 				claim.Providers.Github.Features = updatedFeaturesList
-				// marshalledClaim, err := yaml.Marshal(claim)
 
-				// 	if err != nil {
-				// 		return "", err
-				// 	}
-
-				buffer.Reset()
+				var buffer bytes.Buffer
+				yamlEncoder := yaml.NewEncoder(&buffer)
+				yamlEncoder.SetIndent(2)
 				yamlEncoder.Encode(&claim)
 
 				updatedDir := m.ClaimsDir.WithNewFile(entry, string(buffer.Bytes()))
 
-				// create PR
 				prLink, err := m.upsertPR(
 					ctx,
 					fmt.Sprintf("update-%s-%s", claim.Name, claim.Kind),
