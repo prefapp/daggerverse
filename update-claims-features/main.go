@@ -1,91 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"dagger/update-claims-features/internal/dagger"
-	"encoding/json"
 	"fmt"
-	"strings"
-	"time"
-
-	"github.com/Masterminds/semver/v3"
-	"gopkg.in/yaml.v3"
 )
-
-type UpdateClaimsFeatures struct {
-	Repo                 string
-	GhToken              *dagger.Secret
-	PrefappGhToken       *dagger.Secret
-	GhCliVersion         string
-	ClaimsDirPath        string
-	ClaimsDir            *dagger.Directory
-	DefaultBranch        string
-	ComponentsFolderName string
-}
-
-type ReleasesList struct {
-	Name string `json:"name"`
-}
-
-type Claim struct {
-	Kind      string    `yaml:"kind,omitempty"`
-	Version   string    `yaml:"version,omitempty"`
-	Type      string    `yaml:"type,omitempty"`
-	Lifecycle string    `yaml:"lifecycle,omitempty"`
-	System    string    `yaml:"system,omitempty"`
-	Name      string    `yaml:"name,omitempty"`
-	Providers Providers `yaml:"providers,omitempty"`
-	Owner     string    `yaml:"owner,omitempty"`
-}
-
-type Providers struct {
-	Github Github `yaml:"github,omitempty"`
-}
-
-type Github struct {
-	Description        string         `yaml:"description,omitempty"`
-	Name               string         `yaml:"name,omitempty"`
-	Org                string         `yaml:"org,omitempty"`
-	Visibility         string         `yaml:"visibility,omitempty"`
-	AdditionalBranches []Branch       `yaml:"additionalBranches,omitempty"`
-	BranchStrategy     BranchStrategy `yaml:"branchStrategy,omitempty"`
-	Actions            Actions        `yaml:"actions,omitempty"`
-	Overrides          Overrides      `yaml:"overrides,omitempty"`
-	Features           []Feature      `yaml:"features,omitempty"`
-}
-
-type BranchStrategy struct {
-	Name          string `yaml:"name,omitempty"`
-	DefaultBranch string `yaml:"defaultBranch,omitempty"`
-}
-
-type Actions struct {
-	Oidc OIDC `yaml:"oidc,omitempty"`
-}
-
-type OIDC struct {
-	UseDefault       bool     `yaml:"useDefault"`
-	IncludeClaimKeys []string `yaml:"includeClaimKeys,omitempty"`
-}
-
-type Feature struct {
-	Name    string            `yaml:"name,omitempty"`
-	Version string            `yaml:"version,omitempty"`
-	Args    map[string]string `yaml:"args,omitempty"`
-}
-
-type Branch struct {
-	Name   string `yaml:"name,omitempty"`
-	Orphan bool   `yaml:"orphan"`
-}
-
-type Overrides struct {
-	AdditionalAdmins      []string `yaml:"additionalAdmins,omitempty"`
-	AdditionalMaintainers []string `yaml:"additionalMaintainers,omitempty"`
-	AdditionalWriters     []string `yaml:"additionalWriters,omitempty"`
-	AdditionalReaders     []string `yaml:"additionalReaders,omitempty"`
-}
 
 func (m *UpdateClaimsFeatures) New(
 	ctx context.Context,
@@ -137,151 +56,44 @@ func (m *UpdateClaimsFeatures) New(
 func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	ctx context.Context,
 ) (string, error) {
-	// Get latest feature version
-	ghReleaseListResult, err := dag.Gh(dagger.GhOpts{
-		Version: m.GhCliVersion,
-	}).Container(dagger.GhContainerOpts{
-		Token: m.PrefappGhToken,
-		Repo:  "prefapp/features",
-	}).WithDirectory(m.ClaimsDirPath, m.ClaimsDir, dagger.ContainerWithDirectoryOpts{}).
-		WithWorkdir(m.ClaimsDirPath).
-		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{
-			"gh",
-			"release",
-			"list",
-			"--limit",
-			"999",
-			"--json",
-			"name",
-		}).
-		Stdout(ctx)
-
+	ghReleaseListResult, err := m.getReleases(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	var featuresMap = make(map[string]string)
-	var releasesList []ReleasesList
-	err = json.Unmarshal([]byte(ghReleaseListResult), &releasesList)
-
+	featuresMap, err := m.getLatestReleasesAsMap(ctx, ghReleaseListResult)
 	if err != nil {
 		return "", err
-	}
-
-	for _, feature := range releasesList {
-		featureData := strings.Split(feature.Name, " ")
-
-		featureName := strings.Trim(featureData[0], ":")
-		featureVersion := strings.Trim(featureData[1], "v")
-		featureVersionSemver, err := semver.NewVersion(featureData[1])
-
-		if err != nil {
-			fmt.Printf("Version %s of feature %s is not valid SemVer, skipping", featureData[1], feature.Name)
-			continue
-		}
-
-		currentVersion, hasVersion := featuresMap[featureName]
-
-		if hasVersion {
-			versionIsGreater, err := semver.NewConstraint(fmt.Sprintf("> %s", currentVersion))
-
-			if err != nil {
-				return "", err
-			}
-
-			if versionIsGreater.Check(featureVersionSemver) {
-				featuresMap[featureName] = featureVersion
-			}
-		} else {
-			featuresMap[featureName] = featureVersion
-		}
 	}
 
 	// Get all ComponentClaim claims
-	var claims []string
-
-	for _, ext := range []string{".yml", ".yaml"} {
-		extClaims, err := m.ClaimsDir.Glob(
-			ctx,
-			fmt.Sprintf("claims/%s/*%s", m.ComponentsFolderName, ext),
-		)
-
-		if err != nil {
-
-			return "", err
-
-		}
-
-		claims = append(claims, extClaims...)
+	claims, err := m.getAllClaims(ctx)
+	if err != nil {
+		return "", err
 	}
 
 	for _, entry := range claims {
-
 		fmt.Printf("Classifying claims in %s\n", entry)
 
-		file := m.ClaimsDir.File(entry)
-
-		contents, err := file.Contents(ctx)
-
+		claim, err := m.getClaimIfKindComponent(ctx, entry)
 		if err != nil {
-
 			return "", err
-
 		}
 
-		claim := &Claim{}
-
-		err = yaml.Unmarshal([]byte(contents), claim)
-
-		if err != nil {
-
-			return "", err
-
-		}
-
-		var updatedFeaturesList []Feature
-		var createPR bool
-
-		if claim.Kind == "ComponentClaim" {
-			createPR = false
-
-			for _, feature := range claim.Providers.Github.Features {
-				featureVersionSemver, err := semver.NewVersion(
-					featuresMap[feature.Name],
-				)
-				if err != nil {
-					return "", err
-				}
-
-				versionIsGreater, err := semver.NewConstraint(
-					fmt.Sprintf("> %s", feature.Version),
-				)
-				if err != nil {
-					return "", err
-				}
-
-				// if instead of createPR = versionIsGreater.Check()
-				// because a latter unupdated feature could override this value
-				if versionIsGreater.Check(featureVersionSemver) {
-					createPR = true
-				}
-
-				// Add feature whether its version is greater or not,
-				// so unupdated features are not deleted
-				feature.Version = featuresMap[feature.Name]
-				updatedFeaturesList = append(updatedFeaturesList, feature)
+		if claim != nil {
+			updatedFeaturesList, createPR, err := m.updateClaimFeatures(
+				ctx,
+				claim,
+				featuresMap,
+			)
+			if err != nil {
+				return "", err
 			}
 
 			if createPR {
 				claim.Providers.Github.Features = updatedFeaturesList
 
-				var buffer bytes.Buffer
-				yamlEncoder := yaml.NewEncoder(&buffer)
-				yamlEncoder.SetIndent(2)
-				yamlEncoder.Encode(&claim)
-
-				updatedDir := m.ClaimsDir.WithNewFile(entry, string(buffer.Bytes()))
+				updatedDir := m.updateDirWithClaim(ctx, claim, entry)
 
 				prLink, err := m.upsertPR(
 					ctx,
