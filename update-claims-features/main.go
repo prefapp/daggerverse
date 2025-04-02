@@ -71,7 +71,7 @@ func (m *UpdateClaimsFeatures) New(
 	}, nil
 }
 
-func (m *UpdateClaimsFeatures) updateAllClaimFeatures(
+func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	ctx context.Context,
 ) (string, error) {
 	ghReleaseListResult, err := m.getReleases(ctx)

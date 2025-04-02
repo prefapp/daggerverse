@@ -43,7 +43,9 @@ func (m *UpdateClaimsFeatures) getLatestReleasesAsMap(
 
 		versionConstraint := fmt.Sprintf("> %s", versionToCompareTo)
 		if m.VersionConstraint != "" {
-			versionConstraint = fmt.Sprintf("%s, %s", versionToCompareTo, m.VersionConstraint)
+			versionConstraint = fmt.Sprintf(
+				"%s, %s", versionToCompareTo, m.VersionConstraint,
+			)
 		}
 
 		versionIsGreater, err := semver.NewConstraint(versionConstraint)

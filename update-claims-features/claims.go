@@ -47,8 +47,11 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 		return nil, err
 	}
 
-	if claim.Kind == "ComponentClaim" && (m.ClaimToUpdate == "" || m.ClaimToUpdate == claim.Name) {
+	if claim.Kind == "ComponentClaim" &&
+		(m.ClaimToUpdate == "" || m.ClaimToUpdate == claim.Name) {
+
 		return claim, nil
+
 	}
 
 	return nil, nil
