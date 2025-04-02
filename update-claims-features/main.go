@@ -134,6 +134,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			"gh",
 			"release",
 			"list",
+			"--limit",
+			"999",
 			"--json",
 			"name",
 		}).
