@@ -163,7 +163,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		featureVersionSemver, err := semver.NewVersion(featureData[1])
 
 		if err != nil {
-			return "", err
+			fmt.Printf("Version %s of feature %s is not valid SemVer, skipping", featureData[1], feature.Name)
+			continue
 		}
 
 		currentVersion, hasVersion := featuresMap[featureName]
