@@ -227,6 +227,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 			for _, feature := range claim.Providers.Github.Features {
 
+				fmt.Printf("UPDATING FEATURE >>>>>>>>> %s\n", feature.Name)
+				fmt.Printf("OLD VERSION >>>>>>>>> %s\n", feature.Version)
+				fmt.Printf("NEW VERSION >>>>>>>>> %s\n", featuresMap[feature.Name])
+
 				feature.Version = featuresMap[feature.Name]
 
 				updatedFeaturesList = append(updatedFeaturesList, feature)
