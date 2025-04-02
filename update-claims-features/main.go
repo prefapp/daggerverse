@@ -156,8 +156,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	for _, feature := range releasesList {
 		featureData := strings.Split(feature.Name, " ")
 
-		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>Comparing %s to %s for feature %s\n", featureData[1], featuresMap[feature.Name], feature.Name)
-
 		featureName := strings.Trim(featureData[0], ":")
 		featureVersion := strings.Trim(featureData[1], "v")
 		featureVersionSemver, err := semver.NewVersion(featureData[1])
@@ -248,12 +246,13 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				}
 
 				if versionIsGreater.Check(featureVersionSemver) {
+					createPR = true
 					feature.Version = featuresMap[feature.Name]
 					updatedFeaturesList = append(updatedFeaturesList, feature)
 				}
 			}
 
-			if !createPR {
+			if createPR {
 				claim.Providers.Github.Features = updatedFeaturesList
 				marshalledClaim, err := yaml.Marshal(claim)
 
