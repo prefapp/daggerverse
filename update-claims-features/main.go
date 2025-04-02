@@ -102,12 +102,13 @@ func (m *UpdateClaimsFeatures) New(
 	componentsFolderName string,
 ) (*UpdateClaimsFeatures, error) {
 	return &UpdateClaimsFeatures{
-		Repo:          repo,
-		GhToken:       ghToken,
-		GhCliVersion:  ghCliVersion,
-		ClaimsDir:     claimsDir,
-		ClaimsDirPath: claimsDirPath,
-		DefaultBranch: defaultBranch,
+		Repo:                 repo,
+		GhToken:              ghToken,
+		GhCliVersion:         ghCliVersion,
+		ClaimsDir:            claimsDir,
+		ClaimsDirPath:        claimsDirPath,
+		DefaultBranch:        defaultBranch,
+		ComponentsFolderName: componentsFolderName,
 	}, nil
 }
 
