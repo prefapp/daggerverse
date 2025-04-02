@@ -35,6 +35,7 @@ type Claim struct {
 	System    string    `yaml:"system"`
 	Name      string    `yaml:"name"`
 	Providers Providers `yaml:"providers"`
+	Owner     string    `yaml:"owner"`
 }
 
 type Providers struct {
