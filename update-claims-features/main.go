@@ -42,13 +42,14 @@ type Providers struct {
 }
 
 type Github struct {
-	Description    string         `yaml:"description"`
-	Name           string         `yaml:"name"`
-	Org            string         `yaml:"org"`
-	Visibility     string         `yaml:"visibility"`
-	BranchStrategy BranchStrategy `yaml:"branchStrategy"`
-	Actions        Actions        `yaml:"actions"`
-	Features       []Feature      `yaml:"features"`
+	Description        string         `yaml:"description"`
+	Name               string         `yaml:"name"`
+	Org                string         `yaml:"org"`
+	Visibility         string         `yaml:"visibility"`
+	BranchStrategy     BranchStrategy `yaml:"branchStrategy"`
+	Actions            Actions        `yaml:"actions"`
+	Features           []Feature      `yaml:"features"`
+	AdditionalBranches []Branch       `yaml:"additionalBranches"`
 }
 
 type BranchStrategy struct {
@@ -69,6 +70,11 @@ type Feature struct {
 	Name    string            `yaml:"name"`
 	Version string            `yaml:"version"`
 	Args    map[string]string `yaml:"args"`
+}
+
+type Branch struct {
+	Name   string `yaml:"name"`
+	Orphan bool   `yaml:"orphan"`
 }
 
 func (m *UpdateClaimsFeatures) New(
