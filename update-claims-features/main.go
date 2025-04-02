@@ -171,6 +171,9 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				return "", err
 			}
 
+			fmt.Printf("CHECKING FEATURE >>>>>>>>> %s\n", featureName)
+			fmt.Printf("CURRENT VERSION >>>>>>>>> %s\n", featureVersion)
+
 			if versionIsGreater.Check(featureVersionSemver) {
 				featuresMap[featureName] = featureVersion
 			}
@@ -222,46 +225,56 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 
 		var updatedFeaturesList []Feature
+		var createPR bool
 
 		if claim.Kind == "ComponentClaim" {
+			createPR = false
 
 			for _, feature := range claim.Providers.Github.Features {
+				featureVersionSemver, err := semver.NewVersion(
+					featuresMap[feature.Name],
+				)
+				if err != nil {
+					return "", err
+				}
 
-				fmt.Printf("UPDATING FEATURE >>>>>>>>> %s\n", feature.Name)
-				fmt.Printf("OLD VERSION >>>>>>>>> %s\n", feature.Version)
-				fmt.Printf("NEW VERSION >>>>>>>>> %s\n", featuresMap[feature.Name])
+				versionIsGreater, err := semver.NewConstraint(
+					fmt.Sprintf("> %s", feature.Version),
+				)
+				if err != nil {
+					return "", err
+				}
 
-				feature.Version = featuresMap[feature.Name]
-
-				updatedFeaturesList = append(updatedFeaturesList, feature)
-
+				if versionIsGreater.Check(featureVersionSemver) {
+					feature.Version = featuresMap[feature.Name]
+					updatedFeaturesList = append(updatedFeaturesList, feature)
+				}
 			}
 
-			claim.Providers.Github.Features = updatedFeaturesList
+			if !createPR {
+				claim.Providers.Github.Features = updatedFeaturesList
+				marshalledClaim, err := yaml.Marshal(claim)
 
-			marshalledClaim, err := yaml.Marshal(claim)
+				if err != nil {
+					return "", err
+				}
 
-			if err != nil {
+				updatedDir := m.ClaimsDir.WithNewFile(entry, string(marshalledClaim))
 
-				return "", err
+				// create PR
+				prLink, err := m.upsertPR(
+					ctx,
+					fmt.Sprintf("update-%s-%s", claim.Name, claim.Kind),
+					updatedDir,
+					[]string{},
+					fmt.Sprintf("Update %s features to latest version", claim.Name),
+					fmt.Sprintf("Update %s features to latest version", claim.Name),
+					fmt.Sprintf("kubernetes"),
+					[]string{},
+				)
 
+				fmt.Printf("PR LINK: %s", prLink)
 			}
-
-			updatedDir := m.ClaimsDir.WithNewFile(entry, string(marshalledClaim))
-
-			// create PR
-			prLink, err := m.upsertPR(
-				ctx,
-				fmt.Sprintf("update-%s-%s", claim.Name, claim.Kind),
-				updatedDir,
-				[]string{},
-				fmt.Sprintf("Update %s features to latest version", claim.Name),
-				fmt.Sprintf("Update %s features to latest version", claim.Name),
-				fmt.Sprintf("kubernetes"),
-				[]string{},
-			)
-
-			fmt.Printf("PR LINK: %s", prLink)
 
 		}
 
