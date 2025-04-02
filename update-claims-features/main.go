@@ -156,6 +156,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	for _, feature := range releasesList {
 		featureData := strings.Split(feature.Name, " ")
 
+		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>Comparing %s to %s", featureData[1], featuresMap[feature.Name])
+
 		featureName := strings.Trim(featureData[0], ":")
 		featureVersion := strings.Trim(featureData[1], "v")
 		featureVersionSemver, err := semver.NewVersion(featureData[1])
@@ -243,8 +245,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				if err != nil {
 					return "", err
 				}
-
-				fmt.Printf(">>>>>>>>>>>>>>>>>>>>><Comparing %s to %s", feature.Version, featuresMap[feature.Name])
 
 				if versionIsGreater.Check(featureVersionSemver) {
 					feature.Version = featuresMap[feature.Name]
