@@ -11,6 +11,9 @@ type UpdateClaimsFeatures struct {
 	ClaimsDir            *dagger.Directory
 	DefaultBranch        string
 	ComponentsFolderName string
+	ClaimToUpdate        string
+	FeatureToUpdate      string
+	VersionConstraint    string
 }
 
 type ReleasesList struct {

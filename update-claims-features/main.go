@@ -40,6 +40,21 @@ func (m *UpdateClaimsFeatures) New(
 	// +optional
 	// +default="components"
 	componentsFolderName string,
+
+	// Name of the claim to be updated
+	// +optional
+	// +default=""
+	claimToUpdate string,
+
+	// Name of the feature to be updated
+	// +optional
+	// +default=""
+	featureToUpdate string,
+
+	// Check for the version we want to install
+	// +optional
+	// +default=""
+	versionConstraint string,
 ) (*UpdateClaimsFeatures, error) {
 	return &UpdateClaimsFeatures{
 		Repo:                 repo,
@@ -50,10 +65,13 @@ func (m *UpdateClaimsFeatures) New(
 		ClaimsDirPath:        claimsDirPath,
 		DefaultBranch:        defaultBranch,
 		ComponentsFolderName: componentsFolderName,
+		ClaimToUpdate:        claimToUpdate,
+		FeatureToUpdate:      featureToUpdate,
+		VersionConstraint:    versionConstraint,
 	}, nil
 }
 
-func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
+func (m *UpdateClaimsFeatures) updateAllClaimFeatures(
 	ctx context.Context,
 ) (string, error) {
 	ghReleaseListResult, err := m.getReleases(ctx)

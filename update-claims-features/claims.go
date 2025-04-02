@@ -33,7 +33,6 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	ctx context.Context,
 	claimPath string,
 ) (*Claim, error) {
-
 	file := m.ClaimsDir.File(claimPath)
 	contents, err := file.Contents(ctx)
 	if err != nil {
@@ -45,12 +44,10 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	err = yaml.Unmarshal([]byte(contents), claim)
 
 	if err != nil {
-
 		return nil, err
-
 	}
 
-	if claim.Kind == "ComponentClaim" {
+	if claim.Kind == "ComponentClaim" && (m.ClaimToUpdate == "" || m.ClaimToUpdate == claim.Name) {
 		return claim, nil
 	}
 
@@ -66,24 +63,26 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 	createPR := false
 
 	for _, feature := range claim.Providers.Github.Features {
-		featureVersionSemver, err := semver.NewVersion(
-			featuresMap[feature.Name],
-		)
-		if err != nil {
-			return []Feature{}, false, err
-		}
+		if m.FeatureToUpdate == "" || m.FeatureToUpdate == feature.Name {
+			featureVersionSemver, err := semver.NewVersion(
+				featuresMap[feature.Name],
+			)
+			if err != nil {
+				return []Feature{}, false, err
+			}
 
-		versionIsGreater, err := semver.NewConstraint(
-			fmt.Sprintf("> %s", feature.Version),
-		)
-		if err != nil {
-			return []Feature{}, false, err
-		}
+			versionIsGreater, err := semver.NewConstraint(
+				fmt.Sprintf("> %s", feature.Version),
+			)
+			if err != nil {
+				return []Feature{}, false, err
+			}
 
-		// if instead of createPR = versionIsGreater.Check()
-		// because a latter unupdated feature could override this value
-		if versionIsGreater.Check(featureVersionSemver) {
-			createPR = true
+			// if instead of createPR = versionIsGreater.Check()
+			// because a latter unupdated feature could override this value
+			if versionIsGreater.Check(featureVersionSemver) {
+				createPR = true
+			}
 		}
 
 		// Add feature whether its version is greater or not,
