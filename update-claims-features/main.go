@@ -173,9 +173,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				return "", err
 			}
 
-			fmt.Printf("CHECKING FEATURE >>>>>>>>> %s\n", featureName)
-			fmt.Printf("CURRENT VERSION >>>>>>>>> %s\n", featureVersion)
-
 			if versionIsGreater.Check(featureVersionSemver) {
 				featuresMap[featureName] = featureVersion
 			}
@@ -246,6 +243,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				if err != nil {
 					return "", err
 				}
+
+				fmt.Printf(">>>>>>>>>>>>>>>>>>>>><Comparing %s to %s", feature.Version, featuresMap[feature.Name])
 
 				if versionIsGreater.Check(featureVersionSemver) {
 					feature.Version = featuresMap[feature.Name]
