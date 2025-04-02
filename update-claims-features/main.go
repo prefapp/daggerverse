@@ -48,11 +48,11 @@ type Github struct {
 	Name               string         `yaml:"name,omitempty"`
 	Org                string         `yaml:"org,omitempty"`
 	Visibility         string         `yaml:"visibility,omitempty"`
+	AdditionalBranches []Branch       `yaml:"additionalBranches,omitempty"`
 	BranchStrategy     BranchStrategy `yaml:"branchStrategy,omitempty"`
 	Actions            Actions        `yaml:"actions,omitempty"`
-	Features           []Feature      `yaml:"features,omitempty"`
-	AdditionalBranches []Branch       `yaml:"additionalBranches,omitempty"`
 	Overrides          Overrides      `yaml:"overrides,omitempty"`
+	Features           []Feature      `yaml:"features,omitempty"`
 }
 
 type BranchStrategy struct {
