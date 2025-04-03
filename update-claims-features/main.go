@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
-	"encoding/json"
 	"fmt"
 )
 
@@ -116,15 +115,9 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			}
 
 			if createPR {
-				var releaseBody string
 				claim.Providers.Github.Features = updatedFeaturesList
 				updatedDir := m.updateDirWithClaim(ctx, claim, entry)
-				releaseBodyJSON, err := m.getReleaseBodyForFeatureList(ctx, updatedFeaturesList)
-				if err != nil {
-					return "", err
-				}
-
-				err = json.Unmarshal([]byte(releaseBodyJSON), &releaseBody)
+				releaseBody, err := m.getReleaseBodyForFeatureList(ctx, updatedFeaturesList)
 				if err != nil {
 					return "", err
 				}

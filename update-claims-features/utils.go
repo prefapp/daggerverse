@@ -85,10 +85,10 @@ func (m *UpdateClaimsFeatures) getReleaseBodyForFeatureList(
 	featureList []Feature,
 ) (string, error) {
 	releaseBody := ""
+	var parsedJson ReleaseBody
 
 	for _, feature := range featureList {
 		fullFeatureTag := fmt.Sprintf("%s-v%s", feature.Name, feature.Version)
-		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> %s %s %s", feature.Name, feature.Version, fullFeatureTag)
 		changelog, err := m.getReleaseChangelog(
 			ctx,
 			fullFeatureTag,
@@ -98,10 +98,15 @@ func (m *UpdateClaimsFeatures) getReleaseBodyForFeatureList(
 			return "", err
 		}
 
+		err = json.Unmarshal([]byte(changelog), &parsedJson)
+		if err != nil {
+			return "", err
+		}
+
 		releaseBody = fmt.Sprintf(
 			"##%s:\n%s\n\n\n%s",
 			feature.Name,
-			changelog,
+			parsedJson.Body,
 			releaseBody,
 		)
 	}
