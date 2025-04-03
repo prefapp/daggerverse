@@ -116,8 +116,11 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 			if createPR {
 				claim.Providers.Github.Features = updatedFeaturesList
-
 				updatedDir := m.updateDirWithClaim(ctx, claim, entry)
+				prBody, err := m.getPRBodyForFeatureList(ctx, updatedFeaturesList)
+				if err != nil {
+					return "", err
+				}
 
 				prLink, err := m.upsertPR(
 					ctx,
@@ -125,7 +128,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					updatedDir,
 					[]string{},
 					fmt.Sprintf("Update %s features to latest version", claim.Name),
-					fmt.Sprintf("Update %s features to latest version", claim.Name),
+					prBody,
 					fmt.Sprintf("kubernetes"),
 					[]string{},
 				)

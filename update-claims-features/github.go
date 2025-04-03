@@ -9,13 +9,6 @@ import (
 	"time"
 )
 
-type Pr struct {
-	HeadRefName string `json:"headRefName"`
-	Url         string `json:"url"`
-	Number      int    `json:"number"`
-	State       string `json:"state"`
-}
-
 /*
 Create or update a PR with the updated contents
 */
@@ -358,4 +351,29 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 		Stdout(ctx)
 
 	return ghReleaseListResult, err
+}
+
+func (m *UpdateClaimsFeatures) getReleaseChangelog(
+	ctx context.Context,
+	releaseTag string,
+) (string, error) {
+	changelog, err := dag.Gh(dagger.GhOpts{
+		Version: m.GhCliVersion,
+	}).Container(dagger.GhContainerOpts{
+		Token: m.PrefappGhToken,
+		Repo:  "prefapp/features",
+	}).WithDirectory(m.ClaimsDirPath, m.ClaimsDir, dagger.ContainerWithDirectoryOpts{}).
+		WithWorkdir(m.ClaimsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{
+			"gh",
+			"release",
+			"view",
+			releaseTag,
+			"--json",
+			"body",
+		}).
+		Stdout(ctx)
+
+	return changelog, err
 }

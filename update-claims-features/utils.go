@@ -79,3 +79,26 @@ func (m *UpdateClaimsFeatures) updateDirWithClaim(
 
 	return updatedDir
 }
+
+func (m *UpdateClaimsFeatures) getPRBodyForFeatureList(
+	ctx context.Context,
+	featureList []Feature,
+) (string, error) {
+	prBody := ""
+
+	for _, feature := range featureList {
+		fullFeatureTag := fmt.Sprintf("%s-v%s", feature.Name, feature.Version)
+		changelog, err := m.getReleaseChangelog(
+			ctx,
+			fullFeatureTag,
+		)
+
+		if err != nil {
+			return "", err
+		}
+
+		prBody = fmt.Sprintf("%s\n%s", prBody, changelog)
+	}
+
+	return prBody, nil
+}

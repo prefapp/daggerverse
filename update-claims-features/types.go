@@ -17,8 +17,19 @@ type UpdateClaimsFeatures struct {
 	Automerge            bool
 }
 
+type Pr struct {
+	HeadRefName string `json:"headRefName"`
+	Url         string `json:"url"`
+	Number      int    `json:"number"`
+	State       string `json:"state"`
+}
+
 type ReleasesList struct {
 	TagName string `json:"tagName"`
+}
+
+type ReleaseBody struct {
+	Body string `json:"body"`
 }
 
 type Claim struct {
