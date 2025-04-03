@@ -80,11 +80,11 @@ func (m *UpdateClaimsFeatures) updateDirWithClaim(
 	return updatedDir
 }
 
-func (m *UpdateClaimsFeatures) getPRBodyForFeatureList(
+func (m *UpdateClaimsFeatures) getReleaseBodyForFeatureList(
 	ctx context.Context,
 	featureList []Feature,
 ) (string, error) {
-	prBody := ""
+	releaseBody := ""
 
 	for _, feature := range featureList {
 		fullFeatureTag := fmt.Sprintf("%s-v%s", feature.Name, feature.Version)
@@ -97,8 +97,8 @@ func (m *UpdateClaimsFeatures) getPRBodyForFeatureList(
 			return "", err
 		}
 
-		prBody = fmt.Sprintf("%s\n%s", prBody, changelog)
+		releaseBody = fmt.Sprintf("%s\n%s", releaseBody, changelog)
 	}
 
-	return prBody, nil
+	return releaseBody, nil
 }
