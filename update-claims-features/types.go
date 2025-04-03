@@ -14,6 +14,7 @@ type UpdateClaimsFeatures struct {
 	ClaimToUpdate        string
 	FeatureToUpdate      string
 	VersionConstraint    string
+	Automerge            bool
 }
 
 type ReleasesList struct {

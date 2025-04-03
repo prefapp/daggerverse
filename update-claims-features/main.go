@@ -55,6 +55,11 @@ func (m *UpdateClaimsFeatures) New(
 	// +optional
 	// +default=""
 	versionConstraint string,
+
+	// Whether or not to automerge
+	// +optional
+	// +default=false
+	automerge bool,
 ) (*UpdateClaimsFeatures, error) {
 	return &UpdateClaimsFeatures{
 		Repo:                 repo,
@@ -68,6 +73,7 @@ func (m *UpdateClaimsFeatures) New(
 		ClaimToUpdate:        claimToUpdate,
 		FeatureToUpdate:      featureToUpdate,
 		VersionConstraint:    versionConstraint,
+		Automerge:            automerge,
 	}, nil
 }
 
@@ -129,10 +135,12 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				}
 
 				fmt.Printf("PR LINK: %s", prLink)
+
+				if m.Automerge {
+					m.MergePullRequest(ctx, prLink)
+				}
 			}
-
 		}
-
 	}
 
 	return "ok", nil
