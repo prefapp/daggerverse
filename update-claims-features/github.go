@@ -49,9 +49,7 @@ func (m *UpdateClaimsFeatures) upsertPR(
 	prExists, err := m.prExists(ctx, newBranchName)
 
 	if err != nil {
-
 		return "", err
-
 	}
 
 	contentsDirPath := "/contents"
@@ -75,9 +73,7 @@ func (m *UpdateClaimsFeatures) upsertPR(
 		Stdout(ctx)
 
 	if err != nil {
-
 		return "", err
-
 	}
 
 	fmt.Printf("☢️ git ls-remote: %s\n", stdoutlsRemote)
@@ -199,15 +195,17 @@ func (m *UpdateClaimsFeatures) getRepoPrs(ctx context.Context) ([]Pr, error) {
 		"--json", "number,url",
 		"--json", "state",
 		"-L", "1000",
-		"-R", m.Repo},
-		" ")
+		"-R", m.Repo,
+	}, " ")
 
-	content, err := dag.Gh().Run(command,
+	content, err := dag.Gh().Run(
+		command,
 		dagger.GhRunOpts{
 			Version:      m.GhCliVersion,
 			DisableCache: true,
-			Token:        m.GhToken}).
-		Stdout(ctx)
+			Token:        m.GhToken,
+		},
+	).Stdout(ctx)
 
 	if err != nil {
 
