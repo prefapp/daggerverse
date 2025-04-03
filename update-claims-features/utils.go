@@ -97,7 +97,12 @@ func (m *UpdateClaimsFeatures) getReleaseBodyForFeatureList(
 			return "", err
 		}
 
-		releaseBody = fmt.Sprintf("%s\n%s", releaseBody, changelog)
+		releaseBody = fmt.Sprintf(
+			"%s\n\n\n%s:\n%s",
+			releaseBody,
+			feature.Name,
+			changelog,
+		)
 	}
 
 	return releaseBody, nil
