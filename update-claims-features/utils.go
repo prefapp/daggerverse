@@ -31,7 +31,11 @@ func (m *UpdateClaimsFeatures) getLatestReleasesAsMap(
 		featureVersion := strings.Trim(featureData[1], "v")
 		featureVersionSemver, err := semver.NewVersion(featureData[1])
 		if err != nil {
-			fmt.Printf("Version %s of feature %s is not valid SemVer, skipping", featureData[1], feature.Name)
+			fmt.Printf(
+				"Version %s of feature %s is not valid SemVer, skipping",
+				featureData[1],
+				feature.Name,
+			)
 			continue
 		}
 

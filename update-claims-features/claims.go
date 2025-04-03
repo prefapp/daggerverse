@@ -85,12 +85,12 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 			// because a latter unupdated feature could override this value
 			if versionIsGreater.Check(featureVersionSemver) {
 				createPR = true
+				feature.Version = featuresMap[feature.Name]
 			}
 		}
 
 		// Add feature whether its version is greater or not,
 		// so unupdated features are not deleted
-		feature.Version = featuresMap[feature.Name]
 		updatedFeaturesList = append(updatedFeaturesList, feature)
 	}
 
