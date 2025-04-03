@@ -116,7 +116,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			}
 
 			if createPR {
-				var releaseBody ReleaseBody
+				var releaseBody string
 				claim.Providers.Github.Features = updatedFeaturesList
 				updatedDir := m.updateDirWithClaim(ctx, claim, entry)
 				releaseBodyJSON, err := m.getReleaseBodyForFeatureList(ctx, updatedFeaturesList)
@@ -135,7 +135,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					updatedDir,
 					[]string{},
 					fmt.Sprintf("Update %s features to latest version", claim.Name),
-					releaseBody.Body,
+					releaseBody,
 					fmt.Sprintf("kubernetes"),
 					[]string{},
 				)
