@@ -25,22 +25,22 @@ func (m *UpdateClaimsFeatures) getLatestReleasesAsMap(
 	}
 
 	for _, feature := range releasesList {
-		featureData := strings.Split(feature.Name, " ")
+		featureData := strings.Split(feature.TagName, "-")
 
-		featureName := strings.Trim(featureData[0], ":")
+		featureTag := featureData[0]
 		featureVersion := strings.Trim(featureData[1], "v")
 		featureVersionSemver, err := semver.NewVersion(featureData[1])
 		if err != nil {
 			fmt.Printf(
 				"Version %s of feature %s is not valid SemVer, skipping",
 				featureData[1],
-				feature.Name,
+				featureTag,
 			)
 			continue
 		}
 
 		versionToCompareTo := "0.0.0"
-		currentVersion, hasVersion := featuresMap[featureName]
+		currentVersion, hasVersion := featuresMap[featureTag]
 		if hasVersion {
 			versionToCompareTo = currentVersion
 		}
@@ -58,7 +58,7 @@ func (m *UpdateClaimsFeatures) getLatestReleasesAsMap(
 		}
 
 		if versionIsGreater.Check(featureVersionSemver) {
-			featuresMap[featureName] = featureVersion
+			featuresMap[featureTag] = featureVersion
 		}
 	}
 

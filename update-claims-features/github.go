@@ -353,7 +353,7 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 			"--limit",
 			"999",
 			"--json",
-			"name",
+			"tagName",
 		}).
 		Stdout(ctx)
 

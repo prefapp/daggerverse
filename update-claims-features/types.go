@@ -18,7 +18,7 @@ type UpdateClaimsFeatures struct {
 }
 
 type ReleasesList struct {
-	Name string `json:"name"`
+	TagName string `json:"tagName"`
 }
 
 type Claim struct {
