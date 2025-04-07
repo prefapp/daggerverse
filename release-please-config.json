@@ -17,6 +17,10 @@
        "hydrate-orchestrator": {
             "package-name": "hydrate-orchestrator",
             "release-type": "go"
+       },
+       "update-claims-features": {
+            "package-name": "update-claims-features",
+            "release-type": "go"
        }
     }
 }
