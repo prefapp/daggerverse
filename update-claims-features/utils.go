@@ -6,6 +6,7 @@ import (
 	"dagger/update-claims-features/internal/dagger"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
@@ -15,13 +16,15 @@ import (
 func (m *UpdateClaimsFeatures) getLatestReleasesAsMap(
 	ctx context.Context,
 	ghReleaseListResult string,
-) (map[string]string, error) {
-	var featuresMap = make(map[string]string)
+) (map[string]string, map[string][]string, error) {
+	var latestFeaturesMap = make(map[string]string)
+	var allFeaturesMap = make(map[string][]string)
+	var sortedFeaturesMap = make(map[string][]*semver.Version)
 	var releasesList []ReleasesList
 	err := json.Unmarshal([]byte(ghReleaseListResult), &releasesList)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	for _, feature := range releasesList {
@@ -40,7 +43,7 @@ func (m *UpdateClaimsFeatures) getLatestReleasesAsMap(
 		}
 
 		versionToCompareTo := "0.0.0"
-		currentVersion, hasVersion := featuresMap[featureTag]
+		currentVersion, hasVersion := latestFeaturesMap[featureTag]
 		if hasVersion {
 			versionToCompareTo = currentVersion
 		}
@@ -54,15 +57,37 @@ func (m *UpdateClaimsFeatures) getLatestReleasesAsMap(
 
 		versionIsGreater, err := semver.NewConstraint(versionConstraint)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		if versionIsGreater.Check(featureVersionSemver) {
-			featuresMap[featureTag] = featureVersion
+			latestFeaturesMap[featureTag] = featureVersion
+		}
+
+		if sortedFeaturesMap[featureTag] == nil {
+			sortedFeaturesMap[featureTag] = []*semver.Version{}
+		}
+
+		sortedFeaturesMap[featureTag] = append(
+			sortedFeaturesMap[featureTag], featureVersionSemver,
+		)
+	}
+
+	// Sort map
+	for key, _ := range sortedFeaturesMap {
+		sort.Sort(semver.Collection(sortedFeaturesMap[key]))
+	}
+
+	for featureName, featuresList := range sortedFeaturesMap {
+		allFeaturesMap[featureName] = []string{}
+		for _, feature := range featuresList {
+			allFeaturesMap[featureName] = append(
+				allFeaturesMap[featureName], fmt.Sprintf("%s", feature),
+			)
 		}
 	}
 
-	return featuresMap, nil
+	return latestFeaturesMap, allFeaturesMap, nil
 }
 
 func (m *UpdateClaimsFeatures) updateDirWithClaim(
@@ -83,33 +108,60 @@ func (m *UpdateClaimsFeatures) updateDirWithClaim(
 func (m *UpdateClaimsFeatures) getReleaseBodyForFeatureList(
 	ctx context.Context,
 	featureList []Feature,
+	allFeaturesMap map[string][]string,
+	originalVersionMap map[string]string
 ) (string, error) {
 	releaseBody := ""
 	var parsedJson ReleaseBody
 
 	for _, feature := range featureList {
-		fullFeatureTag := fmt.Sprintf("%s-v%s", feature.Name, feature.Version)
-		changelog, err := m.getReleaseChangelog(
-			ctx,
-			fullFeatureTag,
-		)
+		for _, featureVersion := range allFeaturesMap[feature.Name] {
+			featureVersionSemver, err := semver.NewVersion(featureVersion)
+			versionConstraint := fmt.Sprintf("> %s", originalVersionMap[feature.Name])
 
-		if err != nil {
-			return "", err
+			versionIsGreater, err := semver.NewConstraint(versionConstraint)
+			if err != nil {
+				return "", err
+			}
+
+			if versionIsGreater.Check(featureVersionSemver) {
+				fullFeatureTag := fmt.Sprintf("%s-v%s", feature.Name, featureVersion)
+				changelog, err := m.getReleaseChangelog(
+					ctx,
+					fullFeatureTag,
+				)
+
+				if err != nil {
+					return "", err
+				}
+
+				err = json.Unmarshal([]byte(changelog), &parsedJson)
+				if err != nil {
+					return "", err
+				}
+
+				releaseBody = fmt.Sprintf(
+					"## %s:\n%s\n\n\n%s",
+					feature.Name,
+					parsedJson.Body,
+					releaseBody,
+				)
+			}
 		}
-
-		err = json.Unmarshal([]byte(changelog), &parsedJson)
-		if err != nil {
-			return "", err
-		}
-
-		releaseBody = fmt.Sprintf(
-			"## %s:\n%s\n\n\n%s",
-			feature.Name,
-			parsedJson.Body,
-			releaseBody,
-		)
 	}
 
 	return releaseBody, nil
+}
+
+func (m *UpdateClaimsFeatures) extractCurrentFeatureVersionsFromClaim(
+	ctx context.Context,
+	claim *Claim,
+) map[string]string {
+	var currentFeaturesVersion map[string]string
+
+	for _, featureData := range claim.Providers.Github.Features {
+		currentFeaturesVersion[featureData.Name] = featureData.Version
+	}
+
+	return currentFeaturesVersion
 }
