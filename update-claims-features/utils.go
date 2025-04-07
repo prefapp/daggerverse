@@ -144,8 +144,8 @@ func (m *UpdateClaimsFeatures) getReleaseBodyForFeatureList(
 
 				versionInfo = fmt.Sprintf(
 					"%s\n\n\n%s",
-					parsedJson.Body,
 					versionInfo,
+					parsedJson.Body,
 				)
 			}
 
