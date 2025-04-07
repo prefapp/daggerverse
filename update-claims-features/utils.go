@@ -109,7 +109,7 @@ func (m *UpdateClaimsFeatures) getReleaseBodyForFeatureList(
 	ctx context.Context,
 	featureList []Feature,
 	allFeaturesMap map[string][]string,
-	originalVersionMap map[string]string
+	originalVersionMap map[string]string,
 ) (string, error) {
 	releaseBody := ""
 	var parsedJson ReleaseBody
