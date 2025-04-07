@@ -137,7 +137,7 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 
 	}
 
-	for _, regex := range []string{"*.yml", "*.yaml"} {
+	for _, regex := range []string{"**/*.yml", "**/*.yaml"} {
 
 		entries, err := m.ValuesDir.
 			Glob(ctx, "kubernetes-sys-services/"+cluster+"/"+app+"/extra_artifacts/"+regex)
