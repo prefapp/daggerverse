@@ -85,7 +85,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		return "", err
 	}
 
-	latestFeaturesMap, allFeaturesMap, err := m.getLatestReleasesAsMap(
+	latestFeaturesMap, allFeaturesMap, err := m.getFeaturesMapData(
 		ctx, ghReleaseListResult,
 	)
 	if err != nil {
@@ -122,7 +122,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				)
 				claim.Providers.Github.Features = updatedFeaturesList
 				updatedDir := m.updateDirWithClaim(ctx, claim, entry)
-				releaseBody, err := m.getReleaseBodyForFeatureList(
+				releaseBody, err := m.getPrBodyForFeatureUpdate(
 					ctx,
 					updatedFeaturesList,
 					allFeaturesMap,
