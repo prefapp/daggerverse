@@ -157,7 +157,7 @@ func (m *UpdateClaimsFeatures) extractCurrentFeatureVersionsFromClaim(
 	ctx context.Context,
 	claim *Claim,
 ) map[string]string {
-	var currentFeaturesVersion map[string]string
+	var currentFeaturesVersion = make(map[string]string)
 
 	for _, featureData := range claim.Providers.Github.Features {
 		currentFeaturesVersion[featureData.Name] = featureData.Version
