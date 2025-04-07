@@ -123,8 +123,6 @@ func (m *UpdateClaimsFeatures) getReleaseBodyForFeatureList(
 			return "", err
 		}
 
-		fmt.Printf(">>>>>>>>>>>>>>>>>>>>Checking %s is %s", feature.Version, versionConstraint)
-
 		if versionIsGreater.Check(currentFeatureVersionSemver) {
 			releaseBody = fmt.Sprintf("%s## %s:\n", releaseBody, feature.Name)
 			for _, featureVersion := range allFeaturesMap[feature.Name] {
@@ -152,8 +150,8 @@ func (m *UpdateClaimsFeatures) getReleaseBodyForFeatureList(
 
 					versionInfo = fmt.Sprintf(
 						"%s\n\n\n%s",
-						versionInfo,
 						parsedJson.Body,
+						versionInfo,
 					)
 				}
 
