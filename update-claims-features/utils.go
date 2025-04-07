@@ -116,44 +116,51 @@ func (m *UpdateClaimsFeatures) getReleaseBodyForFeatureList(
 
 	for _, feature := range featureList {
 		releaseBody = fmt.Sprintf("%s## %s:\n", releaseBody, feature.Name)
-		for _, featureVersion := range allFeaturesMap[feature.Name] {
-			featureVersionSemver, err := semver.NewVersion(featureVersion)
-			versionConstraint := fmt.Sprintf("> %s", originalVersionMap[feature.Name])
+		versionConstraint := fmt.Sprintf("> %s", originalVersionMap[feature.Name])
+		currentFeatureVersionSemver, err := semver.NewVersion(feature.Version)
 
-			versionIsGreater, err := semver.NewConstraint(versionConstraint)
-			if err != nil {
-				return "", err
-			}
+		versionIsGreater, err := semver.NewConstraint(versionConstraint)
+		if err != nil {
+			return "", err
+		}
 
-			versionInfo := ""
-			if versionIsGreater.Check(featureVersionSemver) {
-				fullFeatureTag := fmt.Sprintf("%s-v%s", feature.Name, featureVersion)
-				changelog, err := m.getReleaseChangelog(
-					ctx,
-					fullFeatureTag,
-				)
-
+		if versionIsGreater.Check(currentFeatureVersionSemver) {
+			for _, featureVersion := range allFeaturesMap[feature.Name] {
+				featureVersionSemver, err := semver.NewVersion(featureVersion)
 				if err != nil {
 					return "", err
 				}
 
-				err = json.Unmarshal([]byte(changelog), &parsedJson)
-				if err != nil {
-					return "", err
+				versionInfo := ""
+				if versionIsGreater.Check(featureVersionSemver) {
+					fullFeatureTag := fmt.Sprintf("%s-v%s", feature.Name, featureVersion)
+					changelog, err := m.getReleaseChangelog(
+						ctx,
+						fullFeatureTag,
+					)
+
+					if err != nil {
+						return "", err
+					}
+
+					err = json.Unmarshal([]byte(changelog), &parsedJson)
+					if err != nil {
+						return "", err
+					}
+
+					versionInfo = fmt.Sprintf(
+						"%s\n\n\n%s",
+						versionInfo,
+						parsedJson.Body,
+					)
 				}
 
-				versionInfo = fmt.Sprintf(
+				releaseBody = fmt.Sprintf(
 					"%s\n\n\n%s",
+					releaseBody,
 					versionInfo,
-					parsedJson.Body,
 				)
 			}
-
-			releaseBody = fmt.Sprintf(
-				"%s\n\n\n%s",
-				releaseBody,
-				versionInfo,
-			)
 		}
 	}
 
