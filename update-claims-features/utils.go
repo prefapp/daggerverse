@@ -125,6 +125,7 @@ func (m *UpdateClaimsFeatures) getReleaseBodyForFeatureList(
 				return "", err
 			}
 
+			versionInfo := ""
 			if versionIsGreater.Check(featureVersionSemver) {
 				fullFeatureTag := fmt.Sprintf("%s-v%s", feature.Name, featureVersion)
 				changelog, err := m.getReleaseChangelog(
@@ -141,12 +142,18 @@ func (m *UpdateClaimsFeatures) getReleaseBodyForFeatureList(
 					return "", err
 				}
 
-				releaseBody = fmt.Sprintf(
-					"%s%s\n\n\n",
-					releaseBody,
+				versionInfo = fmt.Sprintf(
+					"%s\n\n\n%s",
 					parsedJson.Body,
+					versionInfo,
 				)
 			}
+
+			releaseBody = fmt.Sprintf(
+				"%s\n\n\n%s",
+				releaseBody,
+				versionInfo,
+			)
 		}
 	}
 
