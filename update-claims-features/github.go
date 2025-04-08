@@ -30,9 +30,6 @@ func (m *UpdateClaimsFeatures) upsertPR(
 	// PR body
 	// +required
 	body string,
-	// Clean up the directory
-	// +required
-	cleanupDir string,
 	// PR author
 	// +optional
 	reviewers []string,
@@ -118,7 +115,6 @@ func (m *UpdateClaimsFeatures) upsertPR(
 			"-R", m.Repo,
 			"-b", newBranchName,
 			"-m", "Update deployments",
-			"--delete-path", cleanupDir,
 		}).
 		Sync(ctx)
 
