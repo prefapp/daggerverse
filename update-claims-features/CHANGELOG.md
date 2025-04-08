@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.0.0...update-claims-features-v1.0.1) (2025-04-08)
+
+
+### Bug Fixes
+
+* Removed unused cleanupDir param ([12e0895](https://github.com/prefapp/daggerverse/commit/12e0895237533f6a54ae790240646f2a649d5f52))
+* Removed unused cleanupDir param ([cb90367](https://github.com/prefapp/daggerverse/commit/cb90367477e08cad22598323d5c1e42701faa4e8))
+
 ## 1.0.0 (2025-04-07)
 
 
