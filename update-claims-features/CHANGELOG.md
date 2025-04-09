@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.1.0](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.0.1...update-claims-features-v1.1.0) (2025-04-09)
+
+
+### Features
+
+* Added support for comma separated values in feature and claim name inputs ([ee16c5a](https://github.com/prefapp/daggerverse/commit/ee16c5af6db9ee533660a141ed74ed3777d32975))
+* Added support for comma separated values in feature and claim name inputs ([e51f8c5](https://github.com/prefapp/daggerverse/commit/e51f8c5d7c3bec6edc57e0e1dfa8c12ed333df33))
+
+
+### Bug Fixes
+
+* Allow downgrade ([bdfcd69](https://github.com/prefapp/daggerverse/commit/bdfcd69436866e27ac32875ece2d9a7d8b9cf610))
+* Allow downgrade ([41471c1](https://github.com/prefapp/daggerverse/commit/41471c15c38b51c712dd2f39ba20f1e42cdaa0e2))
+* Removed commented code ([d281ee7](https://github.com/prefapp/daggerverse/commit/d281ee7a272dccdd110a501a6b10bec2f63269b0))
+* Show only changelogs of relevant versions ([4a28bef](https://github.com/prefapp/daggerverse/commit/4a28bef777c119158f3e5113871fc4ae7ded0982))
+* Simplified code ([ee16c5a](https://github.com/prefapp/daggerverse/commit/ee16c5af6db9ee533660a141ed74ed3777d32975))
+* Simplified code ([9fb5b9c](https://github.com/prefapp/daggerverse/commit/9fb5b9c4fb57a3fda1d4a90171f83df8814f4a00))
+* Simplified code ([bab6803](https://github.com/prefapp/daggerverse/commit/bab6803123b80cf7f5ce8d50635b0a47cd336f26))
+* Updating without specifying version ([278d093](https://github.com/prefapp/daggerverse/commit/278d0930c5267ed572b8bbd2aa212ce02d4fa3e2))
+* Updating without specifying version ([3088647](https://github.com/prefapp/daggerverse/commit/3088647c51664ad97e39fd56d693539f73112a1e))
+* Version constraint ([cedc7ab](https://github.com/prefapp/daggerverse/commit/cedc7ab302d9d696d965a92a09bfa40d8ff093ae))
+
 ## [1.0.1](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.0.0...update-claims-features-v1.0.1) (2025-04-08)
 
 
