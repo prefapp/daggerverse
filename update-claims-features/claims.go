@@ -73,8 +73,8 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 				return []Feature{}, false, err
 			}
 
-			versionIsGreater, err := semver.NewConstraint(
-				fmt.Sprintf("> %s", feature.Version),
+			versionIsDifferent, err := semver.NewConstraint(
+				fmt.Sprintf("!= %s %s", feature.Version, m.VersionConstraint),
 			)
 			if err != nil {
 				return []Feature{}, false, err
@@ -82,7 +82,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 
 			// if instead of createPR = versionIsGreater.Check()
 			// because a latter unupdated feature could override this value
-			if versionIsGreater.Check(featureVersionSemver) {
+			if versionIsDifferent.Check(featureVersionSemver) {
 				createPR = true
 				feature.Version = featuresMap[feature.Name]
 			}
