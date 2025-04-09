@@ -261,7 +261,7 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 
 	}
 
-	for _, regex := range []string{"*.yml", "*.yaml"} {
+	for _, regex := range []string{"**/*.yml", "**/*.yaml"} {
 
 		entries, err := m.ValuesDir.
 			Glob(ctx, "kubernetes/"+cluster+"/"+tenant+"/"+env+"/extra_artifacts/"+regex)
