@@ -34,19 +34,20 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	ctx context.Context,
 	claimPath string,
 ) (*Claim, error) {
+	fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1")
 	file := m.ClaimsDir.File(claimPath)
 	contents, err := file.Contents(ctx)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2")
 
 	claim := &Claim{}
-
 	err = yaml.Unmarshal([]byte(contents), claim)
-
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>3")
 
 	if claim.Kind == "ComponentClaim" &&
 		(m.ClaimsToUpdate == nil || slices.Contains(m.ClaimsToUpdate, claim.Name)) {
@@ -54,6 +55,7 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 		return claim, nil
 
 	}
+	fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>4")
 
 	return nil, nil
 }

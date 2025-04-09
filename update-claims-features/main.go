@@ -111,13 +111,13 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	}
 
 	for _, entry := range claims {
-		fmt.Printf("Classifying claims in %s\n", entry)
+		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Classifying claims in %s\n", entry)
 
 		claim, err := m.getClaimIfKindComponent(ctx, entry)
 		if err != nil {
 			return "", err
 		}
-		fmt.Sprintf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1")
+		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>5")
 
 		if claim != nil {
 			updatedFeaturesList, createPR, err := m.updateClaimFeatures(
@@ -128,7 +128,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			if err != nil {
 				return "", err
 			}
-			fmt.Sprintf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2")
+			fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>6")
 
 			if createPR {
 				currentFeatureVersionsMap := m.extractCurrentFeatureVersionsFromClaim(
