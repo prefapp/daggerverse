@@ -92,11 +92,13 @@ func (m *UpdateClaimsFeatures) New(
 func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	ctx context.Context,
 ) (string, error) {
+	fmt.Sprintf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1")
 	ghReleaseListResult, err := m.getReleases(ctx)
 	if err != nil {
 		return "", err
 	}
 
+	fmt.Sprintf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2")
 	latestFeaturesMap, allFeaturesMap, err := m.getFeaturesMapData(
 		ctx, ghReleaseListResult,
 	)
@@ -104,12 +106,14 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		return "", err
 	}
 
+	fmt.Sprintf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>3")
 	// Get all ComponentClaim claims
 	claims, err := m.getAllClaims(ctx)
 	if err != nil {
 		return "", err
 	}
 
+	fmt.Sprintf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>4")
 	for _, entry := range claims {
 		fmt.Printf("Classifying claims in %s\n", entry)
 
