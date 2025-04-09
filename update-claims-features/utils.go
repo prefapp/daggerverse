@@ -135,11 +135,24 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 					return "", err
 				}
 
+				addChangeLog, err := semver.NewConstraint(
+					fmt.Sprintf(
+						"> %s, <= %s",
+						originalVersionMap[updatedFeature.Name],
+						updatedFeature.Version,
+					),
+				)
+				if err != nil {
+					return "", err
+				}
+
 				// allFeaturesMap contains every release for every feature, so
 				// they are filtered here so only the changelogs for versions
-				// more recent than the originally installed feature are shown
+				// that are greater than the originally installed one but
+				// lesser or equal to the version that is being currently
+				// installed (which won't necessarily be latest)
 				versionInfo := ""
-				if versionIsGreaterThanOriginal.Check(featureVersionSemver) {
+				if addChangeLog.Check(featureVersionSemver) {
 					fullFeatureTag := fmt.Sprintf(
 						"%s-v%s", updatedFeature.Name, featureVersion,
 					)
