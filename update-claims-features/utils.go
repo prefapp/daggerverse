@@ -51,7 +51,7 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 		versionConstraint := fmt.Sprintf("> %s", versionToCompareTo)
 		if m.VersionConstraint != "" {
 			versionConstraint = fmt.Sprintf(
-				"%s, %s", versionToCompareTo, m.VersionConstraint,
+				"%s, %s", versionConstraint, m.VersionConstraint,
 			)
 		}
 
@@ -59,8 +59,6 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 		if err != nil {
 			return nil, nil, err
 		}
-
-		fmt.Printf("///////////////////////////////////////////// %s %s\n", versionConstraint, featureData[1])
 
 		if versionIsValid.Check(featureVersionSemver) {
 			latestFeaturesMap[featureTag] = featureVersion
