@@ -55,8 +55,6 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 			)
 		}
 
-		fmt.Printf("///////////////////////////////////////// %s\n", versionConstraint)
-
 		versionIsValid, err := semver.NewConstraint(versionConstraint)
 		if err != nil {
 			return nil, nil, err
@@ -119,8 +117,8 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 	for _, updatedFeature := range updatedFeaturesList {
 		updatedFeatureVersionSemver, err := semver.NewVersion(updatedFeature.Version)
 
-		versionIsGreaterThanOriginal, err := semver.NewConstraint(
-			fmt.Sprintf("> %s", originalVersionMap[updatedFeature.Name]),
+		versionIsDifferentThanOriginal, err := semver.NewConstraint(
+			fmt.Sprintf("!= %s", originalVersionMap[updatedFeature.Name]),
 		)
 		if err != nil {
 			return "", err
@@ -129,7 +127,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 		// Unupdated features are still added to the updatedFeaturesList with
 		// the same version as they originally had, so we filter them here
 		// (they are added so they don't get deleted when updating the feature list)
-		if versionIsGreaterThanOriginal.Check(updatedFeatureVersionSemver) {
+		if versionIsDifferentThanOriginal.Check(updatedFeatureVersionSemver) {
 			prBody = fmt.Sprintf("%s## %s:", prBody, updatedFeature.Name)
 			for _, featureVersion := range allFeaturesMap[updatedFeature.Name] {
 				featureVersionSemver, err := semver.NewVersion(featureVersion)
@@ -139,8 +137,9 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 
 				addChangeLog, err := semver.NewConstraint(
 					fmt.Sprintf(
-						"> %s, <= %s",
+						"> %s, <= %s || =%s",
 						originalVersionMap[updatedFeature.Name],
+						updatedFeature.Version,
 						updatedFeature.Version,
 					),
 				)
