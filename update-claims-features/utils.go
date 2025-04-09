@@ -55,6 +55,8 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 			)
 		}
 
+		fmt.Printf("///////////////////////////////////////// %s\n", versionConstraint)
+
 		versionIsValid, err := semver.NewConstraint(versionConstraint)
 		if err != nil {
 			return nil, nil, err
