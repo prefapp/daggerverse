@@ -64,18 +64,17 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 	var updatedFeaturesList []Feature
 	createPR := false
 
-	fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1")
 	for _, feature := range claim.Providers.Github.Features {
 		if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, feature.Name) {
-			fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2")
+			fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>%s", feature.Name)
 			featureVersionSemver, err := semver.NewVersion(
 				featuresMap[feature.Name],
 			)
 			if err != nil {
+				fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>%s", featuresMap[feature.Name])
 				return []Feature{}, false, err
 			}
 
-			fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>3")
 			versionIsGreater, err := semver.NewConstraint(
 				fmt.Sprintf("> %s", feature.Version),
 			)
@@ -83,7 +82,6 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 				return []Feature{}, false, err
 			}
 
-			fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>4")
 			// if instead of createPR = versionIsGreater.Check()
 			// because a latter unupdated feature could override this value
 			if versionIsGreater.Check(featureVersionSemver) {
