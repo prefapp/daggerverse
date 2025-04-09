@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/Masterminds/semver/v3"
 	"gopkg.in/yaml.v3"
@@ -40,15 +41,13 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	}
 
 	claim := &Claim{}
-
 	err = yaml.Unmarshal([]byte(contents), claim)
-
 	if err != nil {
 		return nil, err
 	}
 
 	if claim.Kind == "ComponentClaim" &&
-		(m.ClaimToUpdate == "" || m.ClaimToUpdate == claim.Name) {
+		(m.ClaimsToUpdate == nil || slices.Contains(m.ClaimsToUpdate, claim.Name)) {
 
 		return claim, nil
 
@@ -66,7 +65,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 	createPR := false
 
 	for _, feature := range claim.Providers.Github.Features {
-		if m.FeatureToUpdate == "" || m.FeatureToUpdate == feature.Name {
+		if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, feature.Name) {
 			featureVersionSemver, err := semver.NewVersion(
 				featuresMap[feature.Name],
 			)
@@ -74,8 +73,8 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 				return []Feature{}, false, err
 			}
 
-			versionIsGreater, err := semver.NewConstraint(
-				fmt.Sprintf("> %s", feature.Version),
+			versionIsDifferent, err := semver.NewConstraint(
+				fmt.Sprintf("!=%s", feature.Version),
 			)
 			if err != nil {
 				return []Feature{}, false, err
@@ -83,7 +82,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 
 			// if instead of createPR = versionIsGreater.Check()
 			// because a latter unupdated feature could override this value
-			if versionIsGreater.Check(featureVersionSemver) {
+			if versionIsDifferent.Check(featureVersionSemver) {
 				createPR = true
 				feature.Version = featuresMap[feature.Name]
 			}
