@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
 	"fmt"
+	"strings"
 )
 
 func (m *UpdateClaimsFeatures) New(
@@ -44,12 +45,12 @@ func (m *UpdateClaimsFeatures) New(
 	// Name of the claim to be updated
 	// +optional
 	// +default=""
-	claimToUpdate string,
+	claimsToUpdate string,
 
 	// Name of the feature to be updated
 	// +optional
 	// +default=""
-	featureToUpdate string,
+	featuresToUpdate string,
 
 	// Check for the version we want to install
 	// +optional
@@ -61,6 +62,17 @@ func (m *UpdateClaimsFeatures) New(
 	// +default=false
 	automerge bool,
 ) (*UpdateClaimsFeatures, error) {
+	var claimsToUpdateList []string = nil
+	var featuresToUpdateList []string = nil
+
+	if claimsToUpdate != "" {
+		claimsToUpdateList = strings.Split(claimsToUpdate, ",")
+	}
+
+	if featuresToUpdate != "" {
+		featuresToUpdateList = strings.Split(featuresToUpdate, ",")
+	}
+
 	return &UpdateClaimsFeatures{
 		Repo:                 repo,
 		GhToken:              ghToken,
@@ -70,8 +82,8 @@ func (m *UpdateClaimsFeatures) New(
 		ClaimsDirPath:        claimsDirPath,
 		DefaultBranch:        defaultBranch,
 		ComponentsFolderName: componentsFolderName,
-		ClaimToUpdate:        claimToUpdate,
-		FeatureToUpdate:      featureToUpdate,
+		ClaimsToUpdate:       claimsToUpdateList,
+		FeaturesToUpdate:     featuresToUpdateList,
 		VersionConstraint:    versionConstraint,
 		Automerge:            automerge,
 	}, nil

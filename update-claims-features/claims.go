@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/Masterminds/semver/v3"
 	"gopkg.in/yaml.v3"
@@ -48,7 +49,7 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	}
 
 	if claim.Kind == "ComponentClaim" &&
-		(m.ClaimToUpdate == "" || m.ClaimToUpdate == claim.Name) {
+		(m.ClaimsToUpdate == nil || slices.Contains(m.ClaimsToUpdate, claim.Name)) {
 
 		return claim, nil
 
@@ -66,7 +67,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 	createPR := false
 
 	for _, feature := range claim.Providers.Github.Features {
-		if m.FeatureToUpdate == "" || m.FeatureToUpdate == feature.Name {
+		if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, feature.Name) {
 			featureVersionSemver, err := semver.NewVersion(
 				featuresMap[feature.Name],
 			)

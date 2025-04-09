@@ -11,8 +11,8 @@ type UpdateClaimsFeatures struct {
 	ClaimsDir            *dagger.Directory
 	DefaultBranch        string
 	ComponentsFolderName string
-	ClaimToUpdate        string
-	FeatureToUpdate      string
+	ClaimsToUpdate       []string
+	FeaturesToUpdate     []string
 	VersionConstraint    string
 	Automerge            bool
 }

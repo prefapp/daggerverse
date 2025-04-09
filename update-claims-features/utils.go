@@ -55,12 +55,12 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 			)
 		}
 
-		versionIsGreater, err := semver.NewConstraint(versionConstraint)
+		versionIsValid, err := semver.NewConstraint(versionConstraint)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		if versionIsGreater.Check(featureVersionSemver) {
+		if versionIsValid.Check(featureVersionSemver) {
 			latestFeaturesMap[featureTag] = featureVersion
 		}
 
