@@ -64,6 +64,7 @@ func (m *UpdateClaimsFeatures) New(
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
 	var featuresToUpdateList []string = nil
+	finalVersionConstraint := "> 0.0.0"
 
 	if claimsToUpdate != "" {
 		claimsToUpdateList = strings.Split(claimsToUpdate, ",")
@@ -71,6 +72,21 @@ func (m *UpdateClaimsFeatures) New(
 
 	if featuresToUpdate != "" {
 		featuresToUpdateList = strings.Split(featuresToUpdate, ",")
+	}
+
+	if versionConstraint != "" {
+		// regex := "^[0-9]"
+		// beginsWithNumber, err := regexp.MatchString(versionConstraint, regex)
+
+		// if err != nil {
+		// 	panic(err)
+		// }
+
+		// if !beginsWithNumber {
+		// 	versionConstraint = fmt.Sprintf("=%s", versionConstraint)
+		// }
+
+		finalVersionConstraint = versionConstraint
 	}
 
 	return &UpdateClaimsFeatures{
@@ -84,7 +100,7 @@ func (m *UpdateClaimsFeatures) New(
 		ComponentsFolderName: componentsFolderName,
 		ClaimsToUpdate:       claimsToUpdateList,
 		FeaturesToUpdate:     featuresToUpdateList,
-		VersionConstraint:    versionConstraint,
+		VersionConstraint:    finalVersionConstraint,
 		Automerge:            automerge,
 	}, nil
 }
