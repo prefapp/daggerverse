@@ -121,7 +121,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 		updatedFeatureVersionSemver, err := semver.NewVersion(updatedFeature.Version)
 
 		versionIsDifferentThanOriginal, err := semver.NewConstraint(
-			fmt.Sprintf("!= %s", originalVersionMap[updatedFeature.Name]),
+			fmt.Sprintf("!=%s", originalVersionMap[updatedFeature.Name]),
 		)
 		if err != nil {
 			return "", err

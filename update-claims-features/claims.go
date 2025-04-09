@@ -74,7 +74,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 			}
 
 			versionIsDifferent, err := semver.NewConstraint(
-				fmt.Sprintf("!=%s, %s", feature.Version, m.VersionConstraint),
+				fmt.Sprintf("!=%s", feature.Version),
 			)
 			if err != nil {
 				return []Feature{}, false, err
