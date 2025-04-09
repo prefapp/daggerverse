@@ -49,10 +49,9 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 				return nil, nil, err
 			}
 		} else {
-			versionToCompareTo := "0.0.0"
-			currentVersion, hasVersion := latestFeaturesMap[featureTag]
-			if hasVersion {
-				versionToCompareTo = currentVersion
+			versionToCompareTo, hasVersion := latestFeaturesMap[featureTag]
+			if !hasVersion {
+				versionToCompareTo = "0.0.0"
 			}
 
 			versionIsValid, err = semver.NewConstraint(
