@@ -60,6 +60,8 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 			return nil, nil, err
 		}
 
+		fmt.Printf("///////////////////////////////////////////// %s %s\n", versionConstraint, featureData[1])
+
 		if versionIsValid.Check(featureVersionSemver) {
 			latestFeaturesMap[featureTag] = featureVersion
 		}

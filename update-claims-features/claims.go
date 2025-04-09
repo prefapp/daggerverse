@@ -66,12 +66,10 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 
 	for _, feature := range claim.Providers.Github.Features {
 		if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, feature.Name) {
-			fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>%s", feature.Name)
 			featureVersionSemver, err := semver.NewVersion(
 				featuresMap[feature.Name],
 			)
 			if err != nil {
-				fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>%s", featuresMap[feature.Name])
 				return []Feature{}, false, err
 			}
 
@@ -90,12 +88,10 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 			}
 		}
 
-		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>5")
 		// Add feature whether its version is greater or not,
 		// so unupdated features are not deleted
 		updatedFeaturesList = append(updatedFeaturesList, feature)
 	}
 
-	fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>6")
 	return updatedFeaturesList, createPR, nil
 }
