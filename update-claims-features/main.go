@@ -75,17 +75,6 @@ func (m *UpdateClaimsFeatures) New(
 	}
 
 	if versionConstraint != "" {
-		// regex := "^[0-9]"
-		// beginsWithNumber, err := regexp.MatchString(versionConstraint, regex)
-
-		// if err != nil {
-		// 	panic(err)
-		// }
-
-		// if !beginsWithNumber {
-		// 	versionConstraint = fmt.Sprintf("=%s", versionConstraint)
-		// }
-
 		finalVersionConstraint = versionConstraint
 	}
 
