@@ -64,7 +64,6 @@ func (m *UpdateClaimsFeatures) New(
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
 	var featuresToUpdateList []string = nil
-	finalVersionConstraint := "> 0.0.0"
 
 	if claimsToUpdate != "" {
 		claimsToUpdateList = strings.Split(claimsToUpdate, ",")
@@ -72,10 +71,6 @@ func (m *UpdateClaimsFeatures) New(
 
 	if featuresToUpdate != "" {
 		featuresToUpdateList = strings.Split(featuresToUpdate, ",")
-	}
-
-	if versionConstraint != "" {
-		finalVersionConstraint = versionConstraint
 	}
 
 	return &UpdateClaimsFeatures{
@@ -89,7 +84,7 @@ func (m *UpdateClaimsFeatures) New(
 		ComponentsFolderName: componentsFolderName,
 		ClaimsToUpdate:       claimsToUpdateList,
 		FeaturesToUpdate:     featuresToUpdateList,
-		VersionConstraint:    finalVersionConstraint,
+		VersionConstraint:    versionConstraint,
 		Automerge:            automerge,
 	}, nil
 }

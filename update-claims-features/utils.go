@@ -42,9 +42,25 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 			continue
 		}
 
-		versionIsValid, err := semver.NewConstraint(m.VersionConstraint)
-		if err != nil {
-			return nil, nil, err
+		var versionIsValid *semver.Constraints
+		if m.VersionConstraint != "" {
+			versionIsValid, err = semver.NewConstraint(m.VersionConstraint)
+			if err != nil {
+				return nil, nil, err
+			}
+		} else {
+			versionToCompareTo := "0.0.0"
+			currentVersion, hasVersion := latestFeaturesMap[featureTag]
+			if hasVersion {
+				versionToCompareTo = currentVersion
+			}
+
+			versionIsValid, err = semver.NewConstraint(
+				fmt.Sprintf("> %s", versionToCompareTo),
+			)
+			if err != nil {
+				return nil, nil, err
+			}
 		}
 
 		if versionIsValid.Check(featureVersionSemver) {
