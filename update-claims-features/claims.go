@@ -34,20 +34,17 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	ctx context.Context,
 	claimPath string,
 ) (*Claim, error) {
-	fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1")
 	file := m.ClaimsDir.File(claimPath)
 	contents, err := file.Contents(ctx)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2")
 
 	claim := &Claim{}
 	err = yaml.Unmarshal([]byte(contents), claim)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>3")
 
 	if claim.Kind == "ComponentClaim" &&
 		(m.ClaimsToUpdate == nil || slices.Contains(m.ClaimsToUpdate, claim.Name)) {
@@ -55,7 +52,6 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 		return claim, nil
 
 	}
-	fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>4")
 
 	return nil, nil
 }
@@ -68,8 +64,10 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 	var updatedFeaturesList []Feature
 	createPR := false
 
+	fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1")
 	for _, feature := range claim.Providers.Github.Features {
 		if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, feature.Name) {
+			fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2")
 			featureVersionSemver, err := semver.NewVersion(
 				featuresMap[feature.Name],
 			)
@@ -77,6 +75,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 				return []Feature{}, false, err
 			}
 
+			fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>3")
 			versionIsGreater, err := semver.NewConstraint(
 				fmt.Sprintf("> %s", feature.Version),
 			)
@@ -84,6 +83,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 				return []Feature{}, false, err
 			}
 
+			fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>4")
 			// if instead of createPR = versionIsGreater.Check()
 			// because a latter unupdated feature could override this value
 			if versionIsGreater.Check(featureVersionSemver) {
@@ -92,10 +92,12 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 			}
 		}
 
+		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>5")
 		// Add feature whether its version is greater or not,
 		// so unupdated features are not deleted
 		updatedFeaturesList = append(updatedFeaturesList, feature)
 	}
 
+	fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>6")
 	return updatedFeaturesList, createPR, nil
 }
