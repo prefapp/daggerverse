@@ -27,7 +27,7 @@ func (m *HydrateKubernetes) BuildPreviousImagesApp(
 		return "", err
 	}
 
-	targetDir := strings.Join([]string{"kubernetes", cluster, tenant, env}, "/")
+	targetDir := strings.Join([]string{"kubernetes", cluster, tenant, env}, "/") + "/"
 
 	if !slices.Contains(entries, targetDir) {
 
