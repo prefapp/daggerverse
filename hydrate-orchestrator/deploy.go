@@ -482,6 +482,11 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 				},
 				ClaimName: m.ArtifactRef,
 			}
+
+			if strings.Trim(m.ArtifactRef, " ") == "" && m.Event == Manual {
+				panic(fmt.Sprintf("error: your input artifact ref %s is empty", m.ArtifactRef))
+			}
+
 			if m.ArtifactRef != "" {
 				if strings.HasSuffix(deployment, ".yaml") {
 					content, err := m.ValuesStateDir.File(deployment).Contents(ctx)
