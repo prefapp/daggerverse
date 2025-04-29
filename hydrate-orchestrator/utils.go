@@ -130,6 +130,7 @@ func (tfd *TfWorkspaceDeployment) Labels() []string {
 	return []string{
 		"type/tfworkspaces",
 		fmt.Sprintf("tfworkspace/%s", tfd.ClaimName),
+		"plan",
 	}
 }
 
