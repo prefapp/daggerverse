@@ -342,7 +342,7 @@ func (m *HydrateOrchestrator) ValidateChanges(
 	updatedDeployments string,
 ) {
 
-	deployments := m.processUpdatedDeployments(updatedDeployments)
+	deployments := m.processUpdatedDeployments(ctx, updatedDeployments)
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
