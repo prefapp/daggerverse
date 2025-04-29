@@ -514,7 +514,3 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 	return result
 
 }
-
-type Claim struct {
-	Name string `yaml:"name"`
-}
