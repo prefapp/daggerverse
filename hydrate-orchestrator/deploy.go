@@ -487,18 +487,16 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 				panic(fmt.Sprintf("error: your input artifact ref %s is empty", m.ArtifactRef))
 			}
 
-			if m.ArtifactRef != "" {
-				if strings.HasSuffix(deployment, ".yaml") {
-					content, err := m.ValuesStateDir.File(deployment).Contents(ctx)
-					if err != nil {
-						panic(err)
-					}
-					claim := &Claim{}
-					yaml.Unmarshal([]byte(content), claim)
+			if m.ArtifactRef != "" && strings.HasSuffix(deployment, ".yaml") {
+				content, err := m.ValuesStateDir.File(deployment).Contents(ctx)
+				if err != nil {
+					panic(err)
+				}
+				claim := &Claim{}
+				yaml.Unmarshal([]byte(content), claim)
 
-					if claim.Name != "" && claim.Name == m.ArtifactRef {
-						result.addDeployment(tfDep)
-					}
+				if claim.Name != "" && claim.Name == m.ArtifactRef {
+					result.addDeployment(tfDep)
 				}
 			} else {
 				result.addDeployment(tfDep)
