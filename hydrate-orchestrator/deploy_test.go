@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 )
@@ -8,6 +9,8 @@ import (
 func TestProcessedUpdatedDeployments(t *testing.T) {
 
 	m := &HydrateOrchestrator{}
+
+	ctx := context.Background()
 
 	// should ignore these paths
 	paths := []string{"kubernetes/environments.yaml", "kubernetes/repositories.yaml"}
@@ -17,7 +20,7 @@ func TestProcessedUpdatedDeployments(t *testing.T) {
 		t.Fatalf("Error marshalling paths to JSON: %v", err)
 	}
 
-	deployments := m.processUpdatedDeployments(string(pathsJSON))
+	deployments := m.processUpdatedDeployments(ctx, string(pathsJSON))
 
 	if len(deployments.KubernetesDeployments) != 0 {
 		t.Errorf("Expected 0 deployments, got %v", len(deployments.KubernetesDeployments))
@@ -31,7 +34,7 @@ func TestProcessedUpdatedDeployments(t *testing.T) {
 		t.Fatalf("Error marshalling paths to JSON: %v", err)
 	}
 
-	deployments = m.processUpdatedDeployments(string(pathsJSON))
+	deployments = m.processUpdatedDeployments(ctx, string(pathsJSON))
 
 	if len(deployments.KubernetesDeployments) != 1 {
 		t.Errorf("Expected 1 deployment, got %v", len(deployments.KubernetesDeployments))
@@ -58,7 +61,7 @@ func TestProcessedUpdatedDeployments(t *testing.T) {
 		t.Fatalf("Error marshalling paths to JSON: %v", err)
 	}
 
-	deployments = m.processUpdatedDeployments(string(pathsJSON))
+	deployments = m.processUpdatedDeployments(ctx, string(pathsJSON))
 
 	if len(deployments.KubernetesDeployments) != 1 {
 		t.Errorf("Expected 1 deployment, got %v", len(deployments.KubernetesDeployments))
@@ -76,7 +79,7 @@ func TestProcessedUpdatedDeployments(t *testing.T) {
 		t.Fatalf("Error marshalling paths to JSON: %v", err)
 	}
 
-	deployments = m.processUpdatedDeployments(string(pathsJSON))
+	deployments = m.processUpdatedDeployments(ctx, string(pathsJSON))
 
 	if len(deployments.KubernetesDeployments) != 1 {
 		t.Errorf("Expected 1 deployment, got %v", len(deployments.KubernetesDeployments))
@@ -103,7 +106,7 @@ func TestProcessedUpdatedDeployments(t *testing.T) {
 		t.Fatalf("Error marshalling paths to JSON: %v", err)
 	}
 
-	deployments = m.processUpdatedDeployments(string(pathsJSON))
+	deployments = m.processUpdatedDeployments(ctx, string(pathsJSON))
 
 	if len(deployments.KubernetesDeployments) != 2 {
 		t.Errorf("Expected 2 deployments, got %v", len(deployments.KubernetesDeployments))

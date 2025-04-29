@@ -1,5 +1,7 @@
 {
   "name": "github",
-  "sdk": "typescript",
-  "engineVersion": "v0.16.3"
+  "engineVersion": "v0.18.5",
+  "sdk": {
+    "source": "typescript"
+  }
 }

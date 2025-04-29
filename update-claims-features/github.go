@@ -277,6 +277,8 @@ func (m *UpdateClaimsFeatures) getColorForLabel(label string) string {
 		return "6C3B2A"
 	case strings.Contains(label, "tfworkspace/"):
 		return "7B42BC"
+	case strings.Contains(label, "plan"):
+		return "AAE2A0"
 	default:
 		return "7E7C7A"
 	}

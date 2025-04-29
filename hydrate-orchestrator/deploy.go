@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/samber/lo"
+	"gopkg.in/yaml.v3"
 )
 
 // Hydrate deployments based on the updated deployments
@@ -341,7 +342,7 @@ func (m *HydrateOrchestrator) ValidateChanges(
 	updatedDeployments string,
 ) {
 
-	deployments := m.processUpdatedDeployments(updatedDeployments)
+	deployments := m.processUpdatedDeployments(ctx, updatedDeployments)
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
@@ -424,11 +425,12 @@ func (m *HydrateOrchestrator) processDeploymentGlob(
 		panic(err)
 	}
 
-	return m.processUpdatedDeployments(string(jsonString))
+	return m.processUpdatedDeployments(ctx, string(jsonString))
 }
 
 // Process updated deployments and return all unique deployments after validating and processing them
 func (m *HydrateOrchestrator) processUpdatedDeployments(
+	ctx context.Context,
 	// List of updated deployments in JSON format
 	// +required
 	updatedDeployments string,
@@ -474,7 +476,6 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 			kdep := kubernetesSysDepFromStr(deployment)
 			result.addDeployment(kdep)
 		case "tfworkspaces":
-			// Process terraform workspace deployment
 			tfDep := &TfWorkspaceDeployment{
 				Deployment: Deployment{
 					DeploymentPath: deployment,
@@ -482,9 +483,25 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 				ClaimName: m.ArtifactRef,
 			}
 
-			result.addDeployment(tfDep)
+			if strings.Trim(m.ArtifactRef, " ") == "" && m.Event == Manual {
+				panic(fmt.Sprintf("error: your input artifact ref %s is empty", m.ArtifactRef))
+			}
+
+			if m.ArtifactRef != "" && strings.HasSuffix(deployment, ".yaml") {
+				content, err := m.ValuesStateDir.File(deployment).Contents(ctx)
+				if err != nil {
+					panic(err)
+				}
+				claim := &Claim{}
+				yaml.Unmarshal([]byte(content), claim)
+
+				if claim.Name == m.ArtifactRef {
+					result.addDeployment(tfDep)
+				}
+			} else {
+				result.addDeployment(tfDep)
+			}
 		case "secrets":
-			// Process secrets deployment
 			secDep := secretsDepFromStr(deployment)
 
 			result.addDeployment(secDep)

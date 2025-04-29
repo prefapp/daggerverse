@@ -1,12 +1,13 @@
 {
   "name": "hydrate-kubernetes",
-  "engineVersion": "v0.16.3",
-  "sdk": "go",
+  "engineVersion": "v0.18.5",
+  "sdk": {
+    "source": "go"
+  },
   "dependencies": [
     {
       "name": "firestartr-config",
       "source": "../firestartr-config"
     }
-  ],
-  "source": "."
+  ]
 }
