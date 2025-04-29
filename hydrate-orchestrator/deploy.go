@@ -495,7 +495,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 				claim := &Claim{}
 				yaml.Unmarshal([]byte(content), claim)
 
-				if claim.Name != "" && claim.Name == m.ArtifactRef {
+				if claim.Name == m.ArtifactRef {
 					result.addDeployment(tfDep)
 				}
 			} else {
