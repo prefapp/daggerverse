@@ -425,7 +425,7 @@ func (m *HydrateOrchestrator) processDeploymentGlob(
 		panic(err)
 	}
 
-	return m.processUpdatedDeployments(string(jsonString))
+	return m.processUpdatedDeployments(ctx, string(jsonString))
 }
 
 // Process updated deployments and return all unique deployments after validating and processing them
