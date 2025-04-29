@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/samber/lo"
+	"gopkg.in/yaml.v3"
 )
 
 // Hydrate deployments based on the updated deployments
@@ -429,6 +430,7 @@ func (m *HydrateOrchestrator) processDeploymentGlob(
 
 // Process updated deployments and return all unique deployments after validating and processing them
 func (m *HydrateOrchestrator) processUpdatedDeployments(
+	ctx context.Context,
 	// List of updated deployments in JSON format
 	// +required
 	updatedDeployments string,
@@ -474,17 +476,29 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 			kdep := kubernetesSysDepFromStr(deployment)
 			result.addDeployment(kdep)
 		case "tfworkspaces":
-			// Process terraform workspace deployment
 			tfDep := &TfWorkspaceDeployment{
 				Deployment: Deployment{
 					DeploymentPath: deployment,
 				},
 				ClaimName: m.ArtifactRef,
 			}
+			if m.ArtifactRef != "" {
+				if strings.HasSuffix(deployment, ".yaml") {
+					content, err := m.ValuesStateDir.File(deployment).Contents(ctx)
+					if err != nil {
+						panic(err)
+					}
+					claim := &Claim{}
+					yaml.Unmarshal([]byte(content), claim)
 
-			result.addDeployment(tfDep)
+					if claim.Name != "" && claim.Name == m.ArtifactRef {
+						result.addDeployment(tfDep)
+					}
+				}
+			} else {
+				result.addDeployment(tfDep)
+			}
 		case "secrets":
-			// Process secrets deployment
 			secDep := secretsDepFromStr(deployment)
 
 			result.addDeployment(secDep)
@@ -494,4 +508,8 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 
 	return result
 
+}
+
+type Claim struct {
+	Name string `yaml:"name"`
 }
