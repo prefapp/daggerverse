@@ -33,14 +33,15 @@ type ReleaseBody struct {
 }
 
 type Claim struct {
-	Kind      string    `yaml:"kind,omitempty"`
-	Version   string    `yaml:"version,omitempty"`
-	Type      string    `yaml:"type,omitempty"`
-	Lifecycle string    `yaml:"lifecycle,omitempty"`
-	System    string    `yaml:"system,omitempty"`
-	Name      string    `yaml:"name,omitempty"`
-	Providers Providers `yaml:"providers,omitempty"`
-	Owner     string    `yaml:"owner,omitempty"`
+	Kind        string            `yaml:"kind,omitempty"`
+	Version     string            `yaml:"version,omitempty"`
+	Type        string            `yaml:"type,omitempty"`
+	Lifecycle   string            `yaml:"lifecycle,omitempty"`
+	System      string            `yaml:"system,omitempty"`
+	Name        string            `yaml:"name,omitempty"`
+	Annotations map[string]string `yaml:"annotations,omitempty"`
+	Providers   Providers         `yaml:"providers,omitempty"`
+	Owner       string            `yaml:"owner,omitempty"`
 }
 
 type Providers struct {
