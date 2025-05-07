@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.1](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.0...update-claims-features-v1.1.1) (2025-05-07)
+
+
+### Bug Fixes
+
+* Added annotation field to claim type ([44eb190](https://github.com/prefapp/daggerverse/commit/44eb19000ba62547ac1f4a23427c65bed9e3d678))
+* Added annotation field to claim type ([2fb3280](https://github.com/prefapp/daggerverse/commit/2fb32806798b595fb63fa8d08aef99b6b9977d34))
+* not needed renders ([#180](https://github.com/prefapp/daggerverse/issues/180)) ([bd18268](https://github.com/prefapp/daggerverse/commit/bd182689ab744ec3d8ec0abccbf9ecf375fada51))
+
 ## [1.1.0](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.0.1...update-claims-features-v1.1.0) (2025-04-09)
 
 
