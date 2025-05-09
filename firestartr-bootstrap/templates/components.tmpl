@@ -1,0 +1,28 @@
+{{ range $index, $claim := .Components }}
+---
+kind: ComponentClaim
+version: "1.0"
+type: service
+lifecycle: production
+system: {{ $.Org }}-system
+name: {{ $claim.Name }}
+providers:
+  github:
+    description: {{ $claim.Description }}
+    name: {{ default $claim.Name $claim.RepoName }}
+    org: {{ $.Org }}
+    visibility: private
+    branchStrategy:
+      name: none
+      defaultBranch: {{ $claim.DefaultBranch }}
+    actions:
+      oidc:
+        useDefault: false
+        includeClaimKeys:
+          - repo
+    features:
+      {{- range $index, $feature := $claim.Features }}
+      - name: {{ $feature.Name }}
+        version: {{ $feature.Version }}
+      {{- end }}
+{{ end }}

@@ -21,6 +21,10 @@
        "update-claims-features": {
             "package-name": "update-claims-features",
             "release-type": "go"
+       },
+       "firestartr-bootstrap": {
+           "package-name": "firestartr-bootstrap",
+           "release-type": "go"
        }
     }
 }

@@ -1,0 +1,17 @@
+name: branchStrategies
+apiVersion: firestartr.dev/v1
+kind: ComponentClaim
+expanderValues:
+  strategies:
+    - name: gitflow
+      values:
+        defaultBranch: master
+        branchProtections:
+          - branch: master
+            statusChecks:
+              - "pr_verify"
+            requiredReviewersCount: 2
+            requiredCodeownersReviewers: false
+            enforceAdmins: true
+            requireSignedCommits: true
+            requireConversationResolution: false
