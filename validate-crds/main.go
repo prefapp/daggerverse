@@ -1,17 +1,3 @@
-// A generated module for ValidateCrds functions
-//
-// This module has been generated via dagger init and serves as a reference to
-// basic module structure as you get started with Dagger.
-//
-// Two functions have been pre-created. You can modify, delete, or add to them,
-// as needed. They demonstrate usage of arguments and return types using simple
-// echo and grep commands. The functions can be called from the dagger CLI or
-// from one of the SDKs.
-//
-// The first line in this comment block is a short description line and the
-// rest is a long description with more detail on the module's purpose or usage,
-// if appropriate. All modules should have a short description.
-
 package main
 
 import (
@@ -19,19 +5,53 @@ import (
 	"dagger/validate-crds/internal/dagger"
 )
 
-type ValidateCrds struct{}
-
-// Returns a container that echoes whatever string argument is provided
-func (m *ValidateCrds) ContainerEcho(stringArg string) *dagger.Container {
-	return dag.Container().From("alpine:latest").WithExec([]string{"echo", stringArg})
+type ValidateCrds struct {
+	Kind *dagger.Container
+	Crds *dagger.Directory
 }
 
-// Returns lines that match a pattern in the files of the provided Directory
-func (m *ValidateCrds) GrepDir(ctx context.Context, directoryArg *dagger.Directory, pattern string) (string, error) {
-	return dag.Container().
-		From("alpine:latest").
-		WithMountedDirectory("/mnt", directoryArg).
-		WithWorkdir("/mnt").
-		WithExec([]string{"grep", "-R", pattern, "."}).
+type Version string
+
+func New(
+	ctx context.Context,
+
+	//This is required by the "prefapp/daggerverse/kind" module.
+	// +required
+	dockerSocket *dagger.Socket,
+
+	//This is required by the "prefapp/daggerverse/kind" module.
+	// +required
+	kindSvc *dagger.Service,
+
+	//+required
+	crdsDir *dagger.Directory,
+
+	// From the "prefapp/daggerverse/kind" module.
+	// The Kubernetes version you want to install in the Kind cluster. Has to be
+	// one of the available ones in the current Kind version used.
+	// +optional
+	version dagger.KindVersion,
+
+) *ValidateCrds {
+
+	opts := dagger.KindOpts{}
+
+	if version != "" {
+		opts.Version = version
+	}
+
+	container := dag.Kind(dockerSocket, kindSvc, opts).Container()
+
+	return &ValidateCrds{
+		Kind: container,
+		Crds: crdsDir,
+	}
+}
+
+func (m *ValidateCrds) Validate(ctx context.Context) (string, error) {
+	return m.Kind.
+		WithWorkdir("/crds").
+		WithMountedDirectory("/crds", m.Crds).
+		WithExec([]string{"kubectl", "apply", "--dry-run=client", "-f", "."}).
 		Stdout(ctx)
 }
