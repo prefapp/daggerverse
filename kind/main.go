@@ -23,7 +23,7 @@ func New(
 	ctx context.Context,
 	// Docker socket path. E.g. /var/run/docker.sock
 	// How to use it:
-	// dagger call --docker-sock=/var/run/docker.sock kind --kind-svc=tcp://127.0.0.1:3000
+	// dagger call --docker-socket=/var/run/docker.sock --kind-svc=tcp://127.0.0.1:3000
 	// +required
 	dockerSocket *dagger.Socket,
 
@@ -32,6 +32,11 @@ func New(
 	// an entry for localhost 127.0.0.1 . Otherwise, the alpine container will not be able to connect to the kind cluster.
 	// +required
 	kindSvc *dagger.Service,
+
+	// The Kubernetes version you want to use inside the cluster. Must be one of the available versions of the current
+	// Kind version used, that is v0.25.0. It has to be indicated like "vx.y", being 'x' the major and 'y' the minor versions.
+	// +optional
+	version Version,
 
 	// +optional
 	// +default="dagger-kubernetes-cluster"
@@ -72,6 +77,17 @@ func New(
 
 	yamlFileContent, err := yaml.Marshal(kindConfig)
 
+	createCluster := []string{
+		"kind", "create", "cluster",
+		"--name", clusterName,
+		"--config", "kind.yaml",
+		"--wait", "1m",
+	}
+
+	if version != "" {
+		createCluster = append(createCluster, "--image", Versions[version])
+	}
+
 	container, err := dag.Container().
 		From("alpine").
 		WithUnixSocket("/var/run/docker.sock", dockerSocket).
@@ -85,12 +101,7 @@ func New(
 			"kind", "delete", "cluster",
 			"--name", clusterName,
 		}).
-		WithExec([]string{
-			"kind", "create", "cluster",
-			"--name", clusterName,
-			"--config", "kind.yaml",
-			"--wait", "1m",
-		}).
+		WithExec(createCluster).
 		WithServiceBinding("localhost", kindSvc).
 		WithExec([]string{
 			"kubectl", "config",
