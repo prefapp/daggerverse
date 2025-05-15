@@ -100,16 +100,18 @@ func (m *K6) Run(
 		WithDirectory(outputDirMountPath, dag.Directory()).
 		WithUser("root")
 
-	if networkThrottle > 0 {
-		return m.ThrotthleCtr(ctx, ctr, networkThrottle, networkInterface)
-	}
+	// if networkThrottle > 0 {
+	// 	return m.ThrotthleCtr(ctx, ctr, networkThrottle, networkInterface)
+	// }
 
-	panic(2)
+	throttlingCmd := `tc qdisc add dev eth1 handle ffff: ingress &&
+tc filter add dev eth1 protocol ip  parent ffff: prio 50 u32 match ip src 0.0.0.0/0 police rate 32kbit burst 15k drop flowid :1 &&
+tc qdisc add dev eth1 root tbf rate 32mbit burst 32kbit latency 400ms`
 
 	ctr = ctr.WithExec([]string{
 		"sh",
 		"-c",
-		fmt.Sprintf("%s || exit 0", strings.Join(command, " ")),
+		fmt.Sprintf("%s && %s || exit 0",throttlingCmd, strings.Join(command, " ")),
 	}, dagger.ContainerWithExecOpts{
 		UseEntrypoint: false,
 	})

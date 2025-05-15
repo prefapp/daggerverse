@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dagger/k-6/internal/dagger"
-	"fmt"
 )
 
 func (m *K6) ThrotthleCtr(
@@ -15,7 +14,7 @@ func (m *K6) ThrotthleCtr(
 	// Network interface to throttle
 	networkInterface string,
 ) *dagger.Container {
-	ctr, _ = ctr.WithExec([]string{
+	container, _ := ctr.WithExec([]string{
 		"apk",
 		"update",
 	}).WithExec([]string{
@@ -32,7 +31,12 @@ func (m *K6) ThrotthleCtr(
 		"handle", "ffff:", "ingress",
 	}, dagger.ContainerWithExecOpts{
 		InsecureRootCapabilities: true,
-	}).WithExec([]string{
+	}).Sync(ctx)
+
+	return container
+	/**
+
+		WithExec([]string{
 		"tc",
 		"filter",
 		"add",
@@ -47,6 +51,7 @@ func (m *K6) ThrotthleCtr(
 	}, dagger.ContainerWithExecOpts{
 		InsecureRootCapabilities: true,
 	}).WithExec([]string{
+
 		"tc",
 		"qdisc",
 		"add",
@@ -58,6 +63,6 @@ func (m *K6) ThrotthleCtr(
 	}, dagger.ContainerWithExecOpts{
 		InsecureRootCapabilities: true,
 	}).Sync(ctx)
+	**/
 
-	return ctr
 }
