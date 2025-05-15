@@ -390,3 +390,14 @@ func TestRenderAppsCanRenderImages(t *testing.T) {
 	}
 
 }
+
+func TestRenderAppsCanApplyJsonPatches(t *testing.T) {
+	ctx := context.Background()
+
+	valuesRepoDir := getDir("./fixtures/values-repo-dir-sys-services")
+
+	repositoryFileDir := getDir("./fixtures/repository_file")
+
+	helmDir := getDir("./helm-sys-services")
+
+}

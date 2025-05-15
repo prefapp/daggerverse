@@ -53,6 +53,13 @@ func (m *K6) Run(
 	//+optional
 	//+default="1s"
 	duration string,
+	// Bandwidth limit in megabytes per second
+	//+optional
+	networkThrottle int,
+	// Network interface to thorttle
+	//+optional
+	//+default="eth1"
+	networkInterface string,
 
 ) *dagger.Container {
 	// We use Glob over Entries because it lists files recursively
@@ -91,14 +98,21 @@ func (m *K6) Run(
 
 	ctr = ctr.WithDirectory(workingDirMountPath, workingDir).
 		WithDirectory(outputDirMountPath, dag.Directory()).
-		WithUser("root").
-		WithExec([]string{
-			"sh",
-			"-c",
-			fmt.Sprintf("%s || exit 0", strings.Join(command, " ")),
-		}, dagger.ContainerWithExecOpts{
-			UseEntrypoint: false,
-		})
+		WithUser("root")
+
+	if networkThrottle > 0 {
+		return m.ThrotthleCtr(ctx, ctr, networkThrottle, networkInterface)
+	}
+
+	panic(2)
+
+	ctr = ctr.WithExec([]string{
+		"sh",
+		"-c",
+		fmt.Sprintf("%s || exit 0", strings.Join(command, " ")),
+	}, dagger.ContainerWithExecOpts{
+		UseEntrypoint: false,
+	})
 
 	ctr, _ = ctr.Sync(ctx)
 

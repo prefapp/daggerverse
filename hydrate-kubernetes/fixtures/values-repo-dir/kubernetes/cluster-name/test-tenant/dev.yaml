@@ -14,12 +14,13 @@ extraPatches:
         value: test-value
 execs:
   - command: ".github/certs_to_ca_yaml.py"
-    args: [
-      "--ca_certs_path", 
-      "./kubernetes/{{.StateValues.cluster}}/{{.StateValues.tenant}}/{{$.Environment.Name}}/ca-certs", 
-      "--ca_yml_path", 
-      "./kubernetes/{{.StateValues.cluster}}/{{.StateValues.tenant}}/{{$.Environment.Name}}/ca.yaml"
-    ]
+    args:
+      [
+        "--ca_certs_path",
+        "./kubernetes/{{.StateValues.cluster}}/{{.StateValues.tenant}}/{{$.Environment.Name}}/ca-certs",
+        "--ca_yml_path",
+        "./kubernetes/{{.StateValues.cluster}}/{{.StateValues.tenant}}/{{$.Environment.Name}}/ca.yaml",
+      ]
 
 set:
   - name: micro-b.image
