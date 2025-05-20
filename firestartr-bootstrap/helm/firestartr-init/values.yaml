@@ -1,0 +1,44 @@
+labels:
+  app: firestarter
+  concern: init
+
+deploy:
+  replicas: 1
+  image:
+    name: bitnami/kubectl 
+    tag: latest
+    pullPolicy: IfNotPresent
+  command: 
+    - "tail"
+    - "-f"
+    - "/dev/null"
+  containerPort: 80
+  probes:
+    liveness: {}
+    readiness: {}
+    startup: {}
+  resources: {}
+  volumeMounts: {}
+  volumes: {}
+
+serviceaccount:
+  annotations: {}
+
+roleRules:
+  - apiGroups: ["", "firestartr.dev"]
+    resources:
+      - pods
+      - secrets
+      - githubgroups
+      - githubmemberships
+      - githubrepositoryfeatures
+      - githubrepositories
+      - providerconfigs
+      - terraformworkspaceplans
+      - terraformworkspaces
+      - tfresults
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+secret: {}
+
+config: {}

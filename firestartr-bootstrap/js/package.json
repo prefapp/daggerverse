@@ -1,0 +1,16 @@
+{
+  "name": "js",
+  "version": "1.0.0",
+  "description": "Token generator for GitHub App",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "generate-github-token":"node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@octokit/auth-app": "7.2.1"
+  }
+}

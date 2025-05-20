@@ -1,0 +1,14 @@
+{
+  "name": "firestartr-bootstrap",
+  "engineVersion": "v0.18.5",
+  "sdk": {
+    "source": "go"
+  },
+  "dependencies": [
+    {
+      "name": "kind",
+      "source": "github.com/prefapp/daggerverse/kind@main",
+      "pin": "5374e045b43b575fda6bfcff2d1039b0e0f444f3"
+    }
+  ]
+}
