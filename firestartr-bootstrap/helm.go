@@ -20,7 +20,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 				Tag: fmt.Sprintf(
 					"%s_full-%s",
 					m.Bootstrap.Firestartr.Version,
-					m.CredsFile.CloudProvider.Name,
+					m.Creds.CloudProvider.Name,
 				),
 				PullPolicy: "Always",
 			},
@@ -48,7 +48,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 		Secret: Secret{
 			Type: "Opaque",
 			Data: map[string]string{
-				"GITHUB_APP_PEM_FILE": m.CredsFile.GithubApp.Pem,
+				"GITHUB_APP_PEM_FILE": m.Creds.GithubApp.Pem,
 			},
 		},
 		Config: Config{
@@ -63,9 +63,9 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 				}, ","),
 				"OPERATOR_NAMESPACE":                 "default",
 				"OPERATOR_IGNORE_LEASE":              "true",
-				"GITHUB_APP_ID":                      m.CredsFile.GithubApp.GhAppId,
-				"GITHUB_APP_INSTALLATION_ID":         m.CredsFile.GithubApp.InstallationId,
-				"GITHUB_APP_INSTALLATION_ID_PREFAPP": m.CredsFile.GithubApp.PrefappInstallationId,
+				"GITHUB_APP_ID":                      m.Creds.GithubApp.GhAppId,
+				"GITHUB_APP_INSTALLATION_ID":         m.Creds.GithubApp.InstallationId,
+				"GITHUB_APP_INSTALLATION_ID_PREFAPP": m.Creds.GithubApp.PrefappInstallationId,
 				"NODE_TLS_REJECT_UNAUTHORIZED":       "0",
 				"ORG":                                m.GhOrg,
 				"DEBUG":                              "*",

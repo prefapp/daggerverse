@@ -86,7 +86,7 @@ func (m *FirestartrBootstrap) RenderInitialCrs(ctx context.Context, templ *dagge
 	if err != nil {
 		return "", err
 	}
-	return renderTmpl(templateContent, m.CredsFile)
+	return renderTmpl(templateContent, m.Creds)
 }
 
 func (m *FirestartrBootstrap) RenderBootstrapFile(ctx context.Context, templ *dagger.File) (string, error) {

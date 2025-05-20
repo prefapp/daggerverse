@@ -134,11 +134,11 @@ func (m *FirestartrBootstrap) SetRepoVariables(ctx context.Context, ghToken *dag
 func (m *FirestartrBootstrap) SetOrgVariables(ctx context.Context, ghToken *dagger.Secret) error {
 
 	mappedVars := map[string]string{
-		"FIRESTARTER_GITHUB_APP_ID":                      m.CredsFile.GithubApp.GhAppId,
-		"FIRESTARTER_GITHUB_APP_NAME":                    m.CredsFile.GithubApp.BotName,
+		"FIRESTARTER_GITHUB_APP_ID":                      m.Creds.GithubApp.GhAppId,
+		"FIRESTARTER_GITHUB_APP_NAME":                    m.Creds.GithubApp.BotName,
 		"FIRESTARTER_WORKFLOW_DOCKER_IMAGE_TAG":          fmt.Sprintf("%s_slim", m.Bootstrap.Firestartr.Version),
-		"FIRESTARTER_GITHUB_APP_INSTALLATION_ID_PREFAPP": m.CredsFile.GithubApp.PrefappInstallationId,
-		"FIRESTARTER_GITHUB_APP_INSTALLATION_ID":         m.CredsFile.GithubApp.InstallationId,
+		"FIRESTARTER_GITHUB_APP_INSTALLATION_ID_PREFAPP": m.Creds.GithubApp.PrefappInstallationId,
+		"FIRESTARTER_GITHUB_APP_INSTALLATION_ID":         m.Creds.GithubApp.InstallationId,
 		"FIRESTARTR_CLI_VERSION":                         strings.TrimPrefix(m.Bootstrap.Firestartr.Version, "v"),
 	}
 
@@ -177,8 +177,8 @@ func (m *FirestartrBootstrap) SetOrgSecret(ctx context.Context, name string, val
 
 func (m *FirestartrBootstrap) SetOrgSecrets(ctx context.Context, ghToken *dagger.Secret) error {
 	mappedVars := map[string]string{
-		"FIRESTARTER_GITHUB_APP_PEM_FILE": m.CredsFile.GithubApp.RawPem,
-		"FIRESTARTR_GITHUB_APP_PEM_FILE":  m.CredsFile.GithubApp.Pem,
+		"FIRESTARTER_GITHUB_APP_PEM_FILE": m.Creds.GithubApp.RawPem,
+		"FIRESTARTR_GITHUB_APP_PEM_FILE":  m.Creds.GithubApp.Pem,
 	}
 
 	for name, value := range mappedVars {
@@ -217,9 +217,9 @@ func (m *FirestartrBootstrap) GenerateGithubToken(ctx context.Context) (*dagger.
 	ctr, err := dag.Container().
 		From("node:22").
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
-		WithEnvVariable("GITHUB_APP_ID", m.CredsFile.GithubApp.GhAppId).
-		WithEnvVariable("GITHUB_APP_INSTALLATION_ID", m.CredsFile.GithubApp.InstallationId).
-		WithEnvVariable("GITHUB_APP_PEM_FILE", m.CredsFile.GithubApp.Pem).
+		WithEnvVariable("GITHUB_APP_ID", m.Creds.GithubApp.GhAppId).
+		WithEnvVariable("GITHUB_APP_INSTALLATION_ID", m.Creds.GithubApp.InstallationId).
+		WithEnvVariable("GITHUB_APP_PEM_FILE", m.Creds.GithubApp.Pem).
 		WithDirectory("/app", dag.CurrentModule().Source().Directory("js")).
 		WithWorkdir("/app").
 		WithExec([]string{

@@ -9,9 +9,11 @@ import (
 
 type FirestartrBootstrap struct {
 	Bootstrap         *BootstrapFile
+	BootstrapFile     *dagger.File
 	CredentialsSecret *dagger.Secret
 	GhOrg             string
-	CredsFile         *CredsFile
+	Creds             *CredsFile
+	CredsFileContent  string
 	GeneratedGhToken  *dagger.Secret
 	RenderedCrs       []*Cr
 	ProvisionedCrs    []*Cr
@@ -29,6 +31,11 @@ func New(
 	// +required
 	credentialsSecret *dagger.Secret,
 ) (*FirestartrBootstrap, error) {
+
+	credsFileContent, err := credentialsSecret.Plaintext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	creds, err := loadCredsFile(ctx, credentialsSecret)
 	if err != nil {
@@ -49,9 +56,11 @@ func New(
 
 	return &FirestartrBootstrap{
 		Bootstrap:         bootstrap,
+		BootstrapFile:     bootstrapFile,
 		CredentialsSecret: credentialsSecret,
 		GhOrg:             creds.GithubApp.Owner,
-		CredsFile:         creds,
+		Creds:             creds,
+		CredsFileContent:  credsFileContent,
 		PreviousCrsDir:    previousCrsDir,
 	}, nil
 }
@@ -61,6 +70,16 @@ func (m *FirestartrBootstrap) RunBootstrap(
 	dockerSocket *dagger.Socket,
 	kindSvc *dagger.Service,
 ) *dagger.Container {
+
+	err := m.ValidateBootstrapFile(ctx, m.BootstrapFile)
+	if err != nil {
+		panic(err)
+	}
+
+	err = m.ValidateCredentialsFile(ctx, m.CredsFileContent)
+	if err != nil {
+		panic(err)
+	}
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
