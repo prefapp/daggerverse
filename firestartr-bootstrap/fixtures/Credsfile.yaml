@@ -1,0 +1,17 @@
+---
+cloudProvider:
+  config: |
+    {
+      "bucket": "my-bucket",
+      "region": "us-east-1",
+    }
+  source: hashicorp/aws
+  type: aws
+  version: ~> 4.0
+githubApp:
+  pem: "-----BEGIN RSA PRIVATE KEY-----\nTEST\n-----END RSA PRIVATE KEY-----"
+  id: "000000"
+  installationId: "00000000"
+  prefappInstallationId: "00000000"
+  owner: "firestartr-test"
+
