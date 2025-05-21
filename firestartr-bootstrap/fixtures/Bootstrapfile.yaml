@@ -15,11 +15,11 @@ pushFiles:
         repo: "state-github"
 
 components:  
+
   - name: "dot-firestartr"
     description: "Repository with the terraform code for manage the multi-tenant infrastructure"
     repoName: ".firestartr"
     defaultBranch: main
-    skip: true
     features: 
       - name: firestartr_repo
         version: 1.0.0
@@ -34,7 +34,6 @@ components:
   - name: "catalog"
     description: "Firestartr configuration folders and files"
     defaultBranch: main
-    skip: true
     features:
       - name: catalog_repo
         version: 1.0.0
@@ -44,7 +43,6 @@ components:
 
   - name: "state-github"
     description: "Firestartr Github wet repository"
-    skip: true
     defaultBranch: main
     features: 
       - name: state_github
