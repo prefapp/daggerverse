@@ -7,6 +7,7 @@ type Component struct {
 	DefaultBranch string `yaml:"defaultBranch"`
 	Features      []Feature
 	Variables     []Variable `yaml:"variables"`
+	Skipped       bool       `yaml:"skip"`
 }
 
 type Variable struct {

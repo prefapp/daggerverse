@@ -86,6 +86,15 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		panic(err)
 	}
 
+	if m.PreviousCrsDir == nil {
+		// only validate if we are not trying to re-run the bootstrap
+		// with the previous crs generated in the previous run
+		err = m.ValidateRepositoriesAreNotCreatedYet(ctx, tokenSecret)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	err = m.SetOrgVariables(ctx, tokenSecret)
 	if err != nil {
 		panic(err)

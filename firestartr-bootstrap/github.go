@@ -33,13 +33,12 @@ func (m *FirestartrBootstrap) PushDirToRepo(
 		ghCtr = ghCtr.WithFile(path.Join("/repo", entry), dir.File(entry))
 	}
 
-	ghCtr, err = ghCtr.
+	_, err = ghCtr.
 		WithWorkdir("/repo").
 		WithExec([]string{"git", "add", "."}).
 		WithExec([]string{"git", "commit", "-m", "automated commit from firestartr-bootstrap"}).
 		WithExec([]string{"git", "push"}).
 		Sync(ctx)
-
 	if err != nil {
 		return err
 	}

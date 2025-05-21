@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
+	"strings"
 
 	"github.com/xeipuuv/gojsonschema"
 	"sigs.k8s.io/yaml"
@@ -59,6 +60,71 @@ func validateDocumentSchema(document string, schema string) error {
 
 	if !res.Valid() {
 		return fmt.Errorf("document is not valid %s", res.Errors())
+	}
+	return nil
+}
+
+func (m *FirestartrBootstrap) GithubRepositoryExists(ctx context.Context, repo string, ghToken *dagger.Secret) (bool, error) {
+	ctr, err := m.GhContainer(ctx, ghToken).
+		WithExec([]string{
+			"gh",
+			"repo",
+			"view",
+			fmt.Sprintf("%s/%s", m.Bootstrap.Org, repo),
+		}, dagger.ContainerWithExecOpts{
+			RedirectStdout: "/tmp/stdout",
+			RedirectStderr: "/tmp/stderr",
+			Expect:         "ANY",
+		}).
+		Sync(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	stderr, err := ctr.File("/tmp/stderr").Contents(ctx)
+	if err != nil {
+		return false, err
+	}
+	stdout, err := ctr.File("/tmp/stdout").Contents(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	fmt.Printf("stdout: %s\n", stdout)
+	fmt.Printf("stderr: %s\n", stderr)
+
+	eC, err := ctr.ExitCode(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	if eC != 0 {
+
+		if strings.Contains(stderr, "Could not resolve to a Repository with the name") {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("failed to check if repository exists: %s", stderr)
+	}
+
+	return true, nil
+}
+
+func (m *FirestartrBootstrap) ValidateRepositoriesAreNotCreatedYet(ctx context.Context, ghToken *dagger.Secret) error {
+	for _, component := range m.Bootstrap.Components {
+		if !component.Skipped {
+			repoName := component.Name
+			if component.RepoName != "" {
+				repoName = component.RepoName
+			}
+			exists, err := m.GithubRepositoryExists(ctx, repoName, ghToken)
+			if err != nil {
+				return err
+			}
+			if exists {
+				return fmt.Errorf("repository %s already exists", repoName)
+			}
+		}
 	}
 	return nil
 }
