@@ -1,0 +1,144 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Bootstrap Schema",
+    "type": "object",
+    "properties": {
+      "firestartr": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "org": {
+        "type": "string"
+      },
+      "pushFiles": {
+        "type": "object",
+        "properties": {
+          "claims": {
+            "type": "object",
+            "properties": {
+              "push": {
+                "type": "boolean"
+              },
+              "repo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "push",
+              "repo"
+            ]
+          },
+          "crs": {
+            "type": "object",
+            "properties": {
+              "providers": {
+                "type": "object",
+                "properties": {
+                  "github": {
+                    "type": "object",
+                    "properties": {
+                      "push": {
+                        "type": "boolean"
+                      },
+                      "repo": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "push",
+                      "repo"
+                    ]
+                  }
+                },
+                "required": [
+                  "github"
+                ]
+              }
+            },
+            "required": [
+              "providers"
+            ]
+          }
+        },
+        "required": [
+          "claims",
+          "crs"
+        ]
+      },
+      "components": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "repoName": {
+              "type": "string"
+            },
+            "defaultBranch": {
+              "type": "string"
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "version"
+                ]
+              }
+            },
+            "variables": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "value"
+                ]
+              }
+            }
+          },
+          "required": [
+            "name",
+            "description",
+            "defaultBranch",
+            "features"
+          ]
+        }
+      }
+    },
+    "required": [
+      "firestartr",
+      "org",
+      "pushFiles",
+      "components"
+    ]
+  }

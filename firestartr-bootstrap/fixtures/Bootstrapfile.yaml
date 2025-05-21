@@ -14,10 +14,8 @@ pushFiles:
         push: true
         repo: "state-github"
 
-# runImport: true
+components:  
 
-components:
-  
   - name: "dot-firestartr"
     description: "Repository with the terraform code for manage the multi-tenant infrastructure"
     repoName: ".firestartr"
@@ -25,7 +23,7 @@ components:
     features: 
       - name: firestartr_repo
         version: 1.0.0
-  
+
   - name: "claims"
     description: "Firestartr configuration folders and files"
     defaultBranch: main
@@ -70,4 +68,3 @@ components:
         value: "claims"
       - name: FIRESTARTER_PROVIDER
         value: "terraform"
-

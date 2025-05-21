@@ -1,4 +1,5 @@
 {{ range $index, $claim := .Components }}
+{{- if not $claim.Skipped }}
 ---
 kind: ComponentClaim
 version: "1.0"
@@ -25,4 +26,5 @@ providers:
       - name: {{ $feature.Name }}
         version: {{ $feature.Version }}
       {{- end }}
+{{ end }}
 {{ end }}
