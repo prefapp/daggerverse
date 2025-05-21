@@ -19,7 +19,7 @@ type Feature struct {
 	Name    string `yaml:"name"`
 	Version string `yaml:"version"`
 }
-type BootstrapFile struct {
+type Bootstrap struct {
 	Firestartr Firestartr  `yaml:"firestartr"`
 	PushFiles  PushFiles   `yaml:"pushFiles"`
 	Org        string      `yaml:"org"`

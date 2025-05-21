@@ -8,7 +8,7 @@ import (
 )
 
 type FirestartrBootstrap struct {
-	Bootstrap         *BootstrapFile
+	Bootstrap         *Bootstrap
 	BootstrapFile     *dagger.File
 	CredentialsSecret *dagger.Secret
 	GhOrg             string
@@ -48,7 +48,7 @@ func New(
 		panic(err)
 	}
 
-	bootstrap := &BootstrapFile{}
+	bootstrap := &Bootstrap{}
 	err = yaml.Unmarshal([]byte(bootstrapContentFile), bootstrap)
 	if err != nil {
 		panic(err)
