@@ -206,7 +206,7 @@ func (m *FirestartrBootstrap) GhContainer(ctx context.Context, ghToken *dagger.S
 		WithExec([]string{"apk", "add", "git", "github-cli"}).
 		WithNewFile("/root/.gitconfig", gitConfig).
 		WithExec([]string{"git", "config", "--global", "user.name", "firestartr"}).
-		WithExec([]string{"git", "config", "--global", "user.email", "info@prefapp.es"}).
+		WithExec([]string{"git", "config", "--global", "user.email", "info@firestartr.dev"}).
 		WithExec([]string{"gh", "auth", "login", "--with-token"}, dagger.ContainerWithExecOpts{
 			Stdin: tokenRaw,
 		})
