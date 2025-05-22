@@ -7,7 +7,7 @@
   "dependencies": [
     {
       "name": "firestartr-config",
-      "source": "../firestartr-config"
+      "source": "../../firestartr-config"
     }
   ]
 }

@@ -7,11 +7,11 @@
   "dependencies": [
     {
       "name": "firestartr-config",
-      "source": "../firestartr-config"
+      "source": "../../firestartr-config"
     },
     {
       "name": "opa",
-      "source": "../opa"
+      "source": "../../opa"
     }
   ]
 }
