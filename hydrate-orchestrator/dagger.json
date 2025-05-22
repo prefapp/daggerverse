@@ -16,15 +16,15 @@
     },
     {
       "name": "hydrate-kubernetes",
-      "source": "../hydrate-kubernetes"
+      "source": "modules/hydrate-kubernetes"
     },
     {
       "name": "hydrate-secrets",
-      "source": "../hydrate-secrets"
+      "source": "modules/hydrate-secrets"
     },
     {
       "name": "hydrate-tfworkspaces",
-      "source": "../hydrate-tfworkspaces"
+      "source": "modules/hydrate-tfworkspaces"
     }
   ]
 }
