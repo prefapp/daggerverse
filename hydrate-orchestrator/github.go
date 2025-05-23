@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/hydrate-orchestrator/internal/dagger"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -148,6 +149,37 @@ func (m *HydrateOrchestrator) upsertRemoteBranch(
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (m *HydrateOrchestrator) getRepoPrs(ctx context.Context) ([]Pr, error) {
+
+	command := strings.Join([]string{
+		"pr",
+		"list",
+		"--json", "headRefName",
+		"--json", "number,url",
+		"--json", "state",
+		"-L", "1000",
+		"-R", m.Repo},
+		" ")
+
+	content, err := dag.Gh().Run(command,
+		dagger.GhRunOpts{
+			Version:      m.GhCliVersion,
+			DisableCache: true,
+			Token:        m.GhToken}).
+		Stdout(ctx)
+
+	if err != nil {
+
+		panic(err)
+	}
+
+	prs := []Pr{}
+
+	json.Unmarshal([]byte(content), &prs)
+
+	return prs, nil
 }
 
 func (m *HydrateOrchestrator) AutomergeFileExists(ctx context.Context, globPattern string) bool {
