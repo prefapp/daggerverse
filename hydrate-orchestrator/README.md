@@ -8,8 +8,8 @@ The **Pull Model Rendering System** streamlines the deployment of Kubernetes obj
 
 #### Core Components
 1. **Hydrate Orchestrator**: Manages the workflow, coordinating three rendering modules:
-   - **HydateKubenetes**: Renders Kubernetes core objects (e.g., ConfigMaps, Services) and workloads (e.g., Deployments) into a wet repository.
-   - **HydateTerraformWorkspaces**: Renders Terraform Workspaces as Kubernetes Custom Resources (CRs) into the wet repository.
+   - **HydrateKubenetes**: Renders Kubernetes core objects (e.g., ConfigMaps, Services) and workloads (e.g., Deployments) into a wet repository.
+   - **HydrateTerraformWorkspaces**: Renders Terraform Workspaces as Kubernetes Custom Resources (CRs) into the wet repository.
    - **HydrateSecrets**: Generates Kubernetes Secrets (e.g., database passwords) using External Secrets, linking them to Terraform Workspaces.
 
 2. **ArgoCD**: Monitors the wet repository in GitHub, deploying Kubernetes objects to clusters and applying Terraform CRs.
