@@ -46,9 +46,7 @@ func (m *HydrateOrchestrator) upsertPR(
 
 ) (string, error) {
 
-	if err := m.upsertRemoteBranch(ctx, contents, newBranchName); err != nil {
-		return "", fmt.Errorf("failed to upsert remote branch: %w", err)
-	}
+	m.upsertRemoteBranch(ctx, contents, newBranchName)
 
 	contentsDirPath := "/contents"
 	_, err := dag.Gh(dagger.GhOpts{
