@@ -16,7 +16,7 @@ The **Pull Model Rendering System** streamlines the deployment of Kubernetes obj
 
 3. **Firestartr Operator**: Processes Terraform CRs, resolves secrets (e.g., a PostgreSQL password), and applies Terraform to provision non-Kubernetes resources.
 
-4. **GitHub**: Stores the wet repository with all rendered resources and manages the hidratying system opening pull requests.
+4. **GitHub**: Stores the wet repository with all rendered resources and manages the hydrating system opening pull requests.
 
 #### Workflow
 1. **Rendering**:
