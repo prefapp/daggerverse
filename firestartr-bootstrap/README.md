@@ -80,16 +80,44 @@ components:
 
 ### 2. Credentials File
 
+#### 2.1 AWS terraform backend provider configuration
+
 ```yaml
 # Credentialsfile.yaml
 ---
 cloudProvider:
   name: aws
   config:
-    bucket: "prefapp-backstage-dev"
+    bucket: "my-bucket"
     region: "eu-west-1"
     access_key: "AKIAXXXXXXXXXXXXXXXX"
     secret_key: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  source: hashicorp/aws
+  type: aws
+  version: ~> 4.0
+githubApp:
+  pem: "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
+  id: "000000"
+  installationId: "00000000" 
+  prefappInstallationId: "00000000"
+  owner: "firestartr-test"
+  botName: "firestartr-local-development-app[bot]"
+```
+
+#### 2.2 Azure terraform backend provider configuration
+
+```yaml
+# Credentialsfile.yaml
+---
+cloudProvider:
+  name: azurerm
+  config:
+    use_azuread_auth: true                                    
+    tenant_id: "00000000-0000-0000-0000-000000000000"  
+    client_id: "00000000-0000-0000-0000-000000000000"  
+    client_secret: "************************************"  
+    storage_account_name: "abcd1234"                              
+    container_name: "tfstate"                               
   source: hashicorp/aws
   type: aws
   version: ~> 4.0
