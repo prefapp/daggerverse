@@ -11,21 +11,29 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Get changed files
+      id: get_changed_files
+      run: |
+        # get the list of changed folders
+        echo "CHANGED_FOLDERS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -oE '^[^/]+/' | sort -u)" >> $GITHUB_ENV
+
     - name: Set up Go
       uses: actions/setup-go@v4
+      if: env.CHANGED_FOLDERS != ''
       with:
         go-version: '1.22'
 
     - name: Install Dagger CLI
+      if: env.CHANGED_FOLDERS != ''
       run: |
         curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=0.18.6 sh
         sudo mv bin/dagger /usr/local/bin/
 
     - name: Run Unit Tests
+      if: env.CHANGED_FOLDERS != ''
       run: |
         for dir in $(find . -name 'go.mod' -not -path './.github/*' -exec dirname {} \;); do
           echo "Running tests in $dir"
@@ -33,5 +41,5 @@ jobs:
           dagger develop # set up module
           dagger functions # ensures dagger can show the module functions
           dagger run go test -v ./
-          cd - 
+          cd -
         done
