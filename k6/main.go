@@ -56,7 +56,7 @@ func (m *K6) Run(
 
 ) *dagger.Container {
 	// We use Glob over Entries because it lists files recursively
-	entries, _ := workingDir.Glob(ctx, "*")
+	entries, _ := workingDir.Glob(ctx, "**/*.js")
 
 	if !slices.Contains(entries, script) {
 		panic("script not found")
