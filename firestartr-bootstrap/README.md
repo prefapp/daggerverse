@@ -6,7 +6,17 @@ The firestartr bootstrap is a dagger workflow that can provision the initial rep
 
 ## How to launch the bootstrap
 
-### 1. Bootstrap File
+### 1. Requirements
+
+You'll need to install on your local machine:
+- [**go**](https://go.dev/doc/install) (v1.22+)
+- [**docker**](https://docs.docker.com/engine/install/) (v24+)
+- [**dagger**](https://docs.dagger.io/install) (v0.18.5+)
+- [**kind**](https://kind.sigs.k8s.io/docs/user/quick-start#installation) (v0.24.0+).
+
+
+
+### 2. Bootstrap File
 
 ```yaml
 # Bootstrapfile.yaml
@@ -78,9 +88,9 @@ components:
         value: "terraform"
 ```
 
-### 2. Credentials File
+### 3. Credentials File
 
-#### 2.1 AWS terraform backend provider configuration
+#### 3.1 AWS terraform backend provider configuration
 
 ```yaml
 # Credentialsfile.yaml
@@ -104,7 +114,7 @@ githubApp:
   botName: "firestartr-local-development-app[bot]"
 ```
 
-#### 2.2 Azure terraform backend provider configuration
+#### 3.2 Azure terraform backend provider configuration
 
 ```yaml
 # Credentialsfile.yaml
@@ -130,5 +140,15 @@ githubApp:
   botName: "firestartr-local-development-app[bot]"
 ```
 
-## Flow chart
+### 4. How to launch the bootstrap
+
+```shell
+dagger --bootstrap-file="./Bootstrapfile.yaml" \
+       --credentials-secret="file:./Credentials.yaml" \
+       call run-bootstrap \
+       --docker-socket=/var/run/docker.sock \
+       --kind-svc=tcp://127.0.0.1:3000
+```
+
+## 5. Flow chart
 ![BootstrapDiagram drawio](https://github.com/user-attachments/assets/1c824119-b147-47bb-b8f8-8cc17db29c6a)
