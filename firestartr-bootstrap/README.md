@@ -9,10 +9,10 @@ The firestartr bootstrap is a dagger workflow that can provision the initial rep
 ### 1. Bootstrap File
 
 ```yaml
+# Bootstrapfile.yaml
 ---
 firestartr:
   version: "v1.39.1"
-org: "prefapp"
 pushFiles:
   claims:
     push: true # When the process finishes, the generated claims will be pushed to the claims repository.
@@ -76,6 +76,30 @@ components:
         value: "claims"
       - name: FIRESTARTER_PROVIDER
         value: "terraform"
+```
+
+### 2. Credentials File
+
+```yaml
+# Credentialsfile.yaml
+---
+cloudProvider:
+  name: aws
+  config:
+    bucket: "prefapp-backstage-dev"
+    region: "eu-west-1"
+    access_key: "AKIAXXXXXXXXXXXXXXXX"
+    secret_key: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  source: hashicorp/aws
+  type: aws
+  version: ~> 4.0
+githubApp:
+  pem: "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
+  id: "000000"
+  installationId: "00000000" 
+  prefappInstallationId: "00000000"
+  owner: "firestartr-test"
+  botName: "firestartr-local-development-app[bot]"
 ```
 
 ## Flow chart
