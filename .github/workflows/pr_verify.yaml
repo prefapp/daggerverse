@@ -5,6 +5,10 @@ on:
     branches:
       - main
   pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   pr_verify:
@@ -13,16 +17,26 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for accurate diff
+        ref: ${{ github.head_ref || github.sha}}
 
     - name: Get changed files
       id: get_changed_files
       run: |
         # get the list of changed folders
-        echo "CHANGED_FOLDERS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -oE '^[^/]+/' | sort -u)" >> $GITHUB_ENV
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.event_name }}" == "push" ]] ; then
+          # For workflow_dispatch or push, include all folders except .github
+          CHANGED_FOLDERS=$(git ls-tree -d --name-only HEAD | grep -v '.github' | sort -u)
+        else
+          CHANGED_FOLDERS=$(git diff --name-only main ${{ github.head_ref }} | grep -oE '^[^/]+/' | sort -u)
+        fi
+
+        echo "CHANGED_FOLDERS=$CHANGED_FOLDERS" >> "$GITHUB_ENV"
 
     - name: Set up Go
       uses: actions/setup-go@v4
-      if: env.CHANGED_FOLDERS != ''
+      if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || env.CHANGED_FOLDERS != '' }}
       with:
         go-version: '1.22'
 
