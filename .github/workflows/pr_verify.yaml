@@ -29,7 +29,7 @@ jobs:
           # For workflow_dispatch or push, include all folders except .github
           CHANGED_FOLDERS=$(git ls-tree -d --name-only HEAD | grep -v '.github' | sort -u)
         else
-          CHANGED_FOLDERS=$(git diff --name-only origin/main "${{ github.head_ref }}"" | grep -oE '^[^/]+/' | grep -v '.github' | sort -u)
+          CHANGED_FOLDERS=$(git diff --name-only origin/main "${{ github.head_ref }}" | grep -oE '^[^/]+/' | grep -v '.github' | sort -u)
         fi
 
         echo "CHANGED_FOLDERS=$CHANGED_FOLDERS" >> "$GITHUB_ENV"
