@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Fetch all history for accurate diff
-        ref: ${{ github.head_ref || github.sha}}
+        ref: ${{ github.head_ref || github.ref_name }}
 
     - name: Get changed files
       id: get_changed_files
@@ -29,14 +29,14 @@ jobs:
           # For workflow_dispatch or push, include all folders except .github
           CHANGED_FOLDERS=$(git ls-tree -d --name-only HEAD | grep -v '.github' | sort -u)
         else
-          CHANGED_FOLDERS=$(git diff --name-only main ${{ github.head_ref }} | grep -oE '^[^/]+/' | sort -u)
+          CHANGED_FOLDERS=$(git diff --name-only origin/main ${{ github.head_ref }} | grep -oE '^[^/]+/' | sort -u)
         fi
 
         echo "CHANGED_FOLDERS=$CHANGED_FOLDERS" >> "$GITHUB_ENV"
 
     - name: Set up Go
       uses: actions/setup-go@v4
-      if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || env.CHANGED_FOLDERS != '' }}
+      if: env.CHANGED_FOLDERS != ''
       with:
         go-version: '1.22'
 
@@ -49,11 +49,23 @@ jobs:
     - name: Run Unit Tests
       if: env.CHANGED_FOLDERS != ''
       run: |
-        for dir in $(find . -name 'go.mod' -not -path './.github/*' -exec dirname {} \;); do
+        for dir in $CHANGED_FOLDERS; do
           echo "Running tests in $dir"
           cd $dir
-          dagger develop # set up module
-          dagger functions # ensures dagger can show the module functions
-          dagger run go test -v ./
+          if [ -f go.mod ]; then
+            dagger develop # set up module
+            dagger functions # ensures dagger can show the module functions
+            dagger run go test -v ./
+          elif [ -f requirements.txt ]; then
+            dagger develop # set up module
+            dagger functions # ensures dagger can show the module functions
+            dagger run python -m unittest discover -s . -v
+          elif [ -f package.json ]; then
+            dagger develop # set up module
+            dagger functions # ensures dagger can show the module functions
+            dagger run npm test
+          else
+            echo "No tests found in $dir"
+          fi
           cd -
         done
