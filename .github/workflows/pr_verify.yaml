@@ -35,7 +35,7 @@ jobs:
         echo "::notice::Changed folders: $CHANGED_MODULES" | tr '\n' ' '
 
         if [ -z "$CHANGED_MODULES" ]; then
-          echo "No dagger changed modules found."
+          echo "No modified dagger modules found."
           echo "SKIP_UNIT_TEST=true" >> "$GITHUB_ENV"
         else
           echo "SKIP_UNIT_TEST=false" >> "$GITHUB_ENV"
@@ -68,8 +68,14 @@ jobs:
           exit 0
         fi
         for dir in "${CHANGED_MODULES[@]}"; do
+          # Check if the directory contains a SKIP_UNIT_TEST file
+          if [ -f "$dir/SKIP_UNIT_TEST" ]; then
+            echo "Skipping tests in $dir due to SKIP_UNIT_TEST file"
+            continue
+          fi
+          
           echo "Running tests in $dir"
-          cd $dir
+          cd "$dir"
           if [ -f go.mod ]; then
             dagger develop # set up module
             dagger functions # ensures dagger can show the module functions
