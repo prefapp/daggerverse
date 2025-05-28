@@ -15,6 +15,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        ref: ${{ github.head_ref }}
 
     - name: Get changed files
       id: get_changed_files
@@ -38,7 +39,7 @@ jobs:
       if: env.CHANGED_FOLDERS != ''
       run: |
         for dir in $(find . -name 'go.mod' -not -path './.github/*' -exec dirname {} \;); do
-          echo "Running tests in $dir"
+          echo "🦖 running tests in $dir"
           cd $dir
           dagger develop # set up module
           dagger functions # ensures dagger can show the module functions
