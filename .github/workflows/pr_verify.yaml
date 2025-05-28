@@ -49,7 +49,16 @@ jobs:
     - name: Run Unit Tests
       if: env.CHANGED_FOLDERS != ''
       run: |
-        for dir in $CHANGED_FOLDERS; do
+        # convert the string of changed folders into an array
+        mapfile -t CHANGED_FOLDERS <<< "$CHANGED_FOLDERS"
+        echo "Changed folders: ${CHANGED_FOLDERS[@]}"
+
+        # iterate over each changed folder and run tests
+        if [ ${#CHANGED_FOLDERS[@]} -eq 0 ]; then
+          echo "No changed folders found."
+          exit 0
+        fi
+        for dir in "${CHANGED_FOLDERS[@]}"; do
           echo "Running tests in $dir"
           cd $dir
           if [ -f go.mod ]; then
