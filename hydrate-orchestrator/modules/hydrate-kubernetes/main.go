@@ -99,7 +99,7 @@ func New(
 	if helmfile == nil {
 		helmfile = dag.CurrentModule().
 			Source().
-			File("./helm-" + renderType + "/helmfile.yaml")
+			File("./helm-" + renderType + "/helmfile.yaml.gotmpl")
 	}
 
 	if valuesGoTmpl == nil {

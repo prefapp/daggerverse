@@ -66,7 +66,7 @@ func (m *HydrateKubernetes) RenderApp(
 	helmfileCtr := m.Container.
 		WithDirectory("/values", m.ValuesDir).
 		WithWorkdir("/values").
-		WithMountedFile("/values/helmfile.yaml", m.Helmfile).
+		WithMountedFile("/values/helmfile.yaml.gotmpl", m.Helmfile).
 		WithMountedFile("/values/values.yaml.gotmpl", m.ValuesGoTmpl).
 		WithEnvVariable("BUST", time.Now().String()).
 		WithFile("/values/kubernetes/repositories.yaml", m.RepositoriesFile).
