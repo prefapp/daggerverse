@@ -9,6 +9,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Check for new images here: https://github.com/helmfile/helmfile/pkgs/container/helmfile
+var HELMFILE_DOCKER_IMAGE = "ghcr.io/helmfile/helmfile:v1.1.0"
+
 type HydrateKubernetes struct {
 	Container               *dagger.Container
 	ValuesDir               *dagger.Directory
@@ -57,40 +60,50 @@ func New(
 
 ) (*HydrateKubernetes, error) {
 
-	hydrateK8sConf, err := valuesDir.
-		File(".github/hydrate_k8s_config.yaml").
-		Contents(ctx)
+	image := HELMFILE_DOCKER_IMAGE
 
+	extraCommands := [][]string{}
+
+	confFileExists, err := hydrateConfigFileExists(ctx, valuesDir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to check for hydrate_k8s_config.yaml: %w", err)
 	}
 
 	config := &Config{}
+	if confFileExists {
+		hydrateK8sConf, err := valuesDir.
+			File(".github/hydrate_k8s_config.yaml").
+			Contents(ctx)
+		if err != nil {
+			return nil, err
+		}
 
-	err = yaml.Unmarshal([]byte(hydrateK8sConf), config)
+		err = yaml.Unmarshal([]byte(hydrateK8sConf), config)
+		if err != nil {
+			return nil, err
+		}
 
-	if err != nil {
+		if config.Image != "" {
+			image = config.Image
+		}
 
-		return nil, err
-
+		if config.Commands != nil {
+			extraCommands = config.Commands
+		}
 	}
 
-	c := dag.
-		Container().
-		From(config.Image)
+	c := dag.Container().From(image)
 
-	c = containerWithCmds(c, config.Commands)
+	c = containerWithCmds(c, extraCommands)
 
 	if helmfile == nil {
-
-		helmfile = dag.CurrentModule().Source().File("./helm-" + renderType + "/helmfile.yaml")
-
+		helmfile = dag.CurrentModule().
+			Source().
+			File("./helm-" + renderType + "/helmfile.yaml")
 	}
 
 	if valuesGoTmpl == nil {
-
 		valuesGoTmpl = dag.CurrentModule().Source().File("./helm-" + renderType + "/values.yaml.gotmpl")
-
 	}
 
 	return &HydrateKubernetes{
