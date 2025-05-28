@@ -10,6 +10,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var FIRESTARTR_DOCKER_IMAGE = "ghcr.io/prefapp/gitops-k8s:v1.39.2_slim"
+
 type HydrateTfworkspaces struct {
 	ValuesDir        *dagger.Directory
 	WetRepoDir       *dagger.Directory
@@ -27,22 +29,28 @@ func New(
 	dotFirestartrDir *dagger.Directory,
 ) *HydrateTfworkspaces {
 
-	configContents, err := valuesDir.File(".github/hydrate_tfworkspaces_config.yaml").Contents(ctx)
-
+	configFileExists, err := hydrateConfigFileExists(ctx, valuesDir)
 	if err != nil {
-
-		panic(err)
-
+		panic(fmt.Errorf("failed to check for hydrate_tfworkspaces_config.yaml: %w", err))
 	}
 
-	config := Config{}
+	config := Config{
+		Image: FIRESTARTR_DOCKER_IMAGE,
+	}
 
-	err = yaml.Unmarshal([]byte(configContents), &config)
+	if configFileExists {
+		configContents, err := valuesDir.
+			File(".github/hydrate_tfworkspaces_config.yaml").
+			Contents(ctx)
 
-	if err != nil {
+		if err != nil {
+			panic(err)
+		}
 
-		panic(err)
-
+		err = yaml.Unmarshal([]byte(configContents), &config)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return &HydrateTfworkspaces{
