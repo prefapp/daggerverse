@@ -11,10 +11,10 @@ func hydrateConfigFileExists(
 	valuesDir *dagger.Directory,
 ) (bool, error) {
 
-	entries, err := valuesDir.Glob(ctx, ".github/hydrate_secrets_config.yaml")
+	entries, err := valuesDir.Glob(ctx, ".github/hydrate_tfworkspaces_config.yaml")
 
 	if err != nil {
-		return false, fmt.Errorf("failed to check for hydrate_secrets_config.yaml: %w", err)
+		return false, fmt.Errorf("failed to check for hydrate_tfworkspaces_config.yaml: %w", err)
 	}
 
 	entriesLength := len(entries)
