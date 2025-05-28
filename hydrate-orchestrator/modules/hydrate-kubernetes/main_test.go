@@ -12,8 +12,8 @@ import (
 var TEST_IMAGE_TAGS = []string{"latest", "v0.170.1", "v1.1.0"}
 
 func TestRenderAppsCanRenderNewImages(t *testing.T) {
-	for _, imageTag := range TEST_IMAGE_TAGS {
 
+	for _, imageTag := range TEST_IMAGE_TAGS {
 		ctx := context.Background()
 		valuesRepoDir := getDir("./fixtures/values-repo-dir")
 		wetRepoDir := getDir("./fixtures/wet-repo-dir")
@@ -33,27 +33,18 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 		config, errContents := valuesRepoDir.
 			File("./fixtures/values-repo-dir/.github/hydrate_k8s_config.yaml").
 			Contents(ctx)
-
 		if errContents != nil {
-
 			t.Errorf("Error reading deps file: %v", errContents)
-
 		}
 
 		configStruct := Config{}
-
 		errUnmsh := yaml.Unmarshal([]byte(config), &configStruct)
-
 		if errUnmsh != nil {
-
 			t.Errorf("Error unmarshalling deps file: %v", errUnmsh)
-
 		}
 
 		m.Container = m.Container.From(configStruct.Image)
-
 		m.Container = containerWithCmds(m.Container, configStruct.Commands)
-
 		renderedDir, _ := m.Render(
 			ctx,
 			"sample-app",
@@ -70,49 +61,32 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 		}
 
 		dpMicroA := Artifact{}
-
 		content, err := newDpRendered.Contents(ctx)
-
 		if err != nil {
-
 			t.Errorf("Error reading new Deployment.sample-app-micro-a.yml: %v", err)
-
 		}
-
 		errUnms := yaml.Unmarshal([]byte(content), &dpMicroA)
-
 		if errUnms != nil {
-
 			t.Errorf("Error unmarshalling new Deployment.sample-app-micro-a.yml: %v", errUnms)
-
 		}
 
 		// check if the jsonPatch works
 		if dpMicroA.Metadata.Labels["test-label"] != "test-value" {
-
 			t.Errorf("Expected new Deployment.sample-app-micro-a.yml to have label test-label=test-value, got %s", dpMicroA.Metadata.Labels)
-
 		}
 
 		// check if the new image is applied
 		if dpMicroA.Metadata.Annotations.Image != "new-image:1.0.0" {
-
 			t.Errorf("Expected new Deployment.sample-app-micro-a.yml to have image new-image:1.0.0, got %s", dpMicroA.Metadata.Annotations)
-
 		}
 
 		regularEntries, errGlob := renderedDir[0].Glob(ctx, "kubernetes/cluster-name/test-tenant/dev/*.yml")
-
 		if errGlob != nil {
-
 			t.Errorf("Error reading rendered files: %v", errGlob)
-
 		}
 
 		if len(regularEntries) != 8 {
-
 			t.Errorf("Expected 8 files to be rendered, got %v", regularEntries)
-
 		}
 
 		mapEntries := map[string]bool{
@@ -127,11 +101,8 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 		}
 
 		for k := range mapEntries {
-
 			if !slices.Contains(regularEntries, k) {
-
 				t.Errorf("Expected %s to be rendered, got %v", k, regularEntries)
-
 			}
 
 		}
@@ -143,15 +114,10 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 
 	for _, imageTag := range TEST_IMAGE_TAGS {
-
 		ctx := context.Background()
-
 		valuesRepoDir := getDir("./fixtures/values-repo-dir")
-
 		wetRepoDir := getDir("./fixtures/wet-repo-dir")
-
 		repositoryFileDir := getDir("./fixtures/repository_file")
-
 		helmDir := getDir("./helm-apps")
 
 		m := &HydrateKubernetes{
@@ -167,27 +133,18 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 		config, errContents := valuesRepoDir.
 			File("./fixtures/values-repo-dir/.github/hydrate_k8s_config.yaml").
 			Contents(ctx)
-
 		if errContents != nil {
-
 			t.Errorf("Error reading deps file: %v", errContents)
-
 		}
 
 		configStruct := Config{}
-
 		errUnmsh := yaml.Unmarshal([]byte(config), &configStruct)
-
 		if errUnmsh != nil {
-
 			t.Errorf("Error unmarshalling deps file: %v", errUnmsh)
-
 		}
 
 		m.Container = m.Container.From(configStruct.Image)
-
 		m.Container = containerWithCmds(m.Container, configStruct.Commands)
-
 		renderedDir, _ := m.Render(
 			ctx,
 			"sample-app",
@@ -197,36 +154,24 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 			"{\"images\":[]}",
 		)
 
-		fmt.Printf("Rendered dir: %v", renderedDir)
-
 		newDpRendered := renderedDir[0].File("kubernetes/cluster-name/test-tenant/dev/Deployment.sample-app-micro-a.yml")
-
 		if newDpRendered == nil {
 			t.Errorf("Expected new Deployment.sample-app-micro-a.yml to be rendered")
 		}
 
 		artifact := Artifact{}
-
 		content, err := newDpRendered.Contents(ctx)
-
 		if err != nil {
-
 			t.Errorf("Error reading new Deployment.sample-app-micro-a.yml: %v", err)
-
 		}
 
 		errUnms := yaml.Unmarshal([]byte(content), &artifact)
-
 		if errUnms != nil {
-
 			t.Errorf("Error unmarshalling new Deployment.sample-app-micro-a.yml: %v", errUnms)
-
 		}
 
 		if artifact.Metadata.Annotations.Image != "image-a:1.16.0" {
-
 			t.Errorf("Expected new Deployment.sample-app-micro-a.yml to have image image-a:1.16.0, got %s", artifact.Metadata.Annotations)
-
 		}
 
 	}
@@ -235,13 +180,9 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 
 	for _, imageTag := range TEST_IMAGE_TAGS {
-
 		ctx := context.Background()
-
 		valuesRepoDir := getDir("./fixtures/values-repo-dir-sys-services")
-
 		repositoryFileDir := getDir("./fixtures/repository_file")
-
 		helmDir := getDir("./helm-sys-services")
 
 		m := &HydrateKubernetes{
@@ -259,33 +200,21 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 			Contents(ctx)
 
 		if errContents != nil {
-
 			t.Errorf("Error reading deps file: %v", errContents)
-
 		}
 
 		configStruct := Config{}
-
 		errUnmsh := yaml.Unmarshal([]byte(config), &configStruct)
-
 		if errUnmsh != nil {
-
 			t.Errorf("Error unmarshalling deps file: %v", errUnmsh)
-
 		}
 
 		m.Container = m.Container.From(configStruct.Image)
-
 		m.Container = containerWithCmds(m.Container, configStruct.Commands)
-
 		dir, _ := m.Render(ctx, "stakater", "cluster-name", "", "", "")
-
 		entries, errGlob := dir[0].Glob(ctx, "kubernetes-sys-services/cluster-name/stakater/*.yml")
-
 		if errGlob != nil {
-
 			t.Errorf("Error reading rendered files: %v", errGlob)
-
 		}
 
 		mapEntries := map[string]bool{
@@ -297,19 +226,13 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 		}
 
 		if len(entries) != 5 {
-
 			t.Errorf("Expected 5 files to be rendered, got %v", entries)
-
 		}
 
 		for k := range mapEntries {
-
 			if !slices.Contains(entries, k) {
-
 				t.Errorf("Expected %s to be rendered, got %v", k, entries)
-
 			}
-
 		}
 
 	}
@@ -318,15 +241,10 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 func TestRenderAppsCanRenderImages(t *testing.T) {
 
 	for _, imageTag := range TEST_IMAGE_TAGS {
-
 		ctx := context.Background()
-
 		valuesRepoDir := getDir("./fixtures/values-repo-dir")
-
 		repositoryFileDir := getDir("./fixtures/repository_file")
-
 		wetRepoDir := getDir("./fixtures/wet-repo-dir")
-
 		helmDir := getDir("./helm-apps")
 
 		m := &HydrateKubernetes{
@@ -344,23 +262,16 @@ func TestRenderAppsCanRenderImages(t *testing.T) {
 			Contents(ctx)
 
 		if errContents != nil {
-
 			t.Errorf("Error reading deps file: %v", errContents)
-
 		}
 
 		configStruct := Config{}
-
 		errUnmsh := yaml.Unmarshal([]byte(config), &configStruct)
-
 		if errUnmsh != nil {
-
 			t.Errorf("Error unmarshalling deps file: %v", errUnmsh)
-
 		}
 
 		m.Container = m.Container.From(configStruct.Image)
-
 		m.Container = containerWithCmds(m.Container, configStruct.Commands)
 
 		renderedDir, _ := m.Render(
@@ -373,33 +284,21 @@ func TestRenderAppsCanRenderImages(t *testing.T) {
 		)
 
 		newDpRendered := renderedDir[0].File("kubernetes/cluster-name/test-tenant/with_images_file/Deployment.sample-app-micro-b.yml")
-
 		dpMicroB := Artifact{}
-
 		content, err := newDpRendered.Contents(ctx)
-
 		if err != nil {
-
 			t.Errorf("Error reading new Deployment.sample-app-micro-b.yml: %v", err)
 		}
 
 		errUnms := yaml.Unmarshal([]byte(content), &dpMicroB)
-
 		if errUnms != nil {
-
 			t.Errorf("Error unmarshalling new Deployment.sample-app-micro-b.yml: %v", errUnms)
-
 		}
 
 		// check if the new image is applied
 		if dpMicroB.Metadata.Annotations.Image != "custom_image:0.1.0" {
-
 			fmt.Printf("Annotations: %v", dpMicroB.Metadata.Annotations)
-
 			t.Errorf("Expected new Deployment.sample-app-micro-b.yml to have image custom_image:0.1.0, got %s", dpMicroB.Metadata.Annotations)
-
 		}
-
 	}
-
 }
