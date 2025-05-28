@@ -32,6 +32,8 @@ jobs:
           CHANGED_FOLDERS="$(git diff --name-only origin/main "${{ github.head_ref }}" | grep -oE '^[^/]+/' | grep -v '.github' | sort -u)"
         fi
 
+        echo "::notice::Changed folders: $CHANGED_FOLDERS"
+
         echo CHANGED_FOLDERS="$CHANGED_FOLDERS" >> "$GITHUB_ENV"
 
     - name: Set up Go
