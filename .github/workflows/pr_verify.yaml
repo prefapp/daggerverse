@@ -5,6 +5,10 @@ on:
     branches:
       - main
   pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   pr_verify:
@@ -14,35 +18,76 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0
-        ref: ${{ github.ref }}
+        fetch-depth: 0  # Fetch all history for accurate diff
+        ref: ${{ github.head_ref || github.ref_name }}
 
     - name: Get changed files
       id: get_changed_files
       run: |
         # get the list of changed folders
-        echo "CHANGED_FOLDERS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -oE '^[^/]+/' | sort -u)" >> $GITHUB_ENV
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.event_name }}" == "push" ]] ; then
+          # For workflow_dispatch or push, include all folders except .github
+          CHANGED_MODULES="$(git ls-tree -d --name-only HEAD | grep -v '.github' | sort -u)"
+        else
+          CHANGED_MODULES="$(git diff --name-only origin/main "${{ github.head_ref }}" | grep -oE '^[^/]+/' | grep -v '.github' | sort -u)"
+        fi
+
+        echo "::notice::Changed folders: $CHANGED_MODULES" | tr '\n' ' '
+
+        if [ -z "$CHANGED_MODULES" ]; then
+          echo "No modified dagger modules found."
+          echo "SKIP_UNIT_TEST=true" >> "$GITHUB_ENV"
+        else
+          echo "SKIP_UNIT_TEST=false" >> "$GITHUB_ENV"
+          echo "$CHANGED_MODULES" > changed_modules.txt
+        fi
 
     - name: Set up Go
       uses: actions/setup-go@v4
-      if: env.CHANGED_FOLDERS != ''
+      if: env.SKIP_UNIT_TEST == 'false'
       with:
         go-version: '1.22'
 
     - name: Install Dagger CLI
-      if: env.CHANGED_FOLDERS != ''
+      if: env.SKIP_UNIT_TEST == 'false'
       run: |
         curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=0.18.6 sh
         sudo mv bin/dagger /usr/local/bin/
 
     - name: Run Unit Tests
-      if: env.CHANGED_FOLDERS != ''
+      if: env.SKIP_UNIT_TEST == 'false'
       run: |
-        for dir in $(find . -name 'go.mod' -not -path './.github/*' -exec dirname {} \;); do
-          echo "🦖 running tests in $dir"
-          cd $dir
+        # convert the string of changed folders into an array
+        mapfile -t CHANGED_MODULES < "changed_modules.txt"
+
+        echo "Changed modules: ${CHANGED_MODULES[@]}"
+
+        # iterate over each changed folder and run tests
+        if [ ${#CHANGED_MODULES[@]} -eq 0 ]; then
+          echo "No changed folders found."
+          exit 0
+        fi
+        for dir in "${CHANGED_MODULES[@]}"; do
+          # Check if the directory contains a SKIP_UNIT_TEST file
+          if [ -f "$dir/SKIP_UNIT_TEST" ]; then
+            echo "Skipping tests in $dir due to SKIP_UNIT_TEST file"
+            continue
+          fi
+
+          echo "Running tests in $dir"
+          cd "$dir"
           dagger develop # set up module
           dagger functions # ensures dagger can show the module functions
-          dagger run go test -v ./
+
+          if [ -f go.mod ]; then
+            dagger run go test -v ./
+          elif [ -f requirements.txt ]; then
+            dagger run python -m unittest discover -s . -v
+          elif [ -f package.json ]; then
+            dagger run npm test
+          else
+            echo "Not supported technology found in $dir. Supported technologies are: Go, Python, Node.js"
+            exit 1
+          fi
           cd -
         done
