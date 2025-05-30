@@ -1,5 +1,19 @@
 # Changelog
 
+## [6.1.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.0.0...hydrate-orchestrator-v6.1.0) (2025-05-30)
+
+
+### Features
+
+* add doc to hydrate orchestrator ([#200](https://github.com/prefapp/daggerverse/issues/200)) ([63b2490](https://github.com/prefapp/daggerverse/commit/63b2490dc5e4e9021ab0eeb5dcd5dc218034e19b))
+* default docker image and helmfile docker image v1 support ([#212](https://github.com/prefapp/daggerverse/issues/212)) ([a92509e](https://github.com/prefapp/daggerverse/commit/a92509e5d2bfb6c36012a84288397acb7c3fc627))
+* move dependant orchestrator modules ([#197](https://github.com/prefapp/daggerverse/issues/197)) ([680873d](https://github.com/prefapp/daggerverse/commit/680873d8c902fc075efe06e36da43b42e78340b0))
+
+
+### Bug Fixes
+
+* revert original pr creation method ([#202](https://github.com/prefapp/daggerverse/issues/202)) ([6bf81e0](https://github.com/prefapp/daggerverse/commit/6bf81e0ba177181dd335ad84855984be2210ceb0))
+
 ## [6.0.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v5.0.2...hydrate-orchestrator-v6.0.0) (2025-04-29)
 
 
