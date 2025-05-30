@@ -39,6 +39,8 @@ func New(
 	}
 
 	if configFileExists {
+
+		loadedConfigFromFile := Config{}
 		configContents, err := valuesDir.
 			File(".github/hydrate_tfworkspaces_config.yaml").
 			Contents(ctx)
@@ -47,9 +49,13 @@ func New(
 			panic(err)
 		}
 
-		err = yaml.Unmarshal([]byte(configContents), &config)
+		err = yaml.Unmarshal([]byte(configContents), &loadedConfigFromFile)
 		if err != nil {
 			panic(err)
+		}
+
+		if loadedConfigFromFile.Image != "" {
+			config.Image = loadedConfigFromFile.Image
 		}
 	}
 
