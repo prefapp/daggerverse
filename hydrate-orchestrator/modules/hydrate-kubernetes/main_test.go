@@ -14,6 +14,9 @@ var TEST_IMAGE_TAGS = []string{"latest", "v0.170.1", "v1.1.0"}
 func TestRenderAppsCanRenderNewImages(t *testing.T) {
 
 	for _, imageTag := range TEST_IMAGE_TAGS {
+
+		renderContainerImage := fmt.Sprintf("ghcr.io/helmfile/helmfile:%s", imageTag)
+
 		ctx := context.Background()
 		valuesRepoDir := getDir("./fixtures/values-repo-dir")
 		wetRepoDir := getDir("./fixtures/wet-repo-dir")
@@ -23,7 +26,7 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 		m := &HydrateKubernetes{
 			ValuesDir:        valuesRepoDir.Directory("fixtures/values-repo-dir"),
 			WetRepoDir:       wetRepoDir.Directory("fixtures/wet-repo-dir"),
-			Container:        dag.Container().From(fmt.Sprintf("ghcr.io/helmfile/helmfile:%s", imageTag)),
+			Container:        dag.Container().From(renderContainerImage),
 			Helmfile:         helmDir.File("helm-apps/helmfile.yaml.gotmpl"),
 			ValuesGoTmpl:     helmDir.File("helm-apps/values.yaml.gotmpl"),
 			RenderType:       "apps",
@@ -43,7 +46,7 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 			t.Errorf("Error unmarshalling deps file: %v", errUnmsh)
 		}
 
-		m.Container = m.Container.From(configStruct.Image)
+		m.Container = m.Container.From(renderContainerImage)
 		m.Container = containerWithCmds(m.Container, configStruct.Commands)
 		renderedDir, _ := m.Render(
 			ctx,
@@ -114,6 +117,8 @@ func TestRenderAppsCanRenderNewImages(t *testing.T) {
 func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 
 	for _, imageTag := range TEST_IMAGE_TAGS {
+
+		renderContainerImage := fmt.Sprintf("ghcr.io/helmfile/helmfile:%s", imageTag)
 		ctx := context.Background()
 		valuesRepoDir := getDir("./fixtures/values-repo-dir")
 		wetRepoDir := getDir("./fixtures/wet-repo-dir")
@@ -123,7 +128,7 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 		m := &HydrateKubernetes{
 			ValuesDir:        valuesRepoDir.Directory("fixtures/values-repo-dir"),
 			WetRepoDir:       wetRepoDir.Directory("fixtures/wet-repo-dir"),
-			Container:        dag.Container().From(fmt.Sprintf("ghcr.io/helmfile/helmfile:%s", imageTag)),
+			Container:        dag.Container().From(renderContainerImage),
 			Helmfile:         helmDir.File("helm-apps/helmfile.yaml.gotmpl"),
 			ValuesGoTmpl:     helmDir.File("helm-apps/values.yaml.gotmpl"),
 			RepositoriesFile: repositoryFileDir.File("fixtures/repository_file/repositories.yaml"),
@@ -143,7 +148,7 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 			t.Errorf("Error unmarshalling deps file: %v", errUnmsh)
 		}
 
-		m.Container = m.Container.From(configStruct.Image)
+		m.Container = m.Container.From(renderContainerImage)
 		m.Container = containerWithCmds(m.Container, configStruct.Commands)
 		renderedDir, _ := m.Render(
 			ctx,
@@ -180,6 +185,7 @@ func TestRenderAppsCanRenderNewImagesWithoutExecs(t *testing.T) {
 func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 
 	for _, imageTag := range TEST_IMAGE_TAGS {
+		renderContainerImage := fmt.Sprintf("ghcr.io/helmfile/helmfile:%s", imageTag)
 		ctx := context.Background()
 		valuesRepoDir := getDir("./fixtures/values-repo-dir-sys-services")
 		repositoryFileDir := getDir("./fixtures/repository_file")
@@ -188,7 +194,7 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 		m := &HydrateKubernetes{
 			ValuesDir:        valuesRepoDir.Directory("fixtures/values-repo-dir-sys-services"),
 			WetRepoDir:       dag.Directory(),
-			Container:        dag.Container().From(fmt.Sprintf("ghcr.io/helmfile/helmfile:%s", imageTag)),
+			Container:        dag.Container().From(renderContainerImage),
 			Helmfile:         helmDir.File("helm-sys-services/helmfile.yaml.gotmpl"),
 			ValuesGoTmpl:     helmDir.File("helm-sys-services/values.yaml.gotmpl"),
 			RepositoriesFile: repositoryFileDir.File("fixtures/repository_file/repositories.yaml"),
@@ -209,7 +215,7 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 			t.Errorf("Error unmarshalling deps file: %v", errUnmsh)
 		}
 
-		m.Container = m.Container.From(configStruct.Image)
+		m.Container = m.Container.From(renderContainerImage)
 		m.Container = containerWithCmds(m.Container, configStruct.Commands)
 		dir, _ := m.Render(ctx, "stakater", "cluster-name", "", "", "")
 		entries, errGlob := dir[0].Glob(ctx, "kubernetes-sys-services/cluster-name/stakater/*.yml")
@@ -241,6 +247,7 @@ func TestRenderSysAppsCanRenderWithExtraArtifacts(t *testing.T) {
 func TestRenderAppsCanRenderImages(t *testing.T) {
 
 	for _, imageTag := range TEST_IMAGE_TAGS {
+		renderContainerImage := fmt.Sprintf("ghcr.io/helmfile/helmfile:%s", imageTag)
 		ctx := context.Background()
 		valuesRepoDir := getDir("./fixtures/values-repo-dir")
 		repositoryFileDir := getDir("./fixtures/repository_file")
@@ -250,7 +257,7 @@ func TestRenderAppsCanRenderImages(t *testing.T) {
 		m := &HydrateKubernetes{
 			ValuesDir:        valuesRepoDir.Directory("fixtures/values-repo-dir"),
 			WetRepoDir:       wetRepoDir.Directory("fixtures/wet-repo-dir"),
-			Container:        dag.Container().From(fmt.Sprintf("ghcr.io/helmfile/helmfile:%s", imageTag)),
+			Container:        dag.Container().From(renderContainerImage),
 			Helmfile:         helmDir.File("helm-apps/helmfile.yaml.gotmpl"),
 			ValuesGoTmpl:     helmDir.File("helm-apps/values.yaml.gotmpl"),
 			RepositoriesFile: repositoryFileDir.File("fixtures/repository_file/repositories.yaml"),
@@ -271,7 +278,7 @@ func TestRenderAppsCanRenderImages(t *testing.T) {
 			t.Errorf("Error unmarshalling deps file: %v", errUnmsh)
 		}
 
-		m.Container = m.Container.From(configStruct.Image)
+		m.Container = m.Container.From(renderContainerImage)
 		m.Container = containerWithCmds(m.Container, configStruct.Commands)
 
 		renderedDir, _ := m.Render(
