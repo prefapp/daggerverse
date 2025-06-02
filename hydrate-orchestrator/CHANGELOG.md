@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.1.0...hydrate-orchestrator-v6.1.1) (2025-06-02)
+
+
+### Bug Fixes
+
+* path separator ([#217](https://github.com/prefapp/daggerverse/issues/217)) ([16fbe95](https://github.com/prefapp/daggerverse/commit/16fbe957b1c170a80a101b12b90ca7b59e6a934e))
+
 ## [6.1.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.0.0...hydrate-orchestrator-v6.1.0) (2025-05-30)
 
 
