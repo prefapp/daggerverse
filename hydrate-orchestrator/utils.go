@@ -301,9 +301,9 @@ func secretsDepFromStr(deployment string) *SecretsDeployment {
 func splitPath(path string) []string {
 
 	// remove "/" a the end
-	if strings.HasSuffix(path, string(os.PathSeparator)) {
-		path = strings.TrimSuffix(path, string(os.PathSeparator))
-	}
+	// if strings.HasSuffix(path, string(os.PathSeparator)) {
+	// 	path = strings.TrimSuffix(path, string(os.PathSeparator))
+	// }
 
 	return strings.Split(path, string(os.PathSeparator))
 }
