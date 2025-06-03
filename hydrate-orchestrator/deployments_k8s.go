@@ -175,10 +175,13 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 			Deployment: Deployment{
 				DeploymentPath: deploymentPath,
 			},
-			Cluster:      image.Platform,
-			Tenant:       image.Tenant,
-			Environment:  image.Env,
-			ImagesMatrix: string(jsonUniqueImage),
+			Cluster:          image.Platform,
+			Tenant:           image.Tenant,
+			Environment:      image.Env,
+			ImagesMatrix:     string(jsonUniqueImage),
+			ServiceNames:     image.ServiceNameList,
+			RepositoryCaller: image.RepositoryCaller,
+			Image:            image.Image,
 		}
 
 		result.addDeployment(kdep)

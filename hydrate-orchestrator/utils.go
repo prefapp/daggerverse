@@ -67,10 +67,13 @@ type Deployment struct {
 
 type KubernetesAppDeployment struct {
 	Deployment
-	Cluster      string
-	Tenant       string
-	Environment  string
-	ImagesMatrix string
+	Cluster          string
+	Tenant           string
+	Environment      string
+	ImagesMatrix     string
+	ServiceNames     []string
+	RepositoryCaller string
+	Image            string
 }
 
 /*
@@ -149,15 +152,38 @@ func (kd *KubernetesAppDeployment) Equals(other KubernetesAppDeployment) bool {
 }
 
 func (kd *KubernetesAppDeployment) String(summary bool) string {
+	serviceNames := kd.ServiceNames
+	if len(serviceNames) == 0 {
+		serviceNames = []string{"unknown-service"}
+	}
+	repo := kd.RepositoryCaller
+	if repo == "" {
+		repo = "unknown-repo"
+	}
+	image := kd.Image
+	if image == "" {
+		image = "unknown-image"
+	}
 
 	if summary {
+		serviceName := serviceNames[0]
+		if len(serviceNames) > 1 {
+			serviceName = strings.Join(serviceNames, ",")
+		}
 
 		return fmt.Sprintf(
-			"Deployment in cluster: `%s`, tenant: `%s`, env: `%s`",
-			kd.Cluster, kd.Tenant, kd.Environment,
+			"Deployment of `%s` in cluster: `%s`, tenant: `%s`, env: `%s`",
+			serviceName, kd.Cluster, kd.Tenant, kd.Environment,
 		)
 	} else {
-		return "Deployment coordinates:" +
+		servicesList := ""
+		for _, svc := range serviceNames {
+			servicesList += fmt.Sprintf("  - %s\n", svc)
+		}
+		return fmt.Sprintf("\n\t* Repository: `%s`", repo) +
+			fmt.Sprintf("\n\t* Services updated: `%s`", servicesList) +
+			fmt.Sprintf("\n\t* New image: `%s`", image) +
+			"\n\tDeployment coordinates:" +
 			fmt.Sprintf("\n\t* Cluster: `%s`", kd.Cluster) +
 			fmt.Sprintf("\n\t* Tenant: `%s`", kd.Tenant) +
 			fmt.Sprintf("\n\t* Environment: `%s`", kd.Environment)
