@@ -50,7 +50,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 		prBody := fmt.Sprintf(`
 # New deployment from new image in repository [*%s*](%s)
 %s
-`, repositoryCaller, repoURL, kdep.String(false))
+`, repositoryCaller, repoURL, kdep.String(false, repoURL))
 
 		globPattern := fmt.
 			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
@@ -60,7 +60,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
-			kdep.String(true),
+			kdep.String(true, repoURL),
 			prBody,
 			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 			reviewers,
