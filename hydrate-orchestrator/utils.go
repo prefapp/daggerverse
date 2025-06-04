@@ -190,7 +190,7 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 		return fmt.Sprintf("\n  * Repository: `%s`", repoLink) +
 			fmt.Sprintf("\n  * Services updated: `%s`", servicesList) +
 			fmt.Sprintf("\n  * New image: `%s`", image) +
-			"\n  Deployment coordinates:" +
+			"\nDeployment coordinates:" +
 			fmt.Sprintf("\n  * Cluster: `%s`", kd.Cluster) +
 			fmt.Sprintf("\n  * Tenant: `%s`", kd.Tenant) +
 			fmt.Sprintf("\n  * Environment: `%s`", kd.Environment)
