@@ -151,7 +151,7 @@ func (kd *KubernetesAppDeployment) Equals(other KubernetesAppDeployment) bool {
 		kd.Environment == other.Environment
 }
 
-func (kd *KubernetesAppDeployment) String(summary bool) string {
+func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) string {
 	serviceNames := kd.ServiceNames
 	if len(serviceNames) == 0 {
 		serviceNames = []string{"unknown-service"}
@@ -165,7 +165,14 @@ func (kd *KubernetesAppDeployment) String(summary bool) string {
 		image = "unknown-image"
 	}
 
+	// Build the repository link if a URL is provided
+	repoLink := repo
+	if len(repoURL) > 0 && repoURL[0] != "" {
+		repoLink = fmt.Sprintf("[%s](%s)", repo, repoURL[0])
+	}
+
 	if summary {
+		// Use the first service_name or concatenate if multiple
 		serviceName := serviceNames[0]
 		if len(serviceNames) > 1 {
 			serviceName = strings.Join(serviceNames, ",")
@@ -180,13 +187,13 @@ func (kd *KubernetesAppDeployment) String(summary bool) string {
 		for _, svc := range serviceNames {
 			servicesList += fmt.Sprintf("  - %s\n", svc)
 		}
-		return fmt.Sprintf("\n\t* Repository: `%s`", repo) +
-			fmt.Sprintf("\n\t* Services updated: `%s`", servicesList) +
-			fmt.Sprintf("\n\t* New image: `%s`", image) +
-			"\n\tDeployment coordinates:" +
-			fmt.Sprintf("\n\t* Cluster: `%s`", kd.Cluster) +
-			fmt.Sprintf("\n\t* Tenant: `%s`", kd.Tenant) +
-			fmt.Sprintf("\n\t* Environment: `%s`", kd.Environment)
+		return fmt.Sprintf("\n  * Repository: `%s`", repoLink) +
+			fmt.Sprintf("\n  * Services updated: `%s`", servicesList) +
+			fmt.Sprintf("\n  * New image: `%s`", image) +
+			"\n  Deployment coordinates:" +
+			fmt.Sprintf("\n  * Cluster: `%s`", kd.Cluster) +
+			fmt.Sprintf("\n  * Tenant: `%s`", kd.Tenant) +
+			fmt.Sprintf("\n  * Environment: `%s`", kd.Environment)
 	}
 }
 
