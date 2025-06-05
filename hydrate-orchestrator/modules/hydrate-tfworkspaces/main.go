@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var FIRESTARTR_DOCKER_IMAGE = "ghcr.io/prefapp/gitops-k8s:v1.39.2_slim"
+var FIRESTARTR_DOCKER_IMAGE = "ghcr.io/prefapp/gitops-k8s:v1.41.1_slim"
 
 type HydrateTfworkspaces struct {
 	ValuesDir        *dagger.Directory
