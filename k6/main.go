@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
-	"strconv"
 	"strings"
 )
 
@@ -81,8 +80,6 @@ func (m *K6) Run(
 	command := []string{
 		"k6",
 		"run",
-		"--vus", strconv.Itoa(vus),
-		"--duration", duration,
 		"--out", fmt.Sprintf("web-dashboard=export=%s", filepath.Join(outputDirMountPath, "report.html")),
 		"--summary-export", filepath.Join(outputDirMountPath, "summary.json"),
 		"--console-output", filepath.Join(outputDirMountPath, "errors.txt"),
