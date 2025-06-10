@@ -4,7 +4,6 @@ import (
 	"context"
 	"dagger/kind/internal/dagger"
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -36,8 +35,18 @@ func New(
 	kindSvc *dagger.Service,
 
 	// The Kind version you want to use.
+	// check https://github.com/kubernetes-sigs/kind/releases
+	// E.g.: "v0.25.0"
 	// +optional
-	kind KindVersion,
+	kind string,
+
+	// The Kubernetes version you want to use.
+	// This must be specified only when the kind version is also specified.
+	// check https://github.com/kubernetes-sigs/kind/releases
+	// NOTE: This takes preference over the `version` field.
+	// E.g.: "kindest/node:v1.26.15@sha256:c79602a44b4056d7e48dc20f7504350f1e87530fe953428b792def00bc1076dd"
+	// +optional
+	kindSha string,
 
 	// The Kubernetes version you want to use inside the cluster.
 	// Must be one of the available versions of the current Kind version used (which default is v0.25.0).
@@ -74,21 +83,21 @@ func New(
 		panic(fmt.Sprintf("Invalid port number: %d, it should be between 1024 and 65535", port))
 	}
 
+	if kind != "" && kindSha == "" {
+		panic(fmt.Sprintf("You must specify a kind sha available in the kind version you provided"))
+	} else if kind == "" && kindSha != "" {
+		panic(fmt.Sprintf("You must specify a kind version that allows using the sha you provided"))
+	}
+
 	if kind == "" {
-		kind = v0_25
+		kind = "v0.29.0"
 	}
-
-	if version != "" && !slices.Contains(KindToK8s[kind], version) {
-		panic(fmt.Sprintf("Invalid k8s version '%s' for kind version '%s'. Possible values are: %v", version, kind, KindToK8s[kind]))
-	}
-
-	kindVersionStr := fmt.Sprintf("%s.0", strings.Replace(string(kind), "_", ".", -1))
 
 	container := dag.Container().
 		From("alpine").
 		WithUnixSocket("/var/run/docker.sock", dockerSocket).
 		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl"}).
-		WithExec([]string{"curl", "-Lo", "./kind", fmt.Sprintf("https://kind.sigs.k8s.io/dl/%s/kind-linux-amd64", kindVersionStr)}).
+		WithExec([]string{"curl", "-Lo", "./kind", fmt.Sprintf("https://kind.sigs.k8s.io/dl/%s/kind-linux-amd64", kind)}).
 		WithExec([]string{"chmod", "+x", "./kind"}).
 		WithExec([]string{"mv", "./kind", "/usr/local/bin/kind"})
 
@@ -118,7 +127,9 @@ func New(
 		"--wait", "1m",
 	}
 
-	if version != "" {
+	if kindSha != "" {
+		createCluster = append(createCluster, "--image", kindSha)
+	} else if version != "" {
 		createCluster = append(createCluster, "--image", K8sVersions[version])
 	}
 
