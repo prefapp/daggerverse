@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/kind/internal/dagger"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -34,10 +35,16 @@ func New(
 	// +required
 	kindSvc *dagger.Service,
 
-	// The Kubernetes version you want to use inside the cluster. Must be one of the available versions of the current
-	// Kind version used, that is v0.25.0. It has to be indicated like "vx.y", being 'x' the major and 'y' the minor versions.
+	// The Kind version you want to use.
 	// +optional
-	version Version,
+	kindVersion KindVersion,
+
+	// The Kubernetes version you want to use inside the cluster.
+	// Must be one of the available versions of the current Kind version used (which default is v0.25.0).
+	// It has to be indicated like "vx.y", being 'x' the major and 'y' the minor versions.
+	// check https://github.com/kubernetes-sigs/kind/releases
+	// +optional
+	kubeVersion K8sVersion,
 
 	// The name of the kind cluster
 	// +default="dagger-kubernetes-cluster"
@@ -67,11 +74,21 @@ func New(
 		panic(fmt.Sprintf("Invalid port number: %d, it should be between 1024 and 65535", port))
 	}
 
+	if kindVersion == "" {
+		kindVersion = v0_25
+	}
+
+	if kubeVersion != "" && !slices.Contains(KindToK8s[kindVersion], kubeVersion) {
+		panic(fmt.Sprintf("Invalid k8s version '%s' for kind version '%s'. Possible values are: %v", kubeVersion, kindVersion, KindToK8s[kindVersion]))
+	}
+
+	kindVersionStr := fmt.Sprintf("%s.0", strings.Replace(string(kindVersion), "_", ".", -1))
+
 	container := dag.Container().
 		From("alpine").
 		WithUnixSocket("/var/run/docker.sock", dockerSocket).
 		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl"}).
-		WithExec([]string{"curl", "-Lo", "./kind", "https://kind.sigs.k8s.io/dl/v0.25.0/kind-linux-amd64"}).
+		WithExec([]string{"curl", "-Lo", "./kind", fmt.Sprintf("https://kind.sigs.k8s.io/dl/%s/kind-linux-amd64", kindVersionStr)}).
 		WithExec([]string{"chmod", "+x", "./kind"}).
 		WithExec([]string{"mv", "./kind", "/usr/local/bin/kind"})
 
@@ -101,8 +118,8 @@ func New(
 		"--wait", "1m",
 	}
 
-	if version != "" {
-		createCluster = append(createCluster, "--image", Versions[version])
+	if kubeVersion != "" {
+		createCluster = append(createCluster, "--image", K8sVersions[kubeVersion])
 	}
 
 	container, err = container.
