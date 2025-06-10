@@ -17,6 +17,7 @@ type Kind struct {
 	KindPort     int
 	Container    *dagger.Container
 	ClusterName  string
+	ConfigFile   *dagger.File
 }
 
 func New(
@@ -38,44 +39,60 @@ func New(
 	// +optional
 	version Version,
 
-	// +optional
+	// The name of the kind cluster
 	// +default="dagger-kubernetes-cluster"
-	// +description=The name of the kind cluster
+	// +optional
 	clusterName string,
 
+	// A custom configuration file for kind.
+	// If set, it is mandatory to indicate `networking.apiServerPort`, with the port of `kindSvc` as value
+	// E.g. with the `kindSvc` example:
+	// networking:
+	//   apiServerPort: 3000
+	// +optional
+	configFile *dagger.File,
+
 ) *Kind {
-
 	ep, err := kindSvc.Endpoint(ctx)
-
 	if err != nil {
-
 		panic(err)
-
 	}
 
 	port, err := strconv.Atoi(strings.Split(ep, ":")[1])
-
 	if err != nil {
-
 		panic(err)
-
 	}
 
 	if port < 1024 || port > 65535 {
-
 		panic(fmt.Sprintf("Invalid port number: %d, it should be between 1024 and 65535", port))
-
 	}
 
-	kindConfig := &KindConfig{
-		Kind:       "Cluster",
-		ApiVersion: "kind.x-k8s.io/v1alpha4",
-		Networking: Networking{
-			ApiServerPort: port,
-		},
-	}
+	container := dag.Container().
+		From("alpine").
+		WithUnixSocket("/var/run/docker.sock", dockerSocket).
+		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl"}).
+		WithExec([]string{"curl", "-Lo", "./kind", "https://kind.sigs.k8s.io/dl/v0.25.0/kind-linux-amd64"}).
+		WithExec([]string{"chmod", "+x", "./kind"}).
+		WithExec([]string{"mv", "./kind", "/usr/local/bin/kind"})
 
-	yamlFileContent, err := yaml.Marshal(kindConfig)
+	if configFile != nil {
+		container = container.WithFile("kind.yaml", configFile)
+	} else {
+		kindConfig := &KindConfig{
+			Kind:       "Cluster",
+			ApiVersion: "kind.x-k8s.io/v1alpha4",
+			Networking: Networking{
+				ApiServerPort: port,
+			},
+		}
+
+		yamlFileContent, err := yaml.Marshal(kindConfig)
+		if err != nil {
+			panic(err)
+		}
+
+		container = container.WithNewFile("kind.yaml", string(yamlFileContent))
+	}
 
 	createCluster := []string{
 		"kind", "create", "cluster",
@@ -88,14 +105,7 @@ func New(
 		createCluster = append(createCluster, "--image", Versions[version])
 	}
 
-	container, err := dag.Container().
-		From("alpine").
-		WithUnixSocket("/var/run/docker.sock", dockerSocket).
-		WithNewFile("kind.yaml", string(yamlFileContent)).
-		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl"}).
-		WithExec([]string{"curl", "-Lo", "./kind", "https://kind.sigs.k8s.io/dl/v0.25.0/kind-linux-amd64"}).
-		WithExec([]string{"chmod", "+x", "./kind"}).
-		WithExec([]string{"mv", "./kind", "/usr/local/bin/kind"}).
+	container, err = container.
 		WithEnvVariable("BUST", time.Now().String()).
 		WithExec([]string{
 			"kind", "delete", "cluster",
@@ -109,9 +119,7 @@ func New(
 		).Sync(ctx)
 
 	if err != nil {
-
 		panic(err)
-
 	}
 
 	return &Kind{
