@@ -37,14 +37,14 @@ func New(
 
 	// The Kind version you want to use.
 	// +optional
-	kindVersion KindVersion,
+	kind KindVersion,
 
 	// The Kubernetes version you want to use inside the cluster.
 	// Must be one of the available versions of the current Kind version used (which default is v0.25.0).
 	// It has to be indicated like "vx.y", being 'x' the major and 'y' the minor versions.
 	// check https://github.com/kubernetes-sigs/kind/releases
 	// +optional
-	kubeVersion K8sVersion,
+	version K8sVersion,
 
 	// The name of the kind cluster
 	// +default="dagger-kubernetes-cluster"
@@ -74,15 +74,15 @@ func New(
 		panic(fmt.Sprintf("Invalid port number: %d, it should be between 1024 and 65535", port))
 	}
 
-	if kindVersion == "" {
-		kindVersion = v0_25
+	if kind == "" {
+		kind = v0_25
 	}
 
-	if kubeVersion != "" && !slices.Contains(KindToK8s[kindVersion], kubeVersion) {
-		panic(fmt.Sprintf("Invalid k8s version '%s' for kind version '%s'. Possible values are: %v", kubeVersion, kindVersion, KindToK8s[kindVersion]))
+	if version != "" && !slices.Contains(KindToK8s[kind], version) {
+		panic(fmt.Sprintf("Invalid k8s version '%s' for kind version '%s'. Possible values are: %v", version, kind, KindToK8s[kind]))
 	}
 
-	kindVersionStr := fmt.Sprintf("%s.0", strings.Replace(string(kindVersion), "_", ".", -1))
+	kindVersionStr := fmt.Sprintf("%s.0", strings.Replace(string(kind), "_", ".", -1))
 
 	container := dag.Container().
 		From("alpine").
@@ -118,8 +118,8 @@ func New(
 		"--wait", "1m",
 	}
 
-	if kubeVersion != "" {
-		createCluster = append(createCluster, "--image", K8sVersions[kubeVersion])
+	if version != "" {
+		createCluster = append(createCluster, "--image", K8sVersions[version])
 	}
 
 	container, err = container.
