@@ -48,25 +48,40 @@ jobs:
       with:
         go-version: '1.22'
 
-    - name: Install Dagger CLI
-      if: env.SKIP_UNIT_TEST == 'false'
-      run: |
-        curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=0.18.9 sh
-        sudo mv bin/dagger /usr/local/bin/
-
-    - name: Run Unit Tests
-      if: env.SKIP_UNIT_TEST == 'false'
+    - name: Get Dagger version to install
       run: |
         # convert the string of changed folders into an array
         mapfile -t CHANGED_MODULES < "changed_modules.txt"
 
         echo "Changed modules: ${CHANGED_MODULES[@]}"
 
-        # iterate over each changed folder and run tests
         if [ ${#CHANGED_MODULES[@]} -eq 0 ]; then
           echo "No changed folders found."
           exit 0
         fi
+
+        VERSIONS=""
+        for dir in "${CHANGED_MODULES[@]}"; do
+          V=$(cat ${dir}/dagger.json | jq -r ."engineVersion")
+          VERSIONS+="${V}\n"
+        done
+
+        DAGGER_VERSION=$(echo -e "${VERSIONS}" | sort -V | tail -n 1)
+
+        echo "DAGGER_VERSION=$DAGGER_VERSION" >> $GITHUB_ENV
+
+    - name: Install Dagger CLI
+      if: env.SKIP_UNIT_TEST == 'false'
+      run: |
+        curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION={{ env.DAGGER_VERSION }}
+        sudo mv bin/dagger /usr/local/bin/
+
+    - name: Run Unit Tests
+      if: env.SKIP_UNIT_TEST == 'false'
+      run: |
+        mapfile -t CHANGED_MODULES < "changed_modules.txt"
+
+        # iterate over each changed folder and run tests
         for dir in "${CHANGED_MODULES[@]}"; do
           # Check if the directory contains a SKIP_UNIT_TEST file
           if [ -f "$dir/SKIP_UNIT_TEST" ]; then
