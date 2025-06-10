@@ -73,7 +73,7 @@ jobs:
     - name: Install Dagger CLI
       if: env.SKIP_UNIT_TEST == 'false'
       run: |
-        curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION={{ env.DAGGER_VERSION }}
+        curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=${{ env.DAGGER_VERSION }} sh
         sudo mv bin/dagger /usr/local/bin/
 
     - name: Run Unit Tests
