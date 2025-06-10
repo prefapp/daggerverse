@@ -22,63 +22,96 @@ func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 	prList []Pr,
 
-) (PrsResult, error) {
+	claimsRepo string,
 
+) (PrsResult, error) {
 	createdOrUpdatedPrs := []Pr{}
 
 	orphanPrs := make([]Pr, len(prList))
 
 	copy(orphanPrs, prList)
 
-	for _, file := range diff.AddedFiles {
+	claimsRepoPRLink := fmt.Sprintf(
+		"https://www.github.com/%s/pull/%s", claimsRepo, claimPrNumber,
+	)
 
-		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, "create", claimPrNumber, prList)
+	result, err := m.upsertPrsFromFileList(
+		ctx, diff.AddedFiles, wetRepositoryDir, wetRepoName, "create",
+		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
+	)
 
-		if err != nil {
-
-			panic(err)
-
-		}
-
-		createdOrUpdatedPrs = append(createdOrUpdatedPrs, pr)
-
-		orphanPrs = removeOrphan(orphanPrs, pr)
-
+	if err != nil {
+		panic(err)
 	}
 
-	for _, file := range diff.ModifiedFiles {
+	createdOrUpdatedPrs = result.Prs
+	orphanPrs = result.Orphans
 
-		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, "update", claimPrNumber, prList)
+	result, err = m.upsertPrsFromFileList(
+		ctx, diff.ModifiedFiles, wetRepositoryDir, wetRepoName, "update",
+		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
+	)
 
-		if err != nil {
-
-			panic(err)
-
-		}
-
-		createdOrUpdatedPrs = append(createdOrUpdatedPrs, pr)
-
-		orphanPrs = removeOrphan(orphanPrs, pr)
+	if err != nil {
+		panic(err)
 	}
 
-	for _, file := range diff.DeletedFiles {
+	createdOrUpdatedPrs = result.Prs
+	orphanPrs = result.Orphans
 
-		pr, err := m.UpsertPr(ctx, file, wetRepositoryDir, wetRepoName, "delete", claimPrNumber, prList)
+	result, err = m.upsertPrsFromFileList(
+		ctx, diff.DeletedFiles, wetRepositoryDir, wetRepoName, "delete",
+		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	createdOrUpdatedPrs = result.Prs
+	orphanPrs = result.Orphans
+
+	return PrsResult{Orphans: orphanPrs, Prs: createdOrUpdatedPrs}, nil
+}
+
+func (m *NotifyAndHydrateState) upsertPrsFromFileList(
+
+	ctx context.Context,
+
+	fileList []*dagger.File,
+
+	wetRepositoryDir *dagger.Directory,
+
+	wetRepoName string,
+
+	action string,
+
+	claimPrNumber string,
+
+	prList []Pr,
+
+	claimsRepoPRLink string,
+
+	createdOrUpdatedPrs []Pr,
+
+	orphanPrs []Pr,
+
+) (PrsResult, error) {
+	for _, file := range fileList {
+		pr, err := m.UpsertPr(
+			ctx, file, wetRepositoryDir, wetRepoName, action,
+			claimPrNumber, prList, claimsRepoPRLink,
+		)
 
 		if err != nil {
-
 			panic(err)
-
 		}
 
 		createdOrUpdatedPrs = append(createdOrUpdatedPrs, pr)
-
 		orphanPrs = removeOrphan(orphanPrs, pr)
-
 	}
 
 	return PrsResult{Orphans: orphanPrs, Prs: createdOrUpdatedPrs}, nil
-
 }
 
 func removeOrphan(orphanPrs []Pr, pr Pr) []Pr {
@@ -111,6 +144,8 @@ func (m *NotifyAndHydrateState) UpsertPr(
 	claimPrNumber string,
 
 	prs []Pr,
+
+	claimsRepoPrLink string,
 
 ) (Pr, error) {
 
@@ -163,7 +198,12 @@ func (m *NotifyAndHydrateState) UpsertPr(
 
 	prTitle := fmt.Sprintf("\"hydrate: %s \"", cr.Metadata.Name)
 
-	prBody := fmt.Sprintf("\"changes come from %s/%s#%s\"", strings.Split(wetRepoName, "/")[0], "claims", claimPrNumber)
+	prBody := fmt.Sprintf(
+		"\"changes come from %s/%s#%s\"",
+		strings.Split(wetRepoName, "/")[0],
+		"claims",
+		claimPrNumber,
+	)
 
 	prLink, err := m.CreatePrIfNotExists(ctx, prBranch, wetRepoName, prTitle, prBody, prs)
 
@@ -178,7 +218,7 @@ func (m *NotifyAndHydrateState) UpsertPr(
 
 	wetRepositoryDir = m.CmdAnnotateCrPr(
 		ctx,
-		prLink,
+		claimsRepoPrLink,
 		prLink,
 		wetRepositoryDir,
 		fileName,

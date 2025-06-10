@@ -1,0 +1,70 @@
+---
+firestartr:
+  version: "v1.36.7"
+
+org: "prefapp"
+
+pushFiles:
+  claims:
+    push: true
+    repo: "claims"
+  crs:
+    providers:
+      github: 
+        push: true
+        repo: "state-github"
+
+components:  
+
+  - name: "dot-firestartr"
+    description: "Repository with the terraform code for manage the multi-tenant infrastructure"
+    repoName: ".firestartr"
+    defaultBranch: main
+    features: 
+      - name: firestartr_repo
+        version: 1.0.0
+
+  - name: "claims"
+    description: "Firestartr configuration folders and files"
+    defaultBranch: main
+    features: 
+      - name: claims_repo
+        version: 1.6.1
+
+  - name: "catalog"
+    description: "Firestartr configuration folders and files"
+    defaultBranch: main
+    features:
+      - name: catalog_repo
+        version: 1.0.0
+    variables:
+      - name: FIRESTARTER_PROVIDER
+        value: "all"
+
+  - name: "state-github"
+    description: "Firestartr Github wet repository"
+    defaultBranch: main
+    features: 
+      - name: state_github
+        version: 1.0.0
+    variables:
+      - name: CLAIMS_DEFAULT_BRANCH
+        value: "main"
+      - name: CLAIMS_REPO_NAME
+        value: "claims"
+      - name: FIRESTARTER_PROVIDER
+        value: "github"
+
+  - name: "state-infra"
+    description: "Firestartr Terraform workspaces wet repository"
+    defaultBranch: main
+    features: 
+      - name: state_infra
+        version: 1.1.0
+    variables:
+      - name: CLAIMS_DEFAULT_BRANCH
+        value: "main"
+      - name: CLAIMS_REPO_NAME
+        value: "claims"
+      - name: FIRESTARTER_PROVIDER
+        value: "terraform"

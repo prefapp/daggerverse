@@ -1,0 +1,24 @@
+# dev.yaml
+version: 0.1.0
+chart: prefapp/aws-web-service-umbrella 
+releaseName: sample-app
+hooks: []
+
+extraPatches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: sample-app-micro-a
+    patch:
+      - op: add
+        path: /metadata/labels/manolo
+        value: escobar
+execs: #[]
+  - command: ".github/certs_to_ca_yaml.py"
+    args: [
+      "--ca_certs_path", 
+      "./kubernetes/{{.StateValues.cluster}}/{{.StateValues.tenant}}/{{$.Environment.Name}}/ca-certs", 
+      "--ca_yml_path", 
+      "./kubernetes/{{.StateValues.cluster}}/{{.StateValues.tenant}}/{{$.Environment.Name}}/ca.yaml"
+    ]

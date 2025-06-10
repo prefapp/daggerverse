@@ -1,4 +1,0 @@
-metadata:
-  annotations:
-    firestartr.dev/microservice: "micro-b"
-    firestartr.dev/image: "nginx:1.19.20"

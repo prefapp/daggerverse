@@ -1,0 +1,6 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: config-{{ .Release.Name }}-{{.Chart.Name }}
+data:
+  {{- toYaml .Values.config.data | nindent 2 }}

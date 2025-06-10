@@ -1,0 +1,30 @@
+kind: TFWorkspaceClaim
+lifecycle: production
+name: example-claim
+resourceType: az-vmss
+system: "system:test"
+version: "1.0"
+providers: 
+  terraform:
+    tfStateKey: e951e631-305a-414e-be4f-5562fc952121
+    name: example-claim
+    source: remote
+    module: git::https://github.com/test/tfm.git//modules/vmss-soups?ref=vmss-soups-v0.2.4
+    values:
+      docker_image: my-test
+      common:
+        resource_group_name: "test-shutter-pre"
+        location: "westeurope"
+        secure_boot_enabled: false
+        tags:
+          cliente: "test"
+          tenant: "test"
+          Producto: "test"
+          application: "test"
+          env: "test"
+      run_script:
+        file: "/data/run_script.sh"
+        vmss_mi_id: "test"
+        registry:  ${{ tfworkspace:claim-from-platform:outputs.registry }}
+        keyvault: "test-soups-pre-kv"
+

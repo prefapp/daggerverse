@@ -1,20 +1,39 @@
+name: Run Release Please
+
 on:
   push:
     branches:
       - main
-      
-name: Run Release Please
+
 jobs:
   release-please:
     name: Release Please Manifest
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-    
-      - uses: google-github-actions/release-please-action@v4
+      - uses: googleapis/release-please-action@v4
         id: release
         with:
-          command: manifest
-          token: ${{secrets.GITHUB_TOKEN}}
+          token: ${{ secrets.GITHUB_TOKEN }}
           default-branch: main
+          command: manifest
           config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json     
+          manifest-file: .release-please-manifest.json
+
+      - uses: actions/checkout@v4
+        if: steps.release.outputs.releases_created == 'true'
+
+      - name: Get major version num and update tag
+        if: steps.release.outputs.releases_created == 'true'
+        run: |
+
+          git config --global user.name 'Prefapp Bot'
+          git config --global user.email 'prefapp-bot@users.noreply.github.com'
+
+          path_released='${{ steps.release.outputs.paths_released }}'
+          releases_info='${{ toJSON(steps.release.outputs) }}'
+
+          echo $path_released | jq -cr '.[]' | while read release; do
+            major=$(echo $releases_info | jq -cr ".\"$release--major\"")
+            git tag -fa "$release-v$major"  -m "Update major version tag"
+            git push origin "$release-v$major" --force
+          done

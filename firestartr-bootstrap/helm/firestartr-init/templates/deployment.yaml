@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-{{ .Chart.Name }}  
+  labels:
+    release: {{ .Release.Name }}
+    {{- toYaml .Values.labels | nindent 4 }}
+spec:
+  replicas: {{ .Values.deploy.replicas }}
+  selector:
+    matchLabels:
+      release: {{ .Release.Name }}
+      {{- toYaml .Values.labels | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+      labels:
+        release: {{ .Release.Name }}
+        {{- toYaml .Values.labels | nindent 8 }}
+    spec:
+      serviceAccountName: svcaccount-{{ .Release.Name }}-{{ .Chart.Name }}
+      containers:
+        - name: {{ .Release.Name }}
+      {{- with .Values.deploy }}
+          image: "{{ .image.name }}:{{ .image.tag }}"
+          imagePullPolicy: {{ .image.pullPolicy }}
+          {{- if .command }}
+          command: 
+            {{- toYaml .command | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: config-{{ $.Release.Name }}-{{ $.Chart.Name }}
+            - secretRef:
+                name: secret-{{ $.Release.Name }}-{{ $.Chart.Name }}
+          ports:
+            - containerPort: {{ .containerPort }}
+          {{- if .probes.startup }}
+          startupProbe:
+            {{- toYaml .probes.startup | nindent 12 }}
+          {{- end }}
+          {{- if .probes.liveness }}
+          livenessProbe:
+            {{- toYaml .probes.liveness | nindent 12 }}
+          {{- end }}
+          {{- if .probes.readiness }}
+          readinessProbe:
+            {{- toYaml .probes.readiness | nindent 12 }}
+          {{- end }}
+          {{- if .resources }}
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+          {{- end }}
+          {{- if .volumeMounts }}
+          volumeMounts:
+            {{- toYaml .volumeMounts | nindent 12 }}
+          {{- end }}
+      {{- if .volumes }}
+      volumes:
+        {{- toYaml .volumes | nindent 8 }}
+      {{- end }}
+      {{- end }}

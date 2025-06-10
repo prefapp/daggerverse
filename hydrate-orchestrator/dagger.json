@@ -1,0 +1,30 @@
+{
+  "name": "hydrate-orchestrator",
+  "engineVersion": "v0.18.5",
+  "sdk": {
+    "source": "go"
+  },
+  "dependencies": [
+    {
+      "name": "firestartr-config",
+      "source": "../firestartr-config"
+    },
+    {
+      "name": "gh",
+      "source": "github.com/prefapp/aweris-daggerverse/gh",
+      "pin": "b301adc888e6c420b46e5b71f48ea4ea68023865"
+    },
+    {
+      "name": "hydrate-kubernetes",
+      "source": "modules/hydrate-kubernetes"
+    },
+    {
+      "name": "hydrate-secrets",
+      "source": "modules/hydrate-secrets"
+    },
+    {
+      "name": "hydrate-tfworkspaces",
+      "source": "modules/hydrate-tfworkspaces"
+    }
+  ]
+}
