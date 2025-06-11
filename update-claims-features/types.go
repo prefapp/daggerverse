@@ -42,9 +42,9 @@ type Claim struct {
 	Description   string            `yaml:"description,omitempty"`
 	Owner         string            `yaml:"owner,omitempty"`
 	Annotations   map[string]string `yaml:"annotations,omitempty"`
-	Providers     Providers         `yaml:"providers,omitempty"`
 	PlatformOwner string            `yaml:"platformOwner,omitempty"`
 	MaintainedBy  []string          `yaml:"maintainedBy,omitempty"`
+	Providers     Providers         `yaml:"providers,omitempty"`
 	Profile       Profile           `yaml:"profile,omitempty"`
 }
 
