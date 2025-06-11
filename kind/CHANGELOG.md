@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/prefapp/daggerverse/compare/kind-v1.0.0...kind-v1.1.0) (2025-06-11)
+
+
+### Features
+
+* optional config file ([#225](https://github.com/prefapp/daggerverse/issues/225)) ([52ba9d3](https://github.com/prefapp/daggerverse/commit/52ba9d36dc8641033f57a4a69cdf34ea337e314b))
+
+
+### Bug Fixes
+
+* version type name ([#232](https://github.com/prefapp/daggerverse/issues/232)) ([fcb79b3](https://github.com/prefapp/daggerverse/commit/fcb79b3325a91c2e17a913e51b7ff308b6b61752))
+
 ## 1.0.0 (2025-05-27)
 
 
