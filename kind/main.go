@@ -53,7 +53,7 @@ func New(
 	// It has to be indicated like "vx.y", being 'x' the major and 'y' the minor versions.
 	// check https://github.com/kubernetes-sigs/kind/releases
 	// +optional
-	version K8sVersion,
+	version Version,
 
 	// The name of the kind cluster
 	// +default="dagger-kubernetes-cluster"
