@@ -341,7 +341,7 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 			"gh",
 			"release",
 			"list",
-            "--exclude-pre-releases",
+            		"--exclude-pre-releases",
 			"--limit",
 			"999",
 			"--json",
