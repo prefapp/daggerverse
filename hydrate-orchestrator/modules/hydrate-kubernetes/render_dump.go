@@ -3,12 +3,22 @@ package main
 import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
+	"errors"
 	"fmt"
-	"regexp"
+	"io"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
+
+func ValidateYaml(c []byte) error {
+	var document interface{}
+	err := yaml.Unmarshal(c, &document)
+	if err != nil {
+		return fmt.Errorf("invalid YAML: %w", err)
+	}
+	return nil
+}
 
 func (m *HydrateKubernetes) SplitRenderInFiles(
 
@@ -26,15 +36,29 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 	}
 
-	k8sManifests := regexp.MustCompile(`(?m)^(---\n)`).Split(string(content), -1)
+	reader := strings.NewReader(content)
+	dec := yaml.NewDecoder(reader)
 
 	dir := dag.Directory()
 
-	for _, manifest := range k8sManifests {
+	for {
+		var node yaml.Node
+		err := dec.Decode(&node)
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		content, err := yaml.Marshal(&node)
+		if err != nil {
+			return nil, err
+		}
 
 		k8sresource := KubernetesResource{}
 
-		err := yaml.Unmarshal([]byte(manifest), &k8sresource)
+		err = yaml.Unmarshal(content, &k8sresource)
 
 		if err != nil {
 
@@ -47,14 +71,19 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 			continue
 		}
 
+		// Validate the YAML content
+		if err := ValidateYaml(content); err != nil {
+			return nil, err
+		}
+
 		// create a new file for each k8s manifest
 		// with <kind>.<metadata.name>.yml as the file name
 		fileName := fmt.Sprintf("%s.%s.yml", k8sresource.Kind, k8sresource.Metadata.Name)
 
 		//add the --- at the beginning of the file
-		manifest = "---\n" + manifest
+		data := "---\n" + string(content)
 
-		dir = dir.WithNewFile(fileName, manifest)
+		dir = dir.WithNewFile(fileName, data)
 
 	}
 
