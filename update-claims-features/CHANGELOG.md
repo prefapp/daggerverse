@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.2...update-claims-features-v1.1.3) (2025-06-11)
+
+
+### Bug Fixes
+
+* Missing fields in update-claims-features module ([#234](https://github.com/prefapp/daggerverse/issues/234)) ([22c5637](https://github.com/prefapp/daggerverse/commit/22c5637de1fac3cac108072d43d22f3723d34148))
+
 ## [1.1.2](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.1...update-claims-features-v1.1.2) (2025-06-11)
 
 
