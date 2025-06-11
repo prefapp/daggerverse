@@ -83,12 +83,6 @@ func New(
 		panic(fmt.Sprintf("Invalid port number: %d, it should be between 1024 and 65535", port))
 	}
 
-	if kind != "" && kindSha == "" {
-		panic(fmt.Sprintf("You must specify a kind sha available in the kind version you provided"))
-	} else if kind == "" && kindSha != "" {
-		panic(fmt.Sprintf("You must specify a kind version that allows using the sha you provided"))
-	}
-
 	if kind == "" {
 		kind = "v0.29.0"
 	}
