@@ -41,7 +41,8 @@ jobs:
           # Get the highest Dagger version used in the modules
           VERSIONS=""
           for dir in "${CHANGED_MODULES[@]}"; do
-            V=$(cat ${dir}/dagger.json | jq -r ."engineVersion")
+            dir=$(echo "$dir" | tr -d '\\n')
+            V=$(cat "${dir}/dagger.json" | jq -r ."engineVersion")
             VERSIONS+="${V}\n"
           done
 
