@@ -27,9 +27,9 @@ jobs:
         # get the list of changed folders
         if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.event_name }}" == "push" ]] ; then
           # For workflow_dispatch or push, include all folders except .github
-          CHANGED_MODULES="$(git ls-tree -d --name-only HEAD | grep -v '.github' | sort -u)"
+          mapfile -t CHANGED_MODULES <<< $(git ls-tree -d --name-only HEAD | grep -v '.github' | sort -u)
         else
-          CHANGED_MODULES="$(git diff --name-only origin/main "${{ github.head_ref }}" | grep -oE '^[^/]+/' | grep -v '.github' | sort -u)"
+          mapfile -t CHANGED_MODULES <<< "$(git diff --name-only origin/main "${{ github.head_ref }}" | grep -oE '^[^/]+/' | grep -v '.github' | sort -u)"
         fi
 
         echo "::notice::Changed folders: $CHANGED_MODULES" | tr '\n' ' '
@@ -41,7 +41,6 @@ jobs:
           # Get the highest Dagger version used in the modules
           VERSIONS=""
           for dir in "${CHANGED_MODULES[@]}"; do
-            dir=$(echo "$dir" | tr -d '\\n')
             V=$(cat "${dir}/dagger.json" | jq -r ."engineVersion")
             VERSIONS+="${V}\n"
           done
