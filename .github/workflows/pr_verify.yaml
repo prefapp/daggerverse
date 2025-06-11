@@ -27,12 +27,12 @@ jobs:
         # get the list of changed folders
         if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.event_name }}" == "push" ]] ; then
           # For workflow_dispatch or push, include all folders except .github
-          mapfile -t CHANGED_MODULES <<< $(git ls-tree -d --name-only HEAD | grep -v '.github' | sort -u)
+          mapfile -t CHANGED_MODULES <<< "$(git ls-tree -d --name-only HEAD | grep -v '.github' | sort -u)"
         else
-          mapfile -t CHANGED_MODULES <<< "$(git diff --name-only origin/main "${{ github.head_ref }}" | grep -oE '^[^/]+/' | grep -v '.github' | sort -u)"
+          mapfile -t CHANGED_MODULES <<< "$(git diff --name-only origin/main '${{ github.head_ref }}' | grep -oE '^[^/]+/' | grep -v '.github' | sort -u)"
         fi
 
-        echo "::notice::Changed folders: $CHANGED_MODULES" | tr '\n' ' '
+        echo "::notice::Changed folders: ${CHANGED_MODULES[@]}" | tr '\n' ' '
 
         if [ -z "$CHANGED_MODULES" ]; then
           echo "No modified dagger modules found."
@@ -49,7 +49,7 @@ jobs:
 
           echo "DAGGER_VERSION=$DAGGER_VERSION" >> $GITHUB_ENV
           echo "SKIP_UNIT_TEST=false" >> "$GITHUB_ENV"
-          echo "$CHANGED_MODULES" > changed_modules.txt
+          printf "%s\n" "${CHANGED_MODULES[@]}" > changed_modules.txt
         fi
 
     - name: Set up Go
