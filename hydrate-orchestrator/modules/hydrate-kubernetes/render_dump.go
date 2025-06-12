@@ -329,7 +329,11 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 		return nil, err
 	}
 
-	m.ValidateYamlFiles(ctx, renderedFiles)
+	err = m.ValidateYamlFiles(ctx, renderedFiles)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return m.WetRepoDir, nil
 }
