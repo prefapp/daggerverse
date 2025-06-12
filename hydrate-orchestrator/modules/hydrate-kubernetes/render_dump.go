@@ -42,14 +42,14 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 			return nil, err
 		}
 
-		content, err := yaml.Marshal(&node)
+		decodedContent, err := yaml.Marshal(&node)
 		if err != nil {
 			return nil, err
 		}
 
 		k8sresource := KubernetesResource{}
 
-		err = yaml.Unmarshal(content, &k8sresource)
+		err = yaml.Unmarshal(decodedContent, &k8sresource)
 
 		if err != nil {
 
@@ -67,7 +67,7 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 		fileName := fmt.Sprintf("%s.%s.yml", k8sresource.Kind, k8sresource.Metadata.Name)
 
 		//add the --- at the beginning of the file
-		data := "---\n" + string(content)
+		data := "---\n" + string(decodedContent)
 
 		dir = dir.WithNewFile(fileName, data)
 
