@@ -179,7 +179,7 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 
 	}
 
-	renderedFiles, err := m.WetRepoDir.Glob(ctx, "kubernetes-sys-services/"+cluster+"/"+app+"/*.yml")
+	renderedFiles, err := m.WetRepoDir.Glob(ctx, "kubernetes-sys-services/"+cluster+"/"+app+"/*.y*ml")
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +310,7 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 
 	}
 
-	renderedFiles, err := m.WetRepoDir.Glob(ctx, "kubernetes/"+cluster+"/"+tenant+"/"+env+"/*.yml")
+	renderedFiles, err := m.WetRepoDir.Glob(ctx, "kubernetes/"+cluster+"/"+tenant+"/"+env+"/*.y*ml")
 	if err != nil {
 		return nil, err
 	}
