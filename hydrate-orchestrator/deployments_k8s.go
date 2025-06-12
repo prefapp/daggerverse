@@ -23,6 +23,27 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
+		// Extract main service name and list of updated services
+		var mainServiceName string
+		var updatedServices string
+		var newImage string
+		if len(kdep.ImagesMatrix) > 0 {
+			var imgMatrix ImageMatrix
+			_ = json.Unmarshal([]byte(kdep.ImagesMatrix), &imgMatrix)
+			if len(imgMatrix.Images) > 0 {
+				mainServiceName = imgMatrix.Images[0].App
+				if len(imgMatrix.Images[0].ServiceNameList) > 0 {
+					updatedServices = ""
+					for _, svc := range imgMatrix.Images[0].ServiceNameList {
+						updatedServices += fmt.Sprintf("  - **%s**\n", svc)
+					}
+				} else {
+					updatedServices = fmt.Sprintf("  - **%s**\n", mainServiceName)
+				}
+				newImage = imgMatrix.Images[0].Image
+			}
+		}
+
 		branchName := fmt.Sprintf("%s-kubernetes-%s-%s-%s", repositoryCaller, kdep.Cluster, kdep.Tenant, kdep.Environment)
 
 		renderedDeployment, err := dag.HydrateKubernetes(
@@ -47,20 +68,27 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 			continue
 		}
 
+		title := fmt.Sprintf("Deployment of %s in cluster: %s, tenant: %s, env: %s", mainServiceName, kdep.Cluster, kdep.Tenant, kdep.Environment)
 		prBody := fmt.Sprintf(`
-# New deployment from new image in repository [*%s*](%s)
-%s
-`, repositoryCaller, repoURL, kdep.String(false))
+### New automatic deployment triggered by new image built:
+- Repository [*%s*](%s)
+- Services updated:
+%s- New image: %s
 
-		globPattern := fmt.
-			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
+#### Deployment coordinates
+* Cluster: %s
+* Tenant: %s
+* Environment: %s
+`, repositoryCaller, repoURL, updatedServices, newImage, kdep.Cluster, kdep.Tenant, kdep.Environment)
+
+		globPattern := fmt.Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
 
 		prLink, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
-			kdep.String(true),
+			title,
 			prBody,
 			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 			reviewers,
