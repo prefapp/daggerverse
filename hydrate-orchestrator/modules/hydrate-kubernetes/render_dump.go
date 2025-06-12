@@ -11,6 +11,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func (m *HydrateKubernetes) ValidateYamlFiles(
+	ctx context.Context,
+	files []string,
+) error {
+	for _, file := range files {
+		content, err := m.WetRepoDir.File(file).Contents(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to read file %s: %w", file, err)
+		}
+		if err := ValidateYaml([]byte(content)); err != nil {
+			return fmt.Errorf("invalid YAML in file %s: %w", file, err)
+		}
+	}
+	return nil
+}
+
 func ValidateYaml(c []byte) error {
 	var document interface{}
 	err := yaml.Unmarshal(c, &document)
@@ -69,11 +85,6 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 		if k8sresource.Kind == "" || k8sresource.Metadata.Name == "" {
 
 			continue
-		}
-
-		// Validate the YAML content
-		if err := ValidateYaml(content); err != nil {
-			return nil, err
 		}
 
 		// create a new file for each k8s manifest
@@ -312,6 +323,13 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 		}
 
 	}
+
+	renderedFiles, err := m.WetRepoDir.Glob(ctx, "kubernetes/"+cluster+"/"+tenant+"/"+env+"/*.yml")
+	if err != nil {
+		return nil, err
+	}
+
+	m.ValidateYamlFiles(ctx, renderedFiles)
 
 	return m.WetRepoDir, nil
 }
