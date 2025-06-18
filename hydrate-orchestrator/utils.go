@@ -195,7 +195,7 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 			for _, svc := range serviceNames {
 				servicesList += fmt.Sprintf("  - %s\n", svc)
 			}
-			return fmt.Sprintf("\n  * Repository: `%s`", repoLink) +
+			return fmt.Sprintf("\n  * Repository: %s", repoLink) +
 				fmt.Sprintf("\n  * Services updated: `%s`", servicesList) +
 				fmt.Sprintf("\n  * New image: `%s`", image) +
 				"\n### Deployment coordinates:" +
