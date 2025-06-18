@@ -21,25 +21,35 @@ jobs:
         fetch-depth: 0  # Fetch all history for accurate diff
         ref: ${{ github.head_ref || github.ref_name }}
 
-    - name: Get changed files
+    - name: Get changed files and Dagger version
       id: get_changed_files
       run: |
         # get the list of changed folders
         if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.event_name }}" == "push" ]] ; then
           # For workflow_dispatch or push, include all folders except .github
-          CHANGED_MODULES="$(git ls-tree -d --name-only HEAD | grep -v '.github' | sort -u)"
+          mapfile -t CHANGED_MODULES <<< "$(git ls-tree -d --name-only HEAD | grep -v '.github' | sort -u)"
         else
-          CHANGED_MODULES="$(git diff --name-only origin/main "${{ github.head_ref }}" | grep -oE '^[^/]+/' | grep -v '.github' | sort -u)"
+          mapfile -t CHANGED_MODULES <<< "$(git diff --name-only origin/main '${{ github.head_ref }}' | grep -oE '^[^/]+/' | grep -v '.github' | sort -u)"
         fi
 
-        echo "::notice::Changed folders: $CHANGED_MODULES" | tr '\n' ' '
+        echo "::notice::Changed folders: ${CHANGED_MODULES[@]}" | tr '\n' ' '
 
         if [ -z "$CHANGED_MODULES" ]; then
           echo "No modified dagger modules found."
           echo "SKIP_UNIT_TEST=true" >> "$GITHUB_ENV"
         else
+          # Get the highest Dagger version used in the modules
+          VERSIONS=""
+          for dir in "${CHANGED_MODULES[@]}"; do
+            V=$(cat "${dir}/dagger.json" | jq -r ."engineVersion")
+            VERSIONS+="${V}\n"
+          done
+
+          DAGGER_VERSION=$(echo -e "${VERSIONS}" | sort -V | tail -n 1)
+
+          echo "DAGGER_VERSION=$DAGGER_VERSION" >> $GITHUB_ENV
           echo "SKIP_UNIT_TEST=false" >> "$GITHUB_ENV"
-          echo "$CHANGED_MODULES" > changed_modules.txt
+          printf "%s\n" "${CHANGED_MODULES[@]}" > changed_modules.txt
         fi
 
     - name: Set up Go
@@ -51,22 +61,15 @@ jobs:
     - name: Install Dagger CLI
       if: env.SKIP_UNIT_TEST == 'false'
       run: |
-        curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=0.18.6 sh
+        curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=${{ env.DAGGER_VERSION }} sh
         sudo mv bin/dagger /usr/local/bin/
 
     - name: Run Unit Tests
       if: env.SKIP_UNIT_TEST == 'false'
       run: |
-        # convert the string of changed folders into an array
         mapfile -t CHANGED_MODULES < "changed_modules.txt"
 
-        echo "Changed modules: ${CHANGED_MODULES[@]}"
-
         # iterate over each changed folder and run tests
-        if [ ${#CHANGED_MODULES[@]} -eq 0 ]; then
-          echo "No changed folders found."
-          exit 0
-        fi
         for dir in "${CHANGED_MODULES[@]}"; do
           # Check if the directory contains a SKIP_UNIT_TEST file
           if [ -f "$dir/SKIP_UNIT_TEST" ]; then
