@@ -193,7 +193,7 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 			// If service names are provided, format them into a list
 			servicesList := ""
 			for _, svc := range serviceNames {
-				servicesList += fmt.Sprintf("  - %s\n", svc)
+				servicesList += fmt.Sprintf("    - %s\n", svc)
 			}
 			return fmt.Sprintf("\n  * Repository: %s", repoLink) +
 				fmt.Sprintf("\n  * Services updated:\n %s", servicesList) +
