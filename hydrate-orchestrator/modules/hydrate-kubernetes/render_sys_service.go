@@ -36,7 +36,7 @@ func (m *HydrateKubernetes) RenderSysService(
 	helmfileCtr := m.Container.
 		WithDirectory("/values", m.ValuesDir).
 		WithWorkdir("/values").
-		WithMountedFile("/values/helmfile.yaml", m.Helmfile).
+		WithMountedFile("/values/helmfile.yaml.gotmpl", m.Helmfile).
 		WithFile("/values/repositories.yaml", m.RepositoriesFile).
 		WithMountedFile("/values/values.yaml.gotmpl", m.ValuesGoTmpl).
 		WithEnvVariable("BUST", time.Now().String())

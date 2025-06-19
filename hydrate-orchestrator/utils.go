@@ -217,9 +217,11 @@ func kubernetesDepFromStr(deployment string) *KubernetesAppDeployment {
 
 	dirs := splitPath(deployment)
 
+	fmt.Printf("kubernetesDepFromStr dirs: %v\n", dirs)
+	fmt.Printf("kubernetesDepFromStr len(dirs): %d\n", len(dirs))
 	// In this case the modified file is kubernetes/<cluster>/<tenant>/<env>.yaml
 	if len(dirs) == 4 {
-
+		fmt.Printf("kubernetesDepFromStr dirs are 4: %v\n", dirs)
 		envFile := filepath.Base(deployment)
 		env := strings.TrimSuffix(envFile, filepath.Ext(envFile))
 
@@ -233,6 +235,7 @@ func kubernetesDepFromStr(deployment string) *KubernetesAppDeployment {
 		}
 
 	} else if len(dirs) > 4 {
+		fmt.Printf("dirs are more than 4: %v\n", dirs)
 		return &KubernetesAppDeployment{
 			Deployment: Deployment{
 				DeploymentPath: strings.Join(dirs[0:4], string(os.PathSeparator)),
@@ -252,17 +255,14 @@ func kubernetesSysDepFromStr(deployment string) *KubernetesSysDeployment {
 	dirs := splitPath(deployment)
 
 	// In this case the modified file is kubernetes/<cluster>/<sys-service>/values.yaml
-
+	fmt.Printf("kubernetesSysDepFromStr dirs: %v\n", dirs)
+	fmt.Printf("kubernetesSysDepFromStr len(dirs): %d\n", len(dirs))
 	if len(dirs) >= 3 {
-
+		fmt.Printf("dirs are 3 or more: %v\n", dirs)
 		sysServiceName := dirs[2]
-
 		if len(dirs) == 3 &&
-
 			(filepath.Ext(sysServiceName) == ".yaml" || filepath.Ext(sysServiceName) == ".yml") {
-
 			sysServiceName = strings.TrimSuffix(sysServiceName, filepath.Ext(sysServiceName))
-
 		}
 
 		return &KubernetesSysDeployment{
@@ -281,8 +281,10 @@ func secretsDepFromStr(deployment string) *SecretsDeployment {
 
 	dirs := splitPath(deployment)
 
+	fmt.Printf("secretsDepFromStr dirs: %v\n", dirs)
+	fmt.Printf("secretsDepFromStr len(dirs): %d\n", len(dirs))
 	if len(dirs) == 3 {
-
+		fmt.Printf("secretsDepFromStr dirs are 3: %v\n", dirs)
 		return &SecretsDeployment{
 			Deployment: Deployment{
 				DeploymentPath: strings.Join(dirs, string(os.PathSeparator)),
@@ -297,6 +299,12 @@ func secretsDepFromStr(deployment string) *SecretsDeployment {
 }
 
 func splitPath(path string) []string {
+
+	// remove "/" a the end
+	if strings.HasSuffix(path, string(os.PathSeparator)) {
+		path = strings.TrimSuffix(path, string(os.PathSeparator))
+	}
+
 	return strings.Split(path, string(os.PathSeparator))
 }
 

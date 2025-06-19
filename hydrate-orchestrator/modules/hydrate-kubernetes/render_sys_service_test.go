@@ -24,7 +24,7 @@ func TestRenderSysServiceCanRender(t *testing.T) {
 		ValuesDir:        valuesRepoDir.Directory("fixtures/values-repo-dir-sys-services"),
 		WetRepoDir:       wetRepoDir.Directory("fixtures/wet-repo-dir"),
 		Container:        dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
-		Helmfile:         helmDir.File("helm-sys-services/helmfile.yaml"),
+		Helmfile:         helmDir.File("helm-sys-services/helmfile.yaml.gotmpl"),
 		ValuesGoTmpl:     helmDir.File("helm-sys-services/values.yaml.gotmpl"),
 		RepositoriesFile: repositoryFileDir.File("fixtures/repository_file/repositories.yaml"),
 		RenderType:       "sys-services",

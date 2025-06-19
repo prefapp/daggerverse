@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
+	"errors"
 	"fmt"
-	"regexp"
+	"io"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -26,15 +27,29 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 
 	}
 
-	k8sManifests := regexp.MustCompile(`(?m)^(---\n)`).Split(string(content), -1)
+	reader := strings.NewReader(content)
+	dec := yaml.NewDecoder(reader)
 
 	dir := dag.Directory()
 
-	for _, manifest := range k8sManifests {
+	for {
+		var node yaml.Node
+		err := dec.Decode(&node)
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		decodedContent, err := yaml.Marshal(&node)
+		if err != nil {
+			return nil, err
+		}
 
 		k8sresource := KubernetesResource{}
 
-		err := yaml.Unmarshal([]byte(manifest), &k8sresource)
+		err = yaml.Unmarshal(decodedContent, &k8sresource)
 
 		if err != nil {
 
@@ -52,9 +67,9 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 		fileName := fmt.Sprintf("%s.%s.yml", k8sresource.Kind, k8sresource.Metadata.Name)
 
 		//add the --- at the beginning of the file
-		manifest = "---\n" + manifest
+		data := "---\n" + string(decodedContent)
 
-		dir = dir.WithNewFile(fileName, manifest)
+		dir = dir.WithNewFile(fileName, data)
 
 	}
 
@@ -162,6 +177,17 @@ func (m *HydrateKubernetes) DumpSysAppRenderToWetDir(
 
 		}
 
+	}
+
+	renderedFiles, err := m.WetRepoDir.Glob(ctx, "kubernetes-sys-services/"+cluster+"/"+app+"/*.y*ml")
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.ValidateYamlFiles(ctx, renderedFiles)
+
+	if err != nil {
+		return nil, err
 	}
 
 	return m.WetRepoDir, nil
@@ -282,6 +308,17 @@ func (m *HydrateKubernetes) DumpAppRenderToWetDir(
 
 		}
 
+	}
+
+	renderedFiles, err := m.WetRepoDir.Glob(ctx, "kubernetes/"+cluster+"/"+tenant+"/"+env+"/*.y*ml")
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.ValidateYamlFiles(ctx, renderedFiles)
+
+	if err != nil {
+		return nil, err
 	}
 
 	return m.WetRepoDir, nil

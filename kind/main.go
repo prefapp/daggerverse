@@ -17,6 +17,7 @@ type Kind struct {
 	KindPort     int
 	Container    *dagger.Container
 	ClusterName  string
+	ConfigFile   *dagger.File
 }
 
 func New(
@@ -33,49 +34,85 @@ func New(
 	// +required
 	kindSvc *dagger.Service,
 
-	// The Kubernetes version you want to use inside the cluster. Must be one of the available versions of the current
-	// Kind version used, that is v0.25.0. It has to be indicated like "vx.y", being 'x' the major and 'y' the minor versions.
+	// The Kind version you want to use.
+	// check https://github.com/kubernetes-sigs/kind/releases
+	// E.g.: "v0.25.0"
+	// +optional
+	kind string,
+
+	// The Kubernetes version you want to use.
+	// This must be specified only when the kind version is also specified.
+	// check https://github.com/kubernetes-sigs/kind/releases
+	// NOTE: This takes preference over the `version` field.
+	// E.g.: "kindest/node:v1.26.15@sha256:c79602a44b4056d7e48dc20f7504350f1e87530fe953428b792def00bc1076dd"
+	// +optional
+	kindSha string,
+
+	// The Kubernetes version you want to use inside the cluster.
+	// Must be one of the available versions of the current Kind version used (which default is v0.25.0).
+	// It has to be indicated like "vx.y", being 'x' the major and 'y' the minor versions.
+	// check https://github.com/kubernetes-sigs/kind/releases
 	// +optional
 	version Version,
 
-	// +optional
+	// The name of the kind cluster
 	// +default="dagger-kubernetes-cluster"
-	// +description=The name of the kind cluster
+	// +optional
 	clusterName string,
 
+	// A custom configuration file for kind.
+	// If set, it is mandatory to indicate `networking.apiServerPort`, with the port of `kindSvc` as value
+	// E.g. with the `kindSvc` example:
+	// networking:
+	//   apiServerPort: 3000
+	// +optional
+	configFile *dagger.File,
+
 ) *Kind {
-
 	ep, err := kindSvc.Endpoint(ctx)
-
 	if err != nil {
-
 		panic(err)
-
 	}
 
 	port, err := strconv.Atoi(strings.Split(ep, ":")[1])
-
 	if err != nil {
-
 		panic(err)
-
 	}
 
 	if port < 1024 || port > 65535 {
-
 		panic(fmt.Sprintf("Invalid port number: %d, it should be between 1024 and 65535", port))
-
 	}
 
-	kindConfig := &KindConfig{
-		Kind:       "Cluster",
-		ApiVersion: "kind.x-k8s.io/v1alpha4",
-		Networking: Networking{
-			ApiServerPort: port,
-		},
+	if kind == "" {
+		kind = "v0.29.0"
 	}
 
-	yamlFileContent, err := yaml.Marshal(kindConfig)
+	container := dag.Container().
+		From("alpine").
+		WithUnixSocket("/var/run/docker.sock", dockerSocket).
+		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl"}).
+		WithExec([]string{"curl", "-Lo", "./kind", fmt.Sprintf("https://kind.sigs.k8s.io/dl/%s/kind-linux-amd64", kind)}).
+		WithExec([]string{"chmod", "+x", "./kind"}).
+		WithExec([]string{"mv", "./kind", "/usr/local/bin/kind"})
+
+	if configFile != nil {
+		container = container.WithFile("kind.yaml", configFile)
+	} else {
+		kindConfig := &KindConfig{
+			Kind:       "Cluster",
+			ApiVersion: "kind.x-k8s.io/v1alpha4",
+			Networking: Networking{
+				ApiServerPort: port,
+			},
+		}
+
+		yamlFileContent, err := yaml.Marshal(kindConfig)
+		if err != nil {
+			panic(err)
+		}
+
+		container = container.WithNewFile("kind.yaml", string(yamlFileContent))
+	}
 
 	createCluster := []string{
 		"kind", "create", "cluster",
@@ -84,18 +121,13 @@ func New(
 		"--wait", "1m",
 	}
 
-	if version != "" {
-		createCluster = append(createCluster, "--image", Versions[version])
+	if kindSha != "" {
+		createCluster = append(createCluster, "--image", kindSha)
+	} else if version != "" {
+		createCluster = append(createCluster, "--image", K8sVersions[version])
 	}
 
-	container, err := dag.Container().
-		From("alpine").
-		WithUnixSocket("/var/run/docker.sock", dockerSocket).
-		WithNewFile("kind.yaml", string(yamlFileContent)).
-		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl"}).
-		WithExec([]string{"curl", "-Lo", "./kind", "https://kind.sigs.k8s.io/dl/v0.25.0/kind-linux-amd64"}).
-		WithExec([]string{"chmod", "+x", "./kind"}).
-		WithExec([]string{"mv", "./kind", "/usr/local/bin/kind"}).
+	container, err = container.
 		WithEnvVariable("BUST", time.Now().String()).
 		WithExec([]string{
 			"kind", "delete", "cluster",
@@ -109,9 +141,7 @@ func New(
 		).Sync(ctx)
 
 	if err != nil {
-
 		panic(err)
-
 	}
 
 	return &Kind{
