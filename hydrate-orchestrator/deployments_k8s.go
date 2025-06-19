@@ -179,7 +179,7 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 			Tenant:           image.Tenant,
 			Environment:      image.Env,
 			ImagesMatrix:     string(jsonUniqueImage),
-			ServiceNames:     append(image.ServiceNameList, image.ImageKeys...),
+			ServiceNames:     image.ServiceNameList,
 			RepositoryCaller: image.RepositoryCaller,
 			Image:            image.Image,
 		}
