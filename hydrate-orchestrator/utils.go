@@ -174,11 +174,14 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 			// Use the first service_name or concatenate if multiple
 			serviceName := serviceNames[0]
 			if len(serviceNames) > 1 {
+				for i, name := range serviceNames {
+					serviceNames[i] = fmt.Sprintf("`%s`", name)
+				}
 				serviceName = strings.Join(serviceNames, ",")
 			}
 
 			return fmt.Sprintf(
-				"Deployment of `%s` in cluster: `%s`, tenant: `%s`, env: `%s`",
+				"Deployment of %s in cluster: `%s`, tenant: `%s`, env: `%s`",
 				serviceName, kd.Cluster, kd.Tenant, kd.Environment,
 			)
 		}

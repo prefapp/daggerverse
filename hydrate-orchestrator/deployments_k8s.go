@@ -47,10 +47,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 			continue
 		}
 
-		prBody := fmt.Sprintf(`
-# New deployment from new image in repository [*%s*](%s)
-%s
-`, repositoryCaller, repoURL, kdep.String(false, repoURL))
+		prBody := kdep.String(false, repoURL)
 
 		globPattern := fmt.
 			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
