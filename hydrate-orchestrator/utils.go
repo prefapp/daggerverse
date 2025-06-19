@@ -177,7 +177,7 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 				for i, name := range serviceNames {
 					serviceNames[i] = fmt.Sprintf("`%s`", name)
 				}
-				serviceName = strings.Join(serviceNames, ",")
+				serviceName = strings.Join(serviceNames, ", ")
 			}
 
 			return fmt.Sprintf(
@@ -196,7 +196,7 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 			// If service names are provided, format them into a list
 			servicesList := ""
 			for _, svc := range serviceNames {
-				servicesList += fmt.Sprintf("      - %s\n", svc)
+				servicesList += fmt.Sprintf("      - `%s`\n", svc)
 			}
 			return "\n### :rocket: Deployment updated from new image dispatch" +
 				fmt.Sprintf("\n  * Repository: %s", repoLink) +
