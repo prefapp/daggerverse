@@ -183,8 +183,8 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 			)
 		}
 	} else {
-		// If no service names, repo link and image are provided, just return the deployment coordinates
-		if len(serviceNames) == 0 && repoLink == "" && image == "" {
+		// If no service names are provided, just return the deployment coordinates
+		if len(serviceNames) == 0 {
 			return "\n### Deployment coordinates:" +
 				fmt.Sprintf("\n  * Cluster: `%s`", kd.Cluster) +
 				fmt.Sprintf("\n  * Tenant: `%s`", kd.Tenant) +
@@ -196,7 +196,7 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 				servicesList += fmt.Sprintf("  - %s\n", svc)
 			}
 			return fmt.Sprintf("\n  * Repository: %s", repoLink) +
-				fmt.Sprintf("\n  * Services updated: `%s`", servicesList) +
+				fmt.Sprintf("\n  * Services updated:\n %s", servicesList) +
 				fmt.Sprintf("\n  * New image: `%s`", image) +
 				"\n### Deployment coordinates:" +
 				fmt.Sprintf("\n  * Cluster: `%s`", kd.Cluster) +
