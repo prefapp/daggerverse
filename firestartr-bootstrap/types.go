@@ -62,10 +62,16 @@ type CloudProvider struct {
 }
 
 type ConfigProvider struct {
-	Bucket    string `json:"bucket" yaml:"bucket"`
-	Region    string `json:"region" yaml:"region"`
-	AccessKey string `json:"access_key" yaml:"access_key"`
-	SecretKey string `json:"secret_key" yaml:"secret_key"`
+	Bucket         string `json:"bucket" yaml:"bucket"`
+	Region         string `json:"region" yaml:"region"`
+	AccessKey      string `json:"access_key" yaml:"access_key"`
+	SecretKey      string `json:"secret_key" yaml:"secret_key"`
+	UseAzureADAuth bool   `json:"use_azuread_auth" yaml:"use_azuread_auth"`
+	TenantId       string `json:"tenant_id" yaml:"tenant_id"`
+	ClientId       string `json:"client_id" yaml:"client_id"`
+	ClientSecret   string `json:"client_secret" yaml:"client_secret"`
+	StorageAccount string `json:"storage_account_name" yaml:"storage_account_name"`
+	ContainerName  string `json:"container_name" yaml:"container_name"`
 }
 
 type GithubApp struct {
