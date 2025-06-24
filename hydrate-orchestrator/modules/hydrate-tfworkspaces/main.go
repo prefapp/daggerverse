@@ -194,7 +194,7 @@ func (m *HydrateTfworkspaces) Render(
 
 	}
 
-	outputDir, err := m.RenderWithFirestartrContainer(ctx, combDirs)
+	outputDir, err := m.RenderWithFirestartrContainer(ctx, combDirs, claimName)
 
 	if err != nil {
 

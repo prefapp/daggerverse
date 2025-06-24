@@ -6,7 +6,7 @@ import (
 	"path"
 )
 
-func (m *HydrateTfworkspaces) RenderWithFirestartrContainer(ctx context.Context, claimsDir *dagger.Directory) (*dagger.Directory, error) {
+func (m *HydrateTfworkspaces) RenderWithFirestartrContainer(ctx context.Context, claimsDir *dagger.Directory, claimName string) (*dagger.Directory, error) {
 
 	fsCtr, err := dag.Container().
 		From(m.Config.Image).
@@ -28,6 +28,7 @@ func (m *HydrateTfworkspaces) RenderWithFirestartrContainer(ctx context.Context,
 				"--excludePath", path.Join("/crs", ".github"),
 				"--claimsDefaults", "/.config",
 				"--outputCrDir", "/output",
+                "--claimRefsList", "TFWorkspaceClaim-" + claimName,
 				"--provider", "terraform",
 			},
 		).Sync(ctx)
