@@ -6,7 +6,7 @@ import (
 	"path"
 )
 
-func (m *HydrateSecrets) RenderWithFirestartrContainer(ctx context.Context, claimsDir *dagger.Directory) (*dagger.Directory, error) {
+func (m *HydrateSecrets) RenderWithFirestartrContainer(ctx context.Context, claimsDir *dagger.Directory, claimName string) (*dagger.Directory, error) {
 
 	fsCtr, err := dag.Container().
 		From(m.Config.Image).
@@ -30,6 +30,7 @@ func (m *HydrateSecrets) RenderWithFirestartrContainer(ctx context.Context, clai
 				"--claimsDefaults", "/.config",
 				"--outputCrDir", "/output",
 				"--provider", "externalSecrets",
+                "--claimRefsList", "SecretsClaim-" + claimName,
 			},
 		).Sync(ctx)
 

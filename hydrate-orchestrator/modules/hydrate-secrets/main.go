@@ -22,7 +22,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var FIRESTARTR_DOCKER_IMAGE = "ghcr.io/prefapp/gitops-k8s:v1.41.1_slim"
+var FIRESTARTR_DOCKER_IMAGE = "ghcr.io/prefapp/gitops-k8s:v1.43.1_slim"
 
 type HydrateSecrets struct {
 	ValuesDir        *dagger.Directory
@@ -111,6 +111,7 @@ func (m *HydrateSecrets) Render(ctx context.Context, app string, tenant string, 
 	outputDir, err := m.RenderWithFirestartrContainer(
 		ctx,
 		secretsDir,
+        claimName
 	)
 	if err != nil {
 		return nil, err
