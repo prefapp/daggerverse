@@ -111,7 +111,7 @@ func (m *HydrateSecrets) Render(ctx context.Context, app string, tenant string, 
 	outputDir, err := m.RenderWithFirestartrContainer(
 		ctx,
 		secretsDir,
-        claimName
+        claimName,
 	)
 	if err != nil {
 		return nil, err
