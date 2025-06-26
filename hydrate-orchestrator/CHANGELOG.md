@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.3.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.2.2...hydrate-orchestrator-v6.3.0) (2025-06-26)
+
+
+### Features
+
+* Modify render function for hydrate-orchestrator ([#244](https://github.com/prefapp/daggerverse/issues/244)) ([7e35199](https://github.com/prefapp/daggerverse/commit/7e35199d37bba66cf73f46c6215fe2ea69e244a7))
+
 ## [6.2.2](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.2.1...hydrate-orchestrator-v6.2.2) (2025-06-19)
 
 
