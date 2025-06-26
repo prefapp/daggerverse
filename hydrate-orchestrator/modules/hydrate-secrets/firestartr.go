@@ -30,7 +30,7 @@ func (m *HydrateSecrets) RenderWithFirestartrContainer(ctx context.Context, clai
 				"--claimsDefaults", "/.config",
 				"--outputCrDir", "/output",
 				"--provider", "externalSecrets",
-                "--claimRefsList", "SecretsClaim-" + claimName,
+            "--claimRefsList", "SecretsClaim-" + claimName,
 			},
 		).Sync(ctx)
 
