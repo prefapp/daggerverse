@@ -6,7 +6,7 @@ import (
 	"path"
 )
 
-func (m *HydrateTfworkspaces) RenderWithFirestartrContainer(ctx context.Context, claimsDir *dagger.Directory) (*dagger.Directory, error) {
+func (m *HydrateTfworkspaces) RenderWithFirestartrContainer(ctx context.Context, claimsDir *dagger.Directory, claimName string) (*dagger.Directory, error) {
 
 	fsCtr, err := dag.Container().
 		From(m.Config.Image).
@@ -15,22 +15,23 @@ func (m *HydrateTfworkspaces) RenderWithFirestartrContainer(ctx context.Context,
 		WithDirectory("/.config", m.ValuesDir.Directory(".config")).
 		WithDirectory("/crs/.config", dag.Directory()).
 		WithEnvVariable("DEBUG", "NONE").
-		WithExec(
-			[]string{
-				"./run.sh",
-				"cdk8s",
-				"--render",
-				"--disableRenames",
-				"--globals", path.Join("/crs", ".config"),
-				"--initializers", path.Join("/crs", ".config"),
-				"--claims", "claims",
-				"--previousCRs", "/crs/tfworkspaces",
-				"--excludePath", path.Join("/crs", ".github"),
-				"--claimsDefaults", "/.config",
-				"--outputCrDir", "/output",
-				"--provider", "terraform",
-			},
-		).Sync(ctx)
+        WithExec(
+            []string{
+                "./run.sh",
+                "cdk8s",
+                "--render",
+                "--disableRenames",
+                "--globals", path.Join("/crs", ".config"),
+                "--initializers", path.Join("/crs", ".config"),
+                "--claims", "claims",
+                "--previousCRs", "/crs/tfworkspaces",
+                "--excludePath", path.Join("/crs", ".github"),
+                "--claimsDefaults", "/.config",
+                "--outputCrDir", "/output",
+                "--claimRefsList", "TFWorkspaceClaim-" + claimName,
+                "--provider", "terraform",
+            },
+        ).Sync(ctx)
 
 	if err != nil {
 
