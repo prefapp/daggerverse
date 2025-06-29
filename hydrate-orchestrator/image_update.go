@@ -28,6 +28,7 @@ type ImageData struct {
 	RepositoryCaller string   `json:"repository_caller"`
 }
 
+// run-dispatch is the main entry point for the hydrate orchestrator.
 func (m *HydrateOrchestrator) RunDispatch(
 	ctx context.Context,
 	// +optional
@@ -75,6 +76,9 @@ func (m *HydrateOrchestrator) RunDispatch(
 
 }
 
+// getRepositoryCaller extracts the repository caller and constructs the repository URL from the new images matrix.
+// It assumes the first image in the matrix contains the repository caller.
+// The repository caller is expected to be in the format "org/repository".
 func (m *HydrateOrchestrator) getRepositoryCaller(newImagesMatrix string) (string, string) {
 	var imagesMatrix ImageMatrix
 	err := json.Unmarshal([]byte(newImagesMatrix), &imagesMatrix)
@@ -92,6 +96,11 @@ func (m *HydrateOrchestrator) getRepositoryCaller(newImagesMatrix string) (strin
 	return repositoryCaller, repoURL
 }
 
+// getReviewers extracts the reviewers from the new images matrix.
+// It filters out any reviewers that are bots (identified by the suffix "[bot]") and
+// ensures that there are no duplicate reviewers.
+// The reviewers are expected to be listed under each image in the matrix.
+// It returns a slice of unique reviewers.
 func (m *HydrateOrchestrator) getReviewers(newImagesMatrix string) []string {
 	var imagesMatrix ImageMatrix
 	err := json.Unmarshal([]byte(newImagesMatrix), &imagesMatrix)
@@ -102,7 +111,27 @@ func (m *HydrateOrchestrator) getReviewers(newImagesMatrix string) []string {
 
 	reviewers := []string{}
 	for _, image := range imagesMatrix.Images {
-		reviewers = append(reviewers, image.Reviewers...)
+		// filter reviewers to avoid duplicates
+		for _, reviewer := range image.Reviewers {
+			if !strings.HasSuffix(reviewer, "[bot]") {
+				// [bot] reviewers are not supported by the GitHub CLI
+				if !contains(reviewers, reviewer) {
+					reviewers = append(reviewers, reviewer)
+				}
+			} else {
+				fmt.Printf("☢️ Skipping bot reviewer: %s\n", reviewer)
+			}
+		}
 	}
 	return reviewers
+}
+
+// contains checks if a string slice contains a specific item.
+func contains(slice []string, item string) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
+		}
+	}
+	return false
 }
