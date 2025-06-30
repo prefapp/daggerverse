@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -64,12 +65,15 @@ func (m *UpdateClaimsFeatures) New(
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
 	var featuresToUpdateList []string = nil
+	rexp := regexp.MustCompile(`,\s+`)
 
 	if claimsToUpdate != "" {
+		claimsToUpdate = rexp.ReplaceAllString(claimsToUpdate, ",")
 		claimsToUpdateList = strings.Split(claimsToUpdate, ",")
 	}
 
 	if featuresToUpdate != "" {
+		featuresToUpdate = rexp.ReplaceAllString(featuresToUpdate, ",")
 		featuresToUpdateList = strings.Split(featuresToUpdate, ",")
 	}
 
