@@ -99,7 +99,7 @@ Created by @%s from %s within commit [%s](%s)
 				kdep.DeploymentPath,
 				fmt.Sprintf("Failed: %s", "STDOUT" + e.Stdout + "." + "STDERR" + e.Stderr),
 			)
-
+			return nil
 		} else {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
