@@ -91,13 +91,13 @@ Created by @%s from %s within commit [%s](%s)
 			var e *dagger.ExecError
 			if errors.As(err, &e) {
 					fmt.Println("FAILED")
-					fmt.Println("STDOUT:", e.Stdout())
-					fmt.Println("STDERR:", e.Stderr())
-					fmt.Println("EXIT CODE:", e.ExitCode())
+					fmt.Println("STDOUT:", e.Stdout)
+					fmt.Println("STDERR:", e.Stderr)
+					fmt.Println("EXIT CODE:", e.ExitCode)
 			}
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", "STDOUT" + e.Stdout() + "." + "STDERR" + e.Stderr()),
+				fmt.Sprintf("Failed: %s", "STDOUT" + e.Stdout + "." + "STDERR" + e.Stderr),
 			)
 
 		} else {
