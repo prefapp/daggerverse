@@ -40,7 +40,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -68,7 +68,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -124,7 +124,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -152,7 +152,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 				summary.addDeploymentSummaryRow(
 					tfDep.DeploymentPath,
-					fmt.Sprintf("Failed: %s", err.Error()),
+					extractErrorMessage(err),
 				)
 
 				continue

@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 )
@@ -41,9 +42,8 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
-
 			continue
 		}
 
@@ -64,10 +64,9 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 		)
 
 		if err != nil {
-
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -83,9 +82,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 					kdep.DeploymentPath,
 					"Failed: PR link is empty, cannot merge PR",
 				)
-
 				continue
-
 			}
 
 			err := m.MergePullRequest(ctx, prLink)
@@ -94,11 +91,9 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 				summary.addDeploymentSummaryRow(
 					kdep.DeploymentPath,
-					fmt.Sprintf("Failed: %s", err.Error()),
+					extractErrorMessage(err),
 				)
-
 				continue
-
 			}
 
 			summary.addDeploymentSummaryRow(
