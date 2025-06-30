@@ -137,58 +137,57 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 			if versionIsDifferentThanOriginal.Check(updatedFeatureVersionSemver) {
 				prBody = fmt.Sprintf("%s## %s:", prBody, updatedFeature.Name)
 				for _, featureVersion := range allFeaturesMap[updatedFeature.Name] {
-					if featureVersion != "" {
-						featureVersionSemver, err := semver.NewVersion(featureVersion)
-						if err != nil {
-							return "", err
-						}
+					featureVersionSemver, err := semver.NewVersion(featureVersion)
+					if err != nil {
+						return "", err
+					}
 
-						addChangeLog, err := semver.NewConstraint(
-							fmt.Sprintf(
-								"> %s, <= %s || =%s",
-								originalVersionMap[updatedFeature.Name],
-								updatedFeature.Version,
-								updatedFeature.Version,
-							),
+					fmt.Printf("☢️ Versions: %s, %s\n", originalVersionMap[updatedFeature.Name], updatedFeature.Version)
+					addChangeLog, err := semver.NewConstraint(
+						fmt.Sprintf(
+							"> %s, <= %s || =%s",
+							originalVersionMap[updatedFeature.Name],
+							updatedFeature.Version,
+							updatedFeature.Version,
+						),
+					)
+					if err != nil {
+						return "", err
+					}
+
+					// allFeaturesMap contains every release for every feature, so
+					// they are filtered here so only the changelogs for versions
+					// that are greater than the originally installed one but
+					// lesser or equal to the version that is being currently
+					// installed (which won't necessarily be latest)
+					versionInfo := ""
+					if addChangeLog.Check(featureVersionSemver) {
+						fullFeatureTag := fmt.Sprintf(
+							"%s-v%s", updatedFeature.Name, featureVersion,
 						)
+						changelog, err := m.getReleaseChangelog(ctx, fullFeatureTag)
+
 						if err != nil {
 							return "", err
 						}
 
-						// allFeaturesMap contains every release for every feature, so
-						// they are filtered here so only the changelogs for versions
-						// that are greater than the originally installed one but
-						// lesser or equal to the version that is being currently
-						// installed (which won't necessarily be latest)
-						versionInfo := ""
-						if addChangeLog.Check(featureVersionSemver) {
-							fullFeatureTag := fmt.Sprintf(
-								"%s-v%s", updatedFeature.Name, featureVersion,
-							)
-							changelog, err := m.getReleaseChangelog(ctx, fullFeatureTag)
-
-							if err != nil {
-								return "", err
-							}
-
-							err = json.Unmarshal([]byte(changelog), &parsedJson)
-							if err != nil {
-								return "", err
-							}
-
-							versionInfo = fmt.Sprintf(
-								"%s\n%s",
-								versionInfo,
-								parsedJson.Body,
-							)
+						err = json.Unmarshal([]byte(changelog), &parsedJson)
+						if err != nil {
+							return "", err
 						}
 
-						prBody = fmt.Sprintf(
-							"%s\n%s\n\n\n",
-							prBody,
+						versionInfo = fmt.Sprintf(
+							"%s\n%s",
 							versionInfo,
+							parsedJson.Body,
 						)
 					}
+
+					prBody = fmt.Sprintf(
+						"%s\n%s\n\n\n",
+						prBody,
+						versionInfo,
+					)
 				}
 			}
 		}
