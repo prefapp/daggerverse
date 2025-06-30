@@ -136,7 +136,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				currentFeatureVersionsMap := m.extractCurrentFeatureVersionsFromClaim(
 					ctx, claim,
 				)
-				fmt.Printf("%s", currentFeatureVersionsMap)
 				claim.Providers.Github.Features = updatedFeaturesList
 				updatedDir := m.updateDirWithClaim(ctx, claim, entry)
 				releaseBody, err := m.getPrBodyForFeatureUpdate(
