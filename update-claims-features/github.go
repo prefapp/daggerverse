@@ -362,6 +362,10 @@ func (m *UpdateClaimsFeatures) getReleaseChangelog(
 	var err error
 
 	if releasesChangelog[releaseTag] == "" {
+		fmt.Printf(
+			"☢️ No cached changelog for tag %s found, getting it from GitHub",
+			releaseTag,
+		)
 		changelog, err = dag.Gh(dagger.GhOpts{
 			Version: m.GhCliVersion,
 		}).Container(dagger.GhContainerOpts{
@@ -380,6 +384,7 @@ func (m *UpdateClaimsFeatures) getReleaseChangelog(
 			}).
 			Stdout(ctx)
 	} else {
+		fmt.Printf("☢️ Using cached changelog for tag %s", releaseTag)
 		changelog = releasesChangelog[releaseTag]
 		err = nil
 	}
