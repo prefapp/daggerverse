@@ -41,7 +41,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -67,7 +67,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -94,7 +94,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 				summary.addDeploymentSummaryRow(
 					kdep.DeploymentPath,
-					fmt.Sprintf("Failed: %s", err.Error()),
+					extractErrorMessage(err),
 				)
 
 				continue

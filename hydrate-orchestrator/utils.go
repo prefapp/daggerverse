@@ -13,6 +13,19 @@ import (
 )
 
 /*
+Error handling
+*/
+
+func extractErrorMessage(err error) string {
+	switch e := err.(type) {
+	case *dagger.ExecError:
+		return fmt.Sprintf("Failed: %s\nSTDERR: %s\nSTDOUT%s", e.Error(), e.Stderr, e.Stdout)
+	default:
+		return fmt.Sprintf("Failed: %s", err.Error())
+	}
+}
+
+/*
 struct to hold the updated deployments
 */
 

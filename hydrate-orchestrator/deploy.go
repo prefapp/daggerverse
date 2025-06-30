@@ -4,7 +4,6 @@ import (
 	"context"
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -59,7 +58,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -88,18 +87,10 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
-			var e *dagger.ExecError
-			if errors.As(err, &e) {
-					fmt.Println("FAILED")
-					fmt.Println("STDOUT:", e.Stdout)
-					fmt.Println("STDERR:", e.Stderr)
-					fmt.Println("EXIT CODE:", e.ExitCode)
-			}
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", "STDOUT" + e.Stdout + "." + "STDERR" + e.Stderr),
+				extractErrorMessage(err),
 			)
-			return nil
 		} else {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
@@ -124,7 +115,7 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -156,7 +147,7 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 		} else {
@@ -181,7 +172,7 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -216,7 +207,7 @@ Created by @%s from %s within commit [%s](%s)
 
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -272,7 +263,7 @@ Created by @%s from %s within commit [%s](%s)
 
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 		} else {
@@ -296,7 +287,7 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				secDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -327,7 +318,7 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				secDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 		} else {
