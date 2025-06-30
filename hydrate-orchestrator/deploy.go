@@ -91,6 +91,8 @@ Created by @%s from %s within commit [%s](%s)
 				kdep.DeploymentPath,
 				extractErrorMessage(err),
 			)
+
+			continue
 		} else {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
@@ -145,11 +147,13 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
+
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
 				extractErrorMessage(err),
 			)
 
+			continue
 		} else {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
@@ -266,6 +270,8 @@ Created by @%s from %s within commit [%s](%s)
 				extractErrorMessage(err),
 			)
 
+			continue
+
 		} else {
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
@@ -320,6 +326,8 @@ Created by @%s from %s within commit [%s](%s)
 				secDep.DeploymentPath,
 				extractErrorMessage(err),
 			)
+
+			continue
 
 		} else {
 			summary.addDeploymentSummaryRow(
