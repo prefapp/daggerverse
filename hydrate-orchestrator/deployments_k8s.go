@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 )
@@ -39,11 +40,17 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 		})
 
 		if err != nil {
+			var e *dagger.ExecError
+			if errors.As(err, &e) {
+					fmt.Println("FAILED")
+					fmt.Println("STDOUT:", e.Stdout)
+					fmt.Println("STDERR:", e.Stderr)
+					fmt.Println("EXIT CODE:", e.ExitCode)
+			}
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				fmt.Sprintf("Failed: %s", "STDERR" + e.Stderr + "," + "STDOUT" + e.Stdout),
 			)
-
 			continue
 		}
 
@@ -64,10 +71,16 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 		)
 
 		if err != nil {
-
+			var e *dagger.ExecError
+			if errors.As(err, &e) {
+					fmt.Println("FAILED")
+					fmt.Println("STDOUT:", e.Stdout)
+					fmt.Println("STDERR:", e.Stderr)
+					fmt.Println("EXIT CODE:", e.ExitCode)
+			}
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				fmt.Sprintf("Failed: %s", "STDERR" + e.Stderr + "," + "STDOUT" + e.Stdout),
 			)
 
 			continue
@@ -83,9 +96,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 					kdep.DeploymentPath,
 					"Failed: PR link is empty, cannot merge PR",
 				)
-
 				continue
-
 			}
 
 			err := m.MergePullRequest(ctx, prLink)
@@ -96,9 +107,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 					kdep.DeploymentPath,
 					fmt.Sprintf("Failed: %s", err.Error()),
 				)
-
 				continue
-
 			}
 
 			summary.addDeploymentSummaryRow(

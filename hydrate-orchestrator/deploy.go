@@ -97,9 +97,8 @@ Created by @%s from %s within commit [%s](%s)
 			}
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", "STDOUT" + e.Stdout + "." + "STDERR" + e.Stderr),
+				fmt.Sprintf("Failed: %s", "STDERR" + e.Stderr + "," + "STDOUT" + e.Stdout),
 			)
-			return nil
 		} else {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
@@ -154,11 +153,17 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
+			var e *dagger.ExecError
+			if errors.As(err, &e) {
+					fmt.Println("FAILED")
+					fmt.Println("STDOUT:", e.Stdout)
+					fmt.Println("STDERR:", e.Stderr)
+					fmt.Println("EXIT CODE:", e.ExitCode)
+			}
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				fmt.Sprintf("Failed: %s", "STDERR" + e.Stderr + "," + "STDOUT" + e.Stdout),
 			)
-
 		} else {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
