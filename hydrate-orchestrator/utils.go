@@ -67,10 +67,13 @@ type Deployment struct {
 
 type KubernetesAppDeployment struct {
 	Deployment
-	Cluster      string
-	Tenant       string
-	Environment  string
-	ImagesMatrix string
+	Cluster          string
+	Tenant           string
+	Environment      string
+	ImagesMatrix     string
+	ServiceNames     []string
+	RepositoryCaller string
+	Image            string
 }
 
 /*
@@ -148,19 +151,62 @@ func (kd *KubernetesAppDeployment) Equals(other KubernetesAppDeployment) bool {
 		kd.Environment == other.Environment
 }
 
-func (kd *KubernetesAppDeployment) String(summary bool) string {
+func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) string {
+	// Extract the necessary fields
+	serviceNames := kd.ServiceNames
+	repo := kd.RepositoryCaller
+	image := kd.Image
+
+	// Build the repository link if a URL is provided
+	repoLink := repo
+	if len(repoURL) > 0 && repoURL[0] != "" {
+		repoLink = fmt.Sprintf("[%s](%s)", repo, repoURL[0])
+	}
 
 	if summary {
+		// If no service names are provided, just return the deployment coordinates
+		if len(serviceNames) == 0 {
+			return fmt.Sprintf(
+				"Deployment in cluster: `%s`, tenant: `%s`, env: `%s`",
+				kd.Cluster, kd.Tenant, kd.Environment,
+			)
+		} else {
+			// Use the first service_name or concatenate if multiple
+			serviceName := serviceNames[0]
+			if len(serviceNames) > 1 {
+				for i, name := range serviceNames {
+					serviceNames[i] = fmt.Sprintf("`%s`", name)
+				}
+				serviceName = strings.Join(serviceNames, ", ")
+			}
 
-		return fmt.Sprintf(
-			"Deployment in cluster: `%s`, tenant: `%s`, env: `%s`",
-			kd.Cluster, kd.Tenant, kd.Environment,
-		)
+			return fmt.Sprintf(
+				"Deployment of %s in cluster: `%s`, tenant: `%s`, env: `%s`",
+				serviceName, kd.Cluster, kd.Tenant, kd.Environment,
+			)
+		}
 	} else {
-		return "Deployment coordinates:" +
-			fmt.Sprintf("\n\t* Cluster: `%s`", kd.Cluster) +
-			fmt.Sprintf("\n\t* Tenant: `%s`", kd.Tenant) +
-			fmt.Sprintf("\n\t* Environment: `%s`", kd.Environment)
+		// If no service names are provided, just return the deployment coordinates
+		if len(serviceNames) == 0 {
+			return "\n### Deployment coordinates:" +
+				fmt.Sprintf("\n  * Cluster: `%s`", kd.Cluster) +
+				fmt.Sprintf("\n  * Tenant: `%s`", kd.Tenant) +
+				fmt.Sprintf("\n  * Environment: `%s`", kd.Environment)
+		} else {
+			// If service names are provided, format them into a list
+			servicesList := ""
+			for _, svc := range serviceNames {
+				servicesList += fmt.Sprintf("      - `%s`\n", svc)
+			}
+			return "\n### :rocket: Deployment updated from new image dispatch" +
+				fmt.Sprintf("\n  * Repository: %s", repoLink) +
+				fmt.Sprintf("\n  * Services updated:\n %s", servicesList) +
+				fmt.Sprintf("\n  * New image: `%s`", image) +
+				"\n### Deployment coordinates:" +
+				fmt.Sprintf("\n  * Cluster: `%s`", kd.Cluster) +
+				fmt.Sprintf("\n  * Tenant: `%s`", kd.Tenant) +
+				fmt.Sprintf("\n  * Environment: `%s`", kd.Environment)
+		}
 	}
 }
 
