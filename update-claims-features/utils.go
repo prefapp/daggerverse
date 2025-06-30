@@ -123,7 +123,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 			return "", err
 		}
 
-		if originalVersionMap[updatedFeature.Name] != "" {
+		if originalVersionMap[updatedFeature.Name] != "" && updatedFeature.Version != "" {
 			versionIsDifferentThanOriginal, err := semver.NewConstraint(
 				fmt.Sprintf("!=%s", originalVersionMap[updatedFeature.Name]),
 			)
