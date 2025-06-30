@@ -47,10 +47,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 			continue
 		}
 
-		prBody := fmt.Sprintf(`
-# New deployment from new image in repository [*%s*](%s)
-%s
-`, repositoryCaller, repoURL, kdep.String(false))
+		prBody := kdep.String(false, repoURL)
 
 		globPattern := fmt.
 			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
@@ -60,7 +57,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
-			kdep.String(true),
+			kdep.String(true, repoURL),
 			prBody,
 			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 			reviewers,
@@ -175,10 +172,13 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 			Deployment: Deployment{
 				DeploymentPath: deploymentPath,
 			},
-			Cluster:      image.Platform,
-			Tenant:       image.Tenant,
-			Environment:  image.Env,
-			ImagesMatrix: string(jsonUniqueImage),
+			Cluster:          image.Platform,
+			Tenant:           image.Tenant,
+			Environment:      image.Env,
+			ImagesMatrix:     string(jsonUniqueImage),
+			ServiceNames:     image.ServiceNameList,
+			RepositoryCaller: image.RepositoryCaller,
+			Image:            image.Image,
 		}
 
 		result.addDeployment(kdep)
