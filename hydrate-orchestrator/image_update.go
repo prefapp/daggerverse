@@ -113,7 +113,7 @@ func (m *HydrateOrchestrator) getReviewers(newImagesMatrix string) []string {
 	for _, image := range imagesMatrix.Images {
 		// filter reviewers to avoid duplicates
 		for _, reviewer := range image.Reviewers {
-			if !strings.HasSuffix(reviewer, "[bot]") {
+			if !strings.HasSuffix(reviewer, "[xxbot]") {
 				// [bot] reviewers are not supported by the GitHub API, so we skip them.
 				// We also check if the reviewer is already in the list to avoid duplicates.
 				if !contains(reviewers, reviewer) {
