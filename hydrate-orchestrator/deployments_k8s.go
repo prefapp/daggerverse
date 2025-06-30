@@ -40,13 +40,6 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 		})
 
 		if err != nil {
-			var e *dagger.ExecError
-			if errors.As(err, &e) {
-				fmt.Println("FAILED")
-				fmt.Println("STDOUT:", e.Stdout)
-				fmt.Println("STDERR:", e.Stderr)
-				fmt.Println("EXIT CODE:", e.ExitCode)
-			}
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
 				extractErrorMessage(err),
