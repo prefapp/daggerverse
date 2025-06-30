@@ -358,11 +358,11 @@ func (m *UpdateClaimsFeatures) getReleaseChangelog(
 	ctx context.Context,
 	releaseTag string,
 ) (string, error) {
-	var changelog
-	var err
+	changelog := ""
+	var err error
 
 	if releasesChangelog[releaseTag] == "" {
-		changelog, err := dag.Gh(dagger.GhOpts{
+		changelog, err = dag.Gh(dagger.GhOpts{
 			Version: m.GhCliVersion,
 		}).Container(dagger.GhContainerOpts{
 			Token: m.PrefappGhToken,
@@ -380,8 +380,8 @@ func (m *UpdateClaimsFeatures) getReleaseChangelog(
 			}).
 			Stdout(ctx)
 	} else {
-		changelog := releasesChangelog[releaseTag]
-		error := nil
+		changelog = releasesChangelog[releaseTag]
+		err = nil
 	}
 
 	return changelog, err
