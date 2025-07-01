@@ -82,7 +82,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 				}
 
 				// if instead of createPR = versionIsGreater.Check()
-				// because a later unupdated feature could override this value
+				// because a later updated feature could override this value
 				if versionIsDifferent.Check(featureVersionSemver) {
 					createPR = true
 					feature.Version = featuresMap[feature.Name]
