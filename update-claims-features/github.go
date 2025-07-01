@@ -341,7 +341,7 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 			"gh",
 			"release",
 			"list",
-            		"--exclude-pre-releases",
+			"--exclude-pre-releases",
 			"--limit",
 			"999",
 			"--json",
@@ -352,27 +352,43 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 	return ghReleaseListResult, err
 }
 
+var releasesChangelog = make(map[string]string)
+
 func (m *UpdateClaimsFeatures) getReleaseChangelog(
 	ctx context.Context,
 	releaseTag string,
 ) (string, error) {
-	changelog, err := dag.Gh(dagger.GhOpts{
-		Version: m.GhCliVersion,
-	}).Container(dagger.GhContainerOpts{
-		Token: m.PrefappGhToken,
-		Repo:  "prefapp/features",
-	}).WithDirectory(m.ClaimsDirPath, m.ClaimsDir, dagger.ContainerWithDirectoryOpts{}).
-		WithWorkdir(m.ClaimsDirPath).
-		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{
-			"gh",
-			"release",
-			"view",
+	changelog := ""
+	var err error
+
+	if releasesChangelog[releaseTag] == "" {
+		fmt.Printf(
+			"☢️ No cached changelog for tag %s found, getting it from GitHub\n",
 			releaseTag,
-			"--json",
-			"body",
-		}).
-		Stdout(ctx)
+		)
+		changelog, err = dag.Gh(dagger.GhOpts{
+			Version: m.GhCliVersion,
+		}).Container(dagger.GhContainerOpts{
+			Token: m.PrefappGhToken,
+			Repo:  "prefapp/features",
+		}).WithDirectory(m.ClaimsDirPath, m.ClaimsDir, dagger.ContainerWithDirectoryOpts{}).
+			WithWorkdir(m.ClaimsDirPath).
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithExec([]string{
+				"gh",
+				"release",
+				"view",
+				releaseTag,
+				"--json",
+				"body",
+			}).
+			Stdout(ctx)
+		releasesChangelog[releaseTag] = changelog
+	} else {
+		fmt.Printf("☢️ Using cached changelog for tag %s\n", releaseTag)
+		changelog = releasesChangelog[releaseTag]
+		err = nil
+	}
 
 	return changelog, err
 }

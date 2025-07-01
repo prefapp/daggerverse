@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -64,12 +65,15 @@ func (m *UpdateClaimsFeatures) New(
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
 	var featuresToUpdateList []string = nil
+	rexp := regexp.MustCompile(`,\s+`)
 
 	if claimsToUpdate != "" {
+		claimsToUpdate = rexp.ReplaceAllString(claimsToUpdate, ",")
 		claimsToUpdateList = strings.Split(claimsToUpdate, ",")
 	}
 
 	if featuresToUpdate != "" {
+		featuresToUpdate = rexp.ReplaceAllString(featuresToUpdate, ",")
 		featuresToUpdateList = strings.Split(featuresToUpdate, ",")
 	}
 
@@ -111,7 +115,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	}
 
 	for _, entry := range claims {
-		fmt.Printf("Classifying claims in %s\n", entry)
+		fmt.Printf("Reading claim %s\n", entry)
 
 		claim, err := m.getClaimIfKindComponent(ctx, entry)
 		if err != nil {
@@ -158,7 +162,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					return "", err
 				}
 
-				fmt.Printf("PR LINK: %s", prLink)
+				fmt.Printf("PR LINK: %s\n", prLink)
 
 				if m.Automerge {
 					m.MergePullRequest(ctx, prLink)
