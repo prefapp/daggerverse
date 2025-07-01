@@ -162,7 +162,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					return "", err
 				}
 
-				fmt.Printf("PR LINK: %s", prLink)
+				fmt.Printf("PR LINK: %s\n", prLink)
 
 				if m.Automerge {
 					m.MergePullRequest(ctx, prLink)

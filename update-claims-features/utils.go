@@ -115,10 +115,10 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 ) (string, error) {
 	prBody := ""
 	var parsedJson ReleaseBody
+	fmt.Printf("☢️ Features data: %s, %s\n", updatedFeaturesList, allFeaturesMap)
 
 	for _, updatedFeature := range updatedFeaturesList {
 		if updatedFeature.Version != "" {
-			fmt.Printf("☢️ Versions> %s, %s\n", updatedFeature.Version, updatedFeature.Name)
 			updatedFeatureVersionSemver, err := semver.NewVersion(updatedFeature.Version)
 
 			if err != nil {
