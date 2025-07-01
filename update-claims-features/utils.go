@@ -132,7 +132,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 					return "", err
 				}
 
-				// Unupdated features are still added to the updatedFeaturesList with
+				// Updated features are still added to the updatedFeaturesList with
 				// the same version as they originally had, so we filter them here
 				// (they are added so they don't get deleted when updating the feature list)
 				if versionIsDifferentThanOriginal.Check(updatedFeatureVersionSemver) {
