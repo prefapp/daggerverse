@@ -1,5 +1,19 @@
 # Changelog
 
+## [6.3.2](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.1...hydrate-orchestrator-v6.3.2) (2025-06-30)
+
+
+### Bug Fixes
+
+* Remove unused module ([#253](https://github.com/prefapp/daggerverse/issues/253)) ([eb890a4](https://github.com/prefapp/daggerverse/commit/eb890a449a48633768181338ca3304e3e24419f3))
+
+## [6.3.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.0...hydrate-orchestrator-v6.3.1) (2025-06-30)
+
+
+### Bug Fixes
+
+* filter reviewers and add error handling ([#249](https://github.com/prefapp/daggerverse/issues/249)) ([26c55ee](https://github.com/prefapp/daggerverse/commit/26c55ee1aee0981d8ddc524fa218a9f808af6d0b))
+
 ## [6.3.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.2.2...hydrate-orchestrator-v6.3.0) (2025-06-26)
 
 
