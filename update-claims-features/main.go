@@ -115,7 +115,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	}
 
 	for _, entry := range claims {
-		fmt.Printf("Classifying claims in %s\n", entry)
+		fmt.Printf("Reading claim %s\n", entry)
 
 		claim, err := m.getClaimIfKindComponent(ctx, entry)
 		if err != nil {
