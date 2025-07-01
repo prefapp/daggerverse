@@ -117,6 +117,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 	var parsedJson ReleaseBody
 
 	for _, updatedFeature := range updatedFeaturesList {
+		fmt.Printf("☢️ Versions> %s, %s\n", updatedFeature.Version, updatedFeature.Name)
 		updatedFeatureVersionSemver, err := semver.NewVersion(updatedFeature.Version)
 
 		if err != nil {
@@ -153,7 +154,6 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 					if err != nil {
 						return "", err
 					}
-					fmt.Printf("☢️ Versions; %s, %s, %s\n", originalVersionMap[updatedFeature.Name], updatedFeature.Version, updatedFeature.Name)
 
 					// allFeaturesMap contains every release for every feature, so
 					// they are filtered here so only the changelogs for versions
