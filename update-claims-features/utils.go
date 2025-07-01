@@ -142,7 +142,6 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 						return "", err
 					}
 
-					fmt.Printf("☢️ Versions: %s, %s\n", originalVersionMap[updatedFeature.Name], updatedFeature.Version)
 					addChangeLog, err := semver.NewConstraint(
 						fmt.Sprintf(
 							"> %s, <= %s || =%s",
@@ -154,6 +153,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 					if err != nil {
 						return "", err
 					}
+					fmt.Printf("☢️ Versions; %s, %s\n", originalVersionMap[updatedFeature.Name], updatedFeature.Version)
 
 					// allFeaturesMap contains every release for every feature, so
 					// they are filtered here so only the changelogs for versions
