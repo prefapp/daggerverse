@@ -38,11 +38,6 @@ func (m *UpdateClaimsFeatures) New(
 	// +default="main"
 	defaultBranch string,
 
-	// Name of the components folder name
-	// +optional
-	// +default="components"
-	componentsFolderName string,
-
 	// Name of the claim to be updated
 	// +optional
 	// +default=""
@@ -78,18 +73,17 @@ func (m *UpdateClaimsFeatures) New(
 	}
 
 	return &UpdateClaimsFeatures{
-		Repo:                 repo,
-		GhToken:              ghToken,
-		PrefappGhToken:       prefappGhToken,
-		GhCliVersion:         ghCliVersion,
-		ClaimsDir:            claimsDir,
-		ClaimsDirPath:        claimsDirPath,
-		DefaultBranch:        defaultBranch,
-		ComponentsFolderName: componentsFolderName,
-		ClaimsToUpdate:       claimsToUpdateList,
-		FeaturesToUpdate:     featuresToUpdateList,
-		VersionConstraint:    versionConstraint,
-		Automerge:            automerge,
+		Repo:              repo,
+		GhToken:           ghToken,
+		PrefappGhToken:    prefappGhToken,
+		GhCliVersion:      ghCliVersion,
+		ClaimsDir:         claimsDir,
+		ClaimsDirPath:     claimsDirPath,
+		DefaultBranch:     defaultBranch,
+		ClaimsToUpdate:    claimsToUpdateList,
+		FeaturesToUpdate:  featuresToUpdateList,
+		VersionConstraint: versionConstraint,
+		Automerge:         automerge,
 	}, nil
 }
 
