@@ -9,10 +9,38 @@ import (
 	"time"
 )
 
+var GhContainer *dagger.Container = nil
+var FeaturesContainer *dagger.Container = nil
+
+func (m *UpdateClaimsFeatures) getGhContainer() *dagger.Container {
+	if GhContainer == nil {
+		GhContainer = dag.Gh(dagger.GhOpts{
+			Version: m.GhCliVersion,
+		}).Container(dagger.GhContainerOpts{
+			Token:   m.GhToken,
+			Plugins: []string{"prefapp/gh-commit"},
+		})
+	}
+
+	return GhContainer
+}
+
+func (m *UpdateClaimsFeatures) getFeaturesContainer() *dagger.Container {
+	if FeaturesContainer == nil {
+		FeaturesContainer = dag.Gh(dagger.GhOpts{
+			Version: m.GhCliVersion,
+		}).Container(dagger.GhContainerOpts{
+			Token: m.PrefappGhToken,
+			Repo:  "prefapp/features",
+		})
+	}
+
+	return FeaturesContainer
+}
+
 /*
 Create or update a PR with the updated contents
 */
-
 func (m *UpdateClaimsFeatures) upsertPR(
 	ctx context.Context,
 	// Updated deployment branch name
@@ -46,12 +74,8 @@ func (m *UpdateClaimsFeatures) upsertPR(
 
 	fmt.Printf("Checking if branch %s exists\n", newBranchName)
 
-	stdoutlsRemote, err := dag.Gh(dagger.GhOpts{
-		Version: m.GhCliVersion,
-	}).Container(dagger.GhContainerOpts{
-		Token:   m.GhToken,
-		Plugins: []string{"prefapp/gh-commit"},
-	}).WithMountedDirectory(contentsDirPath, contents).
+	stdoutlsRemote, err := m.getGhContainer().
+		WithMountedDirectory(contentsDirPath, contents).
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
@@ -84,11 +108,8 @@ func (m *UpdateClaimsFeatures) upsertPR(
 
 		fmt.Printf("☢️ Pull request exists, ensure branch %s is up to date\n", newBranchName)
 
-		_, err = dag.Gh(dagger.GhOpts{
-			Version: m.GhCliVersion,
-		}).Container(dagger.GhContainerOpts{
-			Token: m.GhToken,
-		}).WithWorkdir(contentsDirPath).
+		_, err = m.getGhContainer().
+			WithWorkdir(contentsDirPath).
 			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 			WithExec([]string{
 				"gh",
@@ -100,12 +121,8 @@ func (m *UpdateClaimsFeatures) upsertPR(
 
 	}
 
-	_, err = dag.Gh(dagger.GhOpts{
-		Version: m.GhCliVersion,
-	}).Container(dagger.GhContainerOpts{
-		Token:   m.GhToken,
-		Plugins: []string{"prefapp/gh-commit"},
-	}).WithMountedDirectory(contentsDirPath, contents).
+	_, err = m.getGhContainer().
+		WithMountedDirectory(contentsDirPath, contents).
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
@@ -149,13 +166,9 @@ func (m *UpdateClaimsFeatures) upsertPR(
 		}
 
 		// Create a PR for the updated deployment
-		stdout, err := dag.Gh().Container(dagger.GhContainerOpts{
-			Version: m.GhCliVersion,
-			Token:   m.GhToken,
-		}).
-			WithEnvVariable(
-				"CACHE_BUSTER",
-				time.Now().String()).WithMountedDirectory(contentsDirPath, contents).
+		stdout, err := m.getGhContainer().
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithMountedDirectory(contentsDirPath, contents).
 			WithWorkdir(contentsDirPath).
 			WithExec(cmd).
 			Stdout(ctx)
@@ -220,7 +233,7 @@ func (m *UpdateClaimsFeatures) createRemoteBranch(
 
 	gitDirPath := "/git_dir"
 
-	_, err := dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Version: m.GhCliVersion}).
+	_, err := m.getGhContainer().
 		WithMountedDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
@@ -246,7 +259,7 @@ func (m *UpdateClaimsFeatures) regenerateRemoteBranch(
 
 	gitDirPath := "/git_dir"
 
-	_, err := dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Version: m.GhCliVersion}).
+	_, err := m.getGhContainer().
 		WithMountedDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
@@ -328,12 +341,8 @@ func (m *UpdateClaimsFeatures) prExists(ctx context.Context, branchName string) 
 }
 
 func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) {
-	ghReleaseListResult, err := dag.Gh(dagger.GhOpts{
-		Version: m.GhCliVersion,
-	}).Container(dagger.GhContainerOpts{
-		Token: m.PrefappGhToken,
-		Repo:  "prefapp/features",
-	}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
+	ghReleaseListResult, err := m.getFeaturesContainer().
+		WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
 		WithWorkdir(m.ClaimsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
@@ -365,12 +374,8 @@ func (m *UpdateClaimsFeatures) getReleaseChangelog(
 			"☢️ No cached changelog for tag %s found, getting it from GitHub\n",
 			releaseTag,
 		)
-		changelog, err = dag.Gh(dagger.GhOpts{
-			Version: m.GhCliVersion,
-		}).Container(dagger.GhContainerOpts{
-			Token: m.PrefappGhToken,
-			Repo:  "prefapp/features",
-		}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
+		changelog, err = m.getFeaturesContainer().
+			WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
 			WithWorkdir(m.ClaimsDirPath).
 			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 			WithExec([]string{
