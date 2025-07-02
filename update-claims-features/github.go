@@ -51,7 +51,7 @@ func (m *UpdateClaimsFeatures) upsertPR(
 	}).Container(dagger.GhContainerOpts{
 		Token:   m.GhToken,
 		Plugins: []string{"prefapp/gh-commit"},
-	}).WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{}).
+	}).WithMountedDirectory(contentsDirPath, contents).
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
@@ -105,16 +105,17 @@ func (m *UpdateClaimsFeatures) upsertPR(
 	}).Container(dagger.GhContainerOpts{
 		Token:   m.GhToken,
 		Plugins: []string{"prefapp/gh-commit"},
-	}).WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
-		Exclude: []string{".git"},
-	}).WithWorkdir(contentsDirPath).
+	}).WithMountedDirectory(contentsDirPath, contents).
+		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{"git", "config", "user.email", fmt.Sprintf(
+			"fs-%s-state[bot]@users.noreply.github.com", m.Org,
+		)}).
+		WithExec([]string{"git", "config", "user.name", "firestartr-bot"}).
+		WithExec([]string{"git", "add", "."}).
+		WithExec([]string{"git", "commit", "-m", "\"Update claims' features\""}).
 		WithExec([]string{
-			"gh",
-			"commit",
-			"-R", m.Repo,
-			"-b", newBranchName,
-			"-m", "Update deployments",
+			"git", "push", "--force", "origin", fmt.Sprintf("HEAD:%s", newBranchName),
 		}).
 		Sync(ctx)
 
@@ -154,9 +155,8 @@ func (m *UpdateClaimsFeatures) upsertPR(
 			Version: m.GhCliVersion,
 			Token:   m.GhToken,
 		}).
-			WithEnvVariable(
-				"CACHE_BUSTER",
-				time.Now().String()).WithDirectory(contentsDirPath, contents).
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithMountedDirectory(contentsDirPath, contents).
 			WithWorkdir(contentsDirPath).
 			WithExec(cmd).
 			Stdout(ctx)
@@ -222,7 +222,7 @@ func (m *UpdateClaimsFeatures) createRemoteBranch(
 	gitDirPath := "/git_dir"
 
 	_, err := dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Version: m.GhCliVersion}).
-		WithDirectory(gitDirPath, gitDir).
+		WithMountedDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{"git", "checkout", "-b", newBranch}, dagger.ContainerWithExecOpts{}).
@@ -248,7 +248,7 @@ func (m *UpdateClaimsFeatures) regenerateRemoteBranch(
 	gitDirPath := "/git_dir"
 
 	_, err := dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Version: m.GhCliVersion}).
-		WithDirectory(gitDirPath, gitDir).
+		WithMountedDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{"git", "push", "origin", "--delete", branchName}, dagger.ContainerWithExecOpts{}).
@@ -334,7 +334,7 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 	}).Container(dagger.GhContainerOpts{
 		Token: m.PrefappGhToken,
 		Repo:  "prefapp/features",
-	}).WithDirectory(m.ClaimsDirPath, m.ClaimsDir, dagger.ContainerWithDirectoryOpts{}).
+	}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
 		WithWorkdir(m.ClaimsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
@@ -371,7 +371,7 @@ func (m *UpdateClaimsFeatures) getReleaseChangelog(
 		}).Container(dagger.GhContainerOpts{
 			Token: m.PrefappGhToken,
 			Repo:  "prefapp/features",
-		}).WithDirectory(m.ClaimsDirPath, m.ClaimsDir, dagger.ContainerWithDirectoryOpts{}).
+		}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
 			WithWorkdir(m.ClaimsDirPath).
 			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 			WithExec([]string{
