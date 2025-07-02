@@ -109,8 +109,6 @@ func (m *UpdateClaimsFeatures) upsertPR(
 		fmt.Printf("☢️ Pull request exists, ensure branch %s is up to date\n", newBranchName)
 
 		_, err = m.getGhContainer().
-			WithWorkdir(contentsDirPath).
-			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 			WithExec([]string{
 				"gh",
 				"pr",
@@ -122,9 +120,6 @@ func (m *UpdateClaimsFeatures) upsertPR(
 	}
 
 	_, err = m.getGhContainer().
-		WithMountedDirectory(contentsDirPath, contents).
-		WithWorkdir(contentsDirPath).
-		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
 			"gh",
 			"commit",
@@ -167,9 +162,6 @@ func (m *UpdateClaimsFeatures) upsertPR(
 
 		// Create a PR for the updated deployment
 		stdout, err := m.getGhContainer().
-			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-			WithMountedDirectory(contentsDirPath, contents).
-			WithWorkdir(contentsDirPath).
 			WithExec(cmd).
 			Stdout(ctx)
 
@@ -324,15 +316,11 @@ func (m *UpdateClaimsFeatures) prExists(ctx context.Context, branchName string) 
 	}
 
 	for _, pr := range prs {
-
 		if pr.HeadRefName == branchName && strings.ToLower(pr.State) == "open" {
-
 			fmt.Printf("☢️ PR %s already exists\n", branchName)
 
 			return &pr, nil
-
 		}
-
 	}
 
 	fmt.Printf("☢️ PR %s does not exist\n", branchName)
@@ -342,9 +330,6 @@ func (m *UpdateClaimsFeatures) prExists(ctx context.Context, branchName string) 
 
 func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) {
 	ghReleaseListResult, err := m.getFeaturesContainer().
-		WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
-		WithWorkdir(m.ClaimsDirPath).
-		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
 			"gh",
 			"release",
@@ -375,9 +360,6 @@ func (m *UpdateClaimsFeatures) getReleaseChangelog(
 			releaseTag,
 		)
 		changelog, err = m.getFeaturesContainer().
-			WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
-			WithWorkdir(m.ClaimsDirPath).
-			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 			WithExec([]string{
 				"gh",
 				"release",
