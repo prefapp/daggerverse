@@ -26,7 +26,7 @@ func (m *UpdateClaimsFeatures) New(
 
 	// Gh CLI Version
 	// +optional
-	// +default="v2.66.1"
+	// +default="v2.74.2"
 	ghCliVersion string,
 
 	// Claims repo name

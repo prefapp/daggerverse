@@ -109,12 +109,30 @@ func (m *UpdateClaimsFeatures) upsertPR(
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
-			"gh",
-			"commit",
-			"-R", m.Repo,
-			"-b", newBranchName,
-			"-m", "Update deployments",
+			"git",
+			"add",
+			".",
 		}).
+		WithExec([]string{
+			"git",
+			"commit",
+			"-m",
+			"Update claims' features",
+		}).
+		WithExec([]string{
+			"git",
+			"push",
+			"--force",
+			"origin",
+			fmt.Sprintf("HEAD:%s", newBranchName),
+		}).
+		// WithExec([]string{
+		// 	"gh",
+		// 	"commit",
+		// 	"-R", m.Repo,
+		// 	"-b", newBranchName,
+		// 	"-m", "Update deployments",
+		// }).
 		Sync(ctx)
 
 	if err != nil {
