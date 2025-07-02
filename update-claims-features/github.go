@@ -153,9 +153,8 @@ func (m *UpdateClaimsFeatures) upsertPR(
 			Version: m.GhCliVersion,
 			Token:   m.GhToken,
 		}).
-			WithEnvVariable(
-				"CACHE_BUSTER",
-				time.Now().String()).WithMountedDirectory(contentsDirPath, contents).
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithMountedDirectory(contentsDirPath, contents).
 			WithWorkdir(contentsDirPath).
 			WithExec(cmd).
 			Stdout(ctx)
