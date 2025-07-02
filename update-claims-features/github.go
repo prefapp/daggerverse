@@ -108,43 +108,15 @@ func (m *UpdateClaimsFeatures) upsertPR(
 	}).WithMountedDirectory(contentsDirPath, contents).
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{"git", "config", "user.email", fmt.Sprintf(
+			"fs-%s-state[bot]@users.noreply.github.com", m.Org,
+		)}).
+		WithExec([]string{"git", "config", "user.name", "firestartr-bot"}).
+		WithExec([]string{"git", "add", "."}).
+		WithExec([]string{"git", "commit", "-m", "\"Update claims' features\""}).
 		WithExec([]string{
-			"git",
-			"config",
-			"user.email",
-			"automated-commit@firestartr.es",
+			"git", "push", "--force", "origin", fmt.Sprintf("HEAD:%s", newBranchName),
 		}).
-		WithExec([]string{
-			"git",
-			"config",
-			"user.name",
-			"firestartr-bot",
-		}).
-		WithExec([]string{
-			"git",
-			"add",
-			".",
-		}).
-		WithExec([]string{
-			"git",
-			"commit",
-			"-m",
-			"\"Update claims' features\"",
-		}).
-		WithExec([]string{
-			"git",
-			"push",
-			"--force",
-			"origin",
-			fmt.Sprintf("HEAD:%s", newBranchName),
-		}).
-		// WithExec([]string{
-		// 	"gh",
-		// 	"commit",
-		// 	"-R", m.Repo,
-		// 	"-b", newBranchName,
-		// 	"-m", "Update deployments",
-		// }).
 		Sync(ctx)
 
 	if err != nil {

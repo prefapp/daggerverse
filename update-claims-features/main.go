@@ -74,6 +74,7 @@ func (m *UpdateClaimsFeatures) New(
 
 	return &UpdateClaimsFeatures{
 		Repo:              repo,
+		Org:               strings.Split(repo, "/")[0],
 		GhToken:           ghToken,
 		PrefappGhToken:    prefappGhToken,
 		GhCliVersion:      ghCliVersion,

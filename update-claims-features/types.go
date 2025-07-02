@@ -4,6 +4,7 @@ import "dagger/update-claims-features/internal/dagger"
 
 type UpdateClaimsFeatures struct {
 	Repo              string
+	Org               string
 	GhToken           *dagger.Secret
 	PrefappGhToken    *dagger.Secret
 	GhCliVersion      string
