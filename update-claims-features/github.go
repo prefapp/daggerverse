@@ -110,6 +110,18 @@ func (m *UpdateClaimsFeatures) upsertPR(
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
 			"git",
+			"config",
+			"user.email",
+			"automated-commit@firestartr.es",
+		}).
+		WithExec([]string{
+			"git",
+			"config",
+			"user.name",
+			"firestartr-bot",
+		}).
+		WithExec([]string{
+			"git",
 			"add",
 			".",
 		}).
@@ -117,7 +129,7 @@ func (m *UpdateClaimsFeatures) upsertPR(
 			"git",
 			"commit",
 			"-m",
-			"Update claims' features",
+			"\"Update claims' features\"",
 		}).
 		WithExec([]string{
 			"git",
