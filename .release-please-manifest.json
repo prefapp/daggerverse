@@ -3,8 +3,8 @@
    "dagger-structure-test": "1.0.0",
    "notify-and-hydrate-state": "1.4.1",
    "hydrate-orchestrator": "6.3.2",
+   "firestartr-bootstrap": "1.0.0",
    "update-claims-features": "1.1.5",
-   "firestartr-bootstrap": "0.0.0",
    "kind": "1.1.1",
    "validate-crds": "1.0.0"
 }
