@@ -50,7 +50,7 @@ func (m *UpdateClaimsFeatures) upsertPR(
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
 		Token:   m.GhToken,
-		Plugins: []string{"prefapp/gh-commit@fix/1-weird-file-processing"},
+		Plugins: []string{"prefapp/gh-commit --pin fix/1-weird-file-processing"},
 	}).WithMountedDirectory(contentsDirPath, contents).
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
