@@ -8,7 +8,7 @@
     {
       "name": "gh",
       "source": "github.com/prefapp/aweris-daggerverse/gh",
-      "pin": "fc22e56b83df0a8609cf654836111907fc1cdf00"
+      "pin": "fix/allow-setting-plugin-version"
     }
   ]
 }
