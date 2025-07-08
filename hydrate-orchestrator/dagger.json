@@ -1,6 +1,6 @@
 {
   "name": "hydrate-orchestrator",
-  "engineVersion": "v0.18.12",
+  "engineVersion": "v0.18.8",
   "sdk": {
     "source": "go"
   },
