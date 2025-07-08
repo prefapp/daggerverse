@@ -78,7 +78,7 @@ func New(
 		appStateRepo, asrErr := app.StateRepo(ctx)
 
 		if asrErr != nil {
-			panic(err)
+			panic(asrErr)
 		}
 
 		if appStateRepo == repo {

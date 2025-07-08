@@ -260,6 +260,7 @@ Created by @%s from %s within commit [%s](%s)
 				"-R", m.Repo,
 				"-b", branchName,
 				"-m", "Update deployments",
+				"-d", contentsDirPath,
 				"--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
 			}).
 			Sync(ctx)
