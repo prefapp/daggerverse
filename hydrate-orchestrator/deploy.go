@@ -259,7 +259,7 @@ Created by @%s from %s within commit [%s](%s)
 				"commit",
 				"-R", m.Repo,
 				"-b", branchName,
-				"-h", "main",
+				"-h", "deployment",
 				"-m", "Update deployments",
 				"--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
 			}).
