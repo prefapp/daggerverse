@@ -49,9 +49,8 @@ func (m *UpdateClaimsFeatures) upsertPR(
 	stdoutlsRemote, err := dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
-		Token:          m.GhToken,
-		PluginNames:    []string{"prefapp/gh-commit"},
-		PluginVersions: []string{"v1.2.3-snapshot"},
+		Token:       m.GhToken,
+		PluginNames: []string{"prefapp/gh-commit"},
 	}).WithMountedDirectory(contentsDirPath, contents).
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
@@ -104,9 +103,8 @@ func (m *UpdateClaimsFeatures) upsertPR(
 	_, err = dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
-		Token:          m.GhToken,
-		PluginNames:    []string{"prefapp/gh-commit"},
-		PluginVersions: []string{"v1.2.3-snapshot"},
+		Token:       m.GhToken,
+		PluginNames: []string{"prefapp/gh-commit"},
 	}).WithMountedDirectory(contentsDirPath, contents).
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
