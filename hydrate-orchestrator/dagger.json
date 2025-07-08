@@ -11,8 +11,8 @@
     },
     {
       "name": "gh",
-      "source": "github.com/prefapp/aweris-daggerverse/gh",
-      "pin": "de477b0506f5a97c425d18ab65721301141a2879"
+      "source": "github.com/prefapp/daggerverse/gh",
+      "pin": "e42e773545bc1eb2cb3ea73d01ecd0211c0dc9ce"
     },
     {
       "name": "hydrate-kubernetes",
