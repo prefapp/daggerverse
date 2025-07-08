@@ -67,6 +67,7 @@ func (m *HydrateOrchestrator) upsertPR(
 			"-R", m.Repo,
 			"-b", newBranchName,
 			"-m", "Update deployments",
+			"-d", contentsDirPath,
 			"--delete-path", cleanupDir,
 		}).Sync(ctx)
 
