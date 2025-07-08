@@ -247,8 +247,9 @@ Created by @%s from %s within commit [%s](%s)
 		_, err = dag.Gh(dagger.GhOpts{
 			Version: m.GhCliVersion,
 		}).Container(dagger.GhContainerOpts{
-			Token:   m.GhToken,
-			Plugins: []string{"prefapp/gh-commit"},
+			Token:          m.GhToken,
+			PluginNames:    []string{"prefapp/gh-commit"},
+			PluginVersions: []string{"v1.2.3-snapshot"},
 		}).WithDirectory(contentsDirPath, updatedDir, dagger.ContainerWithDirectoryOpts{
 			Exclude: []string{".git"},
 		}).WithWorkdir(contentsDirPath).
