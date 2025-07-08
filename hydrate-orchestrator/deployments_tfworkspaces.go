@@ -117,7 +117,6 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 				"-R", m.Repo,
 				"-b", branchName,
 				"-m", "Update deployments",
-				"-d", contentsDirPath,
 				"--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
 			}).
 			Sync(ctx)
