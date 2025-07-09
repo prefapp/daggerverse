@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.3.4](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.3...hydrate-orchestrator-v6.3.4) (2025-07-09)
+
+
+### Bug Fixes
+
+* YAML indentation ([#268](https://github.com/prefapp/daggerverse/issues/268)) ([144a9cf](https://github.com/prefapp/daggerverse/commit/144a9cf23bd6e3ffec46beceeb68bd30dc5dfde7))
+
 ## [6.3.3](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.2...hydrate-orchestrator-v6.3.3) (2025-07-09)
 
 
