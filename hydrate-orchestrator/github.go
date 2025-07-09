@@ -54,7 +54,7 @@ func (m *HydrateOrchestrator) upsertPR(
 	}).Container(dagger.GhContainerOpts{
 		Token:          m.GhToken,
 		PluginNames:    []string{"prefapp/gh-commit"},
-		PluginVersions: []string{"v1.2.3-snapshot"},
+		PluginVersions: []string{"v1.2.2"},
 	}).
 		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
 			Exclude: []string{".git"},
@@ -66,7 +66,6 @@ func (m *HydrateOrchestrator) upsertPR(
 			"commit",
 			"-R", m.Repo,
 			"-b", newBranchName,
-			"-h", "deployment",
 			"-m", "Update deployments",
 			"--delete-path", cleanupDir,
 		}).Sync(ctx)
