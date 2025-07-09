@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"dagger/hydrate-kubernetes/internal/dagger"
 	"errors"
@@ -8,6 +9,7 @@ import (
 	"io"
 	"strings"
 
+	"dagger.io/dagger/dag"
 	"gopkg.in/yaml.v3"
 )
 
@@ -42,14 +44,16 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 			return nil, err
 		}
 
-		decodedContent, err := yaml.Marshal(&node)
-		if err != nil {
-			return nil, err
-		}
+		buf := bytes.Buffer{}
+		enc := yaml.NewEncoder(&buf)
+		enc.SetIndent(2)
+		enc.Encode(&node)
+		enc.Close()
+		content := buf.Bytes()
 
 		k8sresource := KubernetesResource{}
 
-		err = yaml.Unmarshal(decodedContent, &k8sresource)
+		err = yaml.Unmarshal(content, &k8sresource)
 
 		if err != nil {
 
@@ -67,7 +71,7 @@ func (m *HydrateKubernetes) SplitRenderInFiles(
 		fileName := fmt.Sprintf("%s.%s.yml", k8sresource.Kind, k8sresource.Metadata.Name)
 
 		//add the --- at the beginning of the file
-		data := "---\n" + string(decodedContent)
+		data := "---\n" + string(content)
 
 		dir = dir.WithNewFile(fileName, data)
 
