@@ -9,7 +9,6 @@ import (
 	"io"
 	"strings"
 
-	"dagger.io/dagger/dag"
 	"gopkg.in/yaml.v3"
 )
 
