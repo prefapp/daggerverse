@@ -247,11 +247,11 @@ Created by @%s from %s within commit [%s](%s)
 		_, err = dag.Gh(dagger.GhOpts{
 			Version: m.GhCliVersion,
 		}).Container(dagger.GhContainerOpts{
-			Token:   m.GhToken,
-			Plugins: []string{"prefapp/gh-commit"},
-		}).WithDirectory(contentsDirPath, updatedDir, dagger.ContainerWithDirectoryOpts{
-			Exclude: []string{".git"},
-		}).WithWorkdir(contentsDirPath).
+			Token:          m.GhToken,
+			PluginNames:    []string{"prefapp/gh-commit"},
+			PluginVersions: []string{"v1.2.3"},
+		}).WithMountedDirectory(contentsDirPath, updatedDir).
+			WithWorkdir(contentsDirPath).
 			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 			WithExec([]string{
 				"gh",
