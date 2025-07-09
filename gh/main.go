@@ -36,7 +36,7 @@ func New(
 
 	// Gh plugins
 	// +optional
-	plugins []string,
+	plugins []GHPlugin,
 
 	// Base container for the Github CLI
 	// +optional
@@ -70,9 +70,13 @@ func (m *Gh) Container(
 	// +optional
 	repo string,
 
-	// Gh plugins
+	// Gh plugin names
 	// +optional
-	plugins []string,
+	pluginNames []string,
+
+	// Gh plugin names
+	// +optional
+	pluginVersions []string,
 
 ) (*dagger.Container, error) {
 	file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx)
@@ -83,10 +87,25 @@ func (m *Gh) Container(
 	// get the github container configuration
 	gc := m.GHContainer
 
+	pluginList := []GHPlugin{}
+
+	for idx, pluginName := range pluginNames {
+		pluginVersion := ""
+
+		if idx < len(pluginVersions) {
+			pluginVersion = pluginVersions[idx]
+		}
+
+		pluginList = append(pluginList, GHPlugin{
+			Name:    pluginName,
+			Version: pluginVersion,
+		})
+	}
+
 	// update the container with the given token and repository if provided
 	gc = lo.Ternary(token != nil, gc.WithToken(token), gc)
 	gc = lo.Ternary(repo != "", gc.WithRepo(repo), gc)
-	gc = lo.Ternary(plugins != nil, gc.WithPlugins(plugins), gc)
+	gc = lo.Ternary(pluginList != nil, gc.WithPlugins(pluginList), gc)
 
 	// get the container object with the given binary
 	ctr := gc.container(file)
@@ -113,16 +132,20 @@ func (m *Gh) Run(
 	// +optional
 	repo string,
 
-	// Gh plugins
+	// Gh plugin names
 	// +optional
-	plugins []string,
+	pluginNames []string,
+
+	// Gh plugin names
+	// +optional
+	pluginVersions []string,
 
 	// disable cache
 	// +optional
 	// +default=false
 	disableCache bool,
 ) (*dagger.Container, error) {
-	ctr, err := m.Container(ctx, version, token, repo, plugins)
+	ctr, err := m.Container(ctx, version, token, repo, pluginNames, pluginVersions)
 	if err != nil {
 		return nil, err
 	}
