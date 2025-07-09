@@ -51,10 +51,12 @@ func (m *HydrateOrchestrator) upsertPR(
 	contentsDirPath := "/contents"
 	_, err := dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
-	}).Container(dagger.GhContainerOpts{Token: m.GhToken, Plugins: []string{"prefapp/gh-commit"}}).
-		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
-			Exclude: []string{".git"},
-		}).
+	}).Container(dagger.GhContainerOpts{
+		Token:          m.GhToken,
+		PluginNames:    []string{"prefapp/gh-commit"},
+		PluginVersions: []string{"v1.2.3"},
+	}).
+		WithMountedDirectory(contentsDirPath, contents).
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
