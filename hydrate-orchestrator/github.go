@@ -57,7 +57,7 @@ func (m *HydrateOrchestrator) upsertPR(
 		PluginVersions: []string{"v1.2.3-snapshot"},
 	}).
 		WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
-			Exclude: []string{".git"},
+			// Exclude: []string{".git"},
 		}).
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
