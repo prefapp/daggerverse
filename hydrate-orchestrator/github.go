@@ -54,7 +54,7 @@ func (m *HydrateOrchestrator) upsertPR(
 	}).Container(dagger.GhContainerOpts{
 		Token:          m.GhToken,
 		PluginNames:    []string{"prefapp/gh-commit"},
-		PluginVersions: []string{"v1.2.3-snapshot"},
+		PluginVersions: []string{"v1.2.3"},
 	}).
 		WithMountedDirectory(contentsDirPath, contents).
 		WithWorkdir(contentsDirPath).
