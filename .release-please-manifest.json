@@ -6,5 +6,6 @@
    "firestartr-bootstrap": "1.0.0",
    "update-claims-features": "1.1.5",
    "kind": "1.1.1",
-   "validate-crds": "1.0.0"
+   "validate-crds": "1.0.0",
+   "gh": "1.0.0"
 }
