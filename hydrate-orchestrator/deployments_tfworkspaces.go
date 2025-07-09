@@ -107,9 +107,8 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			Token:          m.GhToken,
 			PluginNames:    []string{"prefapp/gh-commit"},
 			PluginVersions: []string{"v1.2.3-snapshot"},
-		}).WithDirectory(contentsDirPath, updatedDir, dagger.ContainerWithDirectoryOpts{
-			Exclude: []string{".git"},
-		}).WithWorkdir(contentsDirPath).
+		}).WithMountedDirectory(contentsDirPath, updatedDir).
+			WithWorkdir(contentsDirPath).
 			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 			WithExec([]string{
 				"gh",

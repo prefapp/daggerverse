@@ -250,16 +250,14 @@ Created by @%s from %s within commit [%s](%s)
 			Token:          m.GhToken,
 			PluginNames:    []string{"prefapp/gh-commit"},
 			PluginVersions: []string{"v1.2.3-snapshot"},
-		}).WithDirectory(contentsDirPath, updatedDir, dagger.ContainerWithDirectoryOpts{
-			Exclude: []string{".git"},
-		}).WithWorkdir(contentsDirPath).
+		}).WithMountedDirectory(contentsDirPath, updatedDir).
+			WithWorkdir(contentsDirPath).
 			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 			WithExec([]string{
 				"gh",
 				"commit",
 				"-R", m.Repo,
 				"-b", branchName,
-				"-h", "deployment",
 				"-m", "Update deployments",
 				"--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
 			}).
