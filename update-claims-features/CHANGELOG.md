@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.6](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.5...update-claims-features-v1.1.6) (2025-07-09)
+
+
+### Bug Fixes
+
+* Pin new GH module version ([#258](https://github.com/prefapp/daggerverse/issues/258)) ([c57d26d](https://github.com/prefapp/daggerverse/commit/c57d26deb68620069376bd47a5e68617861f7c0d))
+
 ## [1.1.5](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.4...update-claims-features-v1.1.5) (2025-07-02)
 
 
