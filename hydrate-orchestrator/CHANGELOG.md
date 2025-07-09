@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.3.3](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.2...hydrate-orchestrator-v6.3.3) (2025-07-09)
+
+
+### Bug Fixes
+
+* Updated hydrate-orchestrator Gh container and gh-commit plugin versions ([#259](https://github.com/prefapp/daggerverse/issues/259)) ([a7dea1b](https://github.com/prefapp/daggerverse/commit/a7dea1b54dd5f53f009ead65f443b6df0fe6aa02))
+
 ## [6.3.2](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.1...hydrate-orchestrator-v6.3.2) (2025-06-30)
 
 
