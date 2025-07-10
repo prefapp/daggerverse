@@ -7,6 +7,11 @@ const (
 	// represents.
 	DagCallAttr = "dagger.io/dag.call"
 
+	// The scope of the call.
+	//
+	// Examples: llm, graphql
+	DagCallScopeAttr = "dagger.io/dag.call.scope"
+
 	// The digest of the protobuf-marshalled Call that this span represents.
 	//
 	// This value acts as a node ID in the conceptual DAG.
@@ -31,6 +36,22 @@ const (
 	//
 	// Internal spans may typically be revealed with a toggle.
 	UIInternalAttr = "dagger.io/ui.internal"
+
+	// Reveal the span all the way up to the top-level parent.
+	UIRevealAttr = "dagger.io/ui.reveal"
+
+	// An emoji representing the conceptual source of the span.
+	//
+	// Example: 🧑, 🤖
+	UIActorEmojiAttr = "dagger.io/ui.actor.emoji"
+
+	// Indicates that the span represents a message, and that its logs should be displayed
+	// immediately without requiring them to be expanded.
+	//
+	// The value indicates whether the message is being sent or received.
+	//
+	// Example: "sent", "received"
+	UIMessageAttr = "dagger.io/ui.message"
 
 	// Hide child spans by default.
 	//
@@ -84,6 +105,11 @@ const (
 	// Indicates whether the log stream has ended.
 	StdioEOFAttr = "stdio.eof"
 
+	// The MIME type of the associated content (i.e. log message).
+	//
+	// Example: text/plain, text/markdown, text/html
+	ContentTypeAttr = "dagger.io/content.type"
+
 	// Indicates whether the log should be shown globally.
 	LogsGlobalAttr = "dagger.io/logs.global"
 
@@ -92,4 +118,19 @@ const (
 
 	// OTel metric attribute so we can correlate metrics with traces
 	MetricsTraceIDAttr = "dagger.io/metrics.trace"
+
+	// The kind of the module, e.g. "LOCAL", "GIT"
+	ModuleKindAttr = "dagger.io/module.kind"
+
+	// The commit of the module, e.g. "abc123"
+	ModuleCommitAttr = "dagger.io/module.commit"
+
+	// The version of the module, e.g. tag, branch, or commit
+	ModuleVersionAttr = "dagger.io/module.version"
+
+	// The subpath of the module, relative to the root, e.g. "/modules/my-module"
+	ModuleSubpathAttr = "dagger.io/module.subpath"
+
+	// The HTML URL of the module, e.g. "https://github.com/dagger/dagger"
+	ModuleHTMLRepoURLAttr = "dagger.io/module.htmlRepoURL"
 )
