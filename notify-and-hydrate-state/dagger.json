@@ -5,8 +5,8 @@
   "dependencies": [
     {
       "name": "gh",
-      "source": "github.com/aweris/daggerverse/gh@ff990b1897334421e5619afd4559279f445aeb57",
-      "pin": "ff990b1897334421e5619afd4559279f445aeb57"
+      "source": "github.com/prefapp/daggerverse/gh",
+      "pin": "e42e773545bc1eb2cb3ea73d01ecd0211c0dc9ce"
     },
     {
       "name": "supergit",
