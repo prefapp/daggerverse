@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/prefapp/daggerverse/compare/gh-v1.1.0...gh-v1.1.1) (2025-07-14)
+
+
+### Bug Fixes
+
+* Removed gh binary ([#270](https://github.com/prefapp/daggerverse/issues/270)) ([d29cd39](https://github.com/prefapp/daggerverse/commit/d29cd392623ace817ba0e623c8328f1883234375))
+
 ## [1.1.0](https://github.com/prefapp/daggerverse/compare/gh-v1.0.0...gh-v1.1.0) (2025-07-09)
 
 
