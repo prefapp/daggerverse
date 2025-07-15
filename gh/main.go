@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -177,4 +178,26 @@ func (m *Gh) Get(
 		WithOS(goos).
 		WithArch(goarch).
 		binary(ctx)
+}
+
+// Create a PR with the current changes using GH
+func (m *Gh) CreatePR(
+	ctx context.Context,
+
+	// title of the PR
+	title string,
+
+	// body text of the PR
+	body string,
+
+	// version of the Github CLI
+	// +optional
+	version string,
+
+	// GitHub token.
+	// +optional
+	token *dagger.Secret,
+) (*dagger.Container, error) {
+	cmd := fmt.Sprintf("pr create --title %s --body %s", title, body)
+	return m.Run(ctx, cmd, version, token, "", []string{}, []string{}, false)
 }
