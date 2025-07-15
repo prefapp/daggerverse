@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -190,6 +189,12 @@ func (m *Gh) CreatePR(
 	// body text of the PR
 	body string,
 
+	// branch name
+	branch string,
+
+	// path to the repo
+	repoDir *dagger.Directory,
+
 	// version of the Github CLI
 	// +optional
 	version string,
@@ -198,19 +203,48 @@ func (m *Gh) CreatePR(
 	// +optional
 	token *dagger.Secret,
 ) (*dagger.Container, error) {
-	cmd := fmt.Sprintf("pr create --title %s --body %s", title, body)
-	return m.Run(ctx, cmd, version, token, "", []string{}, []string{}, false)
+	contentsDirPath := "/content"
+	ctr, err := m.Container(ctx, version, token, "", []string{}, []string{})
+	if err != nil {
+		panic(err)
+	}
+
+	ctr = ctr.
+		WithMountedDirectory(contentsDirPath, repoDir).
+		WithWorkdir(contentsDirPath).
+		WithExec([]string{
+			"gh",
+			"pr",
+			"create",
+			"--title", title,
+			"--body", body,
+			"--head", branch,
+		})
+
+	_, err = ctr.Sync(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return ctr, nil
 }
 
 // Commit current changes into a new/existing branch
 func (m *Gh) Commit(
 	ctx context.Context,
 
+	// path to the repo
+	repoDir *dagger.Directory,
+
 	// name of the branch to commit to
 	branchName string,
 
 	// commit message
 	commitMessage string,
+
+	// GitHub token
+	token *dagger.Secret,
 
 	// create a commit even if there are no changes
 	// +optional
@@ -220,27 +254,39 @@ func (m *Gh) Commit(
 	// version of the Github CLI
 	// +optional
 	version string,
-
-	// GitHub token.
-	// +optional
-	token *dagger.Secret,
 ) (*dagger.Container, error) {
-	cmd := fmt.Sprintf("commit -b %s -m %s", branchName, commitMessage)
-	return m.Run(
-		ctx,
-		cmd,
-		version,
-		token,
-		"",
-		[]string{"prefapp/gh-commit"},
-		[]string{"v1.2.3"},
-		false,
-	)
+	contentsDirPath := "/content"
+	ctr, err := m.Container(ctx, version, token, "", []string{"prefapp/gh-commit"}, []string{"v1.2.3"})
+	if err != nil {
+		panic(err)
+	}
+
+	ctr = ctr.
+		WithMountedDirectory(contentsDirPath, repoDir).
+		WithWorkdir(contentsDirPath).
+		WithExec([]string{
+			"gh",
+			"commit",
+			"-b", branchName,
+			"-m", commitMessage,
+			// "--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+		})
+
+	_, err = ctr.Sync(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return ctr, nil
 }
 
 // Commit current changes into a new/existing branch
 func (m *Gh) CommitAndCreatePR(
 	ctx context.Context,
+
+	// path to the repo
+	repoDir *dagger.Directory,
 
 	// name of the branch to commit to
 	branchName string,
@@ -262,10 +308,10 @@ func (m *Gh) CommitAndCreatePR(
 	// +optional
 	token *dagger.Secret,
 ) (*dagger.Container, error) {
-	_, err := m.Commit(ctx, branchName, commitMessage, false, version, token)
+	_, err := m.Commit(ctx, repoDir, branchName, commitMessage, token, false, version)
 	if err != nil {
 		panic(err)
 	}
 
-	return m.CreatePR(ctx, prTitle, prBody, version, token)
+	return m.CreatePR(ctx, prTitle, prBody, branchName, repoDir, version, token)
 }
