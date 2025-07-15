@@ -201,3 +201,71 @@ func (m *Gh) CreatePR(
 	cmd := fmt.Sprintf("pr create --title %s --body %s", title, body)
 	return m.Run(ctx, cmd, version, token, "", []string{}, []string{}, false)
 }
+
+// Commit current changes into a new/existing branch
+func (m *Gh) Commit(
+	ctx context.Context,
+
+	// name of the branch to commit to
+	branchName string,
+
+	// commit message
+	commitMessage string,
+
+	// create a commit even if there are no changes
+	// +optional
+	// +default=false
+	allowEmpty bool,
+
+	// version of the Github CLI
+	// +optional
+	version string,
+
+	// GitHub token.
+	// +optional
+	token *dagger.Secret,
+) (*dagger.Container, error) {
+	cmd := fmt.Sprintf("commit -b %s -m %s", branchName, commitMessage)
+	return m.Run(
+		ctx,
+		cmd,
+		version,
+		token,
+		"",
+		[]string{"prefapp/gh-commit"},
+		[]string{"v1.2.3"},
+		false,
+	)
+}
+
+// Commit current changes into a new/existing branch
+func (m *Gh) CommitAndCreatePR(
+	ctx context.Context,
+
+	// name of the branch to commit to
+	branchName string,
+
+	// commit message
+	commitMessage string,
+
+	// title of the PR
+	prTitle string,
+
+	// body text of the PR
+	prBody string,
+
+	// version of the Github CLI
+	// +optional
+	version string,
+
+	// GitHub token.
+	// +optional
+	token *dagger.Secret,
+) (*dagger.Container, error) {
+	_, err := m.Commit(ctx, branchName, commitMessage, false, version, token)
+	if err != nil {
+		panic(err)
+	}
+
+	return m.CreatePR(ctx, prTitle, prBody, version, token)
+}
