@@ -202,7 +202,7 @@ func (m *Gh) CreatePR(
 	// GitHub token.
 	// +optional
 	token *dagger.Secret,
-) (*dagger.Container, error) {
+) (string, error) {
 	contentsDirPath := "/content"
 	ctr, err := m.Container(ctx, version, token, "", []string{}, []string{})
 	if err != nil {
@@ -226,7 +226,33 @@ func (m *Gh) CreatePR(
 		panic(err)
 	}
 
-	return ctr, nil
+	prId, err := ctr.
+		WithExec([]string{
+			"gh", "pr", "list",
+			"--head", branch,
+			"--json", "number",
+			"--jq", ".[0].number",
+		}).
+		Stdout(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	prLink, err := ctr.
+		WithExec([]string{
+			"gh", "pr", "view",
+			"--json", "url",
+			"--jq", ".url",
+			strings.TrimSpace(prId),
+		}).
+		Stdout(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return strings.TrimSpace(prLink), nil
 }
 
 // Commit current changes into a new/existing branch
@@ -333,7 +359,7 @@ func (m *Gh) CommitAndCreatePR(
 	// GitHub token.
 	// +optional
 	token *dagger.Secret,
-) (*dagger.Container, error) {
+) (string, error) {
 	_, err := m.Commit(
 		ctx, repoDir, branchName, commitMessage,
 		token, deletePath, createEmpty, version,
