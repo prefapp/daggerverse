@@ -302,17 +302,6 @@ func (m *Gh) Commit(
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String())
 
-	remoteBranchList, err := ctr.
-		WithExec([]string{"git", "ls-remote"}).
-		Stdout(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	if strings.Contains(remoteBranchList, branchName) {
-		ctr = ctr.WithExec([]string{"git", "push", "-d", "origin", branchName})
-	}
-
 	cmd := []string{
 		"gh", "commit",
 		"-b", branchName,
@@ -371,6 +360,10 @@ func (m *Gh) CommitAndCreatePR(
 	// +optional
 	token *dagger.Secret,
 ) (string, error) {
+	m.DeleteRemoteBranch(
+		ctx, repoDir, branchName, version, token,
+	)
+
 	_, err := m.Commit(
 		ctx, repoDir, branchName, commitMessage,
 		token, deletePath, createEmpty, version,
@@ -380,4 +373,51 @@ func (m *Gh) CommitAndCreatePR(
 	}
 
 	return m.CreatePR(ctx, prTitle, prBody, branchName, repoDir, version, token)
+}
+
+func (m *Gh) DeleteRemoteBranch(
+	ctx context.Context,
+
+	// path to the repo
+	repoDir *dagger.Directory,
+
+	// name of the branch to commit to
+	branchName string,
+
+	// version of the Github CLI
+	// +optional
+	version string,
+
+	// GitHub token.
+	// +optional
+	token *dagger.Secret,
+) {
+	contentsDirPath := "/content"
+	ctr, err := m.Container(
+		ctx,
+		version,
+		token,
+		"",
+		[]string{},
+		[]string{},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	ctr = ctr.
+		WithMountedDirectory(contentsDirPath, repoDir).
+		WithWorkdir(contentsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String())
+
+	remoteBranchList, err := ctr.
+		WithExec([]string{"git", "ls-remote"}).
+		Stdout(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	if strings.Contains(remoteBranchList, branchName) {
+		ctr = ctr.WithExec([]string{"git", "push", "-d", "origin", branchName})
+	}
 }
