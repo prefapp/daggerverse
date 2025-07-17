@@ -212,10 +212,9 @@ func (m *Gh) CreatePR(
 	ctr = ctr.
 		WithMountedDirectory(contentsDirPath, repoDir).
 		WithWorkdir(contentsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
-			"gh",
-			"pr",
-			"create",
+			"gh", "pr", "create",
 			"--title", title,
 			"--body", body,
 			"--head", branch,
@@ -246,17 +245,28 @@ func (m *Gh) Commit(
 	// GitHub token
 	token *dagger.Secret,
 
-	// create a commit even if there are no changes
+	// delete-path parameter for gh commit plugin
+	// +optional
+	deletePath string,
+
+	// create an empty commit
 	// +optional
 	// +default=false
-	allowEmpty bool,
+	createEmpty bool,
 
 	// version of the Github CLI
 	// +optional
 	version string,
 ) (*dagger.Container, error) {
 	contentsDirPath := "/content"
-	ctr, err := m.Container(ctx, version, token, "", []string{"prefapp/gh-commit"}, []string{"v1.2.3"})
+	ctr, err := m.Container(
+		ctx,
+		version,
+		token,
+		"",
+		[]string{"prefapp/gh-commit"},
+		[]string{"v1.2.4-snapshot"},
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -264,13 +274,20 @@ func (m *Gh) Commit(
 	ctr = ctr.
 		WithMountedDirectory(contentsDirPath, repoDir).
 		WithWorkdir(contentsDirPath).
-		WithExec([]string{
-			"gh",
-			"commit",
-			"-b", branchName,
-			"-m", commitMessage,
-			// "--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
-		})
+		WithEnvVariable("CACHE_BUSTER", time.Now().String())
+
+	cmd := []string{
+		"gh", "commit",
+		"-b", branchName,
+		"-m", commitMessage,
+		"--delete-path", deletePath,
+	}
+
+	if createEmpty {
+		cmd = append(cmd, "-e")
+	}
+
+	ctr = ctr.WithExec(cmd)
 
 	_, err = ctr.Sync(ctx)
 
@@ -300,6 +317,15 @@ func (m *Gh) CommitAndCreatePR(
 	// body text of the PR
 	prBody string,
 
+	// delete-path parameter for gh commit plugin
+	// +optional
+	deletePath string,
+
+	// create an empty commit
+	// +optional
+	// +default=false
+	createEmpty bool,
+
 	// version of the Github CLI
 	// +optional
 	version string,
@@ -308,7 +334,10 @@ func (m *Gh) CommitAndCreatePR(
 	// +optional
 	token *dagger.Secret,
 ) (*dagger.Container, error) {
-	_, err := m.Commit(ctx, repoDir, branchName, commitMessage, token, false, version)
+	_, err := m.Commit(
+		ctx, repoDir, branchName, commitMessage,
+		token, deletePath, createEmpty, version,
+	)
 	if err != nil {
 		panic(err)
 	}
