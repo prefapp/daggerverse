@@ -302,6 +302,17 @@ func (m *Gh) Commit(
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String())
 
+	remoteBranchList, err := ctr.
+		WithExec([]string{"git", "ls-remote"}).
+		Stdout(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	if strings.Contains(remoteBranchList, branchName) {
+		ctr = ctr.WithExec([]string{"git", "push", "-d", "origin", branchName})
+	}
+
 	cmd := []string{
 		"gh", "commit",
 		"-b", branchName,
