@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -177,4 +179,272 @@ func (m *Gh) Get(
 		WithOS(goos).
 		WithArch(goarch).
 		binary(ctx)
+}
+
+// Create a PR with the current changes using GH
+func (m *Gh) CreatePR(
+	ctx context.Context,
+
+	// title of the PR
+	title string,
+
+	// body text of the PR
+	body string,
+
+	// branch name
+	branch string,
+
+	// path to the repo
+	repoDir *dagger.Directory,
+
+	// labels to add to the PR
+	// +optional
+	labels []string,
+
+	// version of the Github CLI
+	// +optional
+	version string,
+
+	// GitHub token.
+	// +optional
+	token *dagger.Secret,
+) (string, error) {
+	contentsDirPath := "/content"
+	ctr, err := m.Container(ctx, version, token, "", []string{}, []string{})
+	if err != nil {
+		panic(err)
+	}
+
+	cmd := []string{
+		"gh", "pr", "create",
+		"--title", title,
+		"--body", body,
+		"--head", branch,
+	}
+
+	for _, label := range labels {
+		cmd = append(cmd, "--label", label)
+	}
+
+	ctr = ctr.
+		WithMountedDirectory(contentsDirPath, repoDir).
+		WithWorkdir(contentsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec(cmd)
+
+	_, err = ctr.Sync(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	prId, err := ctr.
+		WithExec([]string{
+			"gh", "pr", "list",
+			"--head", branch,
+			"--json", "number",
+			"--jq", ".[0].number",
+		}).
+		Stdout(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	prLink, err := ctr.
+		WithExec([]string{
+			"gh", "pr", "view",
+			"--json", "url",
+			"--jq", ".url",
+			strings.TrimSpace(prId),
+		}).
+		Stdout(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return strings.TrimSpace(prLink), nil
+}
+
+// Commit current changes into a new/existing branch
+func (m *Gh) Commit(
+	ctx context.Context,
+
+	// path to the repo
+	repoDir *dagger.Directory,
+
+	// name of the branch to commit to
+	branchName string,
+
+	// commit message
+	commitMessage string,
+
+	// GitHub token
+	token *dagger.Secret,
+
+	// delete-path parameter for gh commit plugin
+	// +optional
+	deletePath string,
+
+	// create an empty commit
+	// +optional
+	// +default=false
+	createEmpty bool,
+
+	// version of the Github CLI
+	// +optional
+	version string,
+) (*dagger.Container, error) {
+	contentsDirPath := "/content"
+	ctr, err := m.Container(
+		ctx,
+		version,
+		token,
+		"",
+		[]string{"prefapp/gh-commit"},
+		[]string{"v1.2.4-snapshot"},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	ctr = ctr.
+		WithMountedDirectory(contentsDirPath, repoDir).
+		WithWorkdir(contentsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String())
+
+	cmd := []string{
+		"gh", "commit",
+		"-b", branchName,
+		"-m", commitMessage,
+		"--delete-path", deletePath,
+	}
+
+	if createEmpty {
+		cmd = append(cmd, "-e")
+	}
+
+	ctr = ctr.WithExec(cmd)
+
+	_, err = ctr.Sync(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return ctr, nil
+}
+
+// Commit current changes into a new/existing branch
+func (m *Gh) CommitAndCreatePR(
+	ctx context.Context,
+
+	// path to the repo
+	repoDir *dagger.Directory,
+
+	// name of the branch to commit to
+	branchName string,
+
+	// commit message
+	commitMessage string,
+
+	// title of the PR
+	prTitle string,
+
+	// body text of the PR
+	prBody string,
+
+	// labels to add to the PR
+	// +optional
+	labels []string,
+
+	// delete-path parameter for gh commit plugin
+	// +optional
+	deletePath string,
+
+	// create an empty commit
+	// +optional
+	// +default=false
+	createEmpty bool,
+
+	// version of the Github CLI
+	// +optional
+	version string,
+
+	// GitHub token.
+	// +optional
+	token *dagger.Secret,
+) (string, error) {
+	m.DeleteRemoteBranch(
+		ctx, repoDir, branchName, version, token,
+	)
+
+	_, err := m.Commit(
+		ctx, repoDir, branchName, commitMessage,
+		token, deletePath, createEmpty, version,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	return m.CreatePR(
+		ctx, prTitle, prBody, branchName, repoDir, labels, version, token,
+	)
+}
+
+func (m *Gh) DeleteRemoteBranch(
+	ctx context.Context,
+
+	// path to the repo
+	repoDir *dagger.Directory,
+
+	// name of the branch to commit to
+	branchName string,
+
+	// version of the Github CLI
+	// +optional
+	version string,
+
+	// GitHub token.
+	// +optional
+	token *dagger.Secret,
+) {
+	contentsDirPath := "/content"
+	ctr, err := m.Container(
+		ctx,
+		version,
+		token,
+		"",
+		[]string{},
+		[]string{},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	ctr = ctr.
+		WithMountedDirectory(contentsDirPath, repoDir).
+		WithWorkdir(contentsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String())
+
+	remoteBranchList, err := ctr.
+		WithExec([]string{"git", "ls-remote"}).
+		Stdout(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	exp := regexp.MustCompile(fmt.Sprintf("%s\n", branchName))
+	matches := exp.Match([]byte(remoteBranchList))
+
+	if matches {
+		_, err = ctr.
+			WithExec([]string{"git", "push", "-d", "origin", branchName}).
+			Sync(ctx)
+
+		if err != nil {
+			panic(err)
+		}
+	}
 }
