@@ -195,6 +195,10 @@ func (m *Gh) CreatePR(
 	// path to the repo
 	repoDir *dagger.Directory,
 
+	// labels to add to the PR
+	// +optional
+	labels []string,
+
 	// version of the Github CLI
 	// +optional
 	version string,
@@ -209,16 +213,22 @@ func (m *Gh) CreatePR(
 		panic(err)
 	}
 
+	cmd := []string{
+		"gh", "pr", "create",
+		"--title", title,
+		"--body", body,
+		"--head", branch,
+	}
+
+	for _, label := range labels {
+		cmd = append(cmd, "--label", label)
+	}
+
 	ctr = ctr.
 		WithMountedDirectory(contentsDirPath, repoDir).
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{
-			"gh", "pr", "create",
-			"--title", title,
-			"--body", body,
-			"--head", branch,
-		})
+		WithExec(cmd)
 
 	_, err = ctr.Sync(ctx)
 
