@@ -353,6 +353,10 @@ func (m *Gh) CommitAndCreatePR(
 	// body text of the PR
 	prBody string,
 
+	// labels to add to the PR
+	// +optional
+	labels []string,
+
 	// delete-path parameter for gh commit plugin
 	// +optional
 	deletePath string,
@@ -382,7 +386,9 @@ func (m *Gh) CommitAndCreatePR(
 		panic(err)
 	}
 
-	return m.CreatePR(ctx, prTitle, prBody, branchName, repoDir, version, token)
+	return m.CreatePR(
+		ctx, prTitle, prBody, branchName, repoDir, labels, version, token,
+	)
 }
 
 func (m *Gh) DeleteRemoteBranch(
