@@ -434,6 +434,12 @@ func (m *Gh) DeleteRemoteBranch(
 	}
 
 	if strings.Contains(remoteBranchList, branchName) {
-		ctr = ctr.WithExec([]string{"git", "push", "-d", "origin", branchName})
+		_, err = ctr.
+			WithExec([]string{"git", "push", "-d", "origin", branchName}).
+			Sync(ctx)
+
+		if err != nil {
+			panic(err)
+		}
 	}
 }
