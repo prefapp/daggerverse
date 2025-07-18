@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -433,7 +435,10 @@ func (m *Gh) DeleteRemoteBranch(
 		panic(err)
 	}
 
-	if strings.Contains(remoteBranchList, branchName) {
+	exp := regexp.MustCompile(fmt.Sprintf("%s\n", branchName))
+	matches := exp.Match([]byte(remoteBranchList))
+
+	if matches {
 		_, err = ctr.
 			WithExec([]string{"git", "push", "-d", "origin", branchName}).
 			Sync(ctx)
