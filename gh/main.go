@@ -208,11 +208,20 @@ func (m *Gh) CreatePR(
 	// GitHub token.
 	// +optional
 	token *dagger.Secret,
+
+	// container with gh binary
+	// +optional
+	ctr *dagger.Container,
 ) (string, error) {
 	contentsDirPath := "/content"
-	ctr, err := m.Container(ctx, version, token, "", []string{}, []string{})
-	if err != nil {
-		panic(err)
+
+	var err error
+
+	if ctr == nil {
+		ctr, err = m.Container(ctx, version, token, "", []string{}, []string{})
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	cmd := []string{
@@ -295,18 +304,27 @@ func (m *Gh) Commit(
 	// version of the Github CLI
 	// +optional
 	version string,
+
+	// container with gh binary
+	// +optional
+	ctr *dagger.Container,
 ) (*dagger.Container, error) {
 	contentsDirPath := "/content"
-	ctr, err := m.Container(
-		ctx,
-		version,
-		token,
-		"",
-		[]string{"prefapp/gh-commit"},
-		[]string{"v1.2.4-snapshot"},
-	)
-	if err != nil {
-		panic(err)
+
+	var err error
+
+	if ctr == nil {
+		ctr, err = m.Container(
+			ctx,
+			version,
+			token,
+			"",
+			[]string{"prefapp/gh-commit"},
+			[]string{"v1.2.4-snapshot"},
+		)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	ctr = ctr.
@@ -376,20 +394,30 @@ func (m *Gh) CommitAndCreatePR(
 	// +optional
 	token *dagger.Secret,
 ) (string, error) {
-	m.DeleteRemoteBranch(
-		ctx, repoDir, branchName, version, token,
+	ctr, err := m.Container(
+		ctx,
+		version,
+		token,
+		"",
+		[]string{"prefapp/gh-commit"},
+		[]string{"v1.2.4-snapshot"},
 	)
+	if err != nil {
+		panic(err)
+	}
 
-	_, err := m.Commit(
-		ctx, repoDir, branchName, commitMessage,
-		token, deletePath, createEmpty, version,
+	m.DeleteRemoteBranch(ctx, repoDir, branchName, version, token, ctr)
+
+	ctr, err = m.Commit(
+		ctx, repoDir, branchName, commitMessage, token,
+		deletePath, createEmpty, version, ctr,
 	)
 	if err != nil {
 		panic(err)
 	}
 
 	return m.CreatePR(
-		ctx, prTitle, prBody, branchName, repoDir, labels, version, token,
+		ctx, prTitle, prBody, branchName, repoDir, labels, version, token, ctr,
 	)
 }
 
@@ -409,18 +437,28 @@ func (m *Gh) DeleteRemoteBranch(
 	// GitHub token.
 	// +optional
 	token *dagger.Secret,
+
+	// container with gh binary
+	// +optional
+	// default=nil
+	ctr *dagger.Container,
 ) {
 	contentsDirPath := "/content"
-	ctr, err := m.Container(
-		ctx,
-		version,
-		token,
-		"",
-		[]string{},
-		[]string{},
-	)
-	if err != nil {
-		panic(err)
+
+	var err error
+
+	if ctr == nil {
+		ctr, err = m.Container(
+			ctx,
+			version,
+			token,
+			"",
+			[]string{},
+			[]string{},
+		)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	ctr = ctr.
