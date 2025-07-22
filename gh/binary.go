@@ -69,7 +69,7 @@ func (b GHBinary) getLatestCliVersion(ctx context.Context) (string, error) {
 // binary returns the Github CLI binary.
 func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File) (*dagger.File, error) {
 	if b.Version == "" && runnerGh != nil {
-		fmt.Printf("No gh version specified, using runner's gh executable\n")
+		fmt.Printf("No gh version specified, using module's gh executable\n")
 		return runnerGh, nil
 	}
 
