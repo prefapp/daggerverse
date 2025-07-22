@@ -82,7 +82,7 @@ func (m *Gh) Container(
 
 	// runner's gh dir path
 	// +optional
-	// +default=bin/gh
+	// +default="/bin/gh"
 	localGhPath *dagger.File,
 
 ) (*dagger.Container, error) {
@@ -154,7 +154,7 @@ func (m *Gh) Run(
 
 	// runner's gh dir path
 	// +optional
-	// +default=bin/gh
+	// +default="/bin/gh"
 	localGhPath *dagger.File,
 ) (*dagger.Container, error) {
 	ctr, err := m.Container(ctx, version, token, repo, pluginNames, pluginVersions, localGhPath)
@@ -225,7 +225,7 @@ func (m *Gh) CreatePR(
 
 	// runner's gh dir path
 	// +optional
-	// +default=bin/gh
+	// +default="/bin/gh"
 	localGhPath *dagger.File,
 ) (string, error) {
 	contentsDirPath := "/content"
@@ -326,7 +326,7 @@ func (m *Gh) Commit(
 
 	// runner's gh dir path
 	// +optional
-	// +default=bin/gh
+	// +default="/bin/gh"
 	localGhPath *dagger.File,
 ) (*dagger.Container, error) {
 	contentsDirPath := "/content"
@@ -417,7 +417,7 @@ func (m *Gh) CommitAndCreatePR(
 
 	// runner's gh dir path
 	// +optional
-	// +default=bin/gh
+	// +default="/bin/gh"
 	localGhPath *dagger.File,
 ) (string, error) {
 	ctr, err := m.Container(
@@ -473,7 +473,7 @@ func (m *Gh) DeleteRemoteBranch(
 
 	// runner's gh dir path
 	// +optional
-	// +default=bin/gh
+	// +default="/bin/gh"
 	localGhPath *dagger.File,
 ) {
 	contentsDirPath := "/content"
