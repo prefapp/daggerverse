@@ -82,13 +82,14 @@ func (m *Gh) Container(
 
 	// runner's gh dir path
 	// +optional
+	// +default="/usr/bin/gh"
 	runnerGh *dagger.File,
 
 ) (*dagger.Container, error) {
-	// file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	// get the github container configuration
 	gc := m.GHContainer
@@ -114,7 +115,7 @@ func (m *Gh) Container(
 	gc = lo.Ternary(pluginList != nil, gc.WithPlugins(pluginList), gc)
 
 	// get the container object with the given binary
-	ctr := gc.container(nil, runnerGh)
+	ctr := gc.container(file)
 
 	return ctr, nil
 }
@@ -153,6 +154,7 @@ func (m *Gh) Run(
 
 	// runner's gh dir path
 	// +optional
+	// +default="/usr/bin/gh"
 	runnerGh *dagger.File,
 ) (*dagger.Container, error) {
 	ctr, err := m.Container(ctx, version, token, repo, pluginNames, pluginVersions, runnerGh)
@@ -223,6 +225,7 @@ func (m *Gh) CreatePR(
 
 	// runner's gh dir path
 	// +optional
+	// +default="/usr/bin/gh"
 	runnerGh *dagger.File,
 ) (string, error) {
 	contentsDirPath := "/content"
@@ -323,6 +326,7 @@ func (m *Gh) Commit(
 
 	// runner's gh dir path
 	// +optional
+	// +default="/usr/bin/gh"
 	runnerGh *dagger.File,
 ) (*dagger.Container, error) {
 	contentsDirPath := "/content"
@@ -413,6 +417,7 @@ func (m *Gh) CommitAndCreatePR(
 
 	// runner's gh dir path
 	// +optional
+	// +default="/usr/bin/gh"
 	runnerGh *dagger.File,
 ) (string, error) {
 	ctr, err := m.Container(
@@ -468,6 +473,7 @@ func (m *Gh) DeleteRemoteBranch(
 
 	// runner's gh dir path
 	// +optional
+	// +default="/usr/bin/gh"
 	runnerGh *dagger.File,
 ) {
 	contentsDirPath := "/content"
