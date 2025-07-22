@@ -85,10 +85,10 @@ func (m *Gh) Container(
 	ghDir *dagger.Directory,
 
 ) (*dagger.Container, error) {
-	file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx)
-	if err != nil {
-		return nil, err
-	}
+	// file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	// get the github container configuration
 	gc := m.GHContainer
@@ -114,7 +114,7 @@ func (m *Gh) Container(
 	gc = lo.Ternary(pluginList != nil, gc.WithPlugins(pluginList), gc)
 
 	// get the container object with the given binary
-	ctr := gc.container(file, ghDir)
+	ctr := gc.container(nil, ghDir)
 
 	return ctr, nil
 }
