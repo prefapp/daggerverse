@@ -86,7 +86,7 @@ func (m *Gh) Container(
 	runnerGh *dagger.File,
 
 ) (*dagger.Container, error) {
-	file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx)
+	file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx, runnerGh)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +188,7 @@ func (m *Gh) Get(
 	return lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).
 		WithOS(goos).
 		WithArch(goarch).
-		binary(ctx)
+		binary(ctx, nil)
 }
 
 // Create a PR with the current changes using GH
