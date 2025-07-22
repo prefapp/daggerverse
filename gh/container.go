@@ -57,10 +57,9 @@ func (c GHContainer) WithPlugins(plugins []GHPlugin) GHContainer {
 }
 
 // container returns the container for the Github CLI with the given binary.
-func (c GHContainer) container(binary *dagger.File, ghDir *dagger.Directory) *dagger.Container {
+func (c GHContainer) container(binary *dagger.File, runnerGh *dagger.File) *dagger.Container {
 	return lo.Ternary(c.Base != nil, c.Base, dag.Container().From("alpine/git:latest")).
-		// WithFile("/usr/local/bin/gh", binary).
-		WithMountedDirectory("/usr/local/bin", ghDir).
+		WithFile("/usr/local/bin/gh", runnerGh).
 		WithEntrypoint([]string{"/usr/local/bin/gh"}).
 		WithEnvVariable("GH_PROMPT_DISABLED", "true").
 		WithEnvVariable("GH_NO_UPDATE_NOTIFIER", "true").

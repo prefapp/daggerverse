@@ -82,7 +82,7 @@ func (m *Gh) Container(
 
 	// runner's gh dir path
 	// +optional
-	ghDir *dagger.Directory,
+	runnerGh *dagger.File,
 
 ) (*dagger.Container, error) {
 	// file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx)
@@ -114,7 +114,7 @@ func (m *Gh) Container(
 	gc = lo.Ternary(pluginList != nil, gc.WithPlugins(pluginList), gc)
 
 	// get the container object with the given binary
-	ctr := gc.container(nil, ghDir)
+	ctr := gc.container(nil, runnerGh)
 
 	return ctr, nil
 }
@@ -153,9 +153,9 @@ func (m *Gh) Run(
 
 	// runner's gh dir path
 	// +optional
-	ghDir *dagger.Directory,
+	runnerGh *dagger.File,
 ) (*dagger.Container, error) {
-	ctr, err := m.Container(ctx, version, token, repo, pluginNames, pluginVersions, ghDir)
+	ctr, err := m.Container(ctx, version, token, repo, pluginNames, pluginVersions, runnerGh)
 	if err != nil {
 		return nil, err
 	}
@@ -223,14 +223,14 @@ func (m *Gh) CreatePR(
 
 	// runner's gh dir path
 	// +optional
-	ghDir *dagger.Directory,
+	runnerGh *dagger.File,
 ) (string, error) {
 	contentsDirPath := "/content"
 
 	var err error
 
 	if ctr == nil {
-		ctr, err = m.Container(ctx, version, token, "", []string{}, []string{}, ghDir)
+		ctr, err = m.Container(ctx, version, token, "", []string{}, []string{}, runnerGh)
 		if err != nil {
 			panic(err)
 		}
@@ -323,7 +323,7 @@ func (m *Gh) Commit(
 
 	// runner's gh dir path
 	// +optional
-	ghDir *dagger.Directory,
+	runnerGh *dagger.File,
 ) (*dagger.Container, error) {
 	contentsDirPath := "/content"
 
@@ -337,7 +337,7 @@ func (m *Gh) Commit(
 			"",
 			[]string{"prefapp/gh-commit"},
 			[]string{"v1.2.4-snapshot"},
-			ghDir,
+			runnerGh,
 		)
 		if err != nil {
 			panic(err)
@@ -413,7 +413,7 @@ func (m *Gh) CommitAndCreatePR(
 
 	// runner's gh dir path
 	// +optional
-	ghDir *dagger.Directory,
+	runnerGh *dagger.File,
 ) (string, error) {
 	ctr, err := m.Container(
 		ctx,
@@ -422,17 +422,17 @@ func (m *Gh) CommitAndCreatePR(
 		"",
 		[]string{"prefapp/gh-commit"},
 		[]string{"v1.2.4-snapshot"},
-		ghDir,
+		runnerGh,
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	m.DeleteRemoteBranch(ctx, repoDir, branchName, version, token, ctr, ghDir)
+	m.DeleteRemoteBranch(ctx, repoDir, branchName, version, token, ctr, runnerGh)
 
 	ctr, err = m.Commit(
 		ctx, repoDir, branchName, commitMessage, token,
-		deletePath, createEmpty, version, ctr, ghDir,
+		deletePath, createEmpty, version, ctr, runnerGh,
 	)
 	if err != nil {
 		panic(err)
@@ -440,7 +440,7 @@ func (m *Gh) CommitAndCreatePR(
 
 	return m.CreatePR(
 		ctx, prTitle, prBody, branchName, repoDir,
-		labels, version, token, ctr, ghDir,
+		labels, version, token, ctr, runnerGh,
 	)
 }
 
@@ -468,7 +468,7 @@ func (m *Gh) DeleteRemoteBranch(
 
 	// runner's gh dir path
 	// +optional
-	ghDir *dagger.Directory,
+	runnerGh *dagger.File,
 ) {
 	contentsDirPath := "/content"
 
@@ -482,7 +482,7 @@ func (m *Gh) DeleteRemoteBranch(
 			"",
 			[]string{},
 			[]string{},
-			ghDir,
+			runnerGh,
 		)
 		if err != nil {
 			panic(err)
