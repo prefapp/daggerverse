@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"runtime"
@@ -71,30 +70,7 @@ func (b GHBinary) getLatestCliVersion(ctx context.Context) (string, error) {
 func (b GHBinary) binary(ctx context.Context) (*dagger.File, error) {
 	if b.Version == "" {
 		fmt.Printf("No gh version specified, using runner's gh executable\n")
-
-		srcFile, err := os.Open("/usr/bin/gh")
-		if err != nil {
-			return nil, err
-		}
-		defer srcFile.Close()
-
-		destFile, err := os.Create("gh")
-		if err != nil {
-			return nil, err
-		}
-		defer destFile.Close()
-
-		_, err = io.Copy(destFile, srcFile)
-		if err != nil {
-			return nil, err
-		}
-
-		err = destFile.Sync()
-		if err != nil {
-			return nil, err
-		}
-
-		return dag.CurrentModule().WorkdirFile("gh"), nil
+		return dag.CurrentModule().WorkdirFile("runner_tools/gh"), nil
 	}
 
 	if b.Version == "latest" {
