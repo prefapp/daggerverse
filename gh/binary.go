@@ -74,11 +74,13 @@ func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File) (*dagger.Fi
 	}
 
 	if b.Version == "latest" {
+		fmt.Printf("Latest version specified, resolving...\n")
 		version, err := b.getLatestCliVersion(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get latest GitHub CLI version: %w", err)
 		}
 
+		fmt.Printf("The latest version avaliable is %s\n", version)
 		b.Version = version
 	}
 
@@ -103,6 +105,11 @@ func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File) (*dagger.Fi
 		version, version, goos, goarch, suffix,
 	)
 	dst := fmt.Sprintf("gh_%s_%s_%s", version, goos, goarch)
+
+	fmt.Printf(
+		"Getting gh version %s for OS %s and architecture %s\n",
+		version, goos, goarch,
+	)
 
 	pwd, err := os.Getwd()
 	if err != nil {
