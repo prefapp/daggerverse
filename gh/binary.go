@@ -69,6 +69,10 @@ func (b GHBinary) getLatestCliVersion(ctx context.Context) (string, error) {
 // binary returns the Github CLI binary.
 func (b GHBinary) binary(ctx context.Context) (*dagger.File, error) {
 	if b.Version == "" {
+		return dag.CurrentModule().WorkdirFile("/usr/bin/gh"), nil
+	}
+
+	if b.Version == "latest" {
 		version, err := b.getLatestCliVersion(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get latest GitHub CLI version: %w", err)
@@ -93,7 +97,10 @@ func (b GHBinary) binary(ctx context.Context) (*dagger.File, error) {
 		goos = "macOS"
 	}
 
-	src := fmt.Sprintf("https://github.com/cli/cli/releases/download/v%s/gh_%s_%s_%s.%s", version, version, goos, goarch, suffix)
+	src := fmt.Sprintf(
+		"https://github.com/cli/cli/releases/download/v%s/gh_%s_%s_%s.%s",
+		version, version, goos, goarch, suffix,
+	)
 	dst := fmt.Sprintf("gh_%s_%s_%s", version, goos, goarch)
 
 	pwd, err := os.Getwd()
