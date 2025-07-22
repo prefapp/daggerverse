@@ -70,7 +70,7 @@ func (b GHBinary) getLatestCliVersion(ctx context.Context) (string, error) {
 func (b GHBinary) binary(ctx context.Context) (*dagger.File, error) {
 	if b.Version == "" {
 		fmt.Printf("No gh version specified, using runner's gh executable\n")
-		return dag.CurrentModule().WorkdirFile(path.Join("/", "usr", "bin", "gh")), nil
+		return dag.CurrentModule().File("/usr/bin/gh"), nil
 	}
 
 	if b.Version == "latest" {
