@@ -116,6 +116,27 @@ func (m *Gh) Container(
 	// get the container object with the given binary
 	ctr := gc.container(file)
 
+	if version != "" && localGhPath != nil {
+		versionOutput, err := ctr.WithExec([]string{"gh", "--version"}).Stdout(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		dateText := regexp.MustCompile(`\([1-9-]+\)`)
+		currentVersion := dateText.ReplaceAllString(
+			strings.ReplaceAll(
+				strings.Split(versionOutput, "\n")[0],
+				"gh version ",
+				"",
+			),
+			"",
+		)
+
+		if currentVersion != version {
+			fmt.Printf("WARNING: local gh binary version and specified version differ")
+		}
+	}
+
 	return ctr, nil
 }
 

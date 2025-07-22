@@ -70,7 +70,6 @@ func (b GHBinary) getLatestCliVersion(ctx context.Context) (string, error) {
 func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File) (*dagger.File, error) {
 	if runnerGh != nil {
 		fmt.Printf("Using specified local gh binary\n")
-		// Comprobar versión runnerGh == b.Version (se b.Version ten valor) (warning se diferen)
 		return runnerGh, nil
 	}
 
