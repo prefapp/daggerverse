@@ -122,7 +122,9 @@ func (m *Gh) Container(
 			return nil, err
 		}
 
-		dateText := regexp.MustCompile(`\([1-9-]+\)`)
+		// versionOutput[0] example => "gh version <version> (<date>)"
+		// this regexp removes the " (<date>)" portion of the output
+		dateText := regexp.MustCompile(`\s\([0-9-]+\)`)
 		currentVersion := dateText.ReplaceAllString(
 			strings.ReplaceAll(
 				strings.Split(versionOutput, "\n")[0],
@@ -133,7 +135,10 @@ func (m *Gh) Container(
 		)
 
 		if currentVersion != version {
-			fmt.Printf("WARNING: local gh binary version and specified version differ")
+			fmt.Printf(
+				"WARNING: local gh binary version and specified version differ. Local gh version: %s, specified version: %s",
+				currentVersion, version,
+			)
 		}
 	}
 
