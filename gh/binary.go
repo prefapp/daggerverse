@@ -108,17 +108,17 @@ func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File, token *dagg
 		"https://github.com/cli/cli/releases/download/v%s/gh_%s_%s_%s.%s",
 		version, version, goos, goarch, suffix,
 	)
-	dst := fmt.Sprintf("./gh_%s_%s_%s", version, goos, goarch)
-
-	fmt.Printf(
-		"Getting gh version %s for OS %s and architecture %s. URL: %s\n",
-		version, goos, goarch, url,
-	)
+	dst := fmt.Sprintf("gh_%s_%s_%s", version, goos, goarch)
 
 	bearerToken, err := token.Plaintext(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf(
+		"Getting gh version %s for OS %s and architecture %s (authenticating with --token param value). URL: %s\n",
+		version, goos, goarch, url,
+	)
 
 	bearer := fmt.Sprintf("Bearer %s", strings.TrimSpace(bearerToken))
 	req, err := http.NewRequest("GET", url, nil)
@@ -131,14 +131,7 @@ func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File, token *dagg
 	}
 	defer resp.Body.Close()
 
-	f, err := os.CreateTemp(".", "test")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	io.Copy(f, resp.Body)
-
-	err = b.ungzip(f.Name(), 0755)
+	err = b.untargz(resp.Body, 0755)
 	if err != nil {
 		return nil, err
 	}
@@ -146,22 +139,14 @@ func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File, token *dagg
 	return dag.CurrentModule().WorkdirFile(path.Join(dst, "bin/gh")), nil
 }
 
-func (b GHBinary) ungzip(src string, umask os.FileMode) error {
+func (b GHBinary) untargz(src io.Reader, umask os.FileMode) error {
 	// If we're going into a directory we should make that first
 	gzipDst := "./ungzip_file"
 	if err := os.MkdirAll(filepath.Dir(gzipDst), umask); err != nil {
 		return err
 	}
 
-	// File first
-	f, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = f.Close() }()
-
-	// gzip compression is second
-	gzipR, err := gzip.NewReader(f)
+	gzipR, err := gzip.NewReader(src)
 	if err != nil {
 		return err
 	}
