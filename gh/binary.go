@@ -140,7 +140,7 @@ func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File, token *dagg
 }
 
 func (b GHBinary) untargz(src io.Reader, umask os.FileMode) error {
-	fmt.Printf("Ungzipping gh release tar...")
+	fmt.Printf("Ungzipping gh release tar...\n")
 
 	gzipR, err := gzip.NewReader(src)
 	if err != nil {
@@ -152,7 +152,7 @@ func (b GHBinary) untargz(src io.Reader, umask os.FileMode) error {
 }
 
 func untar(input io.Reader, src string, dir bool, umask os.FileMode) error {
-	fmt.Printf("Untaring gh release...")
+	fmt.Printf("Untaring gh release...\n")
 
 	tarR := tar.NewReader(input)
 
