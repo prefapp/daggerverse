@@ -140,11 +140,7 @@ func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File, token *dagg
 }
 
 func (b GHBinary) untargz(src io.Reader, umask os.FileMode) error {
-	// If we're going into a directory we should make that first
-	gzipDst := "./ungzip_file"
-	if err := os.MkdirAll(filepath.Dir(gzipDst), umask); err != nil {
-		return err
-	}
+	fmt.Printf("Ungzipping gh release tar...")
 
 	gzipR, err := gzip.NewReader(src)
 	if err != nil {
@@ -152,13 +148,12 @@ func (b GHBinary) untargz(src io.Reader, umask os.FileMode) error {
 	}
 	defer func() { _ = gzipR.Close() }()
 
-	// Explicitly chmod; the process umask is unconditionally applied otherwise.
-	// We'll mask the mode with our own umask, but that may be different than
-	// the process umask
 	return untar(gzipR, "gzip", true, umask)
 }
 
 func untar(input io.Reader, src string, dir bool, umask os.FileMode) error {
+	fmt.Printf("Untaring gh release...")
+
 	tarR := tar.NewReader(input)
 
 	for {
