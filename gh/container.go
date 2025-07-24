@@ -60,7 +60,7 @@ func (c GHContainer) WithPlugins(plugins []GHPlugin) GHContainer {
 func (c GHContainer) container(binary *dagger.File) *dagger.Container {
 	return lo.Ternary(c.Base != nil, c.Base, dag.Container().From("alpine/git:latest")).
 		WithFile("/usr/local/bin/gh", binary).
-		// WithEntrypoint([]string{"/usr/local/bin/gh"}).
+		WithEntrypoint([]string{"/usr/local/bin/gh"}).
 		WithEnvVariable("GH_PROMPT_DISABLED", "true").
 		WithEnvVariable("GH_NO_UPDATE_NOTIFIER", "true").
 		With(func(ctr *dagger.Container) *dagger.Container {

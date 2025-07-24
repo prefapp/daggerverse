@@ -90,9 +90,6 @@ func (m *Gh) Container(
 		return nil, err
 	}
 
-	fileName, err := file.Name(ctx)
-	fmt.Printf("\n>>>>>>>>>>>>>>>>>>>>>>%s", fileName)
-
 	// get the github container configuration
 	gc := m.GHContainer
 
@@ -112,9 +109,9 @@ func (m *Gh) Container(
 	}
 
 	// update the container with the given token and repository if provided
-	// gc = lo.Ternary(token != nil, gc.WithToken(token), gc)
-	// gc = lo.Ternary(repo != "", gc.WithRepo(repo), gc)
-	// gc = lo.Ternary(pluginList != nil, gc.WithPlugins(pluginList), gc)
+	gc = lo.Ternary(token != nil, gc.WithToken(token), gc)
+	gc = lo.Ternary(repo != "", gc.WithRepo(repo), gc)
+	gc = lo.Ternary(pluginList != nil, gc.WithPlugins(pluginList), gc)
 
 	// get the container object with the given binary
 	ctr := gc.container(file)

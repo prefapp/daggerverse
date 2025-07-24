@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"gh/internal/dagger"
 
@@ -140,7 +139,7 @@ func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File, token *dagg
 	defer f.Close()
 	io.Copy(f, resp.Body)
 
-	err = b.ungzip(dst, f.Name(), 0755)
+	err = b.ungzip(f.Name(), 0755)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +147,7 @@ func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File, token *dagg
 	return dag.CurrentModule().WorkdirFile(path.Join(dst, "bin/gh")), nil
 }
 
-func (b GHBinary) ungzip(dst, src string, umask os.FileMode) error {
+func (b GHBinary) ungzip(src string, umask os.FileMode) error {
 	// If we're going into a directory we should make that first
 	gzipDst := "./ungzip_file"
 	if err := os.MkdirAll(filepath.Dir(gzipDst), umask); err != nil {
@@ -172,23 +171,15 @@ func (b GHBinary) ungzip(dst, src string, umask os.FileMode) error {
 	// Explicitly chmod; the process umask is unconditionally applied otherwise.
 	// We'll mask the mode with our own umask, but that may be different than
 	// the process umask
-	return untar(gzipR, ".", "gzip", true, 0755)
+	return untar(gzipR, "gzip", true, umask)
 }
 
-func untar(input io.Reader, dst, src string, dir bool, umask os.FileMode) error {
+func untar(input io.Reader, src string, dir bool, umask os.FileMode) error {
 	tarR := tar.NewReader(input)
-	done := false
-	dirHdrs := []*tar.Header{}
-	now := time.Now()
 
 	for {
 		hdr, err := tarR.Next()
 		if err == io.EOF {
-			if !done {
-				// Empty archive
-				return fmt.Errorf("empty archive: %s", src)
-			}
-
 			break
 		}
 		if err != nil {
@@ -200,11 +191,7 @@ func untar(input io.Reader, dst, src string, dir bool, umask os.FileMode) error 
 			continue
 		}
 
-		path := dst
-		if dir {
-			path = filepath.Join(path, hdr.Name)
-		}
-
+		path := hdr.Name
 		fileInfo := hdr.FileInfo()
 
 		if fileInfo.IsDir() {
@@ -216,10 +203,6 @@ func untar(input io.Reader, dst, src string, dir bool, umask os.FileMode) error 
 			if err := os.MkdirAll(path, umask); err != nil {
 				return err
 			}
-
-			// Record the directory information so that we may set its attributes
-			// after all files have been extracted
-			dirHdrs = append(dirHdrs, hdr)
 
 			continue
 		} else {
@@ -235,14 +218,6 @@ func untar(input io.Reader, dst, src string, dir bool, umask os.FileMode) error 
 			}
 		}
 
-		// We have a file. If we already decoded, then it is an error
-		if !dir && done {
-			return fmt.Errorf("expected a single file, got multiple: %s", src)
-		}
-
-		// Mark that we're done so future in single file mode errors
-		done = true
-
 		dstF, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, umask)
 		if err != nil {
 			return err
@@ -251,40 +226,6 @@ func untar(input io.Reader, dst, src string, dir bool, umask os.FileMode) error 
 
 		_, err = io.Copy(dstF, tarR)
 		if err != nil {
-			return err
-		}
-
-		// Set the access and modification time if valid, otherwise default to current time
-		aTime := now
-		mTime := now
-		if hdr.AccessTime.Unix() > 0 {
-			aTime = hdr.AccessTime
-		}
-		if hdr.ModTime.Unix() > 0 {
-			mTime = hdr.ModTime
-		}
-		if err := os.Chtimes(path, aTime, mTime); err != nil {
-			return err
-		}
-	}
-
-	// Perform a final pass over extracted directories to update metadata
-	for _, dirHdr := range dirHdrs {
-		path := filepath.Join(dst, dirHdr.Name)
-		// Chmod the directory since they might be created before we know the mode flags
-		if err := os.Chmod(path, umask); err != nil {
-			return err
-		}
-		// Set the mtime/atime attributes since they would have been changed during extraction
-		aTime := now
-		mTime := now
-		if dirHdr.AccessTime.Unix() > 0 {
-			aTime = dirHdr.AccessTime
-		}
-		if dirHdr.ModTime.Unix() > 0 {
-			mTime = dirHdr.ModTime
-		}
-		if err := os.Chtimes(path, aTime, mTime); err != nil {
 			return err
 		}
 	}
