@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -25,7 +26,7 @@ func (m *UpdateClaimsFeatures) New(
 
 	// Gh CLI Version
 	// +optional
-	// +default="v2.66.1"
+	// +default="v2.74.2"
 	ghCliVersion string,
 
 	// Claims repo name
@@ -36,11 +37,6 @@ func (m *UpdateClaimsFeatures) New(
 	// +optional
 	// +default="main"
 	defaultBranch string,
-
-	// Name of the components folder name
-	// +optional
-	// +default="components"
-	componentsFolderName string,
 
 	// Name of the claim to be updated
 	// +optional
@@ -64,28 +60,31 @@ func (m *UpdateClaimsFeatures) New(
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
 	var featuresToUpdateList []string = nil
+	rexp := regexp.MustCompile(`,\s+`)
 
 	if claimsToUpdate != "" {
+		claimsToUpdate = rexp.ReplaceAllString(claimsToUpdate, ",")
 		claimsToUpdateList = strings.Split(claimsToUpdate, ",")
 	}
 
 	if featuresToUpdate != "" {
+		featuresToUpdate = rexp.ReplaceAllString(featuresToUpdate, ",")
 		featuresToUpdateList = strings.Split(featuresToUpdate, ",")
 	}
 
 	return &UpdateClaimsFeatures{
-		Repo:                 repo,
-		GhToken:              ghToken,
-		PrefappGhToken:       prefappGhToken,
-		GhCliVersion:         ghCliVersion,
-		ClaimsDir:            claimsDir,
-		ClaimsDirPath:        claimsDirPath,
-		DefaultBranch:        defaultBranch,
-		ComponentsFolderName: componentsFolderName,
-		ClaimsToUpdate:       claimsToUpdateList,
-		FeaturesToUpdate:     featuresToUpdateList,
-		VersionConstraint:    versionConstraint,
-		Automerge:            automerge,
+		Repo:              repo,
+		Org:               strings.Split(repo, "/")[0],
+		GhToken:           ghToken,
+		PrefappGhToken:    prefappGhToken,
+		GhCliVersion:      ghCliVersion,
+		ClaimsDir:         claimsDir,
+		ClaimsDirPath:     claimsDirPath,
+		DefaultBranch:     defaultBranch,
+		ClaimsToUpdate:    claimsToUpdateList,
+		FeaturesToUpdate:  featuresToUpdateList,
+		VersionConstraint: versionConstraint,
+		Automerge:         automerge,
 	}, nil
 }
 
@@ -111,7 +110,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	}
 
 	for _, entry := range claims {
-		fmt.Printf("Classifying claims in %s\n", entry)
+		fmt.Printf("Reading claim %s\n", entry)
 
 		claim, err := m.getClaimIfKindComponent(ctx, entry)
 		if err != nil {
@@ -158,7 +157,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					return "", err
 				}
 
-				fmt.Printf("PR LINK: %s", prLink)
+				fmt.Printf("PR LINK: %s\n", prLink)
 
 				if m.Automerge {
 					m.MergePullRequest(ctx, prLink)

@@ -49,9 +49,10 @@ func (m *UpdateClaimsFeatures) upsertPR(
 	stdoutlsRemote, err := dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
-		Token:   m.GhToken,
-		Plugins: []string{"prefapp/gh-commit"},
-	}).WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{}).
+		Token:          m.GhToken,
+		PluginNames:    []string{"prefapp/gh-commit"},
+		PluginVersions: []string{"v1.2.3"},
+	}).WithMountedDirectory(contentsDirPath, contents).
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
@@ -103,18 +104,20 @@ func (m *UpdateClaimsFeatures) upsertPR(
 	_, err = dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
-		Token:   m.GhToken,
-		Plugins: []string{"prefapp/gh-commit"},
-	}).WithDirectory(contentsDirPath, contents, dagger.ContainerWithDirectoryOpts{
-		Exclude: []string{".git"},
-	}).WithWorkdir(contentsDirPath).
+		Token:          m.GhToken,
+		PluginNames:    []string{"prefapp/gh-commit"},
+		PluginVersions: []string{"v1.2.3"},
+	}).WithMountedDirectory(contentsDirPath, contents).
+		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{"git", "config", "user.email", fmt.Sprintf(
+			"fs-%s-state[bot]@users.noreply.github.com", m.Org,
+		)}).
+		WithExec([]string{"git", "config", "user.name", "firestartr-bot"}).
+		WithExec([]string{"git", "add", "."}).
+		WithExec([]string{"git", "commit", "-m", "\"Update claims' features\""}).
 		WithExec([]string{
-			"gh",
-			"commit",
-			"-R", m.Repo,
-			"-b", newBranchName,
-			"-m", "Update deployments",
+			"git", "push", "--force", "origin", fmt.Sprintf("HEAD:%s", newBranchName),
 		}).
 		Sync(ctx)
 
@@ -154,9 +157,8 @@ func (m *UpdateClaimsFeatures) upsertPR(
 			Version: m.GhCliVersion,
 			Token:   m.GhToken,
 		}).
-			WithEnvVariable(
-				"CACHE_BUSTER",
-				time.Now().String()).WithDirectory(contentsDirPath, contents).
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithMountedDirectory(contentsDirPath, contents).
 			WithWorkdir(contentsDirPath).
 			WithExec(cmd).
 			Stdout(ctx)
@@ -222,7 +224,7 @@ func (m *UpdateClaimsFeatures) createRemoteBranch(
 	gitDirPath := "/git_dir"
 
 	_, err := dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Version: m.GhCliVersion}).
-		WithDirectory(gitDirPath, gitDir).
+		WithMountedDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{"git", "checkout", "-b", newBranch}, dagger.ContainerWithExecOpts{}).
@@ -248,7 +250,7 @@ func (m *UpdateClaimsFeatures) regenerateRemoteBranch(
 	gitDirPath := "/git_dir"
 
 	_, err := dag.Gh().Container(dagger.GhContainerOpts{Token: m.GhToken, Version: m.GhCliVersion}).
-		WithDirectory(gitDirPath, gitDir).
+		WithMountedDirectory(gitDirPath, gitDir).
 		WithWorkdir(gitDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{"git", "push", "origin", "--delete", branchName}, dagger.ContainerWithExecOpts{}).
@@ -334,13 +336,14 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 	}).Container(dagger.GhContainerOpts{
 		Token: m.PrefappGhToken,
 		Repo:  "prefapp/features",
-	}).WithDirectory(m.ClaimsDirPath, m.ClaimsDir, dagger.ContainerWithDirectoryOpts{}).
+	}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
 		WithWorkdir(m.ClaimsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
 			"gh",
 			"release",
 			"list",
+			"--exclude-pre-releases",
 			"--limit",
 			"999",
 			"--json",
@@ -351,27 +354,43 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 	return ghReleaseListResult, err
 }
 
+var releasesChangelog = make(map[string]string)
+
 func (m *UpdateClaimsFeatures) getReleaseChangelog(
 	ctx context.Context,
 	releaseTag string,
 ) (string, error) {
-	changelog, err := dag.Gh(dagger.GhOpts{
-		Version: m.GhCliVersion,
-	}).Container(dagger.GhContainerOpts{
-		Token: m.PrefappGhToken,
-		Repo:  "prefapp/features",
-	}).WithDirectory(m.ClaimsDirPath, m.ClaimsDir, dagger.ContainerWithDirectoryOpts{}).
-		WithWorkdir(m.ClaimsDirPath).
-		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{
-			"gh",
-			"release",
-			"view",
+	changelog := ""
+	var err error
+
+	if releasesChangelog[releaseTag] == "" {
+		fmt.Printf(
+			"☢️ No cached changelog for tag %s found, getting it from GitHub\n",
 			releaseTag,
-			"--json",
-			"body",
-		}).
-		Stdout(ctx)
+		)
+		changelog, err = dag.Gh(dagger.GhOpts{
+			Version: m.GhCliVersion,
+		}).Container(dagger.GhContainerOpts{
+			Token: m.PrefappGhToken,
+			Repo:  "prefapp/features",
+		}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
+			WithWorkdir(m.ClaimsDirPath).
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithExec([]string{
+				"gh",
+				"release",
+				"view",
+				releaseTag,
+				"--json",
+				"body",
+			}).
+			Stdout(ctx)
+		releasesChangelog[releaseTag] = changelog
+	} else {
+		fmt.Printf("☢️ Using cached changelog for tag %s\n", releaseTag)
+		changelog = releasesChangelog[releaseTag]
+		err = nil
+	}
 
 	return changelog, err
 }

@@ -1,5 +1,54 @@
 # Changelog
 
+## [6.3.4](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.3...hydrate-orchestrator-v6.3.4) (2025-07-09)
+
+
+### Bug Fixes
+
+* YAML indentation ([#268](https://github.com/prefapp/daggerverse/issues/268)) ([144a9cf](https://github.com/prefapp/daggerverse/commit/144a9cf23bd6e3ffec46beceeb68bd30dc5dfde7))
+
+## [6.3.3](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.2...hydrate-orchestrator-v6.3.3) (2025-07-09)
+
+
+### Bug Fixes
+
+* Updated hydrate-orchestrator Gh container and gh-commit plugin versions ([#259](https://github.com/prefapp/daggerverse/issues/259)) ([a7dea1b](https://github.com/prefapp/daggerverse/commit/a7dea1b54dd5f53f009ead65f443b6df0fe6aa02))
+
+## [6.3.2](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.1...hydrate-orchestrator-v6.3.2) (2025-06-30)
+
+
+### Bug Fixes
+
+* Remove unused module ([#253](https://github.com/prefapp/daggerverse/issues/253)) ([eb890a4](https://github.com/prefapp/daggerverse/commit/eb890a449a48633768181338ca3304e3e24419f3))
+
+## [6.3.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.0...hydrate-orchestrator-v6.3.1) (2025-06-30)
+
+
+### Bug Fixes
+
+* filter reviewers and add error handling ([#249](https://github.com/prefapp/daggerverse/issues/249)) ([26c55ee](https://github.com/prefapp/daggerverse/commit/26c55ee1aee0981d8ddc524fa218a9f808af6d0b))
+
+## [6.3.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.2.2...hydrate-orchestrator-v6.3.0) (2025-06-26)
+
+
+### Features
+
+* Modify render function for hydrate-orchestrator ([#244](https://github.com/prefapp/daggerverse/issues/244)) ([7e35199](https://github.com/prefapp/daggerverse/commit/7e35199d37bba66cf73f46c6215fe2ea69e244a7))
+
+## [6.2.2](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.2.1...hydrate-orchestrator-v6.2.2) (2025-06-19)
+
+
+### Bug Fixes
+
+* improve deployment pr information ([#219](https://github.com/prefapp/daggerverse/issues/219)) ([7a1f43a](https://github.com/prefapp/daggerverse/commit/7a1f43affb7ad30a89a11efcd39f484a60255195))
+
+## [6.2.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.2.0...hydrate-orchestrator-v6.2.1) (2025-06-13)
+
+
+### Bug Fixes
+
+* Add yaml validation after rendering ([#238](https://github.com/prefapp/daggerverse/issues/238)) ([7d733a6](https://github.com/prefapp/daggerverse/commit/7d733a6884bc9438fcd6cf214f466771d9992de7))
+
 ## [6.2.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.1.1...hydrate-orchestrator-v6.2.0) (2025-06-05)
 
 

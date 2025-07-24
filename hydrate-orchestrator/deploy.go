@@ -58,7 +58,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -89,9 +89,10 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
+			continue
 		} else {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
@@ -116,7 +117,7 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -146,11 +147,13 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
+
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
+			continue
 		} else {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
@@ -173,7 +176,7 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -208,7 +211,7 @@ Created by @%s from %s within commit [%s](%s)
 
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -244,11 +247,11 @@ Created by @%s from %s within commit [%s](%s)
 		_, err = dag.Gh(dagger.GhOpts{
 			Version: m.GhCliVersion,
 		}).Container(dagger.GhContainerOpts{
-			Token:   m.GhToken,
-			Plugins: []string{"prefapp/gh-commit"},
-		}).WithDirectory(contentsDirPath, updatedDir, dagger.ContainerWithDirectoryOpts{
-			Exclude: []string{".git"},
-		}).WithWorkdir(contentsDirPath).
+			Token:          m.GhToken,
+			PluginNames:    []string{"prefapp/gh-commit"},
+			PluginVersions: []string{"v1.2.3"},
+		}).WithMountedDirectory(contentsDirPath, updatedDir).
+			WithWorkdir(contentsDirPath).
 			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 			WithExec([]string{
 				"gh",
@@ -264,8 +267,10 @@ Created by @%s from %s within commit [%s](%s)
 
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
+
+			continue
 
 		} else {
 			summary.addDeploymentSummaryRow(
@@ -288,7 +293,7 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				secDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -319,8 +324,10 @@ Created by @%s from %s within commit [%s](%s)
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				secDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
+
+			continue
 
 		} else {
 			summary.addDeploymentSummaryRow(

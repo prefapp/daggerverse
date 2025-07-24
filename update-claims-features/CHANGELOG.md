@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.1.6](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.5...update-claims-features-v1.1.6) (2025-07-09)
+
+
+### Bug Fixes
+
+* Pin new GH module version ([#258](https://github.com/prefapp/daggerverse/issues/258)) ([c57d26d](https://github.com/prefapp/daggerverse/commit/c57d26deb68620069376bd47a5e68617861f7c0d))
+
+## [1.1.5](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.4...update-claims-features-v1.1.5) (2025-07-02)
+
+
+### Bug Fixes
+
+* More performance changes ([#256](https://github.com/prefapp/daggerverse/issues/256)) ([90299fe](https://github.com/prefapp/daggerverse/commit/90299fec2c2d044ca826aca4a738207b2dbb5ac2))
+
+## [1.1.4](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.3...update-claims-features-v1.1.4) (2025-07-01)
+
+
+### Bug Fixes
+
+* Performance ([#250](https://github.com/prefapp/daggerverse/issues/250)) ([b5360a5](https://github.com/prefapp/daggerverse/commit/b5360a55210928be652a1903684ac3a4366482b0))
+
+## [1.1.3](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.2...update-claims-features-v1.1.3) (2025-06-11)
+
+
+### Bug Fixes
+
+* Missing fields in update-claims-features module ([#234](https://github.com/prefapp/daggerverse/issues/234)) ([22c5637](https://github.com/prefapp/daggerverse/commit/22c5637de1fac3cac108072d43d22f3723d34148))
+
+## [1.1.2](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.1...update-claims-features-v1.1.2) (2025-06-11)
+
+
+### Bug Fixes
+
+* remove pre-releases from features list ([#228](https://github.com/prefapp/daggerverse/issues/228)) ([4d7a2cf](https://github.com/prefapp/daggerverse/commit/4d7a2cfe65adf8f2e8fdb9f41cbdcc547e17271f))
+
 ## [1.1.1](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.0...update-claims-features-v1.1.1) (2025-05-07)
 
 

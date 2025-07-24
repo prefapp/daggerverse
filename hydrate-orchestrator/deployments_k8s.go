@@ -41,16 +41,12 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 		if err != nil {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
-
 			continue
 		}
 
-		prBody := fmt.Sprintf(`
-# New deployment from new image in repository [*%s*](%s)
-%s
-`, repositoryCaller, repoURL, kdep.String(false))
+		prBody := kdep.String(false, repoURL)
 
 		globPattern := fmt.
 			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
@@ -60,17 +56,16 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 			branchName,
 			&renderedDeployment[0],
 			kdep.Labels(),
-			kdep.String(true),
+			kdep.String(true, repoURL),
 			prBody,
 			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 			reviewers,
 		)
 
 		if err != nil {
-
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -86,9 +81,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 					kdep.DeploymentPath,
 					"Failed: PR link is empty, cannot merge PR",
 				)
-
 				continue
-
 			}
 
 			err := m.MergePullRequest(ctx, prLink)
@@ -97,11 +90,9 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 				summary.addDeploymentSummaryRow(
 					kdep.DeploymentPath,
-					fmt.Sprintf("Failed: %s", err.Error()),
+					extractErrorMessage(err),
 				)
-
 				continue
-
 			}
 
 			summary.addDeploymentSummaryRow(
@@ -175,10 +166,13 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 			Deployment: Deployment{
 				DeploymentPath: deploymentPath,
 			},
-			Cluster:      image.Platform,
-			Tenant:       image.Tenant,
-			Environment:  image.Env,
-			ImagesMatrix: string(jsonUniqueImage),
+			Cluster:          image.Platform,
+			Tenant:           image.Tenant,
+			Environment:      image.Env,
+			ImagesMatrix:     string(jsonUniqueImage),
+			ServiceNames:     image.ServiceNameList,
+			RepositoryCaller: image.RepositoryCaller,
+			Image:            image.Image,
 		}
 
 		result.addDeployment(kdep)
