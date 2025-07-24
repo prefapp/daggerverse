@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -134,7 +133,7 @@ func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File, token *dagg
 
 	f, err := os.CreateTemp(".", "test")
 	if err != nil {
-		log.Fatal("cannot open temp file", err)
+		return err
 	}
 	defer f.Close()
 	io.Copy(f, resp.Body)
