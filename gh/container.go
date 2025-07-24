@@ -64,9 +64,12 @@ func (c GHContainer) container(binary *dagger.File) *dagger.Container {
 		WithEnvVariable("GH_PROMPT_DISABLED", "true").
 		WithEnvVariable("GH_NO_UPDATE_NOTIFIER", "true").
 		With(func(ctr *dagger.Container) *dagger.Container {
-			token, err := c.Token.Plaintext(context.Background())
+			if c.Token != nil {
+				token, err := c.Token.Plaintext(context.Background())
+				if err != nil {
+					panic(err)
+				}
 
-			if c.Token != nil && err == nil {
 				ctr = ctr.WithExec([]string{"gh", "auth", "login", "--with-token"}, dagger.ContainerWithExecOpts{
 					Stdin: token,
 				}).WithExec([]string{"gh", "auth", "setup-git"})
