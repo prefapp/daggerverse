@@ -85,10 +85,13 @@ func (m *Gh) Container(
 	localGhCliPath *dagger.File,
 
 ) (*dagger.Container, error) {
-	file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx, localGhCliPath)
+	file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx, localGhCliPath, token)
 	if err != nil {
 		return nil, err
 	}
+
+	fileName, err := file.Name(ctx)
+	fmt.Printf("\n>>>>>>>>>>>>>>>>>>>>>>%s", fileName)
 
 	// get the github container configuration
 	gc := m.GHContainer
@@ -109,9 +112,9 @@ func (m *Gh) Container(
 	}
 
 	// update the container with the given token and repository if provided
-	gc = lo.Ternary(token != nil, gc.WithToken(token), gc)
-	gc = lo.Ternary(repo != "", gc.WithRepo(repo), gc)
-	gc = lo.Ternary(pluginList != nil, gc.WithPlugins(pluginList), gc)
+	// gc = lo.Ternary(token != nil, gc.WithToken(token), gc)
+	// gc = lo.Ternary(repo != "", gc.WithRepo(repo), gc)
+	// gc = lo.Ternary(pluginList != nil, gc.WithPlugins(pluginList), gc)
 
 	// get the container object with the given binary
 	ctr := gc.container(file)
@@ -208,11 +211,15 @@ func (m *Gh) Get(
 	// version of the Github CLI
 	// +optional
 	version string,
+
+	// GitHub token.
+	// +optional
+	token *dagger.Secret,
 ) (*dagger.File, error) {
 	return lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).
 		WithOS(goos).
 		WithArch(goarch).
-		binary(ctx, nil)
+		binary(ctx, nil, token)
 }
 
 // Create a PR with the current changes using GH
