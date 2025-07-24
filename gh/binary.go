@@ -133,7 +133,7 @@ func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File, token *dagg
 
 	f, err := os.CreateTemp(".", "test")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer f.Close()
 	io.Copy(f, resp.Body)
