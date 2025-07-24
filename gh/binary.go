@@ -67,13 +67,20 @@ func (b GHBinary) getLatestCliVersion(ctx context.Context) (string, error) {
 }
 
 // binary returns the Github CLI binary.
-func (b GHBinary) binary(ctx context.Context) (*dagger.File, error) {
+func (b GHBinary) binary(ctx context.Context, runnerGh *dagger.File) (*dagger.File, error) {
+	if runnerGh != nil {
+		fmt.Printf("Using specified local gh binary\n")
+		return runnerGh, nil
+	}
+
 	if b.Version == "" {
+		fmt.Printf("Latest version specified, resolving...\n")
 		version, err := b.getLatestCliVersion(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get latest GitHub CLI version: %w", err)
 		}
 
+		fmt.Printf("The latest version avaliable is %s\n", version)
 		b.Version = version
 	}
 
@@ -93,8 +100,16 @@ func (b GHBinary) binary(ctx context.Context) (*dagger.File, error) {
 		goos = "macOS"
 	}
 
-	src := fmt.Sprintf("https://github.com/cli/cli/releases/download/v%s/gh_%s_%s_%s.%s", version, version, goos, goarch, suffix)
+	src := fmt.Sprintf(
+		"https://github.com/cli/cli/releases/download/v%s/gh_%s_%s_%s.%s",
+		version, version, goos, goarch, suffix,
+	)
 	dst := fmt.Sprintf("gh_%s_%s_%s", version, goos, goarch)
+
+	fmt.Printf(
+		"Getting gh version %s for OS %s and architecture %s\n",
+		version, goos, goarch,
+	)
 
 	pwd, err := os.Getwd()
 	if err != nil {
