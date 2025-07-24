@@ -85,7 +85,7 @@ func (m *Gh) Container(
 	localGhCliPath *dagger.File,
 
 ) (*dagger.Container, error) {
-	file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx, localGhCliPath)
+	file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx, localGhCliPath, token)
 	if err != nil {
 		return nil, err
 	}
@@ -208,11 +208,15 @@ func (m *Gh) Get(
 	// version of the Github CLI
 	// +optional
 	version string,
+
+	// GitHub token.
+	// +optional
+	token *dagger.Secret,
 ) (*dagger.File, error) {
 	return lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).
 		WithOS(goos).
 		WithArch(goarch).
-		binary(ctx, nil)
+		binary(ctx, nil, token)
 }
 
 // Create a PR with the current changes using GH
