@@ -11,7 +11,7 @@ NOTE: Most functions will accept [generic params](#generic-params) in their call
 Unless otherwise specified, any given function parameter is optional.
 
 1. **New**: generic function to create a `Gh` golang object. Note this only creates and returns a pointer to a `Gh` golang object, **_not_** a Dagger container, and it's currently not used in favor of more useful functions that return containers. It receives the [generic params `version`, `token` and `repo`](#generic-params). In addition, it has the following specific params:
-    - `plugins`: a list of strings, representing the name of the plugins that should be installed when creating the container. Omitting this parameter (via the command line) or setting it to an empty list (via code) won't install any plugins.
+    - `plugins`: a `[]string`, representing the name of the plugins that should be installed when creating the container. Omitting this parameter (via the command line) or setting it to an empty list (via code) won't install any plugins.
     - `base`: a `*dagger.Container`, to be used as the base of a new container created by using the `Gh` object returned by this function. Omitting this parameter (via the command line) or setting it to an empty list (via code) will create a container using the `alpine/git:latest` image.
 
 2. **Container**: generic function that creates a new `*dagger.Container` and returns it, along with an error if any happened. The container created is customized using the function parameters, which consist of all [generic params](#generic-params) and the following specific ones:
@@ -20,12 +20,12 @@ Unless otherwise specified, any given function parameter is optional.
     - `pluginVersions`: a `[]string`, a list of versions for each plugin in `pluginNames`. Leaving a version blank or not setting it will download the latest version for that plugin. The values in this parameter will be associated to `pluginNames` positionally, i.e. `pluginNames = [a, b, c, d, e]` and `pluginVersions = [1, "", 2]` will result in the following plugins being downloaded: `a-1`, `b-latest`, `c-2`, `d-latest` and `e-latest`.
 
 3. **Run**: generic function that runs an arbitrary `gh` cli command inside a container created via the previous **Container** (2) function, then returns it and any errors that happened. This function takes  all [generic params](#generic-params), which are then passed to the **Container** (2) function for customization, and the following specific ones:
-    - `cmd`: a string, representing a `gh` command to be executed inside the container. Any valid `gh` command is supported, and parameters and subcommands can be added by separating them with spaces as usual. The initial `gh` part of the command must be omitted (e.g., in order to execute `gh pr list` the value of `cmd` must be `pr list`). This parameter is *mandatory*.
-    - `disableCache`: a bool, used to disable Dagger's container cache when is set to `true` by using a `CACHE_BUSTER` environment variable.
+    - `cmd`: a `string`, representing a `gh` command to be executed inside the container. Any valid `gh` command is supported, and parameters and subcommands can be added by separating them with spaces as usual. The initial `gh` part of the command must be omitted (e.g., in order to execute `gh pr list` the value of `cmd` must be `pr list`). This parameter is *mandatory*.
+    - `disableCache`: a `bool`, used to disable Dagger's container cache when is set to `true` by using a `CACHE_BUSTER` environment variable.
 
 4. **Get**: generic function that downloads and returns the `gh` cli binary as a `*dagger.File`, as well as any errors that happen. This function takes the [`ctx`, `version` and `token` generic params](#generic-params), and the following specific ones:
-    - `goos`: a string, representing the operating system we want to download the binary for. Uses the OS the program is running on when not set. Can be either `linux` or `darwin`.
-    - `goarch`: a string, representing the architecture we want to download the binary for. Uses the architecture of the PC the program is running on when not set. Can be any valid `gh` architecture (`amd64`, `arm64`, etc)
+    - `goos`: a `string`, representing the operating system we want to download the binary for. Uses the OS the program is running on when not set. Can be either `linux` or `darwin`.
+    - `goarch`: a `string`, representing the architecture we want to download the binary for. Uses the architecture of the PC the program is running on when not set. Can be any valid `gh` architecture (`amd64`, `arm64`, etc)
 
 5. **CreatePR**: specific function used to create a PR in a GitHub repository, returning the link to the PR and any errors that ocurred. The PR is created using the `gh pr create` command, and the link is retrieved by a combination of `gh pr list` and `gh pr view`. This function takes the [all generic params](#generic-params), and the following specific ones:
     - `title`: a `string`, the title of the PR to be created. This parameter is *mandatory*.
@@ -67,6 +67,6 @@ Unless otherwise specified, any given function parameter is optional.
 - `token`: a `*dagger.Secret`, a GitHub token used for authentication with its services. Though in many functions this parameter is optional it should always be properly set to avoid authentication errors.
 - `localGhCliPath`: a `*dagger.File`, a binary file of a `gh` cli program stored locally. When set, no download of the `gh` cli will be performed and this file will be used instead. If this file's version and the `version` parameter differ, a warning will be printed.
 
-## Credits
+## 📃 Credits
 
 - Based on [aweris/daggerverse/gh](https://daggerverse.dev/mod/github.com/aweris/daggerverse/gh)
