@@ -12,7 +12,7 @@
     {
       "name": "gh",
       "source": "github.com/prefapp/daggerverse/gh",
-      "pin": "e42e773545bc1eb2cb3ea73d01ecd0211c0dc9ce"
+      "pin": "a85b94ace7bcbe1a855a1d1b7dd0733af6d57b78"
     },
     {
       "name": "hydrate-kubernetes",
