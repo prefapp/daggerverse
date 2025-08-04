@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.7](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.6...update-claims-features-v1.1.7) (2025-07-24)
+
+
+### Bug Fixes
+
+* Unused gh-commit plugin ([#278](https://github.com/prefapp/daggerverse/issues/278)) ([59b79ac](https://github.com/prefapp/daggerverse/commit/59b79ace48707136655759711b7e43e63d853f27))
+
 ## [1.1.6](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.5...update-claims-features-v1.1.6) (2025-07-09)
 
 
