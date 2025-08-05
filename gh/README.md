@@ -43,7 +43,7 @@ Unless otherwise specified, any given function parameter is optional.
     - `createEmpty`: a `bool`, whether or not to allow the creation of an empty commit (a commit with no files changed). By default, `false`, so trying to create a commit with no changes will throw an error.
     - `ctr`: a `*dagger.Container`, which is used to launch the `gh` commands. If this is omitted or unset, a new container will be created and used instead.
 
-7. **CommitAndCreatePR**: specific function used to close any PRs that already exist in the current branch, commit the current latest changes and create a new PR with them. Uses the **CreatePR** (5), **Commit** (6) and **DeleteRemoteBranch** (8) functions. Returns the link of the created PR and any errors that ocurred. This function takes the [all generic params](#generic-params) and the following specific ones:
+7. **CommitAndCreatePR**: specific function used to close any PRs that already exist in the current branch, commit the current latest changes and create a new PR with them. Uses the **CreatePR** (5), **Commit** (6) and **DeleteRemoteBranch** (8) functions. Returns the link of the created PR and any errors that occurred. This function takes the [all generic params](#generic-params) and the following specific ones:
     - `repoDir`: a `*dagger.Directory`, the folder where the repository the commit is going to be made in is stored. This parameter is *mandatory*.
     - `branchName`: a `string`, the name of the branch where to commit the changes. This parameter is *mandatory*.
     - `commitMessage`: a `string`, the text of the commit message. This parameter is *mandatory*.
