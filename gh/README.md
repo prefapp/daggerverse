@@ -35,7 +35,7 @@ Unless otherwise specified, any given function parameter is optional.
     - `labels`: a `[]string`, a list of labels to add to the PR once it has been created. No labels will be added if this parameter is omitted or empty.
     - `ctr`: a `*dagger.Container`, which is used to launch the `gh` commands. If this is omitted or unset, a new container will be created and used instead.
 
-6. **Commit**: specific function used to commit and push changes in a repo to the remote, using our `gh-commit` `gh` plugin. Returns the container used to execute the command plus any errors that ocurred. This function takes the [all generic params](#generic-params) and the following specific ones:
+6. **Commit**: specific function used to commit and push changes in a repo to the remote, using our `gh-commit` `gh` plugin. Returns the container used to execute the command plus any errors that occurred. This function takes the [all generic params](#generic-params) and the following specific ones:
     - `repoDir`: a `*dagger.Directory`, the folder where the repository the commit is going to be made in is stored. This parameter is *mandatory*.
     - `branchName`: a `string`, the name of the branch where to commit the changes. This parameter is *mandatory*.
     - `commitMessage`: a `string`, the text of the commit message. This parameter is *mandatory*.
