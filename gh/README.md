@@ -27,7 +27,7 @@ Unless otherwise specified, any given function parameter is optional.
     - `goos`: a `string`, representing the operating system we want to download the binary for. Uses the OS the program is running on when not set. Can be either `linux` or `darwin`.
     - `goarch`: a `string`, representing the architecture we want to download the binary for. Uses the architecture of the PC the program is running on when not set. Can be any valid `gh` architecture (`amd64`, `arm64`, etc)
 
-5. **CreatePR**: specific function used to create a PR in a GitHub repository, returning the link to the PR and any errors that ocurred. The PR is created using the `gh pr create` command, and the link is retrieved by a combination of `gh pr list` and `gh pr view`. This function takes the [all generic params](#generic-params), and the following specific ones:
+5. **CreatePR**: specific function used to create a PR in a GitHub repository, returning the link to the PR and any errors that occurred. The PR is created using the `gh pr create` command, and the link is retrieved by a combination of `gh pr list` and `gh pr view`. This function takes the [all generic params](#generic-params), and the following specific ones:
     - `title`: a `string`, the title of the PR to be created. This parameter is *mandatory*.
     - `body`: a `string`, the body of the PR to be created. This parameter is *mandatory*.
     - `branch`: a `string`, the name of the branch from which to create the PR. This parameter is *mandatory*.
