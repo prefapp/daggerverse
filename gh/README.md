@@ -2,7 +2,7 @@
 
 This module is a custom version of [aweris' `gh` module](https://github.com/aweris/daggerverse), with some custom functionality added. This documentation will explain both our custom functions and the already existing ones from the base module.
 
-The general purpouse of the module is to allow easy usage of the `gh` cli program within Dagger, especially when paired with our [`gh-commit` plugin](https://github.com/prefapp/gh-commit) (though any number and kind of plugins can be installed). The module has specialized functions designed to do specific tasks, but it also has some generic functions which require additional programming or user input to achieve an useful result.
+The general purpose of the module is to allow easy usage of the `gh` cli program within Dagger, especially when paired with our [`gh-commit` plugin](https://github.com/prefapp/gh-commit) (though any number and kind of plugins can be installed). The module has specialized functions designed to do specific tasks, but it also has some generic functions which require additional programming or user input to achieve an useful result.
 
 ## 🔨 Functions
 
