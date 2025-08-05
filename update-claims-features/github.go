@@ -29,9 +29,6 @@ func (m *UpdateClaimsFeatures) upsertPR(
 	// PR body
 	// +required
 	body string,
-	// PR author
-	// +optional
-	reviewers []string,
 
 ) (string, error) {
 	return dag.Gh().CommitAndCreatePr(
@@ -45,7 +42,8 @@ func (m *UpdateClaimsFeatures) upsertPR(
 			Version: m.GhCliVersion,
 			Token:   m.GhToken,
 			Labels:  labels,
-		})
+		},
+	)
 }
 
 func (m *UpdateClaimsFeatures) MergePullRequest(ctx context.Context, prLink string) error {
