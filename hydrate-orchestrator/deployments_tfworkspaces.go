@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 )
 
 func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
@@ -62,6 +61,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			prBody,
 			fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
 			reviewers,
+			"deployment",
 		)
 
 		if err != nil {
@@ -99,37 +99,15 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			&renderedDeployment[0],
 		)
 
-		contentsDirPath := "/contents"
-
-		_, err = dag.Gh(dagger.GhOpts{
-			Version: m.GhCliVersion,
-		}).Container(dagger.GhContainerOpts{
-			Token:          m.GhToken,
-			PluginNames:    []string{"prefapp/gh-commit"},
-			PluginVersions: []string{"v1.2.3"},
-		}).WithMountedDirectory(contentsDirPath, updatedDir).
-			WithWorkdir(contentsDirPath).
-			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-			WithExec([]string{
-				"gh",
-				"commit",
-				"-R", m.Repo,
-				"-b", branchName,
-				"-m", "Update deployments",
-				"--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
-			}).
-			Sync(ctx)
-
-		if err != nil {
-
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				extractErrorMessage(err),
-			)
-
-			continue
-
-		}
+		_ = dag.Gh().Commit(
+			updatedDir,
+			branchName,
+			"Update deployments",
+			m.GhToken,
+			dagger.GhCommitOpts{
+				DeletePath: fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+			},
+		)
 
 		if m.AutomergeFileExists(ctx, globPattern) {
 

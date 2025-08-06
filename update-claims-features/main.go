@@ -150,7 +150,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					[]string{},
 					fmt.Sprintf("Update %s features to latest version", claim.Name),
 					releaseBody,
-					[]string{},
 				)
 
 				if err != nil {

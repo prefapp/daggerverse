@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
@@ -84,6 +83,7 @@ Created by @%s from %s within commit [%s](%s)
 			prBody,
 			kdep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
+			"deployment",
 		)
 
 		if err != nil {
@@ -144,6 +144,7 @@ Created by @%s from %s within commit [%s](%s)
 			prBody,
 			kdep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
+			"deployment",
 		)
 
 		if err != nil {
@@ -205,6 +206,7 @@ Created by @%s from %s within commit [%s](%s)
 			prBody,
 			tfDep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
+			"deployment",
 		)
 
 		if err != nil {
@@ -242,42 +244,20 @@ Created by @%s from %s within commit [%s](%s)
 			&renderedDep[0],
 		)
 
-		contentsDirPath := "/contents"
+		_ = dag.Gh().Commit(
+			updatedDir,
+			branchName,
+			"Update deployments",
+			m.GhToken,
+			dagger.GhCommitOpts{
+				DeletePath: fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+			},
+		)
 
-		_, err = dag.Gh(dagger.GhOpts{
-			Version: m.GhCliVersion,
-		}).Container(dagger.GhContainerOpts{
-			Token:          m.GhToken,
-			PluginNames:    []string{"prefapp/gh-commit"},
-			PluginVersions: []string{"v1.2.3"},
-		}).WithMountedDirectory(contentsDirPath, updatedDir).
-			WithWorkdir(contentsDirPath).
-			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-			WithExec([]string{
-				"gh",
-				"commit",
-				"-R", m.Repo,
-				"-b", branchName,
-				"-m", "Update deployments",
-				"--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
-			}).
-			Sync(ctx)
-
-		if err != nil {
-
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				extractErrorMessage(err),
-			)
-
-			continue
-
-		} else {
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				"Success",
-			)
-		}
+		summary.addDeploymentSummaryRow(
+			tfDep.DeploymentPath,
+			"Success",
+		)
 
 	}
 
@@ -319,6 +299,7 @@ Created by @%s from %s within commit [%s](%s)
 			prBody,
 			secDep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
+			"deployment",
 		)
 
 		if err != nil {
