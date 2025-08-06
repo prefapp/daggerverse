@@ -235,9 +235,17 @@ func (m *Gh) CreatePR(
 	// path to the repo
 	repoDir *dagger.Directory,
 
+	// name of the branch used as the base for the commit
+	// +optional
+	baseBranch string,
+
 	// labels to add to the PR
 	// +optional
 	labels []string,
+
+	// reviewers to add to the PR
+	// +optional
+	reviewers []string,
 
 	// version of the Github CLI
 	// +optional
@@ -273,8 +281,17 @@ func (m *Gh) CreatePR(
 		"--head", branch,
 	}
 
+	if baseBranch != "" {
+		cmd = append(cmd, "--base", baseBranch)
+	}
+
 	for _, label := range labels {
 		cmd = append(cmd, "--label", label)
+	}
+
+	filteredReviewers := m.filterReviewers(reviewers)
+	for _, reviewer := range filteredReviewers {
+		cmd = append(cmd, "--reviewer", reviewer)
 	}
 
 	ctr = ctr.
@@ -334,6 +351,10 @@ func (m *Gh) Commit(
 	// GitHub token
 	token *dagger.Secret,
 
+	// name of the branch used as the base for the commit
+	// +optional
+	baseBranch string,
+
 	// delete-path parameter for gh commit plugin
 	// +optional
 	deletePath string,
@@ -386,6 +407,10 @@ func (m *Gh) Commit(
 		"--delete-path", deletePath,
 	}
 
+	if baseBranch != "" {
+		cmd = append(cmd, "-h", baseBranch)
+	}
+
 	if createEmpty {
 		cmd = append(cmd, "-e")
 	}
@@ -420,9 +445,17 @@ func (m *Gh) CommitAndCreatePR(
 	// body text of the PR
 	prBody string,
 
+	// name of the branch used as the base for the commit
+	// +optional
+	baseBranch string,
+
 	// labels to add to the PR
 	// +optional
 	labels []string,
+
+	// reviewers to add to the PR
+	// +optional
+	reviewers []string,
 
 	// delete-path parameter for gh commit plugin
 	// +optional
@@ -461,7 +494,7 @@ func (m *Gh) CommitAndCreatePR(
 	m.DeleteRemoteBranch(ctx, repoDir, branchName, version, token, ctr, localGhCliPath)
 
 	ctr, err = m.Commit(
-		ctx, repoDir, branchName, commitMessage, token,
+		ctx, repoDir, branchName, commitMessage, token, baseBranch,
 		deletePath, createEmpty, version, ctr, localGhCliPath,
 	)
 	if err != nil {
@@ -469,8 +502,8 @@ func (m *Gh) CommitAndCreatePR(
 	}
 
 	return m.CreatePR(
-		ctx, prTitle, prBody, branchName, repoDir,
-		labels, version, token, ctr, localGhCliPath,
+		ctx, prTitle, prBody, branchName, repoDir, baseBranch,
+		labels, reviewers, version, token, ctr, localGhCliPath,
 	)
 }
 
