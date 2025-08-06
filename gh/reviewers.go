@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -13,7 +14,7 @@ func (m *Gh) filterReviewers(reviewers []string) []string {
 		if !strings.HasSuffix(reviewer, "[bot]") {
 			// [bot] reviewers are not supported by the GitHub API, so we skip them.
 			// We also check if the reviewer is already in the list to avoid duplicates.
-			if !contains(filteredReviewers, reviewer) {
+			if !slices.Contains(filteredReviewers, reviewer) {
 				filteredReviewers = append(filteredReviewers, reviewer)
 			}
 		} else {
@@ -22,13 +23,4 @@ func (m *Gh) filterReviewers(reviewers []string) []string {
 	}
 
 	return filteredReviewers
-}
-
-func contains(slice []string, item string) bool {
-	for _, v := range slice {
-		if v == item {
-			return true
-		}
-	}
-	return false
 }
