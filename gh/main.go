@@ -241,7 +241,7 @@ func (m *Gh) CreatePR(
 
 	// labels to add to the PR
 	// +optional
-	labels []string,
+	labels map[string]string,
 
 	// reviewers to add to the PR
 	// +optional
@@ -285,7 +285,25 @@ func (m *Gh) CreatePR(
 		cmd = append(cmd, "--base", baseBranch)
 	}
 
-	for _, label := range labels {
+	ctr = ctr.
+		WithMountedDirectory(contentsDirPath, repoDir).
+		WithWorkdir(contentsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String())
+
+	for label, color := range labels {
+		ctr, err = ctr.
+			WithExec([]string{
+				"gh", "label", "create",
+				"--force",
+				"--color", color,
+				label,
+			}).
+			Sync(ctx)
+
+		if err != nil {
+			panic(err)
+		}
+
 		cmd = append(cmd, "--label", label)
 	}
 
@@ -295,13 +313,9 @@ func (m *Gh) CreatePR(
 	}
 
 	ctr = ctr.
-		WithMountedDirectory(contentsDirPath, repoDir).
-		WithWorkdir(contentsDirPath).
-		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec(cmd)
 
 	_, err = ctr.Sync(ctx)
-
 	if err != nil {
 		panic(err)
 	}
@@ -451,7 +465,7 @@ func (m *Gh) CommitAndCreatePR(
 
 	// labels to add to the PR
 	// +optional
-	labels []string,
+	labels map[string]string,
 
 	// reviewers to add to the PR
 	// +optional
