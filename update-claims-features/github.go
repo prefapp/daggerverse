@@ -29,7 +29,6 @@ func (m *UpdateClaimsFeatures) upsertPR(
 	// PR body
 	// +required
 	body string,
-
 ) (string, error) {
 	return dag.Gh().CommitAndCreatePr(
 		ctx,
