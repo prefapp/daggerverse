@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://github.com/prefapp/daggerverse/compare/gh-v1.2.0...gh-v1.3.0) (2025-08-06)
+
+
+### Features
+
+* Added baseBranch and reviewers parameters ([#287](https://github.com/prefapp/daggerverse/issues/287)) ([29abf6b](https://github.com/prefapp/daggerverse/commit/29abf6bd3a830e5f8d46fd67f5cccd64b86b007f))
+
+
+### Bug Fixes
+
+* Improved docs ([#281](https://github.com/prefapp/daggerverse/issues/281)) ([6e4cd14](https://github.com/prefapp/daggerverse/commit/6e4cd14bcdf6b06526925d9075d2706e2b9443db))
+* Use actual release instead of snapshot ([#280](https://github.com/prefapp/daggerverse/issues/280)) ([128c94e](https://github.com/prefapp/daggerverse/commit/128c94e58581b2bb7220717a0cb5be79262fc709))
+
 ## [1.2.0](https://github.com/prefapp/daggerverse/compare/gh-v1.1.0...gh-v1.2.0) (2025-07-24)
 
 
