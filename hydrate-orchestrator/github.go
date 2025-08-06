@@ -41,6 +41,9 @@ func (m *HydrateOrchestrator) upsertPR(
 	// PR author
 	// +optional
 	reviewers []string,
+	// Base branch of the PR
+	// +optional
+	baseBranch string,
 
 ) (string, error) {
 	return dag.Gh().CommitAndCreatePr(
@@ -51,9 +54,11 @@ func (m *HydrateOrchestrator) upsertPR(
 		title,
 		body,
 		dagger.GhCommitAndCreatePrOpts{
+			BaseBranch: baseBranch,
 			Version:    m.GhCliVersion,
 			Token:      m.GhToken,
 			Labels:     labels,
+			Reviewers:  reviewers,
 			DeletePath: cleanupDir,
 		},
 	)

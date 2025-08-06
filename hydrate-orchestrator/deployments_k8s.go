@@ -60,6 +60,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 			prBody,
 			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 			reviewers,
+			"deployment",
 		)
 
 		if err != nil {

@@ -83,6 +83,7 @@ Created by @%s from %s within commit [%s](%s)
 			prBody,
 			kdep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
+			"deployment",
 		)
 
 		if err != nil {
@@ -143,6 +144,7 @@ Created by @%s from %s within commit [%s](%s)
 			prBody,
 			kdep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
+			"deployment",
 		)
 
 		if err != nil {
@@ -204,6 +206,7 @@ Created by @%s from %s within commit [%s](%s)
 			prBody,
 			tfDep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
+			"deployment",
 		)
 
 		if err != nil {
@@ -296,6 +299,7 @@ Created by @%s from %s within commit [%s](%s)
 			prBody,
 			secDep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
+			"deployment",
 		)
 
 		if err != nil {
