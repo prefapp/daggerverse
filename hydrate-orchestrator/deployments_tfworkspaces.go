@@ -61,6 +61,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			prBody,
 			fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
 			reviewers,
+			"deployment",
 		)
 
 		if err != nil {
