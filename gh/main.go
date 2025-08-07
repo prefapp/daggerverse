@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -93,18 +94,19 @@ func (m *Gh) Container(
 	// get the github container configuration
 	gc := m.GHContainer
 
+	if len(pluginNames) != len(pluginVersions) {
+		return nil, errors.New(fmt.Sprintf(
+			"The number of plugin names and plugin versions specified differ ( %s names vs %s versions)",
+			len(pluginNames), len(pluginVersions),
+		))
+	}
+
 	pluginList := []GHPlugin{}
 
 	for idx, pluginName := range pluginNames {
-		pluginVersion := ""
-
-		if idx < len(pluginVersions) {
-			pluginVersion = pluginVersions[idx]
-		}
-
 		pluginList = append(pluginList, GHPlugin{
 			Name:    pluginName,
-			Version: pluginVersion,
+			Version: pluginVersions[idx], // We make sure on line 97 that both slices are equally as long
 		})
 	}
 
@@ -298,22 +300,21 @@ func (m *Gh) CreatePR(
 		WithWorkdir(contentsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String())
 
+	if len(labels) != len(labelColors) || len(labels) != len(labelDescriptions) {
+		return "", errors.New(fmt.Sprintf(
+			"The number of label names, colors and descriptions specified differ ( %s names, %s colors and %s descriptions)",
+			len(labels), len(labelColors), len(labelDescriptions),
+		))
+	}
+
 	for idx, label := range labels {
-		labelCmd := []string{
-			"gh", "label", "create",
-			"--force", label,
-		}
-
-		if idx < len(labelColors) {
-			labelCmd = append(labelCmd, "--color", labelColors[idx])
-		}
-
-		if idx < len(labelDescriptions) {
-			labelCmd = append(labelCmd, "--description", labelDescriptions[idx])
-		}
-
 		ctr, err = ctr.
-			WithExec(labelCmd).
+			WithExec([]string{
+				"gh", "label", "create",
+				"--force", label,
+				"--color", labelColors[idx], // Even if labelColor == "" the command works (gives a random color to the label)
+				"--description", labelDescriptions[idx],
+			}).
 			Sync(ctx)
 
 		if err != nil {
