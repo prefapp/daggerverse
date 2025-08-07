@@ -309,7 +309,7 @@ func (m *Gh) CreatePR(
 			Sync(ctx)
 
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 
 		cmd = append(cmd, "--label", label)
