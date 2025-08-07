@@ -243,9 +243,13 @@ func (m *Gh) CreatePR(
 	// +optional
 	labels []string,
 
-	// label colors to add to the labels
+	// colors to set the labels to
 	// +optional
 	labelColors []string,
+
+	// descriptions to add to the labels
+	// +optional
+	labelDescriptions []string,
 
 	// reviewers to add to the PR
 	// +optional
@@ -302,6 +306,10 @@ func (m *Gh) CreatePR(
 
 		if idx < len(labelColors) {
 			labelCmd = append(labelCmd, "--color", labelColors[idx])
+		}
+
+		if idx < len(labelDescriptions) {
+			labelCmd = append(labelCmd, "--description", labelDescriptions[idx])
 		}
 
 		ctr, err = ctr.
@@ -475,9 +483,13 @@ func (m *Gh) CommitAndCreatePR(
 	// +optional
 	labels []string,
 
-	// label colors to add to the labels
+	// colors to set the labels to
 	// +optional
 	labelColors []string,
+
+	// descriptions to add to the labels
+	// +optional
+	labelDescriptions []string,
 
 	// reviewers to add to the PR
 	// +optional
@@ -529,7 +541,8 @@ func (m *Gh) CommitAndCreatePR(
 
 	return m.CreatePR(
 		ctx, prTitle, prBody, branchName, repoDir, baseBranch,
-		labels, labelColors, reviewers, version, token, ctr, localGhCliPath,
+		labels, labelColors, labelDescriptions, reviewers,
+		version, token, ctr, localGhCliPath,
 	)
 }
 
