@@ -250,6 +250,7 @@ Created by @%s from %s within commit [%s](%s)
 			"Update deployments",
 			m.GhToken,
 			dagger.GhCommitOpts{
+				BaseBranch: "deployment",
 				DeletePath: fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
 			},
 		)
