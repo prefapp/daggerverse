@@ -409,7 +409,7 @@ func (m *Gh) Commit(
 			token,
 			"",
 			[]string{"prefapp/gh-commit"},
-			[]string{"v1.2.4"},
+			[]string{"v1.3.0"},
 			localGhCliPath,
 		)
 		if err != nil {
@@ -430,7 +430,7 @@ func (m *Gh) Commit(
 	}
 
 	if baseBranch != "" {
-		cmd = append(cmd, "-h", baseBranch)
+		cmd = append(cmd, "--base", baseBranch)
 	}
 
 	if createEmpty {
@@ -510,7 +510,7 @@ func (m *Gh) CommitAndCreatePR(
 		token,
 		"",
 		[]string{"prefapp/gh-commit"},
-		[]string{"v1.2.4"},
+		[]string{"v1.3.0"},
 		localGhCliPath,
 	)
 	if err != nil {
