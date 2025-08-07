@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/prefapp/daggerverse/compare/gh-v1.3.0...gh-v1.3.1) (2025-08-07)
+
+
+### Bug Fixes
+
+* Updated gh-commit version to 1.3.0 ([#292](https://github.com/prefapp/daggerverse/issues/292)) ([d1f4d45](https://github.com/prefapp/daggerverse/commit/d1f4d45fabbb4a236ccf683291f8669538718f12))
+
 ## [1.3.0](https://github.com/prefapp/daggerverse/compare/gh-v1.2.0...gh-v1.3.0) (2025-08-06)
 
 
