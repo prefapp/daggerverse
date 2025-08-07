@@ -47,9 +47,11 @@ func (m *HydrateOrchestrator) upsertPR(
 
 ) (string, error) {
 	labelColors := []string{}
+	labelDescriptions := []string{}
 
 	for _, label := range labels {
 		labelColors = append(labelColors, m.getColorForLabel(label))
+		labelDescriptions = append(labelDescriptions, "") // Necessary for the gh module to work
 	}
 
 	return dag.Gh().CommitAndCreatePr(
@@ -60,13 +62,14 @@ func (m *HydrateOrchestrator) upsertPR(
 		title,
 		body,
 		dagger.GhCommitAndCreatePrOpts{
-			BaseBranch:  baseBranch,
-			Version:     m.GhCliVersion,
-			Token:       m.GhToken,
-			Labels:      labels,
-			LabelColors: labelColors,
-			Reviewers:   reviewers,
-			DeletePath:  cleanupDir,
+			BaseBranch:        baseBranch,
+			Version:           m.GhCliVersion,
+			Token:             m.GhToken,
+			Labels:            labels,
+			LabelColors:       labelColors,
+			LabelDescriptions: labelDescriptions,
+			Reviewers:         reviewers,
+			DeletePath:        cleanupDir,
 		},
 	)
 }
