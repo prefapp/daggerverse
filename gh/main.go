@@ -96,7 +96,7 @@ func (m *Gh) Container(
 
 	if len(pluginNames) != len(pluginVersions) {
 		return nil, errors.New(fmt.Sprintf(
-			"The number of plugin names and plugin versions specified differ ( %s names vs %s versions)",
+			"The number of plugin names and plugin versions specified differ (%d names vs %d versions)",
 			len(pluginNames), len(pluginVersions),
 		))
 	}
@@ -302,7 +302,7 @@ func (m *Gh) CreatePR(
 
 	if len(labels) != len(labelColors) || len(labels) != len(labelDescriptions) {
 		return "", errors.New(fmt.Sprintf(
-			"The number of label names, colors and descriptions specified differ ( %s names, %s colors and %s descriptions)",
+			"The number of label names, colors and descriptions specified differ (%d names, %d colors and %d descriptions)",
 			len(labels), len(labelColors), len(labelDescriptions),
 		))
 	}
