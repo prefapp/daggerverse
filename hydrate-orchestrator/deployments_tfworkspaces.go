@@ -99,7 +99,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			&renderedDeployment[0],
 		)
 
-		_ = dag.Gh().Commit(
+		_, err = dag.Gh().Commit(
 			updatedDir,
 			branchName,
 			"Update deployments",
@@ -108,7 +108,16 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 				BaseBranch: "deployment",
 				DeletePath: fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
 			},
-		)
+		).Sync(ctx)
+
+		if err != nil {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				extractErrorMessage(err),
+			)
+
+			continue
+		}
 
 		if m.AutomergeFileExists(ctx, globPattern) {
 
