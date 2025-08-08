@@ -105,6 +105,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			"Update deployments",
 			m.GhToken,
 			dagger.GhCommitOpts{
+				BaseBranch: "deployment",
 				DeletePath: fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
 			},
 		)
