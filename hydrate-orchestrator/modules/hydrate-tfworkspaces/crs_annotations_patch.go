@@ -125,7 +125,7 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 
 	entries, err := crsDir.Glob(ctx, "tfworkspaces/*.yaml")
 
-	fmt.Printf("Beginning annotation process...")
+	fmt.Printf("Beginning annotation process...\n")
 
 	if err != nil {
 
@@ -153,7 +153,7 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 
 		}
 
-		fmt.Printf("Checking %s against %s", cr.Metadata.Annotations.ClaimRef, claimName)
+		fmt.Printf("Checking %s against %s\n", cr.Metadata.Annotations.ClaimRef, claimName)
 
 		if strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1] == claimName {
 
