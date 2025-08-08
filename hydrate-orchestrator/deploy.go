@@ -11,6 +11,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const DEPLOYMENT_BRANCH_NAME string = "deployment"
+
 // Hydrate deployments based on the updated deployments
 func (m *HydrateOrchestrator) GenerateDeployment(
 	ctx context.Context,
@@ -83,7 +85,7 @@ Created by @%s from %s within commit [%s](%s)
 			prBody,
 			kdep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
-			"deployment",
+			DEPLOYMENT_BRANCH_NAME,
 		)
 
 		if err != nil {
@@ -144,7 +146,7 @@ Created by @%s from %s within commit [%s](%s)
 			prBody,
 			kdep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
-			"deployment",
+			DEPLOYMENT_BRANCH_NAME,
 		)
 
 		if err != nil {
@@ -206,7 +208,7 @@ Created by @%s from %s within commit [%s](%s)
 			prBody,
 			tfDep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
-			"deployment",
+			DEPLOYMENT_BRANCH_NAME,
 		)
 
 		if err != nil {
@@ -250,7 +252,7 @@ Created by @%s from %s within commit [%s](%s)
 			"Update deployments",
 			m.GhToken,
 			dagger.GhCommitOpts{
-				BaseBranch: "deployment",
+				BaseBranch: DEPLOYMENT_BRANCH_NAME,
 				DeletePath: fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
 			},
 		).Sync(ctx)
