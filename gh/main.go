@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -93,18 +94,19 @@ func (m *Gh) Container(
 	// get the github container configuration
 	gc := m.GHContainer
 
+	if len(pluginNames) != len(pluginVersions) {
+		return nil, errors.New(fmt.Sprintf(
+			"The number of plugin names and plugin versions specified differ (%d names vs %d versions)",
+			len(pluginNames), len(pluginVersions),
+		))
+	}
+
 	pluginList := []GHPlugin{}
 
 	for idx, pluginName := range pluginNames {
-		pluginVersion := ""
-
-		if idx < len(pluginVersions) {
-			pluginVersion = pluginVersions[idx]
-		}
-
 		pluginList = append(pluginList, GHPlugin{
 			Name:    pluginName,
-			Version: pluginVersion,
+			Version: pluginVersions[idx], // We make sure on line 97 that both slices are equally as long
 		})
 	}
 
@@ -243,6 +245,14 @@ func (m *Gh) CreatePR(
 	// +optional
 	labels []string,
 
+	// colors to set the labels to
+	// +optional
+	labelColors []string,
+
+	// descriptions to add to the labels
+	// +optional
+	labelDescriptions []string,
+
 	// reviewers to add to the PR
 	// +optional
 	reviewers []string,
@@ -285,7 +295,32 @@ func (m *Gh) CreatePR(
 		cmd = append(cmd, "--base", baseBranch)
 	}
 
-	for _, label := range labels {
+	ctr = ctr.
+		WithMountedDirectory(contentsDirPath, repoDir).
+		WithWorkdir(contentsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String())
+
+	if len(labels) != len(labelColors) || len(labels) != len(labelDescriptions) {
+		return "", errors.New(fmt.Sprintf(
+			"The number of label names, colors and descriptions specified differ (%d names, %d colors and %d descriptions)",
+			len(labels), len(labelColors), len(labelDescriptions),
+		))
+	}
+
+	for idx, label := range labels {
+		ctr, err = ctr.
+			WithExec([]string{
+				"gh", "label", "create",
+				"--force", label,
+				"--color", labelColors[idx], // Even if labelColor == "" the command works (gives a random color to the label)
+				"--description", labelDescriptions[idx],
+			}).
+			Sync(ctx)
+
+		if err != nil {
+			return "", err
+		}
+
 		cmd = append(cmd, "--label", label)
 	}
 
@@ -295,13 +330,9 @@ func (m *Gh) CreatePR(
 	}
 
 	ctr = ctr.
-		WithMountedDirectory(contentsDirPath, repoDir).
-		WithWorkdir(contentsDirPath).
-		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec(cmd)
 
 	_, err = ctr.Sync(ctx)
-
 	if err != nil {
 		panic(err)
 	}
@@ -453,6 +484,14 @@ func (m *Gh) CommitAndCreatePR(
 	// +optional
 	labels []string,
 
+	// colors to set the labels to
+	// +optional
+	labelColors []string,
+
+	// descriptions to add to the labels
+	// +optional
+	labelDescriptions []string,
+
 	// reviewers to add to the PR
 	// +optional
 	reviewers []string,
@@ -503,7 +542,8 @@ func (m *Gh) CommitAndCreatePR(
 
 	return m.CreatePR(
 		ctx, prTitle, prBody, branchName, repoDir, baseBranch,
-		labels, reviewers, version, token, ctr, localGhCliPath,
+		labels, labelColors, labelDescriptions, reviewers,
+		version, token, ctr, localGhCliPath,
 	)
 }
 
