@@ -262,13 +262,12 @@ Created by @%s from %s within commit [%s](%s)
 			)
 
 			continue
-		} else {
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				"Success",
-			)
 		}
 
+		summary.addDeploymentSummaryRow(
+			tfDep.DeploymentPath,
+			"Success",
+		)
 	}
 
 	for _, secDep := range deployments.SecretsDeployment {
