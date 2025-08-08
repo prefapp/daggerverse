@@ -131,6 +131,8 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 
 	}
 
+	fmt.Printf("Beginning annotation process...")
+
 	for _, entry := range entries {
 
 		fileContent, err := crsDir.File(entry).Contents(ctx)
@@ -150,6 +152,8 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 			return nil, err
 
 		}
+
+		fmt.Printf("Checking %s against %s", cr.Metadata.Annotations.ClaimRef, claimName)
 
 		if strings.Split(cr.Metadata.Annotations.ClaimRef, "/")[1] == claimName {
 
