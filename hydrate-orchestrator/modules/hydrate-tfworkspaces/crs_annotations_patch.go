@@ -125,13 +125,13 @@ func (m *HydrateTfworkspaces) AddPrAnnotationToCr(
 
 	entries, err := crsDir.Glob(ctx, "tfworkspaces/*.yaml")
 
+	fmt.Printf("Beginning annotation process...")
+
 	if err != nil {
 
 		return nil, err
 
 	}
-
-	fmt.Printf("Beginning annotation process...")
 
 	for _, entry := range entries {
 
