@@ -244,10 +244,11 @@ Created by @%s from %s within commit [%s](%s)
 			&renderedDep[0],
 		)
 
+		fmt.Printf("☢️  Commiting last-state-pr annotation changes...")
 		_ = dag.Gh().Commit(
 			updatedDir,
 			branchName,
-			"Update deployments",
+			"Update CR last-state-pr annotation",
 			m.GhToken,
 			dagger.GhCommitOpts{
 				DeletePath: fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
