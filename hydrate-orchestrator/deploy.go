@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
@@ -245,40 +244,49 @@ Created by @%s from %s within commit [%s](%s)
 			&renderedDep[0],
 		)
 
-		_, err = dag.Gh(dagger.GhOpts{
-			Version: m.GhCliVersion,
-		}).Container(dagger.GhContainerOpts{
-			Token:          m.GhToken,
-			PluginNames:    []string{"prefapp/gh-commit"},
-			PluginVersions: []string{"v1.3.0"},
-		}).WithMountedDirectory("/contents", updatedDir).
-			WithWorkdir("/contents").
-			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-			WithExec([]string{
-				"gh",
-				"commit",
-				"-R", m.Repo,
-				"-b", branchName,
-				"-m", "Update deployments",
-				"--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
-			}).
-			Sync(ctx)
+		// _, err = dag.Gh(dagger.GhOpts{
+		// 	Version: m.GhCliVersion,
+		// }).Container(dagger.GhContainerOpts{
+		// 	Token:          m.GhToken,
+		// 	PluginNames:    []string{"prefapp/gh-commit"},
+		// 	PluginVersions: []string{"v1.3.0"},
+		// }).WithMountedDirectory("/contents", updatedDir).
+		// 	WithWorkdir("/contents").
+		// 	WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		// 	WithExec([]string{
+		// 		"gh",
+		// 		"commit",
+		// 		"-R", m.Repo,
+		// 		"-b", branchName,
+		// 		"-m", "Update deployments",
+		// 		"--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+		// 	}).
+		// 	Sync(ctx)
 
-		// _ = dag.Gh().Commit(
-		// 	updatedDir,
-		// 	branchName,
-		// 	"Update deployments",
-		// 	m.GhToken,
-		// 	dagger.GhCommitOpts{
-		// 		BaseBranch: "deployment",
-		// 		DeletePath: fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
-		// 	},
-		// )
+		_, err = dag.Gh().Commit(
+			updatedDir,
+			branchName,
+			"Update deployments",
+			m.GhToken,
+			dagger.GhCommitOpts{
+				BaseBranch: "deployment",
+				DeletePath: fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+			},
+		).Sync(ctx)
 
-		summary.addDeploymentSummaryRow(
-			tfDep.DeploymentPath,
-			fmt.Sprintf("Success: %s", prLink),
-		)
+		if err != nil {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				extractErrorMessage(err),
+			)
+
+			continue
+		} else {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				"Success",
+			)
+		}
 
 	}
 
