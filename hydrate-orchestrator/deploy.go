@@ -257,7 +257,7 @@ Created by @%s from %s within commit [%s](%s)
 
 		summary.addDeploymentSummaryRow(
 			tfDep.DeploymentPath,
-			"Success",
+			fmt.Sprintf("Success: %s", prLink),
 		)
 
 	}
