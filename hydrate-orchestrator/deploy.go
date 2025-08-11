@@ -76,11 +76,15 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
+		labelList, labelColors, labelDescriptions := kdep.Labels()
+
 		_, err = m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			kdep.Labels(),
+			labelList,
+			labelColors,
+			labelDescriptions,
 			kdep.String(true),
 			prBody,
 			kdep.DeploymentPath,
@@ -137,11 +141,15 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
+		labelList, labelColors, labelDescriptions := kdep.Labels()
+
 		_, err = m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			kdep.Labels(),
+			labelList,
+			labelColors,
+			labelDescriptions,
 			kdep.String(true),
 			prBody,
 			kdep.DeploymentPath,
@@ -199,11 +207,15 @@ Created by @%s from %s within commit [%s](%s)
 			tfDep.String(false),
 		)
 
+		labelList, labelColors, labelDescriptions := tfDep.Labels()
+
 		prLink, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDep[0],
-			tfDep.Labels(),
+			labelList,
+			labelColors,
+			labelDescriptions,
 			tfDep.String(true),
 			prBody,
 			tfDep.DeploymentPath,
@@ -301,11 +313,15 @@ Created by @%s from %s within commit [%s](%s)
 			secDep.String(false),
 		)
 
+		labelList, labelColors, labelDescriptions := secDep.Labels()
+
 		_, err = m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			secDep.Labels(),
+			labelList,
+			labelColors,
+			labelDescriptions,
 			secDep.String(true),
 			prBody,
 			secDep.DeploymentPath,

@@ -26,6 +26,51 @@ func extractErrorMessage(err error) string {
 }
 
 /*
+Label-related functions
+*/
+func getAdditionalLabelInfo(labelList []string) ([]string, []string) {
+	labelColors := []string{}
+	labelDescriptions := []string{}
+
+	for _, label := range labelList {
+		labelColors = append(labelColors, getColorForLabel(label))
+		labelDescriptions = append(labelDescriptions, getDescriptionForLabel(label))
+	}
+
+	return labelColors, labelDescriptions
+}
+
+func getColorForLabel(label string) string {
+	switch {
+	case strings.Contains(label, "app/"): // It is currently redundant but may be useful in the future.
+		return "AC1D1C"
+	case strings.Contains(label, "tenant/"):
+		return "234099"
+	case strings.Contains(label, "env/"):
+		return "33810B"
+	case strings.Contains(label, "service/"): // It is currently redundant but may be useful in the future.
+		return "F1C232"
+	case strings.Contains(label, "cluster/"):
+		return "AC1CAA"
+	case strings.Contains(label, "type/"):
+		return "6C3B2A"
+	case strings.Contains(label, "tfworkspace/"):
+		return "7B42BC"
+	default:
+		return "7E7C7A"
+	}
+}
+
+func getDescriptionForLabel(label string) string {
+	// Created function for future-proof extensibility. New descriptions should
+	// be added the same way colors are in the getColorForLabel function
+	switch {
+	default:
+		return ""
+	}
+}
+
+/*
 struct to hold the updated deployments
 */
 
@@ -142,18 +187,22 @@ func (sd *SecretsDeployment) String(summary bool) string {
 	}
 }
 
-func (tfd *TfWorkspaceDeployment) Labels() []string {
-	return []string{
-		"plan",
-	}
+func (tfd *TfWorkspaceDeployment) Labels() ([]string, []string, []string) {
+	labelList := []string{"plan"}
+	labelColors, labelDescriptions := getAdditionalLabelInfo(labelList)
+
+	return labelList, labelColors, labelDescriptions
 }
 
-func (sd *SecretsDeployment) Labels() []string {
-	return []string{
+func (sd *SecretsDeployment) Labels() ([]string, []string, []string) {
+	labelList := []string{
 		"type/secrets",
 		fmt.Sprintf("tenant/%s", sd.Tenant),
 		fmt.Sprintf("env/%s", sd.Environment),
 	}
+	labelColors, labelDescriptions := getAdditionalLabelInfo(labelList)
+
+	return labelList, labelColors, labelDescriptions
 }
 
 // Check if two KubernetesAppDeployment are equal
@@ -223,13 +272,16 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 	}
 }
 
-func (kd *KubernetesAppDeployment) Labels() []string {
-	return []string{
+func (kd *KubernetesAppDeployment) Labels() ([]string, []string, []string) {
+	labelList := []string{
 		"type/kubernetes",
 		fmt.Sprintf("cluster/%s", kd.Cluster),
 		fmt.Sprintf("tenant/%s", kd.Tenant),
 		fmt.Sprintf("env/%s", kd.Environment),
 	}
+	labelColors, labelDescriptions := getAdditionalLabelInfo(labelList)
+
+	return labelList, labelColors, labelDescriptions
 }
 
 /*
@@ -264,12 +316,15 @@ func (kd *KubernetesSysDeployment) String(summary bool) string {
 	}
 }
 
-func (kd *KubernetesSysDeployment) Labels() []string {
-	return []string{
+func (kd *KubernetesSysDeployment) Labels() ([]string, []string, []string) {
+	labelList := []string{
 		"type/kubernetes",
 		fmt.Sprintf("cluster/%s", kd.Cluster),
 		fmt.Sprintf("sys-service/%s", kd.SysServiceName),
 	}
+	labelColors, labelDescriptions := getAdditionalLabelInfo(labelList)
+
+	return labelList, labelColors, labelDescriptions
 }
 
 func kubernetesDepFromStr(deployment string) *KubernetesAppDeployment {

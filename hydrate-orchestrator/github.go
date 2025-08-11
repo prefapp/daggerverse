@@ -29,6 +29,12 @@ func (m *HydrateOrchestrator) upsertPR(
 	// Labels to be added to the PR
 	// +required
 	labels []string,
+	// Colors for each label
+	// +required
+	labelColors []string,
+	// Descriptions for each label
+	// +required
+	labelDescriptions []string,
 	// PR title
 	// +required
 	title string,
@@ -46,14 +52,6 @@ func (m *HydrateOrchestrator) upsertPR(
 	baseBranch string,
 
 ) (string, error) {
-	labelColors := []string{}
-	labelDescriptions := []string{}
-
-	for _, label := range labels {
-		labelColors = append(labelColors, m.getColorForLabel(label))
-		labelDescriptions = append(labelDescriptions, "") // Necessary for the gh module to work
-	}
-
 	return dag.Gh().CommitAndCreatePr(
 		ctx,
 		contents,
@@ -72,27 +70,6 @@ func (m *HydrateOrchestrator) upsertPR(
 			DeletePath:        cleanupDir,
 		},
 	)
-}
-
-func (m *HydrateOrchestrator) getColorForLabel(label string) string {
-	switch {
-	case strings.Contains(label, "app/"): // It is currently redundant but may be useful in the future.
-		return "AC1D1C"
-	case strings.Contains(label, "tenant/"):
-		return "234099"
-	case strings.Contains(label, "env/"):
-		return "33810B"
-	case strings.Contains(label, "service/"): // It is currently redundant but may be useful in the future.
-		return "F1C232"
-	case strings.Contains(label, "cluster/"):
-		return "AC1CAA"
-	case strings.Contains(label, "type/"):
-		return "6C3B2A"
-	case strings.Contains(label, "tfworkspace/"):
-		return "7B42BC"
-	default:
-		return "7E7C7A"
-	}
 }
 
 func (m *HydrateOrchestrator) AutomergeFileExists(ctx context.Context, globPattern string) bool {
