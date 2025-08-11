@@ -231,7 +231,8 @@ Created by @%s from %s within commit [%s](%s)
 		labelName := "plan"
 		labels := []LabelInfo{
 			{
-				Name: labelName,
+				Name:  labelName,
+				Color: getColorForLabel(labelName),
 			},
 		}
 
