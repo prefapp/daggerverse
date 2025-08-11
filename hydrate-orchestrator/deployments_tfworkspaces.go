@@ -52,15 +52,11 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 		globPattern := fmt.Sprintf("%s/%s/%s/%s", "tfworkspaces", tfDep.ClaimName, "*", "*")
 
-		labelList, labelColors, labelDescriptions := tfDep.Labels()
-
 		prLink, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			labelList,
-			labelColors,
-			labelDescriptions,
+			tfDep.Labels(),
 			tfDep.String(true),
 			prBody,
 			fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),

@@ -26,18 +26,26 @@ func extractErrorMessage(err error) string {
 }
 
 /*
-Label-related functions
+Label-related functions and structs
 */
-func getAdditionalLabelInfo(labelList []string) ([]string, []string) {
-	labelColors := []string{}
-	labelDescriptions := []string{}
+type LabelInfo struct {
+	Name        string
+	Color       string
+	Description string
+}
+
+func getLabelListInfo(labelList []string) []LabelInfo {
+	labelInfo := []LabelInfo{}
 
 	for _, label := range labelList {
-		labelColors = append(labelColors, getColorForLabel(label))
-		labelDescriptions = append(labelDescriptions, getDescriptionForLabel(label))
+		labelInfo = append(labelInfo, LabelInfo{
+			Name:        label,
+			Color:       getColorForLabel(label),
+			Description: getDescriptionForLabel(label),
+		})
 	}
 
-	return labelColors, labelDescriptions
+	return labelInfo
 }
 
 func getColorForLabel(label string) string {
@@ -187,22 +195,16 @@ func (sd *SecretsDeployment) String(summary bool) string {
 	}
 }
 
-func (tfd *TfWorkspaceDeployment) Labels() ([]string, []string, []string) {
-	labelList := []string{"plan"}
-	labelColors, labelDescriptions := getAdditionalLabelInfo(labelList)
-
-	return labelList, labelColors, labelDescriptions
+func (tfd *TfWorkspaceDeployment) Labels() []LabelInfo {
+	return getLabelListInfo([]string{"plan"})
 }
 
-func (sd *SecretsDeployment) Labels() ([]string, []string, []string) {
-	labelList := []string{
+func (sd *SecretsDeployment) Labels() []LabelInfo {
+	return getLabelListInfo([]string{
 		"type/secrets",
 		fmt.Sprintf("tenant/%s", sd.Tenant),
 		fmt.Sprintf("env/%s", sd.Environment),
-	}
-	labelColors, labelDescriptions := getAdditionalLabelInfo(labelList)
-
-	return labelList, labelColors, labelDescriptions
+	})
 }
 
 // Check if two KubernetesAppDeployment are equal
@@ -272,16 +274,13 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 	}
 }
 
-func (kd *KubernetesAppDeployment) Labels() ([]string, []string, []string) {
-	labelList := []string{
+func (kd *KubernetesAppDeployment) Labels() []LabelInfo {
+	return getLabelListInfo([]string{
 		"type/kubernetes",
 		fmt.Sprintf("cluster/%s", kd.Cluster),
 		fmt.Sprintf("tenant/%s", kd.Tenant),
 		fmt.Sprintf("env/%s", kd.Environment),
-	}
-	labelColors, labelDescriptions := getAdditionalLabelInfo(labelList)
-
-	return labelList, labelColors, labelDescriptions
+	})
 }
 
 /*
@@ -316,15 +315,12 @@ func (kd *KubernetesSysDeployment) String(summary bool) string {
 	}
 }
 
-func (kd *KubernetesSysDeployment) Labels() ([]string, []string, []string) {
-	labelList := []string{
+func (kd *KubernetesSysDeployment) Labels() []LabelInfo {
+	return getLabelListInfo([]string{
 		"type/kubernetes",
 		fmt.Sprintf("cluster/%s", kd.Cluster),
 		fmt.Sprintf("sys-service/%s", kd.SysServiceName),
-	}
-	labelColors, labelDescriptions := getAdditionalLabelInfo(labelList)
-
-	return labelList, labelColors, labelDescriptions
+	})
 }
 
 func kubernetesDepFromStr(deployment string) *KubernetesAppDeployment {
