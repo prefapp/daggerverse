@@ -76,11 +76,26 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
+		labelNameList := []string{
+			"type/kubernetes",
+			fmt.Sprintf("cluster/%s", kdep.Cluster),
+			fmt.Sprintf("tenant/%s", kdep.Tenant),
+			fmt.Sprintf("env/%s", kdep.Environment),
+		}
+		labels := []LabelInfo{}
+
+		for _, labelName := range labelNameList {
+			labels = append(labels, LabelInfo{
+				Name:  labelName,
+				Color: getColorForLabel(labelName),
+			})
+		}
+
 		_, err = m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			kdep.Labels(),
+			labels,
 			kdep.String(true),
 			prBody,
 			kdep.DeploymentPath,
@@ -137,11 +152,25 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
+		labelNameList := []string{
+			"type/kubernetes",
+			fmt.Sprintf("cluster/%s", kdep.Cluster),
+			fmt.Sprintf("sys-service/%s", kdep.SysServiceName),
+		}
+		labels := []LabelInfo{}
+
+		for _, labelName := range labelNameList {
+			labels = append(labels, LabelInfo{
+				Name:  labelName,
+				Color: getColorForLabel(labelName),
+			})
+		}
+
 		_, err = m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			kdep.Labels(),
+			labels,
 			kdep.String(true),
 			prBody,
 			kdep.DeploymentPath,
@@ -199,11 +228,18 @@ Created by @%s from %s within commit [%s](%s)
 			tfDep.String(false),
 		)
 
+		labelName := "plan"
+		labels := []LabelInfo{
+			{
+				Name: labelName,
+			},
+		}
+
 		prLink, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDep[0],
-			tfDep.Labels(),
+			labels,
 			tfDep.String(true),
 			prBody,
 			tfDep.DeploymentPath,
@@ -301,11 +337,25 @@ Created by @%s from %s within commit [%s](%s)
 			secDep.String(false),
 		)
 
+		labelNameList := []string{
+			"type/secrets",
+			fmt.Sprintf("tenant/%s", secDep.Tenant),
+			fmt.Sprintf("env/%s", secDep.Environment),
+		}
+		labels := []LabelInfo{}
+
+		for _, labelName := range labelNameList {
+			labels = append(labels, LabelInfo{
+				Name:  labelName,
+				Color: getColorForLabel(labelName),
+			})
+		}
+
 		_, err = m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			secDep.Labels(),
+			labels,
 			secDep.String(true),
 			prBody,
 			secDep.DeploymentPath,

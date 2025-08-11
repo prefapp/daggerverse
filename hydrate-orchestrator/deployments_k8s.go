@@ -51,11 +51,26 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 		globPattern := fmt.
 			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
 
+		labelNameList := []string{
+			"type/kubernetes",
+			fmt.Sprintf("cluster/%s", kdep.Cluster),
+			fmt.Sprintf("tenant/%s", kdep.Tenant),
+			fmt.Sprintf("env/%s", kdep.Environment),
+		}
+		labels := []LabelInfo{}
+
+		for _, labelName := range labelNameList {
+			labels = append(labels, LabelInfo{
+				Name:  labelName,
+				Color: getColorForLabel(labelName),
+			})
+		}
+
 		prLink, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			kdep.Labels(),
+			labels,
 			kdep.String(true, repoURL),
 			prBody,
 			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),

@@ -34,20 +34,6 @@ type LabelInfo struct {
 	Description string
 }
 
-func getLabelListInfo(labelList []string) []LabelInfo {
-	labelInfo := []LabelInfo{}
-
-	for _, label := range labelList {
-		labelInfo = append(labelInfo, LabelInfo{
-			Name:        label,
-			Color:       getColorForLabel(label),
-			Description: getDescriptionForLabel(label),
-		})
-	}
-
-	return labelInfo
-}
-
 func getColorForLabel(label string) string {
 	switch {
 	case strings.Contains(label, "app/"): // It is currently redundant but may be useful in the future.
@@ -195,18 +181,6 @@ func (sd *SecretsDeployment) String(summary bool) string {
 	}
 }
 
-func (tfd *TfWorkspaceDeployment) Labels() []LabelInfo {
-	return getLabelListInfo([]string{"plan"})
-}
-
-func (sd *SecretsDeployment) Labels() []LabelInfo {
-	return getLabelListInfo([]string{
-		"type/secrets",
-		fmt.Sprintf("tenant/%s", sd.Tenant),
-		fmt.Sprintf("env/%s", sd.Environment),
-	})
-}
-
 // Check if two KubernetesAppDeployment are equal
 func (kd *KubernetesAppDeployment) Equals(other KubernetesAppDeployment) bool {
 	return kd.DeploymentPath == other.DeploymentPath &&
@@ -274,15 +248,6 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 	}
 }
 
-func (kd *KubernetesAppDeployment) Labels() []LabelInfo {
-	return getLabelListInfo([]string{
-		"type/kubernetes",
-		fmt.Sprintf("cluster/%s", kd.Cluster),
-		fmt.Sprintf("tenant/%s", kd.Tenant),
-		fmt.Sprintf("env/%s", kd.Environment),
-	})
-}
-
 /*
 - Kubernetes sys service specific deployment struct
 */
@@ -313,14 +278,6 @@ func (kd *KubernetesSysDeployment) String(summary bool) string {
 			fmt.Sprintf("\n\t* Cluster: `%s`", kd.Cluster) +
 			fmt.Sprintf("\n\t* Sys Service: `%s`", kd.SysServiceName)
 	}
-}
-
-func (kd *KubernetesSysDeployment) Labels() []LabelInfo {
-	return getLabelListInfo([]string{
-		"type/kubernetes",
-		fmt.Sprintf("cluster/%s", kd.Cluster),
-		fmt.Sprintf("sys-service/%s", kd.SysServiceName),
-	})
 }
 
 func kubernetesDepFromStr(deployment string) *KubernetesAppDeployment {
