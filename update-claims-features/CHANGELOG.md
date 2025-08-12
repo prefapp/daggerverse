@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.9](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.8...update-claims-features-v1.1.9) (2025-08-12)
+
+
+### Bug Fixes
+
+* Update gh version ([#303](https://github.com/prefapp/daggerverse/issues/303)) ([f8fa1db](https://github.com/prefapp/daggerverse/commit/f8fa1db2ac185b5e5361f7788fdceb32eed4e9f6))
+
 ## [1.1.8](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.7...update-claims-features-v1.1.8) (2025-08-12)
 
 
