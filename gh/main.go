@@ -604,7 +604,7 @@ func (m *Gh) DeleteRemoteBranch(
 		panic(err)
 	}
 
-	exp := regexp.MustCompile(fmt.Sprintf("%s\n", branchName))
+	exp := regexp.MustCompile(fmt.Sprintf("refs/heads/%s\n", branchName))
 	matches := exp.Match([]byte(remoteBranchList))
 
 	if matches {
