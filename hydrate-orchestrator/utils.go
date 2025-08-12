@@ -66,8 +66,6 @@ func getDefaultDescriptionForDeploymentLabel(label string) string {
 	}
 
 	switch {
-	case labelParts[0] == "app":
-		return fmt.Sprintf("Application %s", labelParts[1])
 	case labelParts[0] == "tenant":
 		return fmt.Sprintf("Tenant %s", labelParts[1])
 	case labelParts[0] == "env":
