@@ -74,7 +74,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 		if m.AutomergeFileExists(ctx, globPattern) {
 
-			fmt.Printf("Automerge file found, merging PR %s\n", prLink)
+			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", prLink)
 
 			if prLink == "" {
 
