@@ -50,14 +50,28 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 		globPattern := fmt.
 			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
-
-		labelNameList := []string{
-			"type/kubernetes",
-			fmt.Sprintf("cluster/%s", kdep.Cluster),
-			fmt.Sprintf("tenant/%s", kdep.Tenant),
-			fmt.Sprintf("env/%s", kdep.Environment),
+		labels := []LabelInfo{
+			{
+				Name:        "type/kubernetes",
+				Color:       getDefaultColorForDeploymentLabel("type/kubernetes"),
+				Description: getDefaultDescriptionDeploymentForLabel("type/kubernetes"),
+			},
+			{
+				Name:        fmt.Sprintf("cluster/%s", kdep.Cluster),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
+				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
+			},
+			{
+				Name:        fmt.Sprintf("tenant/%s", kdep.Tenant),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("tenant/%s", kdep.Tenant)),
+				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("tenant/%s", kdep.Tenant)),
+			},
+			{
+				Name:        fmt.Sprintf("env/%s", kdep.Environment),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("env/%s", kdep.Environment)),
+				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("env/%s", kdep.Environment)),
+			},
 		}
-		labels := createDefaultLabelsFromNames(labelNameList)
 
 		prLink, err := m.upsertPR(
 			ctx,

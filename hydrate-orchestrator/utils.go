@@ -36,13 +36,13 @@ type LabelInfo struct {
 
 func getDefaultColorForDeploymentLabel(label string) string {
 	switch {
-	case strings.Contains(label, "app/"): // It is currently redundant but may be useful in the future.
+	case strings.Contains(label, "app/"):
 		return "AC1D1C"
 	case strings.Contains(label, "tenant/"):
 		return "234099"
 	case strings.Contains(label, "env/"):
 		return "33810B"
-	case strings.Contains(label, "service/"): // Reserved for future support of service-specific deployment labels.
+	case strings.Contains(label, "service/"):
 		return "F1C232"
 	case strings.Contains(label, "cluster/"):
 		return "AC1CAA"
@@ -56,26 +56,24 @@ func getDefaultColorForDeploymentLabel(label string) string {
 }
 
 func getDefaultDescriptionDeploymentForLabel(label string) string {
-	labelParts := strings.Split(label, "/")
-	if len(labelParts) < 2 {
-		return fmt.Sprintf("Label for %s", label)
+	switch {
+	case strings.Contains(label, "app/"):
+		return "Application"
+	case strings.Contains(label, "tenant/"):
+		return "Tenant"
+	case strings.Contains(label, "env/"):
+		return "Environment"
+	case strings.Contains(label, "service/"):
+		return "Service"
+	case strings.Contains(label, "cluster/"):
+		return "Cluster name"
+	case strings.Contains(label, "type/"):
+		return "Type of deployment"
+	case strings.Contains(label, "tfworkspace/"):
+		return "TFWorkspace label"
+	default:
+		return ""
 	}
-
-	return fmt.Sprintf("Label for %s: %s", labelParts[0], labelParts[1])
-}
-
-func createDefaultLabelsFromNames(labelNames []string) []LabelInfo {
-	defaultLabels := make([]LabelInfo, 0, len(labelNames))
-
-	for _, labelName := range labelNames {
-		defaultLabels = append(defaultLabels, LabelInfo{
-			Name:        labelName,
-			Color:       getDefaultColorForDeploymentLabel(labelName),
-			Description: getDefaultDescriptionDeploymentForLabel(labelName),
-		})
-	}
-
-	return defaultLabels
 }
 
 /*

@@ -75,14 +75,29 @@ Created by @%s from %s within commit [%s](%s)
 			fmt.Sprintf("https://github.com/%s/commit/%s", m.Repo, branchInfo.SHA),
 			kdep.String(false),
 		)
-
-		labelNameList := []string{
-			"type/kubernetes",
-			fmt.Sprintf("cluster/%s", kdep.Cluster),
-			fmt.Sprintf("tenant/%s", kdep.Tenant),
-			fmt.Sprintf("env/%s", kdep.Environment),
+		
+		labels := []LabelInfo{
+			{
+				Name:        "type/kubernetes",
+				Color:       getDefaultColorForDeploymentLabel("type/kubernetes"),
+				Description: getDefaultDescriptionDeploymentForLabel("type/kubernetes"),
+			},
+			{
+				Name:        fmt.Sprintf("cluster/%s", kdep.Cluster),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
+				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
+			},
+			{
+				Name:        fmt.Sprintf("tenant/%s", kdep.Tenant),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("tenant/%s", kdep.Tenant)),
+				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("tenant/%s", kdep.Tenant)),
+			},
+			{
+				Name:        fmt.Sprintf("env/%s", kdep.Environment),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("env/%s", kdep.Environment)),
+				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("env/%s", kdep.Environment)),
+			},
 		}
-		labels := createDefaultLabelsFromNames(labelNameList)
 
 		_, err = m.upsertPR(
 			ctx,
@@ -145,12 +160,23 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		labelNameList := []string{
-			"type/kubernetes",
-			fmt.Sprintf("cluster/%s", kdep.Cluster),
-			fmt.Sprintf("sys-service/%s", kdep.SysServiceName),
+		labels := []LabelInfo{
+			{
+				Name:        "type/kubernetes",
+				Color:       getDefaultColorForDeploymentLabel("type/kubernetes"),
+				Description: getDefaultDescriptionDeploymentForLabel("type/kubernetes"),
+			},
+			{
+				Name:        fmt.Sprintf("cluster/%s", kdep.Cluster),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
+				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
+			},
+			{
+				Name:        fmt.Sprintf("sys-service/%s", kdep.SysServiceName),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("sys-service/%s", kdep.SysServiceName)),
+				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("sys-service/%s", kdep.SysServiceName)),
+			},
 		}
-		labels := createDefaultLabelsFromNames(labelNameList)
 
 		_, err = m.upsertPR(
 			ctx,
@@ -324,13 +350,23 @@ Created by @%s from %s within commit [%s](%s)
 			fmt.Sprintf("https://github.com/%s/commit/%s", m.Repo, branchInfo.SHA),
 			secDep.String(false),
 		)
-
-		labelNameList := []string{
-			"type/secrets",
-			fmt.Sprintf("tenant/%s", secDep.Tenant),
-			fmt.Sprintf("env/%s", secDep.Environment),
+		labels := []LabelInfo{
+			{
+				Name:        "type/secrets",
+				Color:       getDefaultColorForDeploymentLabel("type/secrets"),
+				Description: getDefaultDescriptionDeploymentForLabel("type/secrets"),
+			},
+			{
+				Name:        fmt.Sprintf("tenant/%s", secDep.Tenant),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("tenant/%s", secDep.Tenant)),
+				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("tenant/%s", secDep.Tenant)),
+			},
+			{
+				Name:        fmt.Sprintf("env/%s", secDep.Environment),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("env/%s", secDep.Environment)),
+				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("env/%s", secDep.Environment)),
+			},
 		}
-		labels := createDefaultLabelsFromNames(labelNameList)
 
 		_, err = m.upsertPR(
 			ctx,
