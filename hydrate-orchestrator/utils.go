@@ -70,7 +70,7 @@ func getDefaultDescriptionForDeploymentLabel(label string) string {
 	case strings.Contains(label, "type/"):
 		return "Type of deployment"
 	case strings.Contains(label, "tfworkspace/"):
-		return "TFWorkspace label"
+		return "Terraform workspace identifier"
 	default:
 		return ""
 	}
