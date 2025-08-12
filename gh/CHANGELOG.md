@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.2](https://github.com/prefapp/daggerverse/compare/gh-v1.3.1...gh-v1.3.2) (2025-08-12)
+
+
+### Bug Fixes
+
+* Fix label support ([#291](https://github.com/prefapp/daggerverse/issues/291)) ([c35b55a](https://github.com/prefapp/daggerverse/commit/c35b55ab7e751fc33afed880dece61c05cea2f99))
+* Update `gh` module documentation ([#297](https://github.com/prefapp/daggerverse/issues/297)) ([a85e7f8](https://github.com/prefapp/daggerverse/commit/a85e7f856838b01c5a4b064caecd92fdfe0f079f))
+
 ## [1.3.1](https://github.com/prefapp/daggerverse/compare/gh-v1.3.0...gh-v1.3.1) (2025-08-07)
 
 
