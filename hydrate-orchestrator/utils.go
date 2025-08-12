@@ -64,6 +64,20 @@ func getDefaultDescriptionDeploymentForLabel(label string) string {
 	return fmt.Sprintf("Label for %s: %s", labelParts[0], labelParts[1])
 }
 
+func createDefaultLabelsFromNames(labelNames []string) []LabelInfo {
+	defaultLabels := []LabelInfo{}
+
+	for _, labelName := range labelNames {
+		defaultLabels = append(defaultLabels, LabelInfo{
+			Name:        labelName,
+			Color:       getDefaultColorForDeploymentLabel(labelName),
+			Description: getDefaultDescriptionDeploymentForLabel(labelName),
+		})
+	}
+
+	return defaultLabels
+}
+
 /*
 struct to hold the updated deployments
 */

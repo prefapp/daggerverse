@@ -82,15 +82,7 @@ Created by @%s from %s within commit [%s](%s)
 			fmt.Sprintf("tenant/%s", kdep.Tenant),
 			fmt.Sprintf("env/%s", kdep.Environment),
 		}
-		labels := []LabelInfo{}
-
-		for _, labelName := range labelNameList {
-			labels = append(labels, LabelInfo{
-				Name:        labelName,
-				Color:       getDefaultColorForDeploymentLabel(labelName),
-				Description: getDefaultDescriptionDeploymentForLabel(labelName),
-			})
-		}
+		labels := createDefaultLabelsFromNames(labelNameList)
 
 		_, err = m.upsertPR(
 			ctx,
@@ -158,15 +150,7 @@ Created by @%s from %s within commit [%s](%s)
 			fmt.Sprintf("cluster/%s", kdep.Cluster),
 			fmt.Sprintf("sys-service/%s", kdep.SysServiceName),
 		}
-		labels := []LabelInfo{}
-
-		for _, labelName := range labelNameList {
-			labels = append(labels, LabelInfo{
-				Name:        labelName,
-				Color:       getDefaultColorForDeploymentLabel(labelName),
-				Description: getDefaultDescriptionDeploymentForLabel(labelName),
-			})
-		}
+		labels := createDefaultLabelsFromNames(labelNameList)
 
 		_, err = m.upsertPR(
 			ctx,
@@ -346,15 +330,7 @@ Created by @%s from %s within commit [%s](%s)
 			fmt.Sprintf("tenant/%s", secDep.Tenant),
 			fmt.Sprintf("env/%s", secDep.Environment),
 		}
-		labels := []LabelInfo{}
-
-		for _, labelName := range labelNameList {
-			labels = append(labels, LabelInfo{
-				Name:        labelName,
-				Color:       getDefaultColorForDeploymentLabel(labelName),
-				Description: getDefaultDescriptionDeploymentForLabel(labelName),
-			})
-		}
+		labels := createDefaultLabelsFromNames(labelNameList)
 
 		_, err = m.upsertPR(
 			ctx,

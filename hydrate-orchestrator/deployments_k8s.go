@@ -57,15 +57,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 			fmt.Sprintf("tenant/%s", kdep.Tenant),
 			fmt.Sprintf("env/%s", kdep.Environment),
 		}
-		labels := []LabelInfo{}
-
-		for _, labelName := range labelNameList {
-			labels = append(labels, LabelInfo{
-				Name:        labelName,
-				Color:       getDefaultColorForDeploymentLabel(labelName),
-				Description: getDefaultDescriptionDeploymentForLabel(labelName),
-			})
-		}
+		labels := createDefaultLabelsFromNames(labelNameList)
 
 		prLink, err := m.upsertPR(
 			ctx,
