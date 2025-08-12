@@ -164,9 +164,9 @@ func kubernetesSysServiceDeploymentLabels(cluster_name string, sys_service_name 
 			Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("cluster/%s", cluster_name)),
 		},
 		{
-			Name:        fmt.Sprintf("sys_service/%s", sys_service_name),
-			Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("sys_service/%s", sys_service_name)),
-			Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("sys_service/%s", sys_service_name)),
+			Name:        fmt.Sprintf("sys-service/%s", sys_service_name),
+			Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("sys-service/%s", sys_service_name)),
+			Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("sys-service/%s", sys_service_name)),
 		},
 	}
 }

@@ -35,18 +35,23 @@ type LabelInfo struct {
 }
 
 func getDefaultColorForDeploymentLabel(label string) string {
+	labelParts := strings.Split(label, "/")
+	if len(labelParts) < 2 {
+		return "7E7C7A"
+	}
+
 	switch {
-	case strings.Contains(label, "tenant/"):
+	case labelParts[0] == "tenant":
 		return "234099"
-	case strings.Contains(label, "env/"):
+	case labelParts[0] == "env":
 		return "33810B"
-	case strings.Contains(label, "service/"):
+	case labelParts[0] == "service":
 		return "F1C232"
-	case strings.Contains(label, "cluster/"):
+	case labelParts[0] == "cluster":
 		return "AC1CAA"
-	case strings.Contains(label, "type/"):
+	case labelParts[0] == "type":
 		return "6C3B2A"
-	case strings.Contains(label, "tfworkspace/"):
+	case labelParts[0] == "tfworkspace":
 		return "7B42BC"
 	default:
 		return "7E7C7A"
