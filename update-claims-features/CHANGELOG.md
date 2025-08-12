@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.8](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.7...update-claims-features-v1.1.8) (2025-08-12)
+
+
+### Bug Fixes
+
+* Refactor labels creation ([#299](https://github.com/prefapp/daggerverse/issues/299)) ([47df764](https://github.com/prefapp/daggerverse/commit/47df764bbac01aac87de2240b73efa0137853569))
+* Updated GH version to 1.3.0 for hydrate-orchestrator and update-claims-features ([#283](https://github.com/prefapp/daggerverse/issues/283)) ([32fc094](https://github.com/prefapp/daggerverse/commit/32fc094252f9c8f4a41194e1d377b086ce53db0b))
+
 ## [1.1.7](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.6...update-claims-features-v1.1.7) (2025-07-24)
 
 
