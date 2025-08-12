@@ -87,8 +87,8 @@ Created by @%s from %s within commit [%s](%s)
 		for _, labelName := range labelNameList {
 			labels = append(labels, LabelInfo{
 				Name:        labelName,
-				Color:       getColorForLabel(labelName),
-				Description: getDescriptionForLabel(labelName),
+				Color:       getDefaultColorForDeploymentLabel(labelName),
+				Description: getDefaultDescriptionDeploymentForLabel(labelName),
 			})
 		}
 
@@ -163,8 +163,8 @@ Created by @%s from %s within commit [%s](%s)
 		for _, labelName := range labelNameList {
 			labels = append(labels, LabelInfo{
 				Name:        labelName,
-				Color:       getColorForLabel(labelName),
-				Description: getDescriptionForLabel(labelName),
+				Color:       getDefaultColorForDeploymentLabel(labelName),
+				Description: getDefaultDescriptionDeploymentForLabel(labelName),
 			})
 		}
 
@@ -234,8 +234,8 @@ Created by @%s from %s within commit [%s](%s)
 		labels := []LabelInfo{
 			{
 				Name:        labelName,
-				Color:       getColorForLabel(labelName),
-				Description: getDescriptionForLabel(labelName),
+				Color:       getDefaultColorForDeploymentLabel(labelName),
+				Description: getDefaultDescriptionDeploymentForLabel(labelName),
 			},
 		}
 
@@ -351,8 +351,8 @@ Created by @%s from %s within commit [%s](%s)
 		for _, labelName := range labelNameList {
 			labels = append(labels, LabelInfo{
 				Name:        labelName,
-				Color:       getColorForLabel(labelName),
-				Description: getDescriptionForLabel(labelName),
+				Color:       getDefaultColorForDeploymentLabel(labelName),
+				Description: getDefaultDescriptionDeploymentForLabel(labelName),
 			})
 		}
 

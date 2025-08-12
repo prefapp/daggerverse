@@ -34,7 +34,7 @@ type LabelInfo struct {
 	Description string
 }
 
-func getColorForLabel(label string) string {
+func getDefaultColorForDeploymentLabel(label string) string {
 	switch {
 	case strings.Contains(label, "app/"): // It is currently redundant but may be useful in the future.
 		return "AC1D1C"
@@ -55,7 +55,7 @@ func getColorForLabel(label string) string {
 	}
 }
 
-func getDescriptionForLabel(label string) string {
+func getDefaultDescriptionDeploymentForLabel(label string) string {
 	labelParts := strings.Split(label, "/")
 	if len(labelParts) < 2 {
 		return fmt.Sprintf("Label for %s", label)
