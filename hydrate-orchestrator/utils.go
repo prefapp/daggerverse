@@ -58,7 +58,7 @@ func getColorForLabel(label string) string {
 func getDescriptionForLabel(label string) string {
 	labelParts := strings.Split(label, "/")
 	if len(labelParts) < 2 {
-		return ""
+		return fmt.Sprintf("Label for %s", label)
 	}
 
 	return fmt.Sprintf("Label for %s: %s", labelParts[0], labelParts[1])
