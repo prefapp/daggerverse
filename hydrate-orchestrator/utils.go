@@ -56,12 +56,12 @@ func getColorForLabel(label string) string {
 }
 
 func getDescriptionForLabel(label string) string {
-	// Created function for future-proof extensibility. New descriptions should
-	// be added the same way colors are in the getColorForLabel function
-	switch {
-	default:
+	labelParts := strings.Split(label, "/")
+	if len(labelParts) < 2 {
 		return ""
 	}
+
+	return fmt.Sprintf("Label for %s: %s", labelParts[0], labelParts[1])
 }
 
 /*
