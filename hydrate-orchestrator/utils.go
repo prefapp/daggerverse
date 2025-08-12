@@ -42,7 +42,7 @@ func getDefaultColorForDeploymentLabel(label string) string {
 		return "234099"
 	case strings.Contains(label, "env/"):
 		return "33810B"
-	case strings.Contains(label, "service/"): // It is currently redundant but may be useful in the future.
+	case strings.Contains(label, "service/"): // Reserved for future support of service-specific deployment labels.
 		return "F1C232"
 	case strings.Contains(label, "cluster/"):
 		return "AC1CAA"
