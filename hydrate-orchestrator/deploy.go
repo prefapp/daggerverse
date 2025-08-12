@@ -23,7 +23,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	// Glob Pattern
 	// +required
 	globPattern string,
-	// Aritfact ref. This param could be used to reference the artifact that triggered the deployment
+	// Artifact ref. This param could be used to reference the artifact that triggered the deployment
 	// It contains the image tag, sha, etc.
 	// +optional
 	// +default=""
@@ -76,28 +76,7 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		labels := []LabelInfo{
-			{
-				Name:        "type/kubernetes",
-				Color:       getDefaultColorForDeploymentLabel("type/kubernetes"),
-				Description: getDefaultDescriptionForDeploymentLabel("type/kubernetes"),
-			},
-			{
-				Name:        fmt.Sprintf("cluster/%s", kdep.Cluster),
-				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
-				Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
-			},
-			{
-				Name:        fmt.Sprintf("tenant/%s", kdep.Tenant),
-				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("tenant/%s", kdep.Tenant)),
-				Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("tenant/%s", kdep.Tenant)),
-			},
-			{
-				Name:        fmt.Sprintf("env/%s", kdep.Environment),
-				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("env/%s", kdep.Environment)),
-				Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("env/%s", kdep.Environment)),
-			},
-		}
+		labels := kubernetesAppDeploymentLabels(kdep.Cluster, kdep.Tenant, kdep.Environment)
 
 		_, err = m.upsertPR(
 			ctx,
@@ -160,23 +139,7 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		labels := []LabelInfo{
-			{
-				Name:        "type/kubernetes",
-				Color:       getDefaultColorForDeploymentLabel("type/kubernetes"),
-				Description: getDefaultDescriptionForDeploymentLabel("type/kubernetes"),
-			},
-			{
-				Name:        fmt.Sprintf("cluster/%s", kdep.Cluster),
-				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
-				Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
-			},
-			{
-				Name:        fmt.Sprintf("sys-service/%s", kdep.SysServiceName),
-				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("sys-service/%s", kdep.SysServiceName)),
-				Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("sys-service/%s", kdep.SysServiceName)),
-			},
-		}
+		labels := kubernetesSysServiceDeploymentLabels(kdep.Cluster, kdep.SysServiceName)
 
 		_, err = m.upsertPR(
 			ctx,
@@ -244,8 +207,8 @@ Created by @%s from %s within commit [%s](%s)
 		labels := []LabelInfo{
 			{
 				Name:        labelName,
-				Color:       getDefaultColorForDeploymentLabel(labelName),
-				Description: getDefaultDescriptionForDeploymentLabel(labelName),
+				Color:       "7E7C7A",
+				Description: "Run terraform plan",
 			},
 		}
 

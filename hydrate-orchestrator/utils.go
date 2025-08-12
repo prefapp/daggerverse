@@ -56,21 +56,27 @@ func getDefaultColorForDeploymentLabel(label string) string {
 }
 
 func getDefaultDescriptionForDeploymentLabel(label string) string {
+	// Return a default description based on the label type
+	labelParts := strings.Split(label, "/")
+	if len(labelParts) < 2 {
+		return ""
+	}
+
 	switch {
-	case strings.Contains(label, "app/"):
-		return "Application"
-	case strings.Contains(label, "tenant/"):
-		return "Tenant"
-	case strings.Contains(label, "env/"):
-		return "Environment"
-	case strings.Contains(label, "service/"):
-		return "Service"
-	case strings.Contains(label, "cluster/"):
-		return "Cluster name"
-	case strings.Contains(label, "type/"):
-		return "Type of deployment"
-	case strings.Contains(label, "tfworkspace/"):
-		return "Terraform workspace identifier"
+	case labelParts[0] == "app":
+		return fmt.Sprintf("Application %s", labelParts[1])
+	case labelParts[0] == "tenant":
+		return fmt.Sprintf("Tenant %s", labelParts[1])
+	case labelParts[0] == "env":
+		return fmt.Sprintf("Environment %s", labelParts[1])
+	case labelParts[0] == "service":
+		return fmt.Sprintf("Service %s", labelParts[1])
+	case labelParts[0] == "cluster":
+		return fmt.Sprintf("Cluster %s", labelParts[1])
+	case labelParts[0] == "type":
+		return fmt.Sprintf("Deployment type %s", labelParts[1])
+	case labelParts[0] == "tfworkspace":
+		return fmt.Sprintf("Terraform workspace %s", labelParts[1])
 	default:
 		return ""
 	}

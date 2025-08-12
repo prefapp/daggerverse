@@ -56,8 +56,8 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 		labels := []LabelInfo{
 			{
 				Name:        labelName,
-				Color:       getDefaultColorForDeploymentLabel(labelName),
-				Description: getDefaultDescriptionForDeploymentLabel(labelName),
+				Color:       "7E7C7A",
+				Description: "Run terraform plan",
 			},
 		}
 
