@@ -57,7 +57,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			{
 				Name:        labelName,
 				Color:       getDefaultColorForDeploymentLabel(labelName),
-				Description: getDefaultDescriptionDeploymentForLabel(labelName),
+				Description: getDefaultDescriptionForDeploymentLabel(labelName),
 			},
 		}
 

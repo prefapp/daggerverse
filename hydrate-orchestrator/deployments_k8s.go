@@ -54,22 +54,22 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 			{
 				Name:        "type/kubernetes",
 				Color:       getDefaultColorForDeploymentLabel("type/kubernetes"),
-				Description: getDefaultDescriptionDeploymentForLabel("type/kubernetes"),
+				Description: getDefaultDescriptionForDeploymentLabel("type/kubernetes"),
 			},
 			{
 				Name:        fmt.Sprintf("cluster/%s", kdep.Cluster),
 				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
-				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
+				Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("cluster/%s", kdep.Cluster)),
 			},
 			{
 				Name:        fmt.Sprintf("tenant/%s", kdep.Tenant),
 				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("tenant/%s", kdep.Tenant)),
-				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("tenant/%s", kdep.Tenant)),
+				Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("tenant/%s", kdep.Tenant)),
 			},
 			{
 				Name:        fmt.Sprintf("env/%s", kdep.Environment),
 				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("env/%s", kdep.Environment)),
-				Description: getDefaultDescriptionDeploymentForLabel(fmt.Sprintf("env/%s", kdep.Environment)),
+				Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("env/%s", kdep.Environment)),
 			},
 		}
 

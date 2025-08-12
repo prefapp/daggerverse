@@ -55,7 +55,7 @@ func getDefaultColorForDeploymentLabel(label string) string {
 	}
 }
 
-func getDefaultDescriptionDeploymentForLabel(label string) string {
+func getDefaultDescriptionForDeploymentLabel(label string) string {
 	switch {
 	case strings.Contains(label, "app/"):
 		return "Application"
