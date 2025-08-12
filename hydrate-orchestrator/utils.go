@@ -36,8 +36,6 @@ type LabelInfo struct {
 
 func getDefaultColorForDeploymentLabel(label string) string {
 	switch {
-	case strings.Contains(label, "app/"):
-		return "AC1D1C"
 	case strings.Contains(label, "tenant/"):
 		return "234099"
 	case strings.Contains(label, "env/"):
