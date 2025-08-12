@@ -28,7 +28,7 @@ func (m *HydrateOrchestrator) upsertPR(
 	contents *dagger.Directory,
 	// Labels to be added to the PR
 	// +required
-	labels []string,
+	labels []LabelInfo,
 	// PR title
 	// +required
 	title string,
@@ -46,6 +46,16 @@ func (m *HydrateOrchestrator) upsertPR(
 	baseBranch string,
 
 ) (string, error) {
+	labelNames := []string{}
+	labelColors := []string{}
+	labelDescriptions := []string{}
+
+	for _, labelInfo := range labels {
+		labelNames = append(labelNames, labelInfo.Name)
+		labelColors = append(labelColors, labelInfo.Color)
+		labelDescriptions = append(labelDescriptions, labelInfo.Description)
+	}
+
 	return dag.Gh().CommitAndCreatePr(
 		ctx,
 		contents,
@@ -54,12 +64,14 @@ func (m *HydrateOrchestrator) upsertPR(
 		title,
 		body,
 		dagger.GhCommitAndCreatePrOpts{
-			BaseBranch: baseBranch,
-			Version:    m.GhCliVersion,
-			Token:      m.GhToken,
-			Labels:     labels,
-			Reviewers:  reviewers,
-			DeletePath: cleanupDir,
+			BaseBranch:        baseBranch,
+			Version:           m.GhCliVersion,
+			Token:             m.GhToken,
+			Labels:            labelNames,
+			LabelColors:       labelColors,
+			LabelDescriptions: labelDescriptions,
+			Reviewers:         reviewers,
+			DeletePath:        cleanupDir,
 		},
 	)
 }

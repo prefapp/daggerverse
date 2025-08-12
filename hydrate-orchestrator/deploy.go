@@ -23,7 +23,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	// Glob Pattern
 	// +required
 	globPattern string,
-	// Aritfact ref. This param could be used to reference the artifact that triggered the deployment
+	// Artifact ref. This param could be used to reference the artifact that triggered the deployment
 	// It contains the image tag, sha, etc.
 	// +optional
 	// +default=""
@@ -76,11 +76,13 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
+		labels := kubernetesAppDeploymentLabels(kdep.Cluster, kdep.Tenant, kdep.Environment)
+
 		_, err = m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			kdep.Labels(),
+			labels,
 			kdep.String(true),
 			prBody,
 			kdep.DeploymentPath,
@@ -137,11 +139,13 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
+		labels := kubernetesSysServiceDeploymentLabels(kdep.Cluster, kdep.SysServiceName)
+
 		_, err = m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			kdep.Labels(),
+			labels,
 			kdep.String(true),
 			prBody,
 			kdep.DeploymentPath,
@@ -199,11 +203,19 @@ Created by @%s from %s within commit [%s](%s)
 			tfDep.String(false),
 		)
 
+		labels := []LabelInfo{
+			{
+				Name:        "plan",
+				Color:       "7E7C7A",
+				Description: "Run terraform plan",
+			},
+		}
+
 		prLink, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDep[0],
-			tfDep.Labels(),
+			labels,
 			tfDep.String(true),
 			prBody,
 			tfDep.DeploymentPath,
@@ -300,12 +312,29 @@ Created by @%s from %s within commit [%s](%s)
 			fmt.Sprintf("https://github.com/%s/commit/%s", m.Repo, branchInfo.SHA),
 			secDep.String(false),
 		)
+		labels := []LabelInfo{
+			{
+				Name:        "type/secrets",
+				Color:       getDefaultColorForDeploymentLabel("type/secrets"),
+				Description: getDefaultDescriptionForDeploymentLabel("type/secrets"),
+			},
+			{
+				Name:        fmt.Sprintf("tenant/%s", secDep.Tenant),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("tenant/%s", secDep.Tenant)),
+				Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("tenant/%s", secDep.Tenant)),
+			},
+			{
+				Name:        fmt.Sprintf("env/%s", secDep.Environment),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("env/%s", secDep.Environment)),
+				Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("env/%s", secDep.Environment)),
+			},
+		}
 
 		_, err = m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			secDep.Labels(),
+			labels,
 			secDep.String(true),
 			prBody,
 			secDep.DeploymentPath,
