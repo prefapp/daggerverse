@@ -65,7 +65,7 @@ func getDefaultDescriptionDeploymentForLabel(label string) string {
 }
 
 func createDefaultLabelsFromNames(labelNames []string) []LabelInfo {
-	defaultLabels := []LabelInfo{}
+	defaultLabels := make([]LabelInfo, 0, len(labelNames))
 
 	for _, labelName := range labelNames {
 		defaultLabels = append(defaultLabels, LabelInfo{
