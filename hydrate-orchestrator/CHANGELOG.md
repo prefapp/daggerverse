@@ -1,5 +1,14 @@
 # Changelog
 
+## [6.3.5](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.4...hydrate-orchestrator-v6.3.5) (2025-08-12)
+
+
+### Bug Fixes
+
+* Commit() call not being executed ([#296](https://github.com/prefapp/daggerverse/issues/296)) ([713daff](https://github.com/prefapp/daggerverse/commit/713daff9c0c02d105dddf69d6dae6e407ca61018))
+* Refactor labels creation ([#299](https://github.com/prefapp/daggerverse/issues/299)) ([47df764](https://github.com/prefapp/daggerverse/commit/47df764bbac01aac87de2240b73efa0137853569))
+* Updated GH version to 1.3.0 for hydrate-orchestrator and update-claims-features ([#283](https://github.com/prefapp/daggerverse/issues/283)) ([32fc094](https://github.com/prefapp/daggerverse/commit/32fc094252f9c8f4a41194e1d377b086ce53db0b))
+
 ## [6.3.4](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.3...hydrate-orchestrator-v6.3.4) (2025-07-09)
 
 
