@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.3.6](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.5...hydrate-orchestrator-v6.3.6) (2025-08-12)
+
+
+### Bug Fixes
+
+* Update gh version ([#303](https://github.com/prefapp/daggerverse/issues/303)) ([f8fa1db](https://github.com/prefapp/daggerverse/commit/f8fa1db2ac185b5e5361f7788fdceb32eed4e9f6))
+
 ## [6.3.5](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.4...hydrate-orchestrator-v6.3.5) (2025-08-12)
 
 
