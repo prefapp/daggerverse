@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3](https://github.com/prefapp/daggerverse/compare/gh-v1.3.2...gh-v1.3.3) (2025-08-12)
+
+
+### Bug Fixes
+
+* Branch name matching incorrectly ([#301](https://github.com/prefapp/daggerverse/issues/301)) ([fc385ec](https://github.com/prefapp/daggerverse/commit/fc385ec1fb9a9f97aef60abe0c200ebeb8fd2f24))
+
 ## [1.3.2](https://github.com/prefapp/daggerverse/compare/gh-v1.3.1...gh-v1.3.2) (2025-08-12)
 
 
