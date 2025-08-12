@@ -52,10 +52,9 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 		globPattern := fmt.Sprintf("%s/%s/%s/%s", "tfworkspaces", tfDep.ClaimName, "*", "*")
 
-		labelName := "plan"
 		labels := []LabelInfo{
 			{
-				Name:        labelName,
+				Name:        "plan",
 				Color:       "7E7C7A",
 				Description: "Run terraform plan",
 			},
