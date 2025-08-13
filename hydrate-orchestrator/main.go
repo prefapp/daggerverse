@@ -69,6 +69,7 @@ func New(
 	ghCliVersion string,
 
 	// Path to the GitHub CLI binary file on the runner
+	// If not provided, the workflow will download the GitHub CLI binary automatically.
 	// +optional
 	localGhCliPath *dagger.File,
 
