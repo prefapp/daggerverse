@@ -72,6 +72,7 @@ func (m *HydrateOrchestrator) upsertPR(
 			LabelDescriptions: labelDescriptions,
 			Reviewers:         reviewers,
 			DeletePath:        cleanupDir,
+			LocalGhCliPath:    m.LocalGhCliPath,
 		},
 	)
 }

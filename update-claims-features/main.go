@@ -57,6 +57,10 @@ func (m *UpdateClaimsFeatures) New(
 	// +optional
 	// +default=false
 	automerge bool,
+
+	// runner's gh dir path
+	// +optional
+	localGhCliPath *dagger.File,
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
 	var featuresToUpdateList []string = nil
@@ -85,6 +89,7 @@ func (m *UpdateClaimsFeatures) New(
 		FeaturesToUpdate:  featuresToUpdateList,
 		VersionConstraint: versionConstraint,
 		Automerge:         automerge,
+		LocalGhCliPath:    localGhCliPath,
 	}, nil
 }
 

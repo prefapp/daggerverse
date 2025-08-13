@@ -30,6 +30,7 @@ type HydrateOrchestrator struct {
 	DotFirestartr    *dagger.Directory
 	GhCliVersion     string
 	ArtifactRef      string
+	LocalGhCliPath   *dagger.File
 }
 
 func New(
@@ -67,6 +68,10 @@ func New(
 	// +default="v2.66.1"
 	ghCliVersion string,
 
+	// runner's gh dir path
+	// +optional
+	localGhCliPath *dagger.File,
+
 ) *HydrateOrchestrator {
 	appName := ""
 	appData, err := dag.FirestartrConfig(dotFirestartr).Apps(ctx)
@@ -97,5 +102,6 @@ func New(
 		Event:            event,
 		DotFirestartr:    dotFirestartr,
 		GhCliVersion:     ghCliVersion,
+		LocalGhCliPath:   localGhCliPath,
 	}
 }
