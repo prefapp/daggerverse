@@ -68,7 +68,7 @@ func New(
 	// +default="v2.66.1"
 	ghCliVersion string,
 
-	// runner's gh dir path
+	// Path to the GitHub CLI binary file on the runner
 	// +optional
 	localGhCliPath *dagger.File,
 
