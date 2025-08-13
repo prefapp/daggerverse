@@ -24,6 +24,8 @@ type Gh struct {
 	GHContainer GHContainer
 }
 
+var ErrorNoNewCommits error = errors.New("No new commits created")
+
 func New(
 	// GitHub CLI version. (default: latest version)
 	// +optional
@@ -446,16 +448,16 @@ func (m *Gh) Commit(
 		cmd = append(cmd, "-e")
 	}
 
-	ctr = ctr.WithExec(cmd)
+	ctr, err = ctr.WithExec(cmd).Sync(ctx)
 
-	commandResult, err := ctr.Stdout(ctx)
+	exitCode, _ := ctr.ExitCode(ctx) // ExitCode() only returns an error if no command was executed, so we ignore it here
+
+	if exitCode == 10 {
+		return nil, ErrorNoNewCommits
+	}
 
 	if err != nil {
 		return nil, err
-	}
-
-	if strings.HasPrefix(commandResult, "no new files to commit") {
-		return ctr, errors.New("No new files to commit")
 	}
 
 	return ctr, nil
