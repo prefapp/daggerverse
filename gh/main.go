@@ -24,8 +24,6 @@ type Gh struct {
 	GHContainer GHContainer
 }
 
-var ErrNoCommitCreated error = errors.New("No commit created")
-
 func New(
 	// GitHub CLI version. (default: latest version)
 	// +optional
@@ -456,8 +454,8 @@ func (m *Gh) Commit(
 		panic(err)
 	}
 
-	if strings.HasPrefix(commandResult, "Error uploading files:") {
-		return ctr, ErrNoCommitCreated
+	if strings.HasPrefix(commandResult, "no new files to commit") {
+		return ctr, errors.New("No new files to commit")
 	}
 
 	return ctr, nil
@@ -543,13 +541,8 @@ func (m *Gh) CommitAndCreatePR(
 		deletePath, createEmpty, version, ctr, localGhCliPath,
 	)
 
-	if errors.Is(err, ErrNoCommitCreated) {
-		fmt.Printf("No commit created, skipping PR creation.\n")
-		return "", nil
-	}
-
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	return m.CreatePR(
