@@ -57,6 +57,11 @@ func (m *UpdateClaimsFeatures) New(
 	// +optional
 	// +default=false
 	automerge bool,
+
+	// Path to the local GitHub CLI binary file (not a directory).
+	// If not provided, the GitHub CLI will be downloaded automatically.
+	// +optional
+	localGhCliPath *dagger.File,
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
 	var featuresToUpdateList []string = nil
@@ -85,6 +90,7 @@ func (m *UpdateClaimsFeatures) New(
 		FeaturesToUpdate:  featuresToUpdateList,
 		VersionConstraint: versionConstraint,
 		Automerge:         automerge,
+		LocalGhCliPath:    localGhCliPath,
 	}, nil
 }
 
