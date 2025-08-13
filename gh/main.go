@@ -24,6 +24,8 @@ type Gh struct {
 	GHContainer GHContainer
 }
 
+var ErrNoCommitCreated error = errors.New("No commit created")
+
 func New(
 	// GitHub CLI version. (default: latest version)
 	// +optional
@@ -406,7 +408,7 @@ func (m *Gh) Commit(
 	// runner's gh dir path
 	// +optional
 	localGhCliPath *dagger.File,
-) (*dagger.Container, bool, error) {
+) (*dagger.Container, error) {
 	contentsDirPath := "/content"
 
 	var err error
@@ -455,10 +457,10 @@ func (m *Gh) Commit(
 	}
 
 	if strings.HasPrefix(commandResult, "Error uploading files:") {
-		return ctr, false, nil
+		return ctr, ErrNoCommitCreated
 	}
 
-	return ctr, true, nil
+	return ctr, nil
 }
 
 // Commit current changes into a new/existing branch
@@ -536,17 +538,18 @@ func (m *Gh) CommitAndCreatePR(
 
 	m.DeleteRemoteBranch(ctx, repoDir, branchName, version, token, ctr, localGhCliPath)
 
-	ctr, commitCreated, err := m.Commit(
+	ctr, err = m.Commit(
 		ctx, repoDir, branchName, commitMessage, token, baseBranch,
 		deletePath, createEmpty, version, ctr, localGhCliPath,
 	)
-	if err != nil {
-		panic(err)
-	}
 
-	if !commitCreated {
+	if !errors.Is(err, ErrNoCommitCreated) {
 		fmt.Printf("No commit created, skipping PR creation.\n")
 		return "", nil
+	}
+
+	if err != nil {
+		panic(err)
 	}
 
 	return m.CreatePR(
