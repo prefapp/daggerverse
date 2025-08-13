@@ -280,7 +280,7 @@ func (m *Gh) CreatePR(
 	if ctr == nil {
 		ctr, err = m.Container(ctx, version, token, "", []string{}, []string{}, localGhCliPath)
 		if err != nil {
-			panic(err)
+			return "", err
 		}
 	}
 
@@ -334,7 +334,7 @@ func (m *Gh) CreatePR(
 
 	_, err = ctr.Sync(ctx)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	prId, err := ctr.
@@ -347,7 +347,7 @@ func (m *Gh) CreatePR(
 		Stdout(ctx)
 
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	prLink, err := ctr.
@@ -360,7 +360,7 @@ func (m *Gh) CreatePR(
 		Stdout(ctx)
 
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	return strings.TrimSpace(prLink), nil
@@ -422,7 +422,7 @@ func (m *Gh) Commit(
 			localGhCliPath,
 		)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 	}
 
@@ -451,7 +451,7 @@ func (m *Gh) Commit(
 	commandResult, err := ctr.Stdout(ctx)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if strings.HasPrefix(commandResult, "no new files to commit") {
@@ -531,16 +531,18 @@ func (m *Gh) CommitAndCreatePR(
 		localGhCliPath,
 	)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	m.DeleteRemoteBranch(ctx, repoDir, branchName, version, token, ctr, localGhCliPath)
+	err = m.DeleteRemoteBranch(ctx, repoDir, branchName, version, token, ctr, localGhCliPath)
+	if err != nil {
+		return "", err
+	}
 
 	ctr, err = m.Commit(
 		ctx, repoDir, branchName, commitMessage, token, baseBranch,
 		deletePath, createEmpty, version, ctr, localGhCliPath,
 	)
-
 	if err != nil {
 		return "", err
 	}
@@ -577,7 +579,7 @@ func (m *Gh) DeleteRemoteBranch(
 	// runner's gh dir path
 	// +optional
 	localGhCliPath *dagger.File,
-) {
+) error {
 	contentsDirPath := "/content"
 
 	var err error
@@ -593,7 +595,7 @@ func (m *Gh) DeleteRemoteBranch(
 			localGhCliPath,
 		)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -606,7 +608,7 @@ func (m *Gh) DeleteRemoteBranch(
 		WithExec([]string{"git", "ls-remote"}).
 		Stdout(ctx)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	exp := regexp.MustCompile(fmt.Sprintf("refs/heads/%s\n", branchName))
@@ -618,7 +620,9 @@ func (m *Gh) DeleteRemoteBranch(
 			Sync(ctx)
 
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
+
+	return nil
 }
