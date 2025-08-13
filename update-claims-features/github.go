@@ -38,9 +38,10 @@ func (m *UpdateClaimsFeatures) upsertPR(
 		title,
 		body,
 		dagger.GhCommitAndCreatePrOpts{
-			Version: m.GhCliVersion,
-			Token:   m.GhToken,
-			Labels:  labels,
+			Version:        m.GhCliVersion,
+			Token:          m.GhToken,
+			Labels:         labels,
+			LocalGhCliPath: m.LocalGhCliPath,
 		},
 	)
 }
