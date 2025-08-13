@@ -406,7 +406,7 @@ func (m *Gh) Commit(
 	// runner's gh dir path
 	// +optional
 	localGhCliPath *dagger.File,
-) (*dagger.Container, error) {
+) (*dagger.Container, bool, error) {
 	contentsDirPath := "/content"
 
 	var err error
@@ -448,13 +448,17 @@ func (m *Gh) Commit(
 
 	ctr = ctr.WithExec(cmd)
 
-	_, err = ctr.Sync(ctx)
+	commandResult, err := ctr.Stdout(ctx)
 
 	if err != nil {
 		panic(err)
 	}
 
-	return ctr, nil
+	if strings.HasPrefix(commandResult, "Error uploading files:") {
+		return ctr, false, nil
+	}
+
+	return ctr, true, nil
 }
 
 // Commit current changes into a new/existing branch
@@ -532,12 +536,17 @@ func (m *Gh) CommitAndCreatePR(
 
 	m.DeleteRemoteBranch(ctx, repoDir, branchName, version, token, ctr, localGhCliPath)
 
-	ctr, err = m.Commit(
+	ctr, commitCreated, err := m.Commit(
 		ctx, repoDir, branchName, commitMessage, token, baseBranch,
 		deletePath, createEmpty, version, ctr, localGhCliPath,
 	)
 	if err != nil {
 		panic(err)
+	}
+
+	if !commitCreated {
+		fmt.Printf("No commit created, skipping PR creation.\n")
+		return "", nil
 	}
 
 	return m.CreatePR(
