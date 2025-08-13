@@ -58,7 +58,7 @@ func (m *UpdateClaimsFeatures) New(
 	// +default=false
 	automerge bool,
 
-	// runner's gh dir path
+	// Path to the local GitHub CLI binary file (not a directory)
 	// +optional
 	localGhCliPath *dagger.File,
 ) (*UpdateClaimsFeatures, error) {
