@@ -53,7 +53,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 		labels := kubernetesAppDeploymentLabels(kdep.Cluster, kdep.Tenant, kdep.Environment)
 
-		prLink, err := m.upsertPR(
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
@@ -66,6 +66,15 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 		)
 
 		if err != nil {
+			if output != "" {
+				summary.addDeploymentSummaryRow(
+					kdep.DeploymentPath,
+					output,
+				)
+
+				continue
+			}
+
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
 				extractErrorMessage(err),
@@ -76,9 +85,9 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 		if m.AutomergeFileExists(ctx, globPattern) {
 
-			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", prLink)
+			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
 
-			if prLink == "" {
+			if output == "" {
 
 				summary.addDeploymentSummaryRow(
 					kdep.DeploymentPath,
@@ -87,7 +96,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 				continue
 			}
 
-			err := m.MergePullRequest(ctx, prLink)
+			err := m.MergePullRequest(ctx, output)
 
 			if err != nil {
 
@@ -102,8 +111,8 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 				kdep.DeploymentPath,
 				fmt.Sprintf(
 					"Success, pr merged: <a href=\"%s\">%s</a>",
-					prLink,
-					prLink,
+					output,
+					output,
 				),
 			)
 
@@ -115,8 +124,8 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 				kdep.DeploymentPath,
 				fmt.Sprintf(
 					"Success, pr created: <a href=\"%s\">%s</a>",
-					prLink,
-					prLink,
+					output,
+					output,
 				),
 			)
 		}
@@ -170,7 +179,6 @@ func kubernetesSysServiceDeploymentLabels(cluster_name string, sys_service_name 
 		},
 	}
 }
-
 
 func (m *HydrateOrchestrator) processImagesMatrix(
 	updatedDeployments string,
