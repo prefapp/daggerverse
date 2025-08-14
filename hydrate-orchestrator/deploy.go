@@ -96,6 +96,8 @@ Created by @%s from %s within commit [%s](%s)
 					kdep.DeploymentPath,
 					output,
 				)
+
+				continue
 			}
 
 			summary.addDeploymentSummaryRow(
@@ -166,6 +168,8 @@ Created by @%s from %s within commit [%s](%s)
 					kdep.DeploymentPath,
 					output,
 				)
+
+				continue
 			}
 
 			summary.addDeploymentSummaryRow(
@@ -242,6 +246,8 @@ Created by @%s from %s within commit [%s](%s)
 					tfDep.DeploymentPath,
 					output,
 				)
+
+				continue
 			}
 
 			summary.addDeploymentSummaryRow(
@@ -367,6 +373,8 @@ Created by @%s from %s within commit [%s](%s)
 					secDep.DeploymentPath,
 					output,
 				)
+
+				continue
 			}
 
 			summary.addDeploymentSummaryRow(
