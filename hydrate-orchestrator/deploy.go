@@ -98,14 +98,14 @@ Created by @%s from %s within commit [%s](%s)
 				)
 
 				continue
+			} else {
+				summary.addDeploymentSummaryRow(
+					kdep.DeploymentPath,
+					extractErrorMessage(err),
+				)
+
+				continue
 			}
-
-			summary.addDeploymentSummaryRow(
-				kdep.DeploymentPath,
-				extractErrorMessage(err),
-			)
-
-			continue
 		} else {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
@@ -170,14 +170,14 @@ Created by @%s from %s within commit [%s](%s)
 				)
 
 				continue
+			} else {
+				summary.addDeploymentSummaryRow(
+					kdep.DeploymentPath,
+					extractErrorMessage(err),
+				)
+
+				continue
 			}
-
-			summary.addDeploymentSummaryRow(
-				kdep.DeploymentPath,
-				extractErrorMessage(err),
-			)
-
-			continue
 		} else {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
@@ -248,14 +248,14 @@ Created by @%s from %s within commit [%s](%s)
 				)
 
 				continue
+			} else {
+				summary.addDeploymentSummaryRow(
+					tfDep.DeploymentPath,
+					extractErrorMessage(err),
+				)
+
+				continue
 			}
-
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				extractErrorMessage(err),
-			)
-
-			continue
 
 		}
 
@@ -375,14 +375,14 @@ Created by @%s from %s within commit [%s](%s)
 				)
 
 				continue
+			} else {
+				summary.addDeploymentSummaryRow(
+					secDep.DeploymentPath,
+					extractErrorMessage(err),
+				)
+
+				continue
 			}
-
-			summary.addDeploymentSummaryRow(
-				secDep.DeploymentPath,
-				extractErrorMessage(err),
-			)
-
-			continue
 
 		} else {
 			summary.addDeploymentSummaryRow(
