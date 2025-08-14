@@ -24,7 +24,7 @@ type Gh struct {
 	GHContainer GHContainer
 }
 
-var ErrorNoNewCommits error = errors.New("No new commits created")
+var ErrorNoNewCommits error = errors.New("no new commits created")
 
 func New(
 	// GitHub CLI version. (default: latest version)
@@ -97,10 +97,10 @@ func (m *Gh) Container(
 	gc := m.GHContainer
 
 	if len(pluginNames) != len(pluginVersions) {
-		return nil, errors.New(fmt.Sprintf(
+		return nil, fmt.Errorf(
 			"The number of plugin names and plugin versions specified differ (%d names vs %d versions)",
 			len(pluginNames), len(pluginVersions),
-		))
+		)
 	}
 
 	pluginList := []GHPlugin{}
@@ -303,10 +303,10 @@ func (m *Gh) CreatePR(
 		WithEnvVariable("CACHE_BUSTER", time.Now().String())
 
 	if len(labels) != len(labelColors) || len(labels) != len(labelDescriptions) {
-		return "", errors.New(fmt.Sprintf(
+		return "", fmt.Errorf(
 			"The number of label names, colors and descriptions specified differ (%d names, %d colors and %d descriptions)",
 			len(labels), len(labelColors), len(labelDescriptions),
-		))
+		)
 	}
 
 	for idx, label := range labels {
@@ -420,7 +420,7 @@ func (m *Gh) Commit(
 			token,
 			"",
 			[]string{"prefapp/gh-commit"},
-			[]string{"v1.3.0"},
+			[]string{"v1.3.1-snapshot"},
 			localGhCliPath,
 		)
 		if err != nil {
@@ -529,7 +529,7 @@ func (m *Gh) CommitAndCreatePR(
 		token,
 		"",
 		[]string{"prefapp/gh-commit"},
-		[]string{"v1.3.0"},
+		[]string{"v1.3.1-snapshot"},
 		localGhCliPath,
 	)
 	if err != nil {
