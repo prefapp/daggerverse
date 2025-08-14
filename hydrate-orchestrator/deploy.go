@@ -78,7 +78,7 @@ Created by @%s from %s within commit [%s](%s)
 
 		labels := kubernetesAppDeploymentLabels(kdep.Cluster, kdep.Tenant, kdep.Environment)
 
-		_, err = m.upsertPR(
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
@@ -91,6 +91,13 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
+			if output != "" {
+				summary.addDeploymentSummaryRow(
+					kdep.DeploymentPath,
+					output,
+				)
+			}
+
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
 				extractErrorMessage(err),
@@ -141,7 +148,7 @@ Created by @%s from %s within commit [%s](%s)
 
 		labels := kubernetesSysServiceDeploymentLabels(kdep.Cluster, kdep.SysServiceName)
 
-		_, err = m.upsertPR(
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
@@ -154,6 +161,12 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
+			if output != "" {
+				summary.addDeploymentSummaryRow(
+					kdep.DeploymentPath,
+					output,
+				)
+			}
 
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
@@ -211,7 +224,7 @@ Created by @%s from %s within commit [%s](%s)
 			},
 		}
 
-		prLink, err := m.upsertPR(
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDep[0],
@@ -224,6 +237,12 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
+			if output != "" {
+				summary.addDeploymentSummaryRow(
+					tfDep.DeploymentPath,
+					output,
+				)
+			}
 
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
@@ -237,11 +256,11 @@ Created by @%s from %s within commit [%s](%s)
 		// https://github.com/org/app-repo/pull/8
 		// parts:    [https:, , github.com, org, app-repo, pull, 8]
 		// positions:  0     1       2        3     4        5   6
-		prNumber := strings.Split(prLink, "/")[6]
-		repo := strings.Split(prLink, "/")[4]
-		org := strings.Split(prLink, "/")[3]
+		prNumber := strings.Split(output, "/")[6]
+		repo := strings.Split(output, "/")[4]
+		org := strings.Split(output, "/")[3]
 		fmt.Printf("🔗 Getting PR number from PR link\n")
-		fmt.Printf("PR link: %s\n", prLink)
+		fmt.Printf("PR link: %s\n", output)
 		fmt.Printf("PR number: %s\n", prNumber)
 		fmt.Printf("Repo: %s\n", repo)
 		fmt.Printf("Org: %s\n", org)
@@ -330,7 +349,7 @@ Created by @%s from %s within commit [%s](%s)
 			},
 		}
 
-		_, err = m.upsertPR(
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
@@ -343,6 +362,13 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
+			if output != "" {
+				summary.addDeploymentSummaryRow(
+					secDep.DeploymentPath,
+					output,
+				)
+			}
+
 			summary.addDeploymentSummaryRow(
 				secDep.DeploymentPath,
 				extractErrorMessage(err),
