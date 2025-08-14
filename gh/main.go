@@ -551,7 +551,7 @@ func (m *Gh) CommitAndCreatePR(
 	)
 	if err != nil {
 		if errors.Is(err, ErrorNoNewCommits) {
-			return "No changes to commit, PR creation skipped", err
+			return "", nil // Returning an error overrides the string value
 		}
 
 		return "", err
