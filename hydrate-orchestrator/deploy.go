@@ -91,7 +91,7 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
-			fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>%s", output)
+			fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>%s", output)
 			if output != "" {
 				summary.addDeploymentSummaryRow(
 					kdep.DeploymentPath,
