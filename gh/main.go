@@ -550,6 +550,10 @@ func (m *Gh) CommitAndCreatePR(
 		deletePath, createEmpty, version, ctr, localGhCliPath,
 	)
 	if err != nil {
+		if errors.Is(err, ErrorNoNewCommits) {
+			return "No changes to commit, PR creation skipped", err
+		}
+
 		return "", err
 	}
 
