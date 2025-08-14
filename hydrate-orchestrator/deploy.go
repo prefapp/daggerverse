@@ -91,6 +91,7 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
+			fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>%s", output)
 			if output != "" {
 				summary.addDeploymentSummaryRow(
 					kdep.DeploymentPath,
@@ -101,7 +102,7 @@ Created by @%s from %s within commit [%s](%s)
 			} else {
 				summary.addDeploymentSummaryRow(
 					kdep.DeploymentPath,
-					"test",
+					extractErrorMessage(err),
 				)
 
 				continue
