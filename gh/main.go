@@ -452,6 +452,8 @@ func (m *Gh) Commit(
 
 	exitCode, _ := ctr.ExitCode(ctx) // ExitCode() only returns an error if no command was executed, so we ignore it here
 
+	fmt.Printf("gh commit exited with code: %d\n", exitCode)
+
 	if exitCode == 10 {
 		return nil, ErrorNoNewCommits
 	}
