@@ -12,6 +12,7 @@ import (
 )
 
 const DEPLOYMENT_BRANCH_NAME string = "deployment"
+const NO_PR_CREATED_MESSAGE string = "No changes detected. PR creation skipped."
 
 // Hydrate deployments based on the updated deployments
 func (m *HydrateOrchestrator) GenerateDeployment(
@@ -91,28 +92,31 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
-			fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>%s", output)
-			if output != "" {
-				summary.addDeploymentSummaryRow(
-					kdep.DeploymentPath,
-					output,
-				)
-
-				continue
-			} else {
-				summary.addDeploymentSummaryRow(
-					kdep.DeploymentPath,
-					extractErrorMessage(err),
-				)
-
-				continue
-			}
-		} else {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				"Success",
+				extractErrorMessage(err),
 			)
+
+			continue
 		}
+
+		if output == "" {
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				NO_PR_CREATED_MESSAGE,
+			)
+
+			continue
+		}
+
+		summary.addDeploymentSummaryRow(
+			kdep.DeploymentPath,
+			fmt.Sprintf(
+				"Success: <a href=\"%s\">%s</a>",
+				output,
+				output,
+			),
+		)
 	}
 
 	for _, kdep := range deployments.KubernetesSysDeployments {
@@ -164,28 +168,31 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
-			if output != "" {
-				summary.addDeploymentSummaryRow(
-					kdep.DeploymentPath,
-					output,
-				)
-
-				continue
-			} else {
-				summary.addDeploymentSummaryRow(
-					kdep.DeploymentPath,
-					extractErrorMessage(err),
-				)
-
-				continue
-			}
-		} else {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				"Success",
+				extractErrorMessage(err),
 			)
+
+			continue
 		}
 
+		if output == "" {
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				NO_PR_CREATED_MESSAGE,
+			)
+
+			continue
+		}
+
+		summary.addDeploymentSummaryRow(
+			kdep.DeploymentPath,
+			fmt.Sprintf(
+				"Success: <a href=\"%s\">%s</a>",
+				output,
+				output,
+			),
+		)
 	}
 
 	for _, tfDep := range deployments.TfWorkspaceDeployments {
@@ -242,22 +249,21 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
-			if output != "" {
-				summary.addDeploymentSummaryRow(
-					tfDep.DeploymentPath,
-					output,
-				)
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				extractErrorMessage(err),
+			)
 
-				continue
-			} else {
-				summary.addDeploymentSummaryRow(
-					tfDep.DeploymentPath,
-					extractErrorMessage(err),
-				)
+			continue
+		}
 
-				continue
-			}
+		if output == "" {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				NO_PR_CREATED_MESSAGE,
+			)
 
+			continue
 		}
 
 		// https://github.com/org/app-repo/pull/8
@@ -306,7 +312,11 @@ Created by @%s from %s within commit [%s](%s)
 
 		summary.addDeploymentSummaryRow(
 			tfDep.DeploymentPath,
-			"Success",
+			fmt.Sprintf(
+				"Success: <a href=\"%s\">%s</a>",
+				output,
+				output,
+			),
 		)
 	}
 
@@ -369,28 +379,31 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
-			if output != "" {
-				summary.addDeploymentSummaryRow(
-					secDep.DeploymentPath,
-					output,
-				)
-
-				continue
-			} else {
-				summary.addDeploymentSummaryRow(
-					secDep.DeploymentPath,
-					extractErrorMessage(err),
-				)
-
-				continue
-			}
-
-		} else {
 			summary.addDeploymentSummaryRow(
 				secDep.DeploymentPath,
-				"Success",
+				extractErrorMessage(err),
 			)
+
+			continue
 		}
+
+		if output == "" {
+			summary.addDeploymentSummaryRow(
+				secDep.DeploymentPath,
+				NO_PR_CREATED_MESSAGE,
+			)
+
+			continue
+		}
+
+		summary.addDeploymentSummaryRow(
+			secDep.DeploymentPath,
+			fmt.Sprintf(
+				"Success: <a href=\"%s\">%s</a>",
+				output,
+				output,
+			),
+		)
 	}
 
 	return m.DeploymentSummaryToFile(ctx, summary)
