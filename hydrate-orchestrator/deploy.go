@@ -101,7 +101,7 @@ Created by @%s from %s within commit [%s](%s)
 			} else {
 				summary.addDeploymentSummaryRow(
 					kdep.DeploymentPath,
-					extractErrorMessage(err),
+					"test",
 				)
 
 				continue
