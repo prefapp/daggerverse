@@ -448,18 +448,20 @@ func (m *Gh) Commit(
 		cmd = append(cmd, "-e")
 	}
 
-	ctr, err = ctr.WithExec(cmd).Sync(ctx)
-
-	exitCode, _ := ctr.ExitCode(ctx) // ExitCode() only returns an error if no command was executed, so we ignore it here
-
-	fmt.Printf("gh commit exited with code: %d\n", exitCode)
-
-	if exitCode == 10 {
-		return nil, ErrorNoNewCommits
-	}
+	ctr, err = ctr.
+		WithExec(cmd).
+		Sync(ctx)
 
 	if err != nil {
-		return nil, err
+		switch e := err.(type) {
+		case *dagger.ExecError:
+			if e.ExitCode == 10 {
+				return nil, ErrorNoNewCommits
+			}
+			return nil, e
+		default:
+			return nil, e
+		}
 	}
 
 	return ctr, nil
