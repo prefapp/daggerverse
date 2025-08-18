@@ -420,7 +420,7 @@ func (m *Gh) Commit(
 			token,
 			"",
 			[]string{"prefapp/gh-commit"},
-			[]string{"v1.3.1-snapshot"},
+			[]string{"v1.3.1"},
 			localGhCliPath,
 		)
 		if err != nil {
@@ -533,7 +533,7 @@ func (m *Gh) CommitAndCreatePR(
 		token,
 		"",
 		[]string{"prefapp/gh-commit"},
-		[]string{"v1.3.1-snapshot"},
+		[]string{"v1.3.1"},
 		localGhCliPath,
 	)
 	if err != nil {
