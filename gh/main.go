@@ -25,6 +25,7 @@ type Gh struct {
 }
 
 var ErrorNoNewCommits error = errors.New("no new commits created")
+var NoNewCommitsExitCode int = 10
 
 func New(
 	// GitHub CLI version. (default: latest version)
@@ -455,7 +456,7 @@ func (m *Gh) Commit(
 	if err != nil {
 		switch e := err.(type) {
 		case *dagger.ExecError:
-			if e.ExitCode == 10 {
+			if e.ExitCode == NoNewCommitsExitCode {
 				return nil, ErrorNoNewCommits
 			}
 			return nil, e
