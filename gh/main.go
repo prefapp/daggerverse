@@ -453,14 +453,15 @@ func (m *Gh) Commit(
 		Sync(ctx)
 
 	if err != nil {
-		switch e := err.(type) {
+		switch err.(type) {
 		case *dagger.ExecError:
+			e := err.(*dagger.ExecError)
 			if e.ExitCode == 10 {
 				return nil, ErrorNoNewCommits
 			}
 			return nil, e
 		default:
-			return nil, e
+			return nil, err
 		}
 	}
 
