@@ -26,7 +26,7 @@ func (s *UpdateSummary) addUpdateSummaryRow(claim string, status string) {
 func (s UpdateSummary) UpdateSummaryToMarkdownTable() string {
 
 	if len(s.Items) == 0 {
-		return "There are no deployments to display"
+		return "There are no updates to display"
 	}
 
 	table := "<table><tr><th>Updated claim</th><th>Status</th></tr>"
