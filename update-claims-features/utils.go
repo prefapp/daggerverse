@@ -22,6 +22,7 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 	releasesList := strings.Split(ghReleaseListResult, "\n")
 
 	for _, featureTag := range releasesList {
+		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>%s\n", featureTag)
 		featureData := strings.Split(featureTag, "-")
 
 		featureName := featureData[0]
