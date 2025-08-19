@@ -66,25 +66,46 @@ func (m *UpdateClaimsFeatures) MergePullRequest(ctx context.Context, prLink stri
 }
 
 func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) {
-	ghReleaseListResult, err := dag.Gh(dagger.GhOpts{
-		Version: m.GhCliVersion,
-	}).Container(dagger.GhContainerOpts{
-		Token: m.PrefappGhToken,
-		Repo:  "prefapp/features",
-	}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
-		WithWorkdir(m.ClaimsDirPath).
-		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-		WithExec([]string{
-			"gh",
-			"release",
-			"list",
-			"--exclude-pre-releases",
-			"--limit",
-			"999",
-			"--json",
-			"tagName",
-		}).
-		Stdout(ctx)
+	ghReleaseListResult := ""
+	var err error
+
+	if len(m.FeaturesToUpdate) > 0 {
+		query := `{
+  repository(owner: "prefapp", name: "features") {
+	%s
+  }
+}`
+		featureQuery := ""
+
+		for _, feature := range m.FeaturesToUpdate {
+			featureQuery = fmt.Sprintf(`%s
+%s: refs(refPrefix: "refs/tags/", last: 100, query: "%s-") {
+  nodes {
+	name
+  }
+}`, featureQuery, feature, feature)
+		}
+		query = fmt.Sprintf(query, featureQuery)
+
+		ghReleaseListResult, err = dag.Gh(dagger.GhOpts{
+			Version: m.GhCliVersion,
+		}).Container(dagger.GhContainerOpts{
+			Token: m.PrefappGhToken,
+			Repo:  "prefapp/features",
+		}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
+			WithWorkdir(m.ClaimsDirPath).
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithExec([]string{
+				"gh",
+				"api",
+				"graphql",
+				"-f",
+				fmt.Sprintf("query=%s", query),
+				"--jq",
+				"'.data.repository.[].nodes[].name'",
+			}).
+			Stdout(ctx)
+	}
 
 	return ghReleaseListResult, err
 }
