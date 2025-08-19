@@ -14,30 +14,24 @@ import (
 )
 
 func (m *UpdateClaimsFeatures) getFeaturesMapData(
-	ctx context.Context,
 	ghReleaseListResult string,
 ) (map[string]string, map[string][]string, error) {
 	var latestFeaturesMap = make(map[string]string)
 	var allFeaturesMap = make(map[string][]string)
 	var sortedFeaturesMap = make(map[string][]*semver.Version)
-	var releasesList []ReleasesList
-	err := json.Unmarshal([]byte(ghReleaseListResult), &releasesList)
+	releasesList := strings.Split(ghReleaseListResult, "\n")
 
-	if err != nil {
-		return nil, nil, err
-	}
+	for _, featureTag := range releasesList {
+		featureData := strings.Split(featureTag, "-")
 
-	for _, feature := range releasesList {
-		featureData := strings.Split(feature.TagName, "-")
-
-		featureTag := featureData[0]
+		featureName := featureData[0]
 		featureVersion := strings.Trim(featureData[1], "v")
 		featureVersionSemver, err := semver.NewVersion(featureData[1])
 		if err != nil {
 			fmt.Printf(
 				"Version %s of feature %s is not valid SemVer, skipping",
 				featureData[1],
-				featureTag,
+				featureName,
 			)
 			continue
 		}
@@ -49,7 +43,7 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 				return nil, nil, err
 			}
 		} else {
-			versionToCompareTo, hasVersion := latestFeaturesMap[featureTag]
+			versionToCompareTo, hasVersion := latestFeaturesMap[featureName]
 			if !hasVersion {
 				versionToCompareTo = "0.0.0"
 			}
@@ -63,20 +57,20 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 		}
 
 		if versionIsValid.Check(featureVersionSemver) {
-			latestFeaturesMap[featureTag] = featureVersion
+			latestFeaturesMap[featureName] = featureVersion
 		}
 
-		if sortedFeaturesMap[featureTag] == nil {
-			sortedFeaturesMap[featureTag] = []*semver.Version{}
+		if sortedFeaturesMap[featureName] == nil {
+			sortedFeaturesMap[featureName] = []*semver.Version{}
 		}
 
-		sortedFeaturesMap[featureTag] = append(
-			sortedFeaturesMap[featureTag], featureVersionSemver,
+		sortedFeaturesMap[featureName] = append(
+			sortedFeaturesMap[featureName], featureVersionSemver,
 		)
 	}
 
 	// Sort map
-	for key, _ := range sortedFeaturesMap {
+	for key := range sortedFeaturesMap {
 		sort.Sort(semver.Collection(sortedFeaturesMap[key]))
 	}
 
@@ -93,7 +87,6 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 }
 
 func (m *UpdateClaimsFeatures) updateDirWithClaim(
-	ctx context.Context,
 	claim *Claim,
 	claimPath string,
 ) *dagger.Directory {
@@ -102,7 +95,7 @@ func (m *UpdateClaimsFeatures) updateDirWithClaim(
 	yamlEncoder.SetIndent(2)
 	yamlEncoder.Encode(&claim)
 
-	updatedDir := m.ClaimsDir.WithNewFile(claimPath, string(buffer.Bytes()))
+	updatedDir := m.ClaimsDir.WithNewFile(claimPath, buffer.String())
 
 	return updatedDir
 }

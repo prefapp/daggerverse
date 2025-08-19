@@ -103,7 +103,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	}
 
 	latestFeaturesMap, allFeaturesMap, err := m.getFeaturesMapData(
-		ctx, ghReleaseListResult,
+		ghReleaseListResult,
 	)
 	if err != nil {
 		return "", err
