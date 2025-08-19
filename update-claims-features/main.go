@@ -96,23 +96,26 @@ func (m *UpdateClaimsFeatures) New(
 
 func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	ctx context.Context,
-) (string, error) {
+) (*dagger.File, error) {
+	summary := &UpdateSummary{
+		Items: []UpdateSummaryRow{},
+	}
 	ghReleaseListResult, err := m.getReleases(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	latestFeaturesMap, allFeaturesMap, err := m.getFeaturesMapData(
 		ghReleaseListResult,
 	)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Get all ComponentClaim claims
 	claims, err := m.getAllClaims(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	for _, entry := range claims {
@@ -120,7 +123,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		claim, err := m.getClaimIfKindComponent(ctx, entry)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
 		if claim != nil {
@@ -130,7 +133,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				latestFeaturesMap,
 			)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 
 			if createPR {
@@ -146,7 +149,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					currentFeatureVersionsMap,
 				)
 				if err != nil {
-					return "", err
+					return nil, err
 				}
 
 				prLink, err := m.upsertPR(
@@ -159,10 +162,13 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				)
 
 				if err != nil {
-					return "", err
+					return nil, err
 				}
 
-				fmt.Printf("PR LINK: %s\n", prLink)
+				summary.addUpdateSummaryRow(
+					claim.Name,
+					fmt.Sprintf("Success: <a href=\"%s\">%s</a>", prLink, prLink),
+				)
 
 				if m.Automerge {
 					m.MergePullRequest(ctx, prLink)
@@ -171,5 +177,5 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 	}
 
-	return "ok", nil
+	return m.DeploymentSummaryToFile(ctx, summary), nil
 }
