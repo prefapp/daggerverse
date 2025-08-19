@@ -138,7 +138,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					ctx, claim,
 				)
 				claim.Providers.Github.Features = updatedFeaturesList
-				updatedDir := m.updateDirWithClaim(ctx, claim, entry)
+				updatedDir := m.updateDirWithClaim(claim, entry)
 				releaseBody, err := m.getPrBodyForFeatureUpdate(
 					ctx,
 					updatedFeaturesList,
