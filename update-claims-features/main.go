@@ -135,7 +135,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 			if createPR {
 				currentFeatureVersionsMap := m.extractCurrentFeatureVersionsFromClaim(
-					ctx, claim,
+					claim,
 				)
 				claim.Providers.Github.Features = updatedFeaturesList
 				updatedDir := m.updateDirWithClaim(claim, entry)

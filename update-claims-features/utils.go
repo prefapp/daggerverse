@@ -194,7 +194,6 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 }
 
 func (m *UpdateClaimsFeatures) extractCurrentFeatureVersionsFromClaim(
-	ctx context.Context,
 	claim *Claim,
 ) map[string]string {
 	var currentFeaturesVersion = make(map[string]string)

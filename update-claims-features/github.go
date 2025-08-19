@@ -105,6 +105,8 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 				".data.repository.[].nodes[].name",
 			}).
 			Stdout(ctx)
+	} else {
+		return "", fmt.Errorf("no features to update specified")
 	}
 
 	return ghReleaseListResult, err
