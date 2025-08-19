@@ -102,7 +102,7 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 				"-f",
 				fmt.Sprintf("query=%s", query),
 				"--jq",
-				"'.data.repository.[].nodes[].name'",
+				".data.repository.[].nodes[].name",
 			}).
 			Stdout(ctx)
 	}
