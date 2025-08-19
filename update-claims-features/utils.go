@@ -13,6 +13,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func extractErrorMessage(err error) string {
+	switch e := err.(type) {
+	case *dagger.ExecError:
+		return fmt.Sprintf("Failed: %s\nSTDERR: %s\nSTDOUT: %s", e.Error(), e.Stderr, e.Stdout)
+	default:
+		return fmt.Sprintf("Failed: %s", err.Error())
+	}
+}
+
 func (m *UpdateClaimsFeatures) getFeaturesMapData(
 	ghReleaseListResult string,
 ) (map[string]string, map[string][]string, error) {

@@ -123,7 +123,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		claim, err := m.getClaimIfKindComponent(ctx, entry)
 		if err != nil {
-			return nil, err
+			summary.addUpdateSummaryRow(claim.Name, extractErrorMessage(err))
+			continue
 		}
 
 		if claim != nil {
@@ -133,7 +134,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				latestFeaturesMap,
 			)
 			if err != nil {
-				return nil, err
+				summary.addUpdateSummaryRow(
+					claim.Name, extractErrorMessage(err),
+				)
+				continue
 			}
 
 			if createPR {
@@ -149,7 +153,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					currentFeatureVersionsMap,
 				)
 				if err != nil {
-					return nil, err
+					summary.addUpdateSummaryRow(
+						claim.Name, extractErrorMessage(err),
+					)
+					continue
 				}
 
 				prLink, err := m.upsertPR(
@@ -162,7 +169,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				)
 
 				if err != nil {
-					return nil, err
+					summary.addUpdateSummaryRow(
+						claim.Name, extractErrorMessage(err),
+					)
+					continue
 				}
 
 				summary.addUpdateSummaryRow(
