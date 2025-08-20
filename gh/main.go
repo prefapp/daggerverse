@@ -454,15 +454,10 @@ func (m *Gh) Commit(
 		Sync(ctx)
 
 	if err != nil {
-		switch e := err.(type) {
-		case *dagger.ExecError:
-			if e.ExitCode == NoNewCommitsExitCode {
-				return nil, ErrorNoNewCommits
-			}
-			return nil, e
-		default:
-			return nil, e
+		if e, ok := err.(*dagger.ExecError); ok && e.ExitCode == NoNewCommitsExitCode {
+			return nil, ErrorNoNewCommits
 		}
+		return nil, err
 	}
 
 	return ctr, nil
