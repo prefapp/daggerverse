@@ -267,10 +267,10 @@ Created by @%s from %s within commit [%s](%s)
 		}
 
 		parts := strings.Split(output, "/")
-		if !strings.HasPrefix(output, "https://github.com/") || len(parts) < 7 {
+		if err := m.validatePrUrl(output, parts); err != nil {
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Invalid PR URL format: %s", output),
+				extractErrorMessage(err),
 			)
 			continue
 		}

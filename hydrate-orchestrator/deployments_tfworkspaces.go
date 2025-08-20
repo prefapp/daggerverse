@@ -93,10 +93,10 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 		}
 
 		parts := strings.Split(output, "/")
-		if !strings.HasPrefix(output, "https://github.com/") || len(parts) < 7 {
+		if err := m.validatePrUrl(output, parts); err != nil {
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Invalid PR URL format: %s", output),
+				extractErrorMessage(err),
 			)
 			continue
 		}
@@ -149,19 +149,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
 
-			if output == "" {
-
-				summary.addDeploymentSummaryRow(
-					tfDep.DeploymentPath,
-					"Failed: PR link is empty, cannot merge PR",
-				)
-
-				continue
-
-			}
-
 			err := m.MergePullRequest(ctx, output)
-
 			if err != nil {
 
 				summary.addDeploymentSummaryRow(
