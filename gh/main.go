@@ -25,6 +25,9 @@ type Gh struct {
 }
 
 var ErrorNoNewCommits error = errors.New("no new commits created")
+
+// Exit code 10 is used to indicate the 'no new commits' scenario.
+// This value is chosen to distinguish it from standard exit codes (e.g., 0 for success, 1 for general errors).
 var NoNewCommitsExitCode int = 10
 
 func New(
