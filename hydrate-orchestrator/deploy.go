@@ -92,18 +92,18 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
-			if output == "" {
-				summary.addDeploymentSummaryRow(
-					kdep.DeploymentPath,
-					NO_PR_CREATED_MESSAGE,
-				)
-
-				continue
-			}
-
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
 				extractErrorMessage(err),
+			)
+
+			continue
+		}
+
+		if output == "" {
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				NO_PR_CREATED_MESSAGE,
 			)
 
 			continue
@@ -168,18 +168,18 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
-			if output == "" {
-				summary.addDeploymentSummaryRow(
-					kdep.DeploymentPath,
-					NO_PR_CREATED_MESSAGE,
-				)
-
-				continue
-			}
-
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
 				extractErrorMessage(err),
+			)
+
+			continue
+		}
+
+		if output == "" {
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				NO_PR_CREATED_MESSAGE,
 			)
 
 			continue
