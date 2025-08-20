@@ -447,7 +447,7 @@ func (m *HydrateOrchestrator) validatePrUrl(prURL string, urlSplitted []string) 
 		return fmt.Errorf("PR URL cannot be empty")
 	}
 
-	if !strings.HasPrefix(prURL, "https://github.com/") || (len(urlSplitted) != 0 && len(urlSplitted) < 7) {
+	if !strings.HasPrefix(prURL, "https://github.com/") || len(urlSplitted) < 7 {
 		return fmt.Errorf("invalid PR URL format: %s", prURL)
 	}
 
