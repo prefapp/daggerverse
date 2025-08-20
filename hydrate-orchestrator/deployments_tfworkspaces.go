@@ -93,7 +93,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 		}
 
 		parts := strings.Split(output, "/")
-		if output == "" || !strings.HasPrefix(output, "https://github.com/") || len(parts) < 7 {
+		if !strings.HasPrefix(output, "https://github.com/") || len(parts) < 7 {
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
 				fmt.Sprintf("Invalid PR URL format: %s", output),
