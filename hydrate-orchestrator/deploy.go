@@ -266,12 +266,21 @@ Created by @%s from %s within commit [%s](%s)
 			continue
 		}
 
+		parts := strings.Split(output, "/")
+		if output == "" || !strings.HasPrefix(output, "https://github.com/") || len(parts) < 7 {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				fmt.Sprintf("Invalid PR URL format: %s", output),
+			)
+			continue
+		}
+
 		// https://github.com/org/app-repo/pull/8
 		// parts:    [https:, , github.com, org, app-repo, pull, 8]
 		// positions:  0     1       2        3     4        5   6
-		prNumber := strings.Split(output, "/")[6]
-		repo := strings.Split(output, "/")[4]
-		org := strings.Split(output, "/")[3]
+		prNumber := parts[6]
+		repo := parts[4]
+		org := parts[3]
 		fmt.Printf("🔗 Getting PR number from PR link\n")
 		fmt.Printf("PR link: %s\n", output)
 		fmt.Printf("PR number: %s\n", prNumber)
