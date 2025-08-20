@@ -554,7 +554,7 @@ func (m *Gh) CommitAndCreatePR(
 			// exit with an error status and the string will not be printed
 			// to standard output. This also applies to modules consuming this
 			// one, they'll have access to the error but not the string.
-			return "", nil
+			return "", err
 		}
 
 		return "", err
