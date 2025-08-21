@@ -24,6 +24,12 @@ type Gh struct {
 	GHContainer GHContainer
 }
 
+var ErrorNoNewCommits error = errors.New("no new commits created")
+
+// Exit code 10 is used to indicate the 'no new commits' scenario.
+// This value is chosen to distinguish it from standard exit codes (e.g., 0 for success, 1 for general errors).
+var NoNewCommitsExitCode int = 10
+
 func New(
 	// GitHub CLI version. (default: latest version)
 	// +optional
@@ -95,10 +101,10 @@ func (m *Gh) Container(
 	gc := m.GHContainer
 
 	if len(pluginNames) != len(pluginVersions) {
-		return nil, errors.New(fmt.Sprintf(
+		return nil, fmt.Errorf(
 			"The number of plugin names and plugin versions specified differ (%d names vs %d versions)",
 			len(pluginNames), len(pluginVersions),
-		))
+		)
 	}
 
 	pluginList := []GHPlugin{}
@@ -280,7 +286,7 @@ func (m *Gh) CreatePR(
 	if ctr == nil {
 		ctr, err = m.Container(ctx, version, token, "", []string{}, []string{}, localGhCliPath)
 		if err != nil {
-			panic(err)
+			return "", err
 		}
 	}
 
@@ -301,10 +307,10 @@ func (m *Gh) CreatePR(
 		WithEnvVariable("CACHE_BUSTER", time.Now().String())
 
 	if len(labels) != len(labelColors) || len(labels) != len(labelDescriptions) {
-		return "", errors.New(fmt.Sprintf(
+		return "", fmt.Errorf(
 			"The number of label names, colors and descriptions specified differ (%d names, %d colors and %d descriptions)",
 			len(labels), len(labelColors), len(labelDescriptions),
-		))
+		)
 	}
 
 	for idx, label := range labels {
@@ -334,7 +340,7 @@ func (m *Gh) CreatePR(
 
 	_, err = ctr.Sync(ctx)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	prId, err := ctr.
@@ -347,7 +353,7 @@ func (m *Gh) CreatePR(
 		Stdout(ctx)
 
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	prLink, err := ctr.
@@ -360,7 +366,7 @@ func (m *Gh) CreatePR(
 		Stdout(ctx)
 
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	return strings.TrimSpace(prLink), nil
@@ -418,11 +424,11 @@ func (m *Gh) Commit(
 			token,
 			"",
 			[]string{"prefapp/gh-commit"},
-			[]string{"v1.3.0"},
+			[]string{"v1.3.1"},
 			localGhCliPath,
 		)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 	}
 
@@ -446,12 +452,15 @@ func (m *Gh) Commit(
 		cmd = append(cmd, "-e")
 	}
 
-	ctr = ctr.WithExec(cmd)
-
-	_, err = ctr.Sync(ctx)
+	ctr, err = ctr.
+		WithExec(cmd).
+		Sync(ctx)
 
 	if err != nil {
-		panic(err)
+		if e, ok := err.(*dagger.ExecError); ok && e.ExitCode == NoNewCommitsExitCode {
+			return nil, ErrorNoNewCommits
+		}
+		return nil, err
 	}
 
 	return ctr, nil
@@ -523,21 +532,28 @@ func (m *Gh) CommitAndCreatePR(
 		token,
 		"",
 		[]string{"prefapp/gh-commit"},
-		[]string{"v1.3.0"},
+		[]string{"v1.3.1"},
 		localGhCliPath,
 	)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	m.DeleteRemoteBranch(ctx, repoDir, branchName, version, token, ctr, localGhCliPath)
+	err = m.DeleteRemoteBranch(ctx, repoDir, branchName, version, token, ctr, localGhCliPath)
+	if err != nil {
+		return "", err
+	}
 
 	ctr, err = m.Commit(
 		ctx, repoDir, branchName, commitMessage, token, baseBranch,
 		deletePath, createEmpty, version, ctr, localGhCliPath,
 	)
 	if err != nil {
-		panic(err)
+		if errors.Is(err, ErrorNoNewCommits) {
+			return "", nil
+		}
+
+		return "", err
 	}
 
 	return m.CreatePR(
@@ -572,7 +588,7 @@ func (m *Gh) DeleteRemoteBranch(
 	// runner's gh dir path
 	// +optional
 	localGhCliPath *dagger.File,
-) {
+) error {
 	contentsDirPath := "/content"
 
 	var err error
@@ -588,7 +604,7 @@ func (m *Gh) DeleteRemoteBranch(
 			localGhCliPath,
 		)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -601,7 +617,7 @@ func (m *Gh) DeleteRemoteBranch(
 		WithExec([]string{"git", "ls-remote"}).
 		Stdout(ctx)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	exp := regexp.MustCompile(fmt.Sprintf("refs/heads/%s\n", branchName))
@@ -613,7 +629,9 @@ func (m *Gh) DeleteRemoteBranch(
 			Sync(ctx)
 
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
+
+	return nil
 }
