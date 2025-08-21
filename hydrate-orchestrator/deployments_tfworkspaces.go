@@ -60,7 +60,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			},
 		}
 
-		prLink, err := m.upsertPR(
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
@@ -74,6 +74,15 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 		if err != nil {
 
+			if output != "" {
+				summary.addDeploymentSummaryRow(
+					tfDep.DeploymentPath,
+					output,
+				)
+
+				continue
+			}
+
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
 				extractErrorMessage(err),
@@ -83,14 +92,23 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 		}
 
+		parts := strings.Split(output, "/")
+		if err := m.validatePrUrl(output, parts); err != nil {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				extractErrorMessage(err),
+			)
+			continue
+		}
+
 		// https://github.com/org/app-repo/pull/8
 		// parts:    [https:, , github.com, org, app-repo, pull, 8]
 		// positions:  0     1       2        3     4        5   6
-		prNumber := strings.Split(prLink, "/")[6]
-		repo := strings.Split(prLink, "/")[4]
-		org := strings.Split(prLink, "/")[3]
+		prNumber := parts[6]
+		repo := parts[4]
+		org := parts[3]
 		fmt.Printf("🔗 Getting PR number from PR link\n")
-		fmt.Printf("PR link: %s\n", prLink)
+		fmt.Printf("PR link: %s\n", output)
 		fmt.Printf("PR number: %s\n", prNumber)
 		fmt.Printf("Repo: %s\n", repo)
 		fmt.Printf("Org: %s\n", org)
@@ -129,21 +147,9 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 		if m.AutomergeFileExists(ctx, globPattern) {
 
-			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", prLink)
+			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
 
-			if prLink == "" {
-
-				summary.addDeploymentSummaryRow(
-					tfDep.DeploymentPath,
-					"Failed: PR link is empty, cannot merge PR",
-				)
-
-				continue
-
-			}
-
-			err := m.MergePullRequest(ctx, prLink)
-
+			err := m.MergePullRequest(ctx, output)
 			if err != nil {
 
 				summary.addDeploymentSummaryRow(
@@ -163,8 +169,8 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 				),
 				fmt.Sprintf(
 					"Success, pr merged: <a href=\"%s\">%s</a>",
-					prLink,
-					prLink,
+					output,
+					output,
 				),
 			)
 
@@ -180,8 +186,8 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 				),
 				fmt.Sprintf(
 					"Success, pr created: <a href=\"%s\">%s</a>",
-					prLink,
-					prLink,
+					output,
+					output,
 				),
 			)
 
