@@ -37,6 +37,14 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 
 		featureData := strings.Split(featureTag, "-")
 
+		if len(featureData) < 2 {
+			fmt.Printf(
+				"Feature tag %s is not valid, skipping",
+				featureTag,
+			)
+			continue
+		}
+
 		featureName := featureData[0]
 		featureVersion := strings.Trim(featureData[1], "v")
 		featureVersionSemver, err := semver.NewVersion(featureData[1])
