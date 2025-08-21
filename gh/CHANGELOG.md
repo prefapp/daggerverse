@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.4](https://github.com/prefapp/daggerverse/compare/gh-v1.3.3...gh-v1.3.4) (2025-08-21)
+
+
+### Bug Fixes
+
+* Dont create a PR if the commit wasnt also created ([#310](https://github.com/prefapp/daggerverse/issues/310)) ([79ab863](https://github.com/prefapp/daggerverse/commit/79ab86352b706c7f26a3a1f40162d918654c3079))
+
 ## [1.3.3](https://github.com/prefapp/daggerverse/compare/gh-v1.3.2...gh-v1.3.3) (2025-08-12)
 
 
