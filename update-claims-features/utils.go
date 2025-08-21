@@ -39,7 +39,7 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 
 		if len(featureData) < 2 {
 			fmt.Printf(
-				"Feature tag %s is not valid, skipping",
+				"Feature tag %s is not valid, skipping\n",
 				featureTag,
 			)
 			continue
