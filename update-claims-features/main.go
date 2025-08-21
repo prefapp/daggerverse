@@ -162,7 +162,11 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					return "", err
 				}
 
-				fmt.Printf("PR LINK: %s\n", prLink)
+				if prLink == "" {
+					fmt.Printf("No files to commit, no PR was created for %s\n", claim.Name)
+				} else {
+					fmt.Printf("PR LINK: %s\n", prLink)
+				}
 
 				if m.Automerge {
 					m.MergePullRequest(ctx, prLink)

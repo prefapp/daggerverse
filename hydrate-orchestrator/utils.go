@@ -441,3 +441,15 @@ func (m *HydrateOrchestrator) getBranchInfo(
 		SHA:  sha,
 	}
 }
+
+func (m *HydrateOrchestrator) validatePrUrl(prURL string, urlSplitted []string) error {
+	if prURL == "" {
+		return fmt.Errorf("PR URL cannot be empty")
+	}
+
+	if !strings.HasPrefix(prURL, "https://github.com/") || len(urlSplitted) < 7 {
+		return fmt.Errorf("invalid PR URL format: %s", prURL)
+	}
+
+	return nil
+}

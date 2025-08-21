@@ -12,6 +12,7 @@ import (
 )
 
 const DEPLOYMENT_BRANCH_NAME string = "deployment"
+const NO_PR_CREATED_MESSAGE string = "No changes detected. PR creation skipped."
 
 // Hydrate deployments based on the updated deployments
 func (m *HydrateOrchestrator) GenerateDeployment(
@@ -78,7 +79,7 @@ Created by @%s from %s within commit [%s](%s)
 
 		labels := kubernetesAppDeploymentLabels(kdep.Cluster, kdep.Tenant, kdep.Environment)
 
-		_, err = m.upsertPR(
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
@@ -97,12 +98,25 @@ Created by @%s from %s within commit [%s](%s)
 			)
 
 			continue
-		} else {
+		}
+
+		if output == "" {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				"Success",
+				NO_PR_CREATED_MESSAGE,
 			)
+
+			continue
 		}
+
+		summary.addDeploymentSummaryRow(
+			kdep.DeploymentPath,
+			fmt.Sprintf(
+				"Success: <a href=\"%s\">%s</a>",
+				output,
+				output,
+			),
+		)
 	}
 
 	for _, kdep := range deployments.KubernetesSysDeployments {
@@ -141,7 +155,7 @@ Created by @%s from %s within commit [%s](%s)
 
 		labels := kubernetesSysServiceDeploymentLabels(kdep.Cluster, kdep.SysServiceName)
 
-		_, err = m.upsertPR(
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
@@ -154,20 +168,31 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
-
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
 				extractErrorMessage(err),
 			)
 
 			continue
-		} else {
-			summary.addDeploymentSummaryRow(
-				kdep.DeploymentPath,
-				"Success",
-			)
 		}
 
+		if output == "" {
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				NO_PR_CREATED_MESSAGE,
+			)
+
+			continue
+		}
+
+		summary.addDeploymentSummaryRow(
+			kdep.DeploymentPath,
+			fmt.Sprintf(
+				"Success: <a href=\"%s\">%s</a>",
+				output,
+				output,
+			),
+		)
 	}
 
 	for _, tfDep := range deployments.TfWorkspaceDeployments {
@@ -211,7 +236,7 @@ Created by @%s from %s within commit [%s](%s)
 			},
 		}
 
-		prLink, err := m.upsertPR(
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDep[0],
@@ -224,24 +249,40 @@ Created by @%s from %s within commit [%s](%s)
 		)
 
 		if err != nil {
-
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
 				extractErrorMessage(err),
 			)
 
 			continue
+		}
 
+		if output == "" {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				NO_PR_CREATED_MESSAGE,
+			)
+
+			continue
+		}
+
+		parts := strings.Split(output, "/")
+		if err := m.validatePrUrl(output, parts); err != nil {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				extractErrorMessage(err),
+			)
+			continue
 		}
 
 		// https://github.com/org/app-repo/pull/8
 		// parts:    [https:, , github.com, org, app-repo, pull, 8]
 		// positions:  0     1       2        3     4        5   6
-		prNumber := strings.Split(prLink, "/")[6]
-		repo := strings.Split(prLink, "/")[4]
-		org := strings.Split(prLink, "/")[3]
+		prNumber := parts[6]
+		repo := parts[4]
+		org := parts[3]
 		fmt.Printf("🔗 Getting PR number from PR link\n")
-		fmt.Printf("PR link: %s\n", prLink)
+		fmt.Printf("PR link: %s\n", output)
 		fmt.Printf("PR number: %s\n", prNumber)
 		fmt.Printf("Repo: %s\n", repo)
 		fmt.Printf("Org: %s\n", org)
@@ -280,7 +321,11 @@ Created by @%s from %s within commit [%s](%s)
 
 		summary.addDeploymentSummaryRow(
 			tfDep.DeploymentPath,
-			"Success",
+			fmt.Sprintf(
+				"Success: <a href=\"%s\">%s</a>",
+				output,
+				output,
+			),
 		)
 	}
 
@@ -330,7 +375,7 @@ Created by @%s from %s within commit [%s](%s)
 			},
 		}
 
-		_, err = m.upsertPR(
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
@@ -349,13 +394,25 @@ Created by @%s from %s within commit [%s](%s)
 			)
 
 			continue
+		}
 
-		} else {
+		if output == "" {
 			summary.addDeploymentSummaryRow(
 				secDep.DeploymentPath,
-				"Success",
+				NO_PR_CREATED_MESSAGE,
 			)
+
+			continue
 		}
+
+		summary.addDeploymentSummaryRow(
+			secDep.DeploymentPath,
+			fmt.Sprintf(
+				"Success: <a href=\"%s\">%s</a>",
+				output,
+				output,
+			),
+		)
 	}
 
 	return m.DeploymentSummaryToFile(ctx, summary)
