@@ -97,6 +97,11 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
   }
 }`, featureQuery, feature, feature)
 		}
+
+		if featureQuery == "" {
+			return "", fmt.Errorf("no valid features to update specified")
+		}
+
 		query = fmt.Sprintf(query, featureQuery)
 
 		ghReleaseListResult, err = dag.Gh(dagger.GhOpts{
