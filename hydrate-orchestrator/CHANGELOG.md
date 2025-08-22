@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.3.7](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.6...hydrate-orchestrator-v6.3.7) (2025-08-22)
+
+
+### Bug Fixes
+
+* Handle errors better when no files are committed ([#311](https://github.com/prefapp/daggerverse/issues/311)) ([3aa0431](https://github.com/prefapp/daggerverse/commit/3aa04318ba9d5a493c533fa596b02e4dea1e7d06))
+* Use local gh binary instead of downloading ([#309](https://github.com/prefapp/daggerverse/issues/309)) ([cc8d4c4](https://github.com/prefapp/daggerverse/commit/cc8d4c432a158eb47fa8c9aedc342ad56b4b4460))
+
 ## [6.3.6](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.5...hydrate-orchestrator-v6.3.6) (2025-08-12)
 
 
