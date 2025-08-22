@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.10](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.9...update-claims-features-v1.1.10) (2025-08-22)
+
+
+### Bug Fixes
+
+* `update-claims-features` improvements ([#312](https://github.com/prefapp/daggerverse/issues/312)) ([b37b8ba](https://github.com/prefapp/daggerverse/commit/b37b8ba55d167243575525ae7ca07d8194d7685e))
+* Handle errors better when no files are committed ([#311](https://github.com/prefapp/daggerverse/issues/311)) ([3aa0431](https://github.com/prefapp/daggerverse/commit/3aa04318ba9d5a493c533fa596b02e4dea1e7d06))
+* Use local gh binary instead of downloading ([#309](https://github.com/prefapp/daggerverse/issues/309)) ([cc8d4c4](https://github.com/prefapp/daggerverse/commit/cc8d4c432a158eb47fa8c9aedc342ad56b4b4460))
+
 ## [1.1.9](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.8...update-claims-features-v1.1.9) (2025-08-12)
 
 
