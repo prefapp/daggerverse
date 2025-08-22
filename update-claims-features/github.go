@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -69,6 +70,9 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 	ghReleaseListResult := ""
 	var err error
 
+	// Only allow alphanumeric, underscores, and hyphens
+	validFeatureName := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
 	if len(m.FeaturesToUpdate) > 0 {
 		query := `{
   repository(owner: "prefapp", name: "features") {
@@ -78,6 +82,14 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 		featureQuery := ""
 
 		for _, feature := range m.FeaturesToUpdate {
+			if !validFeatureName.MatchString(feature) {
+				fmt.Printf(
+					"'%s' is not a valid feature name, it won't be queried\n",
+					feature,
+				)
+				continue
+			}
+
 			featureQuery = fmt.Sprintf(`%s
 %s: refs(refPrefix: "refs/tags/", last: 100, query: "%s-") {
   nodes {
