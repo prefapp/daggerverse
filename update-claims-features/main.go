@@ -96,23 +96,26 @@ func (m *UpdateClaimsFeatures) New(
 
 func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	ctx context.Context,
-) (string, error) {
+) (*dagger.File, error) {
+	summary := &UpdateSummary{
+		Items: []UpdateSummaryRow{},
+	}
 	ghReleaseListResult, err := m.getReleases(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	latestFeaturesMap, allFeaturesMap, err := m.getFeaturesMapData(
-		ctx, ghReleaseListResult,
+		ghReleaseListResult,
 	)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Get all ComponentClaim claims
 	claims, err := m.getAllClaims(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	for _, entry := range claims {
@@ -120,7 +123,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		claim, err := m.getClaimIfKindComponent(ctx, entry)
 		if err != nil {
-			return "", err
+			summary.addUpdateSummaryRow(entry, extractErrorMessage(err))
+			continue
 		}
 
 		if claim != nil {
@@ -130,15 +134,18 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				latestFeaturesMap,
 			)
 			if err != nil {
-				return "", err
+				summary.addUpdateSummaryRow(
+					claim.Name, extractErrorMessage(err),
+				)
+				continue
 			}
 
 			if createPR {
 				currentFeatureVersionsMap := m.extractCurrentFeatureVersionsFromClaim(
-					ctx, claim,
+					claim,
 				)
 				claim.Providers.Github.Features = updatedFeaturesList
-				updatedDir := m.updateDirWithClaim(ctx, claim, entry)
+				updatedDir := m.updateDirWithClaim(claim, entry)
 				releaseBody, err := m.getPrBodyForFeatureUpdate(
 					ctx,
 					updatedFeaturesList,
@@ -146,7 +153,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					currentFeatureVersionsMap,
 				)
 				if err != nil {
-					return "", err
+					summary.addUpdateSummaryRow(
+						claim.Name, extractErrorMessage(err),
+					)
+					continue
 				}
 
 				prLink, err := m.upsertPR(
@@ -159,14 +169,16 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				)
 
 				if err != nil {
-					return "", err
+					summary.addUpdateSummaryRow(
+						claim.Name, extractErrorMessage(err),
+					)
+					continue
 				}
 
-				if prLink == "" {
-					fmt.Printf("No files to commit, no PR was created for %s\n", claim.Name)
-				} else {
-					fmt.Printf("PR LINK: %s\n", prLink)
-				}
+				summary.addUpdateSummaryRow(
+					claim.Name,
+					fmt.Sprintf("Success: <a href=\"%s\">%s</a>", prLink, prLink),
+				)
 
 				if m.Automerge {
 					m.MergePullRequest(ctx, prLink)
@@ -175,5 +187,5 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 	}
 
-	return "ok", nil
+	return m.DeploymentSummaryToFile(ctx, summary), nil
 }
