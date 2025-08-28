@@ -133,12 +133,9 @@ func (m *FirestartrBootstrap) SetRepoVariables(ctx context.Context, ghToken *dag
 func (m *FirestartrBootstrap) SetOrgVariables(ctx context.Context, ghToken *dagger.Secret) error {
 
 	mappedVars := map[string]string{
-		"FIRESTARTER_GITHUB_APP_ID":                      m.Creds.GithubApp.GhAppId,
-		"FIRESTARTER_GITHUB_APP_NAME":                    m.Creds.GithubApp.BotName,
-		"FIRESTARTER_WORKFLOW_DOCKER_IMAGE_TAG":          fmt.Sprintf("%s_slim", m.Bootstrap.Firestartr.Version),
-		"FIRESTARTER_GITHUB_APP_INSTALLATION_ID_PREFAPP": m.Creds.GithubApp.PrefappInstallationId,
-		"FIRESTARTER_GITHUB_APP_INSTALLATION_ID":         m.Creds.GithubApp.InstallationId,
-		"FIRESTARTR_CLI_VERSION":                         strings.TrimPrefix(m.Bootstrap.Firestartr.Version, "v"),
+		"FIRESTARTER_GITHUB_APP_NAME":           m.Creds.GithubApp.BotName,
+		"FIRESTARTER_WORKFLOW_DOCKER_IMAGE_TAG": fmt.Sprintf("%s_slim", m.Bootstrap.Firestartr.Version),
+		"FIRESTARTR_CLI_VERSION":                strings.TrimPrefix(m.Bootstrap.Firestartr.Version, "v"),
 	}
 
 	for name, value := range mappedVars {
