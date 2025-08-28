@@ -76,4 +76,5 @@ type GithubApp struct {
 	PrefappInstallationId string `yaml:"prefappInstallationId"`
 	Owner                 string `yaml:"owner"`
 	BotName               string `yaml:"botName"`
+    BotPat                string `yaml:"botPat"`
 }

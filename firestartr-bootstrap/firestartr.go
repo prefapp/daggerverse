@@ -29,8 +29,8 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(ctx context.Context,
 		WithEnvVariable("DEBUG", "*").
 		WithEnvVariable("GITHUB_APP_ID", m.Creds.GithubApp.GhAppId).
 		WithEnvVariable("GITHUB_APP_INSTALLATION_ID", m.Creds.GithubApp.InstallationId).
-		WithEnvVariable("GITHUB_APP_INSTALLATION_ID_PREFAPP", m.Creds.GithubApp.PrefappInstallationId).
 		WithEnvVariable("GITHUB_APP_PEM_FILE", m.Creds.GithubApp.Pem).
+        WithEnvVariable("PREFAPP_BOT_PAT", m.Creds.GithubApp.BotPat).
 		WithEnvVariable("ORG", m.GhOrg).
 		WithExec(
 			[]string{
