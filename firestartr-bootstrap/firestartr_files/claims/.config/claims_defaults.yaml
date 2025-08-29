@@ -5,7 +5,7 @@ ComponentClaim:
   platformOwner: group:prefapp-all
   maintainedBy: []
   owner: group:prefapp-all
-  system: system:prefapp-system 
+  system: system:prefapp-system
   providers:
     github:
       sync:
