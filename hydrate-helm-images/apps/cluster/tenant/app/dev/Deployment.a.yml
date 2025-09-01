@@ -1,0 +1,4 @@
+metadata:
+  annotations:
+    firestartr.dev/microservice: "micro-a"
+    firestartr.dev/image: "nginx:1.19.6"
