@@ -99,7 +99,7 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 		panic(fmt.Sprintf("Failed to unmarshal CR: %s", err))
 	}
 
-	kindContainer = kindContainer.
+	kindContainer, err = kindContainer.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"kubectl",
