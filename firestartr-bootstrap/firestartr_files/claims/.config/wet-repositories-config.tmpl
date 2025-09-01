@@ -1,16 +1,16 @@
 states:
   github:
-    repo: firestartr-test/state-github
+    repo: {{ $.Org }}/state-github
     crKinds:
       FirestartrGithubRepository:
       FirestartrGithubGroup:
       FirestartrGithubMembership:
       FirestartrGithubRepositoryFeature:
-    workflows: 
+    workflows:
       hydrate: "hydrate_and_notify.yaml"
       notify: "notify_and_hydrate.yaml"
   catalog:
-    repo: firestartr-test/catalog
+    repo: {{ $.Org }}/catalog
     crKinds:
       Domain:
       User:
@@ -18,11 +18,11 @@ states:
       Component:
       Group:
       Resource:
-    workflows: 
+    workflows:
       hydrate: "hydrate.yaml"
       notify: "notify.yaml"
   terraform:
-    repo: firestartr-test/state-infra
+    repo: {{ $.Org }}/state-infra
     crKinds:
       FirestartrTerraformWorkspace:
     workflows:

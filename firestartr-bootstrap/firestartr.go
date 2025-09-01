@@ -15,16 +15,39 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(ctx context.Context,
 	}
 	fmt.Printf("💡 💡 Claims Entries: %v\n", entries)
 
-	fsCtr, err := dag.Container().
-		From(fmt.Sprintf(
+	claimsDefaults, err := m.RenderClaimsDefaults(ctx,
+		dag.CurrentModule().
+			Source().
+			File("firestartr_files/claims/.config/claims_defaults.tmpl"),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	wetReposConfig, err := m.RenderWetReposConfig(ctx,
+		dag.CurrentModule().
+			Source().
+			File("firestartr_files/claims/.config/wet-repositories-config.tmpl"),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	defaultsDir := dag.Directory().
+		WithNewDirectory("/claims_defaults").
+		WithNewFile("claims_defaults.yaml", claimsDefaults).
+		WithNewFile("wet-repositories-config.yaml", wetReposConfig)
+
+	fsCtr, err := dag.Container().From(
+		fmt.Sprintf(
 			"ghcr.io/prefapp/gitops-k8s:%s_slim",
 			m.Bootstrap.Firestartr.Version,
 		),
-		).
+	).
 		WithDirectory("/claims", claimsDir).
 		WithDirectory("/crs", crsDir).
 		WithDirectory("/config", dag.CurrentModule().Source().Directory("firestartr_files/crs/.config")).
-		WithDirectory("/claims_defaults", dag.CurrentModule().Source().Directory("firestartr_files/claims/.config")).
+		WithDirectory("/claims_defaults", defaultsDir).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithEnvVariable("DEBUG", "*").
 		WithEnvVariable("GITHUB_APP_ID", m.Creds.GithubApp.GhAppId).

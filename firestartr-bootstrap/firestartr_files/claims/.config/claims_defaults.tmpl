@@ -2,10 +2,10 @@ ComponentClaim:
   version: "1.0"
   type: service
   lifecycle: "production"
-  platformOwner: group:prefapp-all
+  platformOwner: group:{{ $.Org }}-all
   maintainedBy: []
-  owner: group:prefapp-all
-  system: system:prefapp-system
+  owner: group:{{ $.Org }}-all
+  system: system:{{ $.Org }}-system
   providers:
     github:
       sync:
@@ -27,7 +27,7 @@ GroupClaim:
       privacy: closed
 
 UserClaim:
-  owner: group:prefapp-all
+  owner: group:{{ $.Org }}-all
   providers:
     github:
 
@@ -45,3 +45,4 @@ TFWorkspaceClaim:
         period: 24h
         enabled: true
       policy: apply
+
