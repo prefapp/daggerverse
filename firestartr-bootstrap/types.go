@@ -66,6 +66,7 @@ type ConfigProvider struct {
 	Region    string `json:"region" yaml:"region"`
 	AccessKey string `json:"access_key" yaml:"access_key"`
 	SecretKey string `json:"secret_key" yaml:"secret_key"`
+	Token     string `json:"token" yaml:"token"`
 }
 
 type GithubApp struct {
