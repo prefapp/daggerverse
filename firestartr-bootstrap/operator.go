@@ -105,22 +105,21 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 			"kubectl",
 			"apply",
 			"-f", entry,
-		})
-		// .
-		// WithExec([]string{
-		// 	"kubectl",
-		// 	"wait",
-		// 	"--for=condition=PROVISIONED=True",
-		// 	fmt.Sprintf("%s/%s", getSingularByKind(cr.Kind), cr.Metadata.Name),
-		// 	"--timeout=180s",
-		// }).
-		// Sync(ctx)
+		}).
+		WithExec([]string{
+			"kubectl",
+			"wait",
+			"--for=condition=PROVISIONED=True",
+			fmt.Sprintf("%s/%s", getSingularByKind(cr.Kind), cr.Metadata.Name),
+			"--timeout=180s",
+		}).
+		Sync(ctx)
 
-	// if err != nil {
-	// m.FailedCrs = append(m.FailedCrs, cr)
-	// } else {
-	// m.ProvisionedCrs = append(m.ProvisionedCrs, cr)
-	// }
+	if err != nil {
+		m.FailedCrs = append(m.FailedCrs, cr)
+	} else {
+		m.ProvisionedCrs = append(m.ProvisionedCrs, cr)
+	}
 
 	return kindContainer
 }

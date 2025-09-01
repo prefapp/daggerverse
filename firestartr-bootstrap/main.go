@@ -105,47 +105,46 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		panic(err)
 	}
 
-	return m.RunOperator(ctx, dockerSocket, kindSvc)
-	// kindContainer := m.RunOperator(ctx, dockerSocket, kindSvc)
+	kindContainer := m.RunOperator(ctx, dockerSocket, kindSvc)
 
-	// if m.Bootstrap.PushFiles.Claims.Push {
-	// 	claimsDir := kindContainer.Directory("/resources/claims")
+	if m.Bootstrap.PushFiles.Claims.Push {
+		claimsDir := kindContainer.Directory("/resources/claims")
 
-	// 	err := m.PushDirToRepo(
-	// 		ctx,
-	// 		claimsDir,
-	// 		m.Bootstrap.PushFiles.Claims.Repo,
-	// 		tokenSecret,
-	// 	)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// }
+		err := m.PushDirToRepo(
+			ctx,
+			claimsDir,
+			m.Bootstrap.PushFiles.Claims.Repo,
+			tokenSecret,
+		)
+		if err != nil {
+			panic(err)
+		}
+	}
 
-	// if m.Bootstrap.PushFiles.Crs.Providers.Github.Push {
-	// 	crsDir := kindContainer.Directory("/resources/firestartr-crs")
+	if m.Bootstrap.PushFiles.Crs.Providers.Github.Push {
+		crsDir := kindContainer.Directory("/resources/firestartr-crs")
 
-	// 	err := m.PushDirToRepo(
-	// 		ctx,
-	// 		crsDir,
-	// 		m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
-	// 		tokenSecret,
-	// 	)
+		err := m.PushDirToRepo(
+			ctx,
+			crsDir,
+			m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
+			tokenSecret,
+		)
 
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// }
+		if err != nil {
+			panic(err)
+		}
+	}
 
-	// err = m.SetRepoVariables(ctx, tokenSecret)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	err = m.SetRepoVariables(ctx, tokenSecret)
+	if err != nil {
+		panic(err)
+	}
 
-	// err = m.RunImportsWorkflow(ctx, tokenSecret)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	err = m.RunImportsWorkflow(ctx, tokenSecret)
+	if err != nil {
+		panic(err)
+	}
 
-	// return kindContainer
+	return kindContainer
 }
