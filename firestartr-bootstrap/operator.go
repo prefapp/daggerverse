@@ -70,10 +70,10 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(ctx context.Context, kindContai
 			panic(fmt.Sprintf("Failed to get glob entries: %s", err))
 		}
 		for _, entry := range entries {
-			kindContainer = m.ApplyCrAndWaitForProvisioned(ctx, kindContainer, fmt.Sprintf("/resources/firestartr-crs/%s", entry))
-			if err != nil {
-				panic(fmt.Sprintf("Failed to apply CR and wait for provisioned: %s", err))
-			}
+			kindContainer = m.ApplyCrAndWaitForProvisioned(
+				ctx, kindContainer,
+				fmt.Sprintf("/resources/firestartr-crs/%s", entry),
+			)
 		}
 	}
 
