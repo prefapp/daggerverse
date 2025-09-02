@@ -24,6 +24,8 @@ type Bootstrap struct {
 	PushFiles  PushFiles   `yaml:"pushFiles"`
 	Org        string      `yaml:"org"`
 	Components []Component `yaml:"components"`
+	SystemName string      `yaml:"systemName"`
+	DomainName string      `yaml:"domainName"`
 }
 
 type PushFiles struct {
