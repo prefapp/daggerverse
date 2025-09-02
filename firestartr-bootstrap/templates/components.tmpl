@@ -5,7 +5,7 @@ kind: ComponentClaim
 version: "1.0"
 type: service
 lifecycle: production
-system: {{ $.Org }}-system
+system: system:{{ $.Org }}-system
 name: {{ $claim.Name }}
 providers:
   github:
@@ -28,3 +28,16 @@ providers:
       {{- end }}
 {{ end }}
 {{ end }}
+---
+kind: SystemClaim
+version: "1.0"
+name: {{ $.Org }}-system
+domain: domain:{{ $.Org }}-domain
+owner: group:{{ $.Org }}-all
+description: "The principal system of {{ $.Org }}"
+---
+kind: DomainClaim
+version: "1.0"
+name: {{ $.Org }}-domain
+description: "The main domain of {{ $.Org }}"
+owner: group:{{ $.Org }}-all

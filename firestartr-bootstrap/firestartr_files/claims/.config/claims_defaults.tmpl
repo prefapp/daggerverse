@@ -2,8 +2,10 @@ ComponentClaim:
   version: "1.0"
   type: service
   lifecycle: "production"
-  platformOwner: null
+  platformOwner: group:{{ $.Org }}-all
   maintainedBy: []
+  owner: group:{{ $.Org }}-all
+  system: system:{{ $.Org }}-system
   providers:
     github:
       sync:
@@ -25,16 +27,15 @@ GroupClaim:
       privacy: closed
 
 UserClaim:
+  owner: group:{{ $.Org }}-all
   providers:
     github:
 
 SystemClaim:
-  providers:
-    catalog:
+  providers: {}
 
 DomainClaim:
-  providers:
-    catalog:
+  providers: {}
 
 TFWorkspaceClaim:
   providers:
@@ -44,3 +45,4 @@ TFWorkspaceClaim:
         period: 24h
         enabled: true
       policy: apply
+
