@@ -5,8 +5,8 @@ kind: ComponentClaim
 version: "1.0"
 type: service
 lifecycle: production
-{{- if $.System }}
-system: system:{{ $.System }}
+{{- if $.DefaultSystemName }}
+system: system:{{ $.DefaultSystemName }}
 {{- else }}
 system: system:{{ $.Org }}-system
 {{- end }}
@@ -35,25 +35,25 @@ providers:
 ---
 kind: SystemClaim
 version: "1.0"
-{{- if $.System }}
-name: {{ $.System }}
+{{- if $.DefaultSystemName }}
+name: {{ $.DefaultSystemName }}
 {{- else }}
 name: {{ $.Org }}-system
 {{- end }}
-{{- if $.Domain }}
-domain: domain:{{ $.Domain }}
+{{- if $.DefaultDomainName }}
+domain: domain:{{ $.DefaultDomainName }}
 {{- else }}
 domain: domain:{{ $.Org }}-domain
 {{- end }}
 owner: group:{{ $.Org }}-all
-description: "The principal system of {{ $.Org }}"
+description: "The default system of {{ $.Org }}"
 ---
 kind: DomainClaim
 version: "1.0"
-{{- if $.Domain }}
-name: {{ $.Domain }}
+{{- if $.DefaultDomainName }}
+name: {{ $.DefaultDomainName }}
 {{- else }}
 name: {{ $.Org }}-domain
 {{- end }}
-description: "The main domain of {{ $.Org }}"
+description: "The default domain of {{ $.Org }}"
 owner: group:{{ $.Org }}-all

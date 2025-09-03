@@ -20,12 +20,12 @@ type Feature struct {
 	Version string `yaml:"version"`
 }
 type Bootstrap struct {
-	Firestartr Firestartr  `yaml:"firestartr"`
-	PushFiles  PushFiles   `yaml:"pushFiles"`
-	Org        string      `yaml:"org"`
-	Components []Component `yaml:"components"`
-	SystemName string      `yaml:"systemName"`
-	DomainName string      `yaml:"domainName"`
+	Firestartr        Firestartr  `yaml:"firestartr"`
+	PushFiles         PushFiles   `yaml:"pushFiles"`
+	Org               string      `yaml:"org"`
+	Components        []Component `yaml:"components"`
+	DefaultSystemName string      `yaml:"defaultSystemName"`
+	DefaultDomainName string      `yaml:"defaultDomainName"`
 }
 
 type PushFiles struct {
