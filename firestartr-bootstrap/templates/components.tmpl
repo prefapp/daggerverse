@@ -45,7 +45,11 @@ domain: domain:{{ $.DefaultDomainName }}
 {{- else }}
 domain: domain:{{ $.Org }}-domain
 {{- end }}
+{{- if $.DefaultGroupName }}
+owner: group:{{ $.DefaultGroupName }}
+{{- else }}
 owner: group:{{ $.Org }}-all
+{{- end }}
 description: "The default system of {{ $.Org }}"
 ---
 kind: DomainClaim
@@ -56,4 +60,8 @@ name: {{ $.DefaultDomainName }}
 name: {{ $.Org }}-domain
 {{- end }}
 description: "The default domain of {{ $.Org }}"
+{{- if $.DefaultGroupName }}
+owner: group:{{ $.DefaultGroupName }}
+{{- else }}
 owner: group:{{ $.Org }}-all
+{{- end }}

@@ -105,7 +105,9 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		panic(err)
 	}
 
-	kindContainer := m.RunOperator(ctx, dockerSocket, kindSvc)
+	kindContainer := m.InstallCRDsAndInitialCRs(ctx, dockerSocket, kindSvc)
+	kindContainer = m.RunImporter(ctx, kindContainer)
+	kindContainer = m.RunOperator(ctx, kindContainer)
 
 	if m.Bootstrap.PushFiles.Claims.Push {
 		claimsDir := kindContainer.Directory("/resources/claims")
@@ -137,11 +139,6 @@ func (m *FirestartrBootstrap) RunBootstrap(
 	}
 
 	err = m.SetRepoVariables(ctx, tokenSecret)
-	if err != nil {
-		panic(err)
-	}
-
-	err = m.RunImportsWorkflow(ctx, tokenSecret)
 	if err != nil {
 		panic(err)
 	}

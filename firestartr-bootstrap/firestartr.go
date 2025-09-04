@@ -7,7 +7,11 @@ import (
 	"time"
 )
 
-func (m *FirestartrBootstrap) RenderWithFirestartrContainer(ctx context.Context, claimsDir *dagger.Directory, crsDir *dagger.Directory) (*dagger.Directory, error) {
+func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
+	ctx context.Context,
+	claimsDir *dagger.Directory,
+	crsDir *dagger.Directory,
+) (*dagger.Directory, error) {
 
 	entries, err := claimsDir.Glob(ctx, "**")
 	if err != nil {

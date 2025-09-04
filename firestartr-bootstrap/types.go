@@ -26,6 +26,7 @@ type Bootstrap struct {
 	Components        []Component `yaml:"components"`
 	DefaultSystemName string      `yaml:"defaultSystemName"`
 	DefaultDomainName string      `yaml:"defaultDomainName"`
+	DefaultGroupName  string      `yaml:"defaultGroupName"`
 }
 
 type PushFiles struct {

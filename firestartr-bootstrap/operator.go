@@ -10,16 +10,39 @@ import (
 )
 
 func (m *FirestartrBootstrap) RunOperator(
-
 	ctx context.Context,
-
-	dockerSocket *dagger.Socket,
-
-	kindSvc *dagger.Service,
-
+	kindContainer *dagger.Container,
 ) *dagger.Container {
 
-	renderedCrsDir, err := m.RenderCrs(ctx)
+	renderedCrsDir, err := m.RenderCrs(ctx, kindContainer.Directory("/import"))
+	if err != nil {
+		panic(err)
+	}
+
+	kindContainer = kindContainer.
+		WithDirectory("/resources", renderedCrsDir)
+
+	kindContainer = m.ApplyFirestartrCrs(ctx, kindContainer, "/resources/firestartr-crs/")
+
+	return kindContainer
+
+}
+
+func (m *FirestartrBootstrap) InstallCRDsAndInitialCRs(
+	ctx context.Context,
+	dockerSocket *dagger.Socket,
+	kindSvc *dagger.Service,
+) *dagger.Container {
+	initialCrsTemplate, err := m.RenderInitialCrs(ctx,
+		dag.CurrentModule().
+			Source().
+			File("templates/initial_crs.tmpl"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	initialCrsDir, err := m.SplitRenderedCrsInFiles(initialCrsTemplate)
 	if err != nil {
 		panic(err)
 	}
@@ -43,36 +66,38 @@ func (m *FirestartrBootstrap) RunOperator(
 			"/tmp/crds.yaml",
 		}).
 		WithExec([]string{"kubectl", "apply", "-f", "/tmp/crds.yaml"}).
-		WithDirectory("/resources", renderedCrsDir).
 		WithWorkdir("/charts/firestartr-init").
 		WithExec([]string{"helm", "upgrade", "--install", "firestartr-init", ".", "--values", "values-file.yaml"}).
+		WithDirectory("/resources/initial-crs", initialCrsDir).
 		WithExec([]string{
 			"kubectl",
 			"apply",
 			"-f", "/resources/initial-crs",
 		})
 
-	kindContainer = m.ApplyFirestartrCrs(ctx, kindContainer)
-
 	return kindContainer
-
 }
 
-func (m *FirestartrBootstrap) ApplyFirestartrCrs(ctx context.Context, kindContainer *dagger.Container) *dagger.Container {
+func (m *FirestartrBootstrap) ApplyFirestartrCrs(
+	ctx context.Context,
+	kindContainer *dagger.Container,
+	crsDirectoryPath string,
+) *dagger.Container {
 
 	for _, kind := range []string{
+		"FirestartrGithubMembership.*",
 		"FirestartrGithubGroup.*",
 		"FirestartrGithubRepository.*",
 		"FirestartrGithubRepositoryFeature.*",
 	} {
-		entries, err := kindContainer.Directory("/resources/firestartr-crs/").Glob(ctx, kind)
+		entries, err := kindContainer.Directory(crsDirectoryPath).Glob(ctx, kind)
 		if err != nil {
 			panic(fmt.Sprintf("Failed to get glob entries: %s", err))
 		}
 		for _, entry := range entries {
 			kindContainer = m.ApplyCrAndWaitForProvisioned(
 				ctx, kindContainer,
-				fmt.Sprintf("/resources/firestartr-crs/%s", entry),
+				fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
 			)
 		}
 	}

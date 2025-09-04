@@ -26,7 +26,6 @@ func (m *FirestartrBootstrap) PushDirToRepo(
 	}
 
 	for _, entry := range entries {
-
 		if strings.HasSuffix(entry, "/") {
 			continue
 		}
