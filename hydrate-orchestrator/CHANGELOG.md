@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.3.8](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.7...hydrate-orchestrator-v6.3.8) (2025-09-05)
+
+
+### Bug Fixes
+
+* Missing LocalGhCliPath parameters ([#320](https://github.com/prefapp/daggerverse/issues/320)) ([ae4bf4f](https://github.com/prefapp/daggerverse/commit/ae4bf4f5fe1398ba0cccef9089fd32c240833e20))
+
 ## [6.3.7](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.6...hydrate-orchestrator-v6.3.7) (2025-08-22)
 
 
