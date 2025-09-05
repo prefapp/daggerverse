@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.0.0...firestartr-bootstrap-v1.1.0) (2025-09-05)
+
+
+### Features
+
+* Adapt bootstrap to 1.48 ([#316](https://github.com/prefapp/daggerverse/issues/316)) ([2effa28](https://github.com/prefapp/daggerverse/commit/2effa285fc5d914cbf71e58b40768b43ef750b4c))
+
 ## 1.0.0 (2025-07-02)
 
 
