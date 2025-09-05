@@ -4,8 +4,16 @@ ComponentClaim:
   lifecycle: "production"
   platformOwner: group:{{ $.Org }}-all
   maintainedBy: []
+{{- if $.DefaultGroupName }}
+  owner: group:{{ $.DefaultGroupName }}
+{{- else }}
   owner: group:{{ $.Org }}-all
+{{- end }}
+{{- if $.DefaultSystemName }}
+  system: system:{{ $.DefaultSystemName }}
+{{- else }}
   system: system:{{ $.Org }}-system
+{{- end }}
   providers:
     github:
       sync:
@@ -27,7 +35,6 @@ GroupClaim:
       privacy: closed
 
 UserClaim:
-  owner: group:{{ $.Org }}-all
   providers:
     github:
 

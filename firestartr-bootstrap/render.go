@@ -5,12 +5,16 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 )
 
-func (m *FirestartrBootstrap) RenderCrs(ctx context.Context) (*dagger.Directory, error) {
+func (m *FirestartrBootstrap) RenderCrs(
+	ctx context.Context,
+	importResultDir *dagger.Directory,
+) (*dagger.Directory, error) {
 
 	initialCrsTemplate, err := m.RenderInitialCrs(ctx,
 		dag.CurrentModule().
@@ -26,6 +30,18 @@ func (m *FirestartrBootstrap) RenderCrs(ctx context.Context) (*dagger.Directory,
 		return nil, err
 	}
 
+	importedCrsDir := importResultDir.Directory("crs")
+	importedCrs, err := importedCrsDir.Glob(ctx, "**")
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range importedCrs {
+		if strings.HasSuffix(entry, "/") {
+			continue
+		}
+		initialCrsDir = initialCrsDir.WithFile(entry, importedCrsDir.File(entry))
+	}
+
 	renderedClaims, err := m.RenderBootstrapFile(
 		ctx,
 		dag.CurrentModule().
@@ -39,6 +55,17 @@ func (m *FirestartrBootstrap) RenderCrs(ctx context.Context) (*dagger.Directory,
 	claimsDir, err := m.SplitRenderedClaimsInFiles(renderedClaims)
 	if err != nil {
 		return nil, err
+	}
+
+	importedClaims, err := importResultDir.Glob(ctx, "claims/**")
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range importedClaims {
+		if strings.HasSuffix(entry, "/") {
+			continue
+		}
+		claimsDir = claimsDir.WithFile(entry, importResultDir.File(entry))
 	}
 
 	crsDir := initialCrsDir.WithoutFiles(
@@ -60,6 +87,11 @@ func (m *FirestartrBootstrap) RenderCrs(ctx context.Context) (*dagger.Directory,
 
 	if err != nil {
 		return nil, err
+	}
+
+	for _, entry := range importedCrs {
+		firestartrCrsDir = firestartrCrsDir.WithoutFile(entry)
+		firestartrCrsDir = firestartrCrsDir.WithFile(entry, importedCrsDir.File(entry))
 	}
 
 	return dag.Directory().

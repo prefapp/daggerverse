@@ -20,10 +20,15 @@ type Feature struct {
 	Version string `yaml:"version"`
 }
 type Bootstrap struct {
-	Firestartr Firestartr  `yaml:"firestartr"`
-	PushFiles  PushFiles   `yaml:"pushFiles"`
-	Org        string      `yaml:"org"`
-	Components []Component `yaml:"components"`
+	Firestartr        Firestartr  `yaml:"firestartr"`
+	PushFiles         PushFiles   `yaml:"pushFiles"`
+	Org               string      `yaml:"org"`
+	Components        []Component `yaml:"components"`
+	DefaultSystemName string      `yaml:"defaultSystemName"`
+	DefaultDomainName string      `yaml:"defaultDomainName"`
+	DefaultGroupName  string      `yaml:"defaultGroupName"`
+	HasFreePlan       bool        // Autocalculated
+	BotName           string      // Stored in Credentialsfile.yaml, but needed here for templating
 }
 
 type PushFiles struct {

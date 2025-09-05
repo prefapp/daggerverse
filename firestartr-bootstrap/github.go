@@ -26,7 +26,6 @@ func (m *FirestartrBootstrap) PushDirToRepo(
 	}
 
 	for _, entry := range entries {
-
 		if strings.HasSuffix(entry, "/") {
 			continue
 		}
@@ -134,8 +133,8 @@ func (m *FirestartrBootstrap) SetOrgVariables(ctx context.Context, ghToken *dagg
 
 	mappedVars := map[string]string{
 		"FIRESTARTER_GITHUB_APP_NAME":           m.Creds.GithubApp.BotName,
-		"FIRESTARTER_WORKFLOW_DOCKER_IMAGE_TAG": fmt.Sprintf("%s_slim", m.Bootstrap.Firestartr.Version),
-		"FIRESTARTR_CLI_VERSION":                strings.TrimPrefix(m.Bootstrap.Firestartr.Version, "v"),
+		"FIRESTARTER_WORKFLOW_DOCKER_IMAGE_TAG": fmt.Sprintf("v%s_slim", m.Bootstrap.Firestartr.Version),
+		"FIRESTARTR_CLI_VERSION":                m.Bootstrap.Firestartr.Version,
 	}
 
 	for name, value := range mappedVars {
@@ -266,17 +265,32 @@ func (m *FirestartrBootstrap) WorkflowRun(ctx context.Context, jsonInput string,
 	return nil
 }
 
-func (m *FirestartrBootstrap) RunImportsWorkflow(ctx context.Context, ghToken *dagger.Secret) error {
-	err := m.WorkflowRun(
-		ctx,
-		`{"gh-repo-filter":"SKIP=SKIP","gh-members-filter":"REGEXP=[A-Za-z0-9\\-]+","gh-group-filter":"REGEXP=[A-Za-z0-9\\-]+"}`,
-		"github-import.yaml",
-		m.Bootstrap.PushFiles.Claims.Repo,
-		ghToken,
-	)
+func (m *FirestartrBootstrap) GetOrganizationPlanName(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) (string, error) {
+	planName, err := m.GhContainer(ctx, ghToken).
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithExec([]string{
+			"gh", "api", "/orgs/" + m.GhOrg, "--jq", ".plan.name",
+		}).
+		Stdout(ctx)
+
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return strings.Trim(planName, "\n"), nil
+}
+
+func (m *FirestartrBootstrap) OrgHasFreePlan(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) (bool, error) {
+	planName, err := m.GetOrganizationPlanName(ctx, ghToken)
+	if err != nil {
+		return false, err
+	}
+
+	return strings.EqualFold(planName, "free"), nil
 }

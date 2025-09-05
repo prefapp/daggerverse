@@ -62,6 +62,7 @@ func getPathByKind(kind string) string {
 		"GroupClaims":    "groups",
 		"SystemClaim":    "systems",
 		"DomainClaim":    "domains",
+		"SecretsClaim":   "secrets",
 	}
 
 	if path, ok := mapKindPath[kind]; ok {
