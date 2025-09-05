@@ -18,7 +18,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 			Image: Image{
 				Name: "ghcr.io/prefapp/gitops-k8s",
 				Tag: fmt.Sprintf(
-					"%s_full-%s",
+					"v%s_full-%s",
 					m.Bootstrap.Firestartr.Version,
 					m.Creds.CloudProvider.Name,
 				),

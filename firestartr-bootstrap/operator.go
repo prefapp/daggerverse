@@ -124,21 +124,22 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 		panic(fmt.Sprintf("Failed to unmarshal CR: %s", err))
 	}
 
-	kindContainer, err = kindContainer.
+	kindContainer = kindContainer.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"kubectl",
 			"apply",
 			"-f", entry,
-		}).
-		WithExec([]string{
-			"kubectl",
-			"wait",
-			"--for=condition=PROVISIONED=True",
-			fmt.Sprintf("%s/%s", getSingularByKind(cr.Kind), cr.Metadata.Name),
-			"--timeout=180s",
-		}).
-		Sync(ctx)
+		})
+		// .
+		// WithExec([]string{
+		// 	"kubectl",
+		// 	"wait",
+		// 	"--for=condition=PROVISIONED=True",
+		// 	fmt.Sprintf("%s/%s", getSingularByKind(cr.Kind), cr.Metadata.Name),
+		// 	"--timeout=180s",
+		// }).
+		// Sync(ctx)
 
 	if err != nil {
 		m.FailedCrs = append(m.FailedCrs, cr)

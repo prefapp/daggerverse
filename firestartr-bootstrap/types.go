@@ -27,6 +27,8 @@ type Bootstrap struct {
 	DefaultSystemName string      `yaml:"defaultSystemName"`
 	DefaultDomainName string      `yaml:"defaultDomainName"`
 	DefaultGroupName  string      `yaml:"defaultGroupName"`
+	HasFreePlan       bool        // Autocalculated
+	BotName           string      // Stored in Credentialsfile.yaml, but needed here for templating
 }
 
 type PushFiles struct {

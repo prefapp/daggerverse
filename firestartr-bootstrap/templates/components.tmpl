@@ -30,6 +30,30 @@ providers:
       - name: {{ $feature.Name }}
         version: {{ $feature.Version }}
       {{- end }}
+    {{- if $.HasFreePlan }}
+    secrets:
+      actions:
+        - name: FIRESTARTER_GITHUB_APP_PEM_FILE
+          value: "ref:secretsclaim:pem-secrets:raw_pem"
+        - name: FIRESTARTR_GITHUB_APP_PEM_FILE
+          value: "ref:secretsclaim:pem-secrets:pem"
+    {{- end }}
+    {{- if or $.HasFreePlan $claim.Variables}}
+    variables:
+      actions:
+        {{- range $index, $variable := $claim.Variables }}
+        - name: {{ $variable.Name }}
+          value: {{ $variable.Value }}
+        {{- end }}
+        {{- if $.HasFreePlan }}
+        - name: "FIRESTARTER_GITHUB_APP_NAME"
+          value: "{{ $.BotName }}"
+        - name: "FIRESTARTER_WORKFLOW_DOCKER_IMAGE_TAG"
+          value: "v{{ $.Firestartr.Version }}_slim"
+        - name: "FIRESTARTR_CLI_VERSION"
+          value: "{{ $.Firestartr.Version }}"
+        {{- end }}
+    {{- end }}
 {{ end }}
 {{ end }}
 ---
@@ -65,3 +89,25 @@ owner: group:{{ $.DefaultGroupName }}
 {{- else }}
 owner: group:{{ $.Org }}-all
 {{- end }}
+---
+---
+kind: SecretsClaim
+lifecycle: production
+name: pem-secrets
+{{- if $.DefaultSystemName }}
+system: system:{{ $.DefaultSystemName }}
+{{- else }}
+system: system:{{ $.Org }}-system
+{{- end }}
+version: "1.0"
+providers:
+  external_secrets:
+    name: pem-secrets
+    secretStore:
+     kind: SecretStore
+     name: parameterstore
+    externalSecrets:
+      refreshInterval: 1y
+      secrets:
+      - secretName: "raw_pem"
+      - secretName: "pem"

@@ -95,14 +95,22 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		}
 	}
 
-	err = m.SetOrgVariables(ctx, tokenSecret)
+	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
+	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
 	if err != nil {
 		panic(err)
 	}
 
-	err = m.SetOrgSecrets(ctx, tokenSecret)
-	if err != nil {
-		panic(err)
+	if !m.Bootstrap.HasFreePlan {
+		err = m.SetOrgVariables(ctx, tokenSecret)
+		if err != nil {
+			panic(err)
+		}
+
+		err = m.SetOrgSecrets(ctx, tokenSecret)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	kindContainer := m.InstallCRDsAndInitialCRs(ctx, dockerSocket, kindSvc)
@@ -136,11 +144,6 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		if err != nil {
 			panic(err)
 		}
-	}
-
-	err = m.SetRepoVariables(ctx, tokenSecret)
-	if err != nil {
-		panic(err)
 	}
 
 	return kindContainer

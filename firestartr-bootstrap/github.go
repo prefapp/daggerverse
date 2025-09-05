@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
-	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
@@ -134,8 +133,8 @@ func (m *FirestartrBootstrap) SetOrgVariables(ctx context.Context, ghToken *dagg
 
 	mappedVars := map[string]string{
 		"FIRESTARTER_GITHUB_APP_NAME":           m.Creds.GithubApp.BotName,
-		"FIRESTARTER_WORKFLOW_DOCKER_IMAGE_TAG": fmt.Sprintf("%s_slim", m.Bootstrap.Firestartr.Version),
-		"FIRESTARTR_CLI_VERSION":                strings.TrimPrefix(m.Bootstrap.Firestartr.Version, "v"),
+		"FIRESTARTER_WORKFLOW_DOCKER_IMAGE_TAG": fmt.Sprintf("v%s_slim", m.Bootstrap.Firestartr.Version),
+		"FIRESTARTR_CLI_VERSION":                m.Bootstrap.Firestartr.Version,
 	}
 
 	for name, value := range mappedVars {
@@ -266,31 +265,14 @@ func (m *FirestartrBootstrap) WorkflowRun(ctx context.Context, jsonInput string,
 	return nil
 }
 
-func (m *FirestartrBootstrap) RunImportsWorkflow(ctx context.Context, ghToken *dagger.Secret) error {
-	err := m.WorkflowRun(
-		ctx,
-		`{"gh-repo-filter":"SKIP=SKIP","gh-members-filter":"REGEXP=[A-Za-z0-9\\-]+","gh-group-filter":"REGEXP=[A-Za-z0-9\\-]+"}`,
-		"github-import.yaml",
-		m.Bootstrap.PushFiles.Claims.Repo,
-		ghToken,
-	)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *FirestartrBootstrap) GetOrganizationPlan(
+func (m *FirestartrBootstrap) GetOrganizationPlanName(
 	ctx context.Context,
 	ghToken *dagger.Secret,
 ) (string, error) {
-	var orgInfo map[string]interface{}
-
-	response, err := m.GhContainer(ctx, ghToken).
+	planName, err := m.GhContainer(ctx, ghToken).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
-			"gh", "api", "/orgs/" + m.GhOrg,
+			"gh", "api", "/orgs/" + m.GhOrg, "--jq", ".plan.name",
 		}).
 		Stdout(ctx)
 
@@ -298,13 +280,17 @@ func (m *FirestartrBootstrap) GetOrganizationPlan(
 		return "", err
 	}
 
-	err = json.Unmarshal([]byte(response), &orgInfo)
+	return strings.Trim(planName, "\n"), nil
+}
+
+func (m *FirestartrBootstrap) OrgHasFreePlan(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) (bool, error) {
+	planName, err := m.GetOrganizationPlanName(ctx, ghToken)
 	if err != nil {
-		return "", err
+		return false, err
 	}
 
-	planInfo := orgInfo["plan"].(map[string]interface{})
-	planName := planInfo["name"].(string)
-
-	return planName, nil
+	return strings.EqualFold(planName, "free"), nil
 }
