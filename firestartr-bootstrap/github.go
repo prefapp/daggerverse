@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
@@ -278,4 +279,32 @@ func (m *FirestartrBootstrap) RunImportsWorkflow(ctx context.Context, ghToken *d
 	}
 
 	return nil
+}
+
+func (m *FirestartrBootstrap) GetOrganizationPlan(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) (string, error) {
+	var orgInfo map[string]interface{}
+
+	response, err := m.GhContainer(ctx, ghToken).
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithExec([]string{
+			"gh", "api", "/orgs/" + m.GhOrg,
+		}).
+		Stdout(ctx)
+
+	if err != nil {
+		return "", err
+	}
+
+	err = json.Unmarshal([]byte(response), &orgInfo)
+	if err != nil {
+		return "", err
+	}
+
+	planInfo := orgInfo["plan"].(map[string]interface{})
+	planName := planInfo["name"].(string)
+
+	return planName, nil
 }
