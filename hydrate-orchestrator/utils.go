@@ -405,8 +405,9 @@ func (m *HydrateOrchestrator) getBranchInfo(
 
 	gitDirPath := "/git_dir"
 	ctr := dag.Gh().Container(dagger.GhContainerOpts{
-		Token:   m.GhToken,
-		Version: m.GhCliVersion,
+		Token:          m.GhToken,
+		Version:        m.GhCliVersion,
+		LocalGhCliPath: m.LocalGhCliPath,
 	}).
 		WithDirectory(gitDirPath, m.ValuesStateDir).
 		WithWorkdir(gitDirPath).
