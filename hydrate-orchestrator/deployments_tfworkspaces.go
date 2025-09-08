@@ -131,8 +131,9 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			"Update deployments",
 			m.GhToken,
 			dagger.GhCommitOpts{
-				BaseBranch: DEPLOYMENT_BRANCH_NAME,
-				DeletePath: fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+				BaseBranch:     DEPLOYMENT_BRANCH_NAME,
+				DeletePath:     fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+				LocalGhCliPath: m.LocalGhCliPath,
 			},
 		).Sync(ctx)
 

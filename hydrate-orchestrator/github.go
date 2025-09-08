@@ -111,9 +111,10 @@ func (m *HydrateOrchestrator) MergePullRequest(ctx context.Context, prLink strin
 	command := strings.Join([]string{"pr", "merge", "--merge", prLink}, " ")
 
 	_, err := dag.Gh().Run(command, dagger.GhRunOpts{
-		Version:      m.GhCliVersion,
-		Token:        m.GhToken,
-		DisableCache: true,
+		Version:        m.GhCliVersion,
+		Token:          m.GhToken,
+		DisableCache:   true,
+		LocalGhCliPath: m.LocalGhCliPath,
 	}).Sync(ctx)
 
 	if err != nil {
