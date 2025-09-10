@@ -19,39 +19,17 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
 	}
 	fmt.Printf("💡 💡 Claims Entries: %v\n", entries)
 
-	claimsDefaults, err := m.RenderClaimsDefaults(ctx,
-		dag.CurrentModule().
-			Source().
-			File("firestartr_files/claims/.config/claims_defaults.tmpl"),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	wetReposConfig, err := m.RenderWetReposConfig(ctx,
-		dag.CurrentModule().
-			Source().
-			File("firestartr_files/claims/.config/wet-repositories-config.tmpl"),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	defaultsDir := dag.Directory().
-		WithNewDirectory("/claims_defaults").
-		WithNewFile("claims_defaults.yaml", claimsDefaults).
-		WithNewFile("wet-repositories-config.yaml", wetReposConfig)
-
 	fsCtr, err := dag.Container().From(
-		fmt.Sprintf(
-			"ghcr.io/prefapp/gitops-k8s:v%s_slim",
-			m.Bootstrap.Firestartr.Version,
-		),
+		// fmt.Sprintf(
+		// 	"ghcr.io/prefapp/gitops-k8s:v%s_slim",
+		// 	m.Bootstrap.Firestartr.Version,
+		// ),
+		"ghcr.io/prefapp/gitops-k8s:18ce79a_full-aws",
 	).
 		WithDirectory("/claims", claimsDir).
 		WithDirectory("/crs", crsDir).
 		WithDirectory("/config", dag.CurrentModule().Source().Directory("firestartr_files/crs/.config")).
-		WithDirectory("/claims_defaults", defaultsDir).
+		WithDirectory("/claims_defaults", m.DotConfigDir).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithEnvVariable("DEBUG", "*").
 		WithEnvVariable("GITHUB_APP_ID", m.Creds.GithubApp.GhAppId).
@@ -71,7 +49,23 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
 				"--previousCRs", "/crs",
 				"--excludePath", "/.config",
 				"--claimsDefaults", "/claims_defaults",
-				"--outputCrDir", "/output",
+				"--outputCrDir", "/tmp/rendered_crs",
+				"--provider", "terraform",
+			},
+		).
+		WithExec(
+			[]string{
+				"./run.sh",
+				"cdk8s",
+				"--render",
+				"--disableRenames",
+				"--globals", "/config",
+				"--initializers", "/config",
+				"--claims", "/claims",
+				"--previousCRs", "/crs",
+				"--excludePath", "/.config",
+				"--claimsDefaults", "/claims_defaults",
+				"--outputCrDir", "/tmp/rendered_crs",
 				"--provider", "github",
 			},
 		).Sync(ctx)
@@ -82,7 +76,7 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
 
 	}
 
-	outputDir := fsCtr.Directory("/output")
+	outputDir := fsCtr.Directory("/tmp/rendered_crs")
 
 	return outputDir, nil
 }

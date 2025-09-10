@@ -2,43 +2,46 @@ ComponentClaim:
   version: "1.0"
   type: service
   lifecycle: "production"
-  platformOwner: group:{{ $.Org }}-all
   maintainedBy: []
-{{- if $.DefaultGroupName }}
-  owner: group:{{ $.DefaultGroupName }}
-{{- else }}
-  owner: group:{{ $.Org }}-all
-{{- end }}
-{{- if $.DefaultSystemName }}
-  system: system:{{ $.DefaultSystemName }}
-{{- else }}
-  system: system:{{ $.Org }}-system
-{{- end }}
+  owner: "group:{{ $.DefaultFirestartrGroup }}"
+  platformOwner: "group:{{ $.DefaultFirestartrGroup }}"
+  system: "system:{{ $.DefaultSystemName }}"
   providers:
     github:
       sync:
         enabled: true
         period: 24h
+      org: {{ $.Org }}
+      maintainedBy: []
       branchStrategy:
-        name: gitflow
-        defaultBranch: master
-      orgPermissions: view
-      visibility: private
+        name: {{ or $.DefaultBranchStrategy "none" }}
+        defaultBranch: {{ or $.DefaultBranch "main" }}
+      orgPermissions: {{ or $.DefaultOrgPermissions "view"}}
+      visibility: public
       technology:
-        stack: "node"
-        version: "16"
+        stack: "none"
+        version: "none"
       features: []
 
 GroupClaim:
   providers:
     github:
+      sync:
+        enabled: true
+        period: 24h
+      org: {{ $.Org }}
       privacy: closed
 
 UserClaim:
   providers:
     github:
+      sync:
+        enabled: true
+        period: 24h
+      org: {{ $.Org }}
 
 SystemClaim:
+  domain: "domain:{{ $.DefaultSystemName }}"
   providers: {}
 
 DomainClaim:

@@ -5,11 +5,7 @@ kind: ComponentClaim
 version: "1.0"
 type: service
 lifecycle: production
-{{- if $.DefaultSystemName }}
 system: system:{{ $.DefaultSystemName }}
-{{- else }}
-system: system:{{ $.Org }}-system
-{{- end }}
 name: {{ $claim.Name }}
 providers:
   github:
@@ -34,12 +30,12 @@ providers:
     secrets:
       actions:
         - name: FIRESTARTER_GITHUB_APP_PEM_FILE
-          value: "ref:secretsclaim:pem-secrets:raw_pem"
+          value: "ref:secretsclaim:pem-secrets:test-raw-pem"
         - name: FIRESTARTR_GITHUB_APP_PEM_FILE
-          value: "ref:secretsclaim:pem-secrets:pem"
+          value: "ref:secretsclaim:pem-secrets:test-pem"
     {{- end }}
     {{- if or $.HasFreePlan $claim.Variables}}
-    variables:
+    vars:
       actions:
         {{- range $index, $variable := $claim.Variables }}
         - name: {{ $variable.Name }}
@@ -59,55 +55,48 @@ providers:
 ---
 kind: SystemClaim
 version: "1.0"
-{{- if $.DefaultSystemName }}
 name: {{ $.DefaultSystemName }}
-{{- else }}
-name: {{ $.Org }}-system
-{{- end }}
-{{- if $.DefaultDomainName }}
 domain: domain:{{ $.DefaultDomainName }}
-{{- else }}
-domain: domain:{{ $.Org }}-domain
-{{- end }}
-{{- if $.DefaultGroupName }}
-owner: group:{{ $.DefaultGroupName }}
-{{- else }}
-owner: group:{{ $.Org }}-all
-{{- end }}
+owner: group:{{ $.DefaultFirestartrGroup }}
 description: "The default system of {{ $.Org }}"
 ---
 kind: DomainClaim
 version: "1.0"
-{{- if $.DefaultDomainName }}
 name: {{ $.DefaultDomainName }}
-{{- else }}
-name: {{ $.Org }}-domain
-{{- end }}
 description: "The default domain of {{ $.Org }}"
-{{- if $.DefaultGroupName }}
-owner: group:{{ $.DefaultGroupName }}
-{{- else }}
-owner: group:{{ $.Org }}-all
-{{- end }}
+owner: group:{{ $.DefaultFirestartrGroup }}
 ---
+kind: GroupClaim
+version: "1.0"
+name: {{ $.DefaultFirestartrGroup }}
+description: "The default group for the firestartr application"
+type: business-unit
+profile:
+  displayName: {{ $.DefaultFirestartrGroup }}
+members: []
+providers:
+  github:
+    name: {{ $.DefaultFirestartrGroup }}
+    org: {{ $.Org }}
 ---
 kind: SecretsClaim
 lifecycle: production
 name: pem-secrets
-{{- if $.DefaultSystemName }}
 system: system:{{ $.DefaultSystemName }}
-{{- else }}
-system: system:{{ $.Org }}-system
-{{- end }}
 version: "1.0"
 providers:
   external_secrets:
     name: pem-secrets
     secretStore:
-     kind: SecretStore
-     name: parameterstore
+      kind: SecretStore
+      name: aws
     externalSecrets:
-      refreshInterval: 1y
+      refreshInterval: 24h
       secrets:
-      - secretName: "raw_pem"
-      - secretName: "pem"
+      - secretName: "test-raw-pem"
+      - secretName: "test-pem"
+    pushSecrets:
+      - secretName: test
+        generator:
+          name: test-generator
+

@@ -47,7 +47,7 @@ func (m *FirestartrBootstrap) InstallCRDsAndInitialCRs(
 		panic(err)
 	}
 
-	kindContainer := GetKind(dockerSocket, kindSvc).
+	kindContainer, err := GetKind(dockerSocket, kindSvc).
 		WithExec([]string{"apk", "add", "helm", "curl"}).
 		WithMountedDirectory("/charts",
 			dag.CurrentModule().
@@ -73,7 +73,22 @@ func (m *FirestartrBootstrap) InstallCRDsAndInitialCRs(
 			"kubectl",
 			"apply",
 			"-f", "/resources/initial-crs",
-		})
+		}).
+		WithExec([]string{
+			"helm", "repo", "add",
+			"external-secrets", "https://charts.external-secrets.io",
+		}).
+		WithExec([]string{
+			"helm", "install", "external-secrets",
+			"external-secrets/external-secrets",
+			"-n", "external-secrets",
+			"--create-namespace",
+		}).
+		Sync(ctx)
+
+	if err != nil {
+		panic(err)
+	}
 
 	return kindContainer
 }
@@ -85,6 +100,7 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 ) *dagger.Container {
 
 	for _, kind := range []string{
+		// "ExternalSecret.*",
 		"FirestartrGithubMembership.*",
 		"FirestartrGithubGroup.*",
 		"FirestartrGithubRepository.*",
@@ -159,13 +175,10 @@ func GetKind(
 ) *dagger.Container {
 
 	return dag.Kind(
-
 		dockerSocket,
 		kindSvc,
-		dagger.KindOpts{
-
-			ClusterName: "bootstrap-firestartr",
-		}).Container()
+		dagger.KindOpts{ClusterName: "bootstrap-firestartr"},
+	).Container()
 }
 
 func getSingularByKind(kind string) string {

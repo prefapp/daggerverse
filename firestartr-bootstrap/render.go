@@ -102,9 +102,11 @@ func (m *FirestartrBootstrap) RenderCrs(
 		WithDirectory(
 			"initial-crs",
 			initialCrsDir.WithoutFile(
-				fmt.Sprintf("FirestartrGithubGroup.%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669.yaml",
+				fmt.Sprintf(
+					"FirestartrGithubGroup.%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669.yaml",
 					m.GhOrg,
-				)),
+				),
+			),
 		).
 		WithDirectory(
 			"claims",
@@ -131,22 +133,16 @@ func (m *FirestartrBootstrap) RenderBootstrapFile(ctx context.Context, templ *da
 	return renderTmpl(templateContent, m.Bootstrap)
 }
 
-func (m *FirestartrBootstrap) RenderClaimsDefaults(ctx context.Context, templ *dagger.File) (string, error) {
-
+func RenderDotConfigFile(
+	ctx context.Context,
+	templ *dagger.File,
+	bootstrap interface{},
+) (string, error) {
 	templateContent, err := templ.Contents(ctx)
 	if err != nil {
 		return "", err
 	}
-	return renderTmpl(templateContent, m.Bootstrap)
-}
-
-func (m *FirestartrBootstrap) RenderWetReposConfig(ctx context.Context, templ *dagger.File) (string, error) {
-
-	templateContent, err := templ.Contents(ctx)
-	if err != nil {
-		return "", err
-	}
-	return renderTmpl(templateContent, m.Bootstrap)
+	return renderTmpl(templateContent, bootstrap)
 }
 
 func renderTmpl(tmpl string, data interface{}) (string, error) {

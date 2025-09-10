@@ -20,15 +20,18 @@ type Feature struct {
 	Version string `yaml:"version"`
 }
 type Bootstrap struct {
-	Firestartr        Firestartr  `yaml:"firestartr"`
-	PushFiles         PushFiles   `yaml:"pushFiles"`
-	Org               string      `yaml:"org"`
-	Components        []Component `yaml:"components"`
-	DefaultSystemName string      `yaml:"defaultSystemName"`
-	DefaultDomainName string      `yaml:"defaultDomainName"`
-	DefaultGroupName  string      `yaml:"defaultGroupName"`
-	HasFreePlan       bool        // Autocalculated
-	BotName           string      // Stored in Credentialsfile.yaml, but needed here for templating
+	Firestartr             Firestartr  `yaml:"firestartr"`
+	PushFiles              PushFiles   `yaml:"pushFiles"`
+	Org                    string      `yaml:"org"`
+	Components             []Component `yaml:"components"`
+	DefaultSystemName      string      `yaml:"defaultSystemName"`
+	DefaultDomainName      string      `yaml:"defaultDomainName"`
+	DefaultFirestartrGroup string      `yaml:"defaultFirestartrGroup"`
+	DefaultBranch          string      `yaml:"defaultBranch"`
+	DefaultBranchStrategy  string      `yaml:"defaultBranchStrategy"`
+	DefaultOrgPermissions  string      `yaml:"defaultOrgPermissions"`
+	HasFreePlan            bool        // Autocalculated
+	BotName                string      // Stored in Credentialsfile.yaml, but needed here for templating
 }
 
 type PushFiles struct {
@@ -83,4 +86,9 @@ type GithubApp struct {
 	Owner                 string `yaml:"owner"`
 	BotName               string `yaml:"botName"`
 	BotPat                string `yaml:"botPat"`
+}
+
+type SecretData struct {
+	Name  string
+	Value string
 }

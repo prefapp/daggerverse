@@ -11,20 +11,6 @@ func (m *FirestartrBootstrap) RunImporter(
 	ctx context.Context,
 	kindContainer *dagger.Container,
 ) *dagger.Container {
-
-	claimsDefaults, err := m.RenderClaimsDefaults(ctx,
-		dag.CurrentModule().
-			Source().
-			File("firestartr_files/claims/.config/claims_defaults.tmpl"),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	defaultsDir := dag.Directory().
-		WithNewDirectory("/claims_defaults").
-		WithNewFile("claims_defaults.yaml", claimsDefaults)
-
 	claimsDir := dag.Directory().
 		WithNewDirectory("/claims")
 
@@ -35,7 +21,7 @@ func (m *FirestartrBootstrap) RunImporter(
 		WithDirectory("/import", claimsDir).
 		WithDirectory("/import", crsDir).
 		WithDirectory("/config", dag.CurrentModule().Source().Directory("firestartr_files/crs/.config")).
-		WithDirectory("/claims_defaults", defaultsDir).
+		WithDirectory("/claims_defaults", m.DotConfigDir).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithEnvVariable("DEBUG", "*").
 		WithEnvVariable("GITHUB_APP_ID", m.Creds.GithubApp.GhAppId).

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -17,11 +16,12 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 			Replicas: 1,
 			Image: Image{
 				Name: "ghcr.io/prefapp/gitops-k8s",
-				Tag: fmt.Sprintf(
-					"v%s_full-%s",
-					m.Bootstrap.Firestartr.Version,
-					m.Creds.CloudProvider.Name,
-				),
+				// Tag: fmt.Sprintf(
+				// 	"v%s_full-%s",
+				// 	m.Bootstrap.Firestartr.Version,
+				// 	m.Creds.CloudProvider.Name,
+				// ),
+				Tag:        "46468ff_full-aws",
 				PullPolicy: "Always",
 			},
 			Command:       []string{"./run.sh", "operator", "--start", "controller"},

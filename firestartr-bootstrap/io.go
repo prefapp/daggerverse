@@ -59,7 +59,7 @@ func (m *FirestartrBootstrap) SplitRenderedClaimsInFiles(renderedContent string)
 func getPathByKind(kind string) string {
 	mapKindPath := map[string]string{
 		"ComponentClaim": "components",
-		"GroupClaims":    "groups",
+		"GroupClaim":     "groups",
 		"SystemClaim":    "systems",
 		"DomainClaim":    "domains",
 		"SecretsClaim":   "secrets",

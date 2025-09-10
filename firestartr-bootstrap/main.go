@@ -19,6 +19,7 @@ type FirestartrBootstrap struct {
 	ProvisionedCrs    []*Cr
 	FailedCrs         []*Cr
 	PreviousCrsDir    *dagger.Directory
+	DotConfigDir      *dagger.Directory
 }
 
 func New(
@@ -54,6 +55,33 @@ func New(
 		panic(err)
 	}
 
+	claimsDefaults, err := RenderDotConfigFile(
+		ctx,
+		dag.CurrentModule().
+			Source().
+			File("firestartr_files/claims/.config/claims_defaults.tmpl"),
+		bootstrap,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	wetReposConfig, err := RenderDotConfigFile(
+		ctx,
+		dag.CurrentModule().
+			Source().
+			File("firestartr_files/claims/.config/wet-repositories-config.tmpl"),
+		bootstrap,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	dotConfigDir := dag.Directory().
+		WithNewDirectory("/.config").
+		WithNewFile("claims_defaults.yaml", claimsDefaults).
+		WithNewFile("wet-repositories-config.yaml", wetReposConfig)
+
 	return &FirestartrBootstrap{
 		Bootstrap:         bootstrap,
 		BootstrapFile:     bootstrapFile,
@@ -62,6 +90,7 @@ func New(
 		Creds:             creds,
 		CredsFileContent:  credsFileContent,
 		PreviousCrsDir:    previousCrsDir,
+		DotConfigDir:      dotConfigDir,
 	}, nil
 }
 
@@ -114,37 +143,59 @@ func (m *FirestartrBootstrap) RunBootstrap(
 	}
 
 	kindContainer := m.InstallCRDsAndInitialCRs(ctx, dockerSocket, kindSvc)
+
+	if m.Bootstrap.HasFreePlan {
+		kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)
+
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	kindContainer = m.RunImporter(ctx, kindContainer)
 	kindContainer = m.RunOperator(ctx, kindContainer)
 
-	if m.Bootstrap.PushFiles.Claims.Push {
-		claimsDir := kindContainer.Directory("/resources/claims")
+	// 	if m.Bootstrap.PushFiles.Claims.Push {
+	// 		claimsDir := kindContainer.Directory("/resources/claims")
 
-		err := m.PushDirToRepo(
-			ctx,
-			claimsDir,
-			m.Bootstrap.PushFiles.Claims.Repo,
-			tokenSecret,
-		)
-		if err != nil {
-			panic(err)
-		}
-	}
+	// 		err := m.PushDirToRepo(
+	// 			ctx,
+	// 			claimsDir,
+	// 			m.Bootstrap.PushFiles.Claims.Repo,
+	// 			tokenSecret,
+	// 		)
+	// 		if err != nil {
+	// 			panic(err)
+	// 		}
 
-	if m.Bootstrap.PushFiles.Crs.Providers.Github.Push {
-		crsDir := kindContainer.Directory("/resources/firestartr-crs")
+	// 		dotConfig := dag.Directory().
+	// 			WithDirectory(".config", m.DotConfigDir)
 
-		err := m.PushDirToRepo(
-			ctx,
-			crsDir,
-			m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
-			tokenSecret,
-		)
+	// 		err = m.PushDirToRepo(
+	// 			ctx,
+	// 			dotConfig,
+	// 			m.Bootstrap.PushFiles.Claims.Repo,
+	// 			tokenSecret,
+	// 		)
+	// 		if err != nil {
+	// 			panic(err)
+	// 		}
+	// 	}
 
-		if err != nil {
-			panic(err)
-		}
-	}
+	// 	if m.Bootstrap.PushFiles.Crs.Providers.Github.Push {
+	// 		crsDir := kindContainer.Directory("/resources/firestartr-crs")
+
+	// 		err := m.PushDirToRepo(
+	// 			ctx,
+	// 			crsDir,
+	// 			m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
+	// 			tokenSecret,
+	// 		)
+
+	// 		if err != nil {
+	// 			panic(err)
+	// 		}
+	// 	}
 
 	return kindContainer
 }
