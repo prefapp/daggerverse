@@ -22,7 +22,8 @@ func (m *FirestartrBootstrap) RunOperator(
 	kindContainer = kindContainer.
 		WithDirectory("/resources", renderedCrsDir)
 
-	kindContainer = m.ApplyFirestartrCrs(ctx, kindContainer, "/resources/firestartr-crs/")
+	kindContainer = m.ApplyFirestartrCrs(ctx, kindContainer, "/resources/firestartr-crs/infra")
+	kindContainer = m.ApplyFirestartrCrs(ctx, kindContainer, "/resources/firestartr-crs/github")
 
 	return kindContainer
 
@@ -100,7 +101,7 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 ) *dagger.Container {
 
 	for _, kind := range []string{
-		// "ExternalSecret.*",
+		"ExternalSecret.*",
 		"FirestartrGithubMembership.*",
 		"FirestartrGithubGroup.*",
 		"FirestartrGithubRepository.*",
@@ -114,6 +115,7 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 			kindContainer = m.ApplyCrAndWaitForProvisioned(
 				ctx, kindContainer,
 				fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
+				kind != "ExternalSecret.*",
 			)
 		}
 	}
@@ -125,6 +127,7 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 	ctx context.Context,
 	kindContainer *dagger.Container,
 	entry string,
+	waitForProvisioned bool,
 ) *dagger.Container {
 
 	crFile := kindContainer.File(entry)
@@ -147,15 +150,19 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 			"apply",
 			"-f", entry,
 		})
-		// .
-		// WithExec([]string{
-		// 	"kubectl",
-		// 	"wait",
-		// 	"--for=condition=PROVISIONED=True",
-		// 	fmt.Sprintf("%s/%s", getSingularByKind(cr.Kind), cr.Metadata.Name),
-		// 	"--timeout=180s",
-		// }).
-		// Sync(ctx)
+
+	if waitForProvisioned {
+		kindContainer = kindContainer.
+			WithExec([]string{
+				"kubectl",
+				"wait",
+				"--for=condition=PROVISIONED=True",
+				fmt.Sprintf("%s/%s", getSingularByKind(cr.Kind), cr.Metadata.Name),
+				"--timeout=180s",
+			})
+	}
+
+	kindContainer, err = kindContainer.Sync(ctx)
 
 	if err != nil {
 		m.FailedCrs = append(m.FailedCrs, cr)
@@ -184,6 +191,7 @@ func GetKind(
 func getSingularByKind(kind string) string {
 
 	mapSingular := map[string]string{
+		"ExternalSecret":                    "",
 		"FirestartrGithubRepository":        "githubrepository",
 		"FirestartrGithubGroup":             "githubgroup",
 		"FirestartrTerraformWorkspace":      "terraformworkspace",

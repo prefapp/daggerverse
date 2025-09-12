@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -16,12 +17,11 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 			Replicas: 1,
 			Image: Image{
 				Name: "ghcr.io/prefapp/gitops-k8s",
-				// Tag: fmt.Sprintf(
-				// 	"v%s_full-%s",
-				// 	m.Bootstrap.Firestartr.Version,
-				// 	m.Creds.CloudProvider.Name,
-				// ),
-				Tag:        "46468ff_full-aws",
+				Tag: fmt.Sprintf(
+					"v%s_full-%s",
+					m.Bootstrap.Firestartr.Version,
+					m.Creds.CloudProvider.Name,
+				),
 				PullPolicy: "Always",
 			},
 			Command:       []string{"./run.sh", "operator", "--start", "controller"},
@@ -61,14 +61,15 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 					"terraformworkspaces",
 					"terraformworkspaceplans",
 				}, ","),
-				"OPERATOR_NAMESPACE":           "default",
-				"OPERATOR_IGNORE_LEASE":        "true",
-				"GITHUB_APP_ID":                m.Creds.GithubApp.GhAppId,
-				"GITHUB_APP_INSTALLATION_ID":   m.Creds.GithubApp.InstallationId,
-				"PREFAPP_BOT_PAT":              m.Creds.GithubApp.BotPat,
-				"NODE_TLS_REJECT_UNAUTHORIZED": "0",
-				"ORG":                          m.GhOrg,
-				"DEBUG":                        "*",
+				"OPERATOR_NAMESPACE":               "default",
+				"OPERATOR_IGNORE_LEASE":            "true",
+				"GITHUB_APP_ID":                    m.Creds.GithubApp.GhAppId,
+				"GITHUB_APP_INSTALLATION_ID":       m.Creds.GithubApp.InstallationId,
+				"PREFAPP_BOT_PAT":                  m.Creds.GithubApp.BotPat,
+				"NODE_TLS_REJECT_UNAUTHORIZED":     "0",
+				"ORG":                              m.GhOrg,
+				"DEBUG":                            "*",
+				"AVOID_PROVIDER_SECRET_ENCRYPTION": "1",
 			},
 		},
 	}

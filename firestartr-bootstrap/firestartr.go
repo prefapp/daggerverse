@@ -20,11 +20,10 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
 	fmt.Printf("💡 💡 Claims Entries: %v\n", entries)
 
 	fsCtr, err := dag.Container().From(
-		// fmt.Sprintf(
-		// 	"ghcr.io/prefapp/gitops-k8s:v%s_slim",
-		// 	m.Bootstrap.Firestartr.Version,
-		// ),
-		"ghcr.io/prefapp/gitops-k8s:18ce79a_full-aws",
+		fmt.Sprintf(
+			"ghcr.io/prefapp/gitops-k8s:v%s_slim",
+			m.Bootstrap.Firestartr.Version,
+		),
 	).
 		WithDirectory("/claims", claimsDir).
 		WithDirectory("/crs", crsDir).
@@ -49,7 +48,7 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
 				"--previousCRs", "/crs",
 				"--excludePath", "/.config",
 				"--claimsDefaults", "/claims_defaults",
-				"--outputCrDir", "/tmp/rendered_crs",
+				"--outputCrDir", "/tmp/rendered_crs/infra",
 				"--provider", "terraform",
 			},
 		).
@@ -65,7 +64,7 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
 				"--previousCRs", "/crs",
 				"--excludePath", "/.config",
 				"--claimsDefaults", "/claims_defaults",
-				"--outputCrDir", "/tmp/rendered_crs",
+				"--outputCrDir", "/tmp/rendered_crs/github",
 				"--provider", "github",
 			},
 		).Sync(ctx)

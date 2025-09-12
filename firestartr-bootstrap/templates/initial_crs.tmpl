@@ -2,7 +2,7 @@
 apiVersion: firestartr.dev/v1
 kind: FirestartrProviderConfig
 metadata:
-  name: github-app
+  name: {{ .GithubApp.ProviderConfigName }}
 spec:
   config: |
     {
@@ -20,7 +20,7 @@ spec:
 apiVersion: firestartr.dev/v1
 kind: FirestartrProviderConfig
 metadata:
-  name: firestartr-terraform-state
+  name: {{ .CloudProvider.ProviderConfigName }}
 spec:
   config: '{{ .CloudProvider.Config | toJson }}'
   source: '{{ .CloudProvider.Source }}'
@@ -33,7 +33,6 @@ metadata:
   annotations:
     firestartr.dev/claim-ref: GroupClaim/{{.GithubApp.Owner}}-all
     firestartr.dev/external-name: {{.GithubApp.Owner}}-all
-    firestartr.dev/import: "true"
   labels:
     claim-ref: {{.GithubApp.Owner}}-all
   name: {{.GithubApp.Owner}}-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669

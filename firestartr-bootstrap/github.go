@@ -45,7 +45,11 @@ func (m *FirestartrBootstrap) PushDirToRepo(
 	return nil
 }
 
-func (m *FirestartrBootstrap) CloneRepo(ctx context.Context, repoName string, ghToken *dagger.Secret) (*dagger.Container, error) {
+func (m *FirestartrBootstrap) CloneRepo(
+	ctx context.Context,
+	repoName string,
+	ghToken *dagger.Secret,
+) (*dagger.Container, error) {
 	alpCtr, err := m.GhContainer(ctx, ghToken).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{

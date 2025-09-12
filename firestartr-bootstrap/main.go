@@ -155,47 +155,62 @@ func (m *FirestartrBootstrap) RunBootstrap(
 	kindContainer = m.RunImporter(ctx, kindContainer)
 	kindContainer = m.RunOperator(ctx, kindContainer)
 
-	// 	if m.Bootstrap.PushFiles.Claims.Push {
-	// 		claimsDir := kindContainer.Directory("/resources/claims")
+	if m.Bootstrap.PushFiles.Claims.Push {
+		claimsDir := kindContainer.Directory("/resources/claims")
 
-	// 		err := m.PushDirToRepo(
-	// 			ctx,
-	// 			claimsDir,
-	// 			m.Bootstrap.PushFiles.Claims.Repo,
-	// 			tokenSecret,
-	// 		)
-	// 		if err != nil {
-	// 			panic(err)
-	// 		}
+		err := m.PushDirToRepo(
+			ctx,
+			claimsDir,
+			m.Bootstrap.PushFiles.Claims.Repo,
+			tokenSecret,
+		)
+		if err != nil {
+			panic(err)
+		}
 
-	// 		dotConfig := dag.Directory().
-	// 			WithDirectory(".config", m.DotConfigDir)
+		dotConfig := dag.Directory().
+			WithDirectory(".config", m.DotConfigDir)
 
-	// 		err = m.PushDirToRepo(
-	// 			ctx,
-	// 			dotConfig,
-	// 			m.Bootstrap.PushFiles.Claims.Repo,
-	// 			tokenSecret,
-	// 		)
-	// 		if err != nil {
-	// 			panic(err)
-	// 		}
-	// 	}
+		err = m.PushDirToRepo(
+			ctx,
+			dotConfig,
+			m.Bootstrap.PushFiles.Claims.Repo,
+			tokenSecret,
+		)
+		if err != nil {
+			panic(err)
+		}
+	}
 
-	// 	if m.Bootstrap.PushFiles.Crs.Providers.Github.Push {
-	// 		crsDir := kindContainer.Directory("/resources/firestartr-crs")
+	if m.Bootstrap.PushFiles.Crs.Providers.Github.Push {
+		crsDir := kindContainer.Directory("/resources/firestartr-crs/github")
 
-	// 		err := m.PushDirToRepo(
-	// 			ctx,
-	// 			crsDir,
-	// 			m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
-	// 			tokenSecret,
-	// 		)
+		err := m.PushDirToRepo(
+			ctx,
+			crsDir,
+			m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
+			tokenSecret,
+		)
 
-	// 		if err != nil {
-	// 			panic(err)
-	// 		}
-	// 	}
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if m.Bootstrap.PushFiles.Crs.Providers.Terraform.Push {
+		crsDir := kindContainer.Directory("/resources/firestartr-crs/infra")
+
+		err := m.PushDirToRepo(
+			ctx,
+			crsDir,
+			m.Bootstrap.PushFiles.Crs.Providers.Terraform.Repo,
+			tokenSecret,
+		)
+
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	return kindContainer
 }

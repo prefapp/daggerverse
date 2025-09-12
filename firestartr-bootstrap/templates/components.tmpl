@@ -6,6 +6,7 @@ version: "1.0"
 type: service
 lifecycle: production
 system: system:{{ $.DefaultSystemName }}
+owner: group:{{ $.DefaultFirestartrGroup }}
 name: {{ $claim.Name }}
 providers:
   github:
@@ -26,13 +27,19 @@ providers:
       - name: {{ $feature.Name }}
         version: {{ $feature.Version }}
       {{- end }}
-    {{- if $.HasFreePlan }}
+    {{- if or $.HasFreePlan $claim.Secrets}}
     secrets:
       actions:
-        - name: FIRESTARTER_GITHUB_APP_PEM_FILE
-          value: "ref:secretsclaim:pem-secrets:test-raw-pem"
-        - name: FIRESTARTR_GITHUB_APP_PEM_FILE
-          value: "ref:secretsclaim:pem-secrets:test-pem"
+        {{- range $index, $secret := $claim.Secrets }}
+        - name: {{ $secret.Name }}
+          value: {{ $secret.Value }}
+        {{- end }}
+        {{- if $.HasFreePlan }}
+        - name: FS_STATE_PEM_FILE
+          value: "ref:secretsclaim:platform-secrets:fs-state-pem"
+        - name: FS_CHECKS_PEM_FILE
+          value: "ref:secretsclaim:platform-secrets:fs-checks-pem"
+        {{- end }}
     {{- end }}
     {{- if or $.HasFreePlan $claim.Variables}}
     vars:
@@ -42,12 +49,12 @@ providers:
           value: {{ $variable.Value }}
         {{- end }}
         {{- if $.HasFreePlan }}
-        - name: "FIRESTARTER_GITHUB_APP_NAME"
-          value: "{{ $.BotName }}"
-        - name: "FIRESTARTER_WORKFLOW_DOCKER_IMAGE_TAG"
-          value: "v{{ $.Firestartr.Version }}_slim"
         - name: "FIRESTARTR_CLI_VERSION"
-          value: "{{ $.Firestartr.Version }}"
+          value: "ref:secretsclaim:platform-secrets:firestartr-cli-version"
+        - name: "FS_STATE_APP_ID"
+          value: "ref:secretsclaim:platform-secrets:fs-state-appid"
+        - name: "FS_CHECKS_APP_ID"
+          value: "ref:secretsclaim:platform-secrets:fs-checks-appid"
         {{- end }}
     {{- end }}
 {{ end }}
@@ -81,22 +88,31 @@ providers:
 ---
 kind: SecretsClaim
 lifecycle: production
-name: pem-secrets
+name: platform-secrets
 system: system:{{ $.DefaultSystemName }}
 version: "1.0"
 providers:
   external_secrets:
-    name: pem-secrets
+    name: platform-secrets
     secretStore:
       kind: SecretStore
-      name: aws
+      name: aws  # This will be swapped with {{ $.Org }}-firestartr-secret-store before uploading
     externalSecrets:
       refreshInterval: 24h
       secrets:
-      - secretName: "test-raw-pem"
-      - secretName: "test-pem"
-    pushSecrets:
-      - secretName: test
-        generator:
-          name: test-generator
-
+      - secretName: "prefapp-bot-pat"
+        remoteRef: "/firestartr/{{ $.Org }}/prefapp-bot-pat"
+      - secretName: "firestartr-cli-version"
+        remoteRef: "/firestartr/{{ $.Org }}/firestartr-cli-version"
+      - secretName: "fs-state-pem"
+        remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-state/pem"
+      - secretName: "fs-checks-pem"
+        remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-checks/pem"
+      - secretName: "fs-import-pem"
+        remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-import/pem"
+      - secretName: "fs-state-appid"
+        remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-state/app-id"
+      - secretName: "fs-checks-appid"
+        remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-checks/app-id"
+      - secretName: "fs-import-appid"
+        remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-import/app-id"

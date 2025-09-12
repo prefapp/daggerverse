@@ -3,7 +3,6 @@ ComponentClaim:
   type: service
   lifecycle: "production"
   maintainedBy: []
-  owner: "group:{{ $.DefaultFirestartrGroup }}"
   platformOwner: "group:{{ $.DefaultFirestartrGroup }}"
   system: "system:{{ $.DefaultSystemName }}"
   providers:
@@ -17,7 +16,7 @@ ComponentClaim:
         name: {{ or $.DefaultBranchStrategy "none" }}
         defaultBranch: {{ or $.DefaultBranch "main" }}
       orgPermissions: {{ or $.DefaultOrgPermissions "view"}}
-      visibility: public
+      visibility: private
       technology:
         stack: "none"
         version: "none"
