@@ -6,11 +6,11 @@ defaultValues:
     backend:
       ref:
         kind: FirestartrProviderConfig
-        name: firestartr-terraform-state
+        name: {{ .CloudProvider.ProviderConfigName }}
     provider:
       ref:
         kind: FirestartrProviderConfig
-        name: github-app
+        name: {{ .GithubApp.ProviderConfigName }}
   firestartr:
     technology:
       stack: none
@@ -18,7 +18,6 @@ defaultValues:
     type: service
     lifecycle: production
   repo:
-    description: "another repo"
     allowMergeCommit: true
     allowSquashMerge: true
     allowRebaseMerge: true
@@ -29,8 +28,7 @@ defaultValues:
     allowUpdateBranch: false
     hasIssues: true
     visibility: private
-    defaultBranch: master
-    codeowners: ""
+    defaultBranch: {{ or .DefaultBranch "main"}}
   actions:
     oidc:
       useDefault: true

@@ -142,6 +142,7 @@ func RenderDotConfigFile(
 	if err != nil {
 		return "", err
 	}
+
 	return renderTmpl(templateContent, bootstrap)
 }
 

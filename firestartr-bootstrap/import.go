@@ -20,8 +20,8 @@ func (m *FirestartrBootstrap) RunImporter(
 	kindContainer = kindContainer.
 		WithDirectory("/import", claimsDir).
 		WithDirectory("/import", crsDir).
-		WithDirectory("/config", dag.CurrentModule().Source().Directory("firestartr_files/crs/.config")).
-		WithDirectory("/claims_defaults", m.DotConfigDir).
+		WithDirectory("/config", m.CrsDotConfigDir).
+		WithDirectory("/claims_defaults", m.ClaimsDotConfigDir).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithEnvVariable("DEBUG", "*").
 		WithEnvVariable("GITHUB_APP_ID", m.Creds.GithubApp.GhAppId).

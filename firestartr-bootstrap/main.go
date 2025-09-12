@@ -8,18 +8,19 @@ import (
 )
 
 type FirestartrBootstrap struct {
-	Bootstrap         *Bootstrap
-	BootstrapFile     *dagger.File
-	CredentialsSecret *dagger.Secret
-	GhOrg             string
-	Creds             *CredsFile
-	CredsFileContent  string
-	GeneratedGhToken  *dagger.Secret
-	RenderedCrs       []*Cr
-	ProvisionedCrs    []*Cr
-	FailedCrs         []*Cr
-	PreviousCrsDir    *dagger.Directory
-	DotConfigDir      *dagger.Directory
+	Bootstrap          *Bootstrap
+	BootstrapFile      *dagger.File
+	CredentialsSecret  *dagger.Secret
+	GhOrg              string
+	Creds              *CredsFile
+	CredsFileContent   string
+	GeneratedGhToken   *dagger.Secret
+	RenderedCrs        []*Cr
+	ProvisionedCrs     []*Cr
+	FailedCrs          []*Cr
+	PreviousCrsDir     *dagger.Directory
+	ClaimsDotConfigDir *dagger.Directory
+	CrsDotConfigDir    *dagger.Directory
 }
 
 func New(
@@ -55,42 +56,26 @@ func New(
 		panic(err)
 	}
 
-	claimsDefaults, err := RenderDotConfigFile(
-		ctx,
-		dag.CurrentModule().
-			Source().
-			File("firestartr_files/claims/.config/claims_defaults.tmpl"),
-		bootstrap,
-	)
+	claimsDotConfigDir, err := getClaimsDotConfigDir(ctx, bootstrap)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	wetReposConfig, err := RenderDotConfigFile(
-		ctx,
-		dag.CurrentModule().
-			Source().
-			File("firestartr_files/claims/.config/wet-repositories-config.tmpl"),
-		bootstrap,
-	)
+	crsDotConfigDir, err := getClaimsDotConfigDir(ctx, bootstrap)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	dotConfigDir := dag.Directory().
-		WithNewDirectory("/.config").
-		WithNewFile("claims_defaults.yaml", claimsDefaults).
-		WithNewFile("wet-repositories-config.yaml", wetReposConfig)
 
 	return &FirestartrBootstrap{
-		Bootstrap:         bootstrap,
-		BootstrapFile:     bootstrapFile,
-		CredentialsSecret: credentialsSecret,
-		GhOrg:             creds.GithubApp.Owner,
-		Creds:             creds,
-		CredsFileContent:  credsFileContent,
-		PreviousCrsDir:    previousCrsDir,
-		DotConfigDir:      dotConfigDir,
+		Bootstrap:          bootstrap,
+		BootstrapFile:      bootstrapFile,
+		CredentialsSecret:  credentialsSecret,
+		GhOrg:              creds.GithubApp.Owner,
+		Creds:              creds,
+		CredsFileContent:   credsFileContent,
+		PreviousCrsDir:     previousCrsDir,
+		ClaimsDotConfigDir: claimsDotConfigDir,
+		CrsDotConfigDir:    crsDotConfigDir,
 	}, nil
 }
 
@@ -169,7 +154,7 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		}
 
 		dotConfig := dag.Directory().
-			WithDirectory(".config", m.DotConfigDir)
+			WithDirectory(".config", m.ClaimsDotConfigDir)
 
 		err = m.PushDirToRepo(
 			ctx,
@@ -192,6 +177,19 @@ func (m *FirestartrBootstrap) RunBootstrap(
 			tokenSecret,
 		)
 
+		if err != nil {
+			panic(err)
+		}
+
+		dotConfig := dag.Directory().
+			WithDirectory(".config", m.CrsDotConfigDir)
+
+		err = m.PushDirToRepo(
+			ctx,
+			dotConfig,
+			m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
+			tokenSecret,
+		)
 		if err != nil {
 			panic(err)
 		}

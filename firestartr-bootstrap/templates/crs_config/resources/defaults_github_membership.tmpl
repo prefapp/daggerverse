@@ -1,13 +1,14 @@
-name: group_base
+name: membership_base
 apiVersion: firestartr.dev/v1
-kind: GroupClaim
+kind: UserClaim
 defaultValues:
   context:
     backend:
       ref:
         kind: FirestartrProviderConfig
-        name: firestartr-terraform-state
+        name: {{ .CloudProvider.ProviderConfigName }}
     provider:
       ref:
         kind: FirestartrProviderConfig
-        name: github-app
+        name: {{ .GithubApp.ProviderConfigName }}
+  role: member
