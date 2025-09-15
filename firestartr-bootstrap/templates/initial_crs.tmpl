@@ -45,11 +45,11 @@ spec:
     backend:
       ref:
         kind: FirestartrProviderConfig
-        name: firestartr-terraform-state
+        name: {{ .CloudProvider.ProviderConfigName }}
     provider:
       ref:
         kind: FirestartrProviderConfig
-        name: github-app
+        name: {{ .GithubApp.ProviderConfigName }}
   firestartr:
     tfStateKey: c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669
   writeConnectionSecretToRef:

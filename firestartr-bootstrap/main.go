@@ -61,7 +61,13 @@ func New(
 		panic(err)
 	}
 
-	crsDotConfigDir, err := getClaimsDotConfigDir(ctx, bootstrap)
+	defaultsInterface := CrsDefaultsData{
+		GithubAppProviderConfigName:     creds.GithubApp.ProviderConfigName,
+		CloudProviderProviderConfigName: creds.CloudProvider.ProviderConfigName,
+		DefaultBranch:                   bootstrap.DefaultBranch,
+	}
+
+	crsDotConfigDir, err := getCrsDotConfigDir(ctx, bootstrap, defaultsInterface)
 	if err != nil {
 		panic(err)
 	}

@@ -20,6 +20,7 @@ type Feature struct {
 	Name    string `yaml:"name"`
 	Version string `yaml:"version"`
 }
+
 type Bootstrap struct {
 	Firestartr             Firestartr  `yaml:"firestartr"`
 	PushFiles              PushFiles   `yaml:"pushFiles"`
@@ -96,4 +97,10 @@ type GithubApp struct {
 type SecretData struct {
 	Name  string
 	Value string
+}
+
+type CrsDefaultsData struct {
+	DefaultBranch                   string
+	CloudProviderProviderConfigName string
+	GithubAppProviderConfigName     string
 }

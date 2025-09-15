@@ -70,8 +70,8 @@ func (m *FirestartrBootstrap) RenderCrs(
 
 	crsDir := initialCrsDir.WithoutFiles(
 		[]string{
-			"FirestartrProviderConfig.github-app.yml",
-			"FirestartrProviderConfig.firestartr-terraform-state.yml",
+			fmt.Sprintf("FirestartrProviderConfig.%s.yml", m.Creds.GithubApp.ProviderConfigName),
+			fmt.Sprintf("FirestartrProviderConfig.%s.yml", m.Creds.CloudProvider.ProviderConfigName),
 		},
 	)
 

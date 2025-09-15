@@ -6,11 +6,11 @@ defaultValues:
     backend:
       ref:
         kind: FirestartrProviderConfig
-        name: {{ .CloudProvider.ProviderConfigName }}
+        name: {{ .CloudProviderProviderConfigName }}
     provider:
       ref:
         kind: FirestartrProviderConfig
-        name: {{ .GithubApp.ProviderConfigName }}
+        name: {{ .GithubAppProviderConfigName }}
   firestartr:
     technology:
       stack: none

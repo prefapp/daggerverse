@@ -31,24 +31,21 @@ func (m *FirestartrBootstrap) RunImporter(
 		WithEnvVariable("ORG", m.GhOrg).
 		WithExec([]string{"apk", "add", "nodejs", "npm"}).
 		WithExec([]string{
-			"npm",
-			"install",
-			"-g",
-			fmt.Sprintf("@firestartr/cli@v%s", m.Bootstrap.Firestartr.Version),
+			"npm", "install", "-g",
+			fmt.Sprintf("@firestartr/cli@v%s", "v1.50.1-snapshot"),
+			// fmt.Sprintf("@firestartr/cli@v%s", m.Bootstrap.Firestartr.Version),
 		}).
-		WithExec(
-			[]string{
-				"firestartr-cli", "importer",
-				"--org", m.GhOrg,
-				"--config", "/config",
-				"--crs", "/import/crs",
-				"--claims", "/import/claims",
-				"--claimsDefaults", "/claims_defaults",
-				"--filters", "gh-repo,SKIP=SKIP",
-				"--filters", "gh-group,REGEXP=[A-Za-z0-9\\-]+",
-				"--filters", "gh-members,REGEXP=[A-Za-z0-9\\-]+",
-			},
-		)
+		WithExec([]string{
+			"firestartr-cli", "importer",
+			"--org", m.GhOrg,
+			"--config", "/config",
+			"--crs", "/import/crs",
+			"--claims", "/import/claims",
+			"--claimsDefaults", "/claims_defaults",
+			"--filters", "gh-repo,SKIP=SKIP",
+			"--filters", "gh-group,REGEXP=[A-Za-z0-9\\-]+",
+			"--filters", "gh-members,REGEXP=[A-Za-z0-9\\-]+",
+		})
 
 	kindContainer = m.ApplyFirestartrCrs(ctx, kindContainer, "/import/crs")
 
