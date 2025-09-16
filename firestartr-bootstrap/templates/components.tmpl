@@ -96,7 +96,7 @@ providers:
     name: platform-secrets
     secretStore:
       kind: SecretStore
-      name: aws  # This will be swapped with {{ $.Org }}-firestartr-secret-store before uploading
+      name: aws  # This will be swapped with {{ $.FinalSecretStoreName }} before uploading
     externalSecrets:
       refreshInterval: 24h
       secrets:

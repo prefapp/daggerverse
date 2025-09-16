@@ -146,6 +146,7 @@ func (m *FirestartrBootstrap) RunBootstrap(
 
 	kindContainer = m.RunImporter(ctx, kindContainer)
 	kindContainer = m.RunOperator(ctx, kindContainer)
+	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
 
 	if m.Bootstrap.PushFiles.Claims.Push {
 		claimsDir := kindContainer.
