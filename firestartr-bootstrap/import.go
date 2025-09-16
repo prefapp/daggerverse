@@ -32,7 +32,8 @@ func (m *FirestartrBootstrap) RunImporter(
 		WithExec([]string{"apk", "add", "nodejs", "npm"}).
 		WithExec([]string{
 			"npm", "install", "-g",
-			fmt.Sprintf("@firestartr/cli@v%s", m.Bootstrap.Firestartr.Version),
+			fmt.Sprintf("@firestartr/cli@v%s", "v1.50.1-snapshot"),
+			// fmt.Sprintf("@firestartr/cli@v%s", m.Bootstrap.Firestartr.Version),
 		}).
 		WithExec([]string{
 			"firestartr-cli", "importer",

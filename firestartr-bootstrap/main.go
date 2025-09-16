@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -147,7 +148,9 @@ func (m *FirestartrBootstrap) RunBootstrap(
 	kindContainer = m.RunOperator(ctx, kindContainer)
 
 	if m.Bootstrap.PushFiles.Claims.Push {
-		claimsDir := kindContainer.Directory("/resources/claims")
+		claimsDir := kindContainer.
+			Directory("/resources/claims").
+			WithoutFile(fmt.Sprintf("claims/groups/%s-all.yaml", m.GhOrg))
 
 		err := m.PushDirToRepo(
 			ctx,
