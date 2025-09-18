@@ -45,12 +45,12 @@ owner: group:{{ $.Org }}-all
 ---
 kind: SecretsClaim
 lifecycle: production
-name: platform-secrets
+name: firestartr-secrets
 system: system:{{ $.DefaultSystemName }}
 version: "1.0"
 providers:
   external_secrets:
-    name: platform-secrets
+    name: firestartr-secrets
     secretStore:
       kind: SecretStore
       name: aws  # This will be swapped with {{ $.FinalSecretStoreName }} before uploading

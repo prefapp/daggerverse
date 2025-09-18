@@ -15,21 +15,19 @@ func (m *FirestartrBootstrap) RunImporter(
 	claimsDir := dag.Directory().
 		WithNewDirectory("/claims")
 
-	if len(alreadyCreatedReposList) > 0 {
-		renderedClaims, err := m.RenderBootstrapFile(
-			ctx,
-			dag.CurrentModule().
-				Source().
-				File("templates/initial_claims.tmpl"),
-		)
-		if err != nil {
-			panic(err)
-		}
+	renderedClaims, err := m.RenderBootstrapFile(
+		ctx,
+		dag.CurrentModule().
+			Source().
+			File("templates/initial_claims.tmpl"),
+	)
+	if err != nil {
+		panic(err)
+	}
 
-		claimsDir, err = m.SplitRenderedClaimsInFiles(renderedClaims)
-		if err != nil {
-			panic(err)
-		}
+	claimsDir, err = m.SplitRenderedClaimsInFiles(renderedClaims)
+	if err != nil {
+		panic(err)
 	}
 
 	crsDir := dag.Directory().
