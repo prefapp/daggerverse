@@ -8,6 +8,7 @@ type Component struct {
 	Features      []Feature
 	Variables     []Variable `yaml:"variables"`
 	Secrets       []Variable `yaml:"secrets"` // Secrets have the same structure as Variables
+	Labels        []string   `yaml:"labels"`
 	Skipped       bool       `yaml:"skip"`
 }
 

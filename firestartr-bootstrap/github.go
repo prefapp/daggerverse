@@ -68,7 +68,43 @@ func (m *FirestartrBootstrap) CloneRepo(
 	return alpCtr, nil
 }
 
-func (m *FirestartrBootstrap) SetOrgVariable(ctx context.Context, name string, value string, ghToken *dagger.Secret) (*dagger.Container, error) {
+func (m *FirestartrBootstrap) CreateLabelsInRepo(
+	ctx context.Context,
+	repoName string,
+	labelList []string,
+	ghToken *dagger.Secret,
+) error {
+	ghCtr, err := m.CloneRepo(ctx, repoName, ghToken)
+	if err != nil {
+		return err
+	}
+
+	ghCtr = ghCtr.WithWorkdir("/repo")
+
+	for _, label := range labelList {
+		ghCtr, err = ghCtr.
+			WithExec([]string{
+				"gh",
+				"label",
+				"create",
+				label,
+			}).
+			Sync(ctx)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *FirestartrBootstrap) SetOrgVariable(
+	ctx context.Context,
+	name string,
+	value string,
+	ghToken *dagger.Secret,
+) (*dagger.Container, error) {
 	alpCtr, err := m.GhContainer(ctx, ghToken).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
@@ -92,7 +128,13 @@ func (m *FirestartrBootstrap) SetOrgVariable(ctx context.Context, name string, v
 	return alpCtr, nil
 }
 
-func (m *FirestartrBootstrap) SetRepoVariable(ctx context.Context, repoName string, name string, value string, ghToken *dagger.Secret) (*dagger.Container, error) {
+func (m *FirestartrBootstrap) SetRepoVariable(
+	ctx context.Context,
+	repoName string,
+	name string,
+	value string,
+	ghToken *dagger.Secret,
+) (*dagger.Container, error) {
 	alpCtr, err := m.GhContainer(ctx, ghToken).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{

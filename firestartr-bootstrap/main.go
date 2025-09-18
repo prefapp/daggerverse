@@ -220,5 +220,15 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		}
 	}
 
+	for _, component := range m.Bootstrap.Components {
+		if len(component.Labels) > 0 {
+			err = m.CreateLabelsInRepo(ctx, component.Name, component.Labels, tokenSecret)
+
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
 	return kindContainer
 }
