@@ -191,9 +191,9 @@ func (m *FirestartrBootstrap) SetRepoVariables(ctx context.Context, ghToken *dag
 func (m *FirestartrBootstrap) SetOrgVariables(ctx context.Context, ghToken *dagger.Secret) error {
 
 	mappedVars := map[string]string{
-		"FIRESTARTER_GITHUB_APP_NAME":           m.Creds.GithubApp.BotName,
-		"FIRESTARTER_WORKFLOW_DOCKER_IMAGE_TAG": fmt.Sprintf("v%s_slim", m.Bootstrap.Firestartr.Version),
-		"FIRESTARTR_CLI_VERSION":                m.Bootstrap.Firestartr.Version,
+		"FIRESTARTR_CLI_VERSION": "ref:secretsclaim:firestartr-secrets:firestartr-cli-version",
+		"FS_STATE_APP_ID":        "ref:secretsclaim:firestartr-secrets:fs-state-appid",
+		"FS_CHECKS_APP_ID":       "ref:secretsclaim:firestartr-secrets:fs-checks-appid",
 	}
 
 	for name, value := range mappedVars {
@@ -231,8 +231,9 @@ func (m *FirestartrBootstrap) SetOrgSecret(ctx context.Context, name string, val
 
 func (m *FirestartrBootstrap) SetOrgSecrets(ctx context.Context, ghToken *dagger.Secret) error {
 	mappedVars := map[string]string{
-		"FIRESTARTER_GITHUB_APP_PEM_FILE": m.Creds.GithubApp.RawPem,
-		"FIRESTARTR_GITHUB_APP_PEM_FILE":  m.Creds.GithubApp.Pem,
+		"FS_STATE_PEM_FILE":  "ref:secretsclaim:firestartr-secrets:fs-state-pem",
+		"FS_CHECKS_PEM_FILE": "ref:secretsclaim:firestartr-secrets:fs-checks-pem",
+		"PREFAPP_BOT_PAT":    "ref:secretsclaim:firestartr-secrets:prefapp-bot-pat",
 	}
 
 	for name, value := range mappedVars {
