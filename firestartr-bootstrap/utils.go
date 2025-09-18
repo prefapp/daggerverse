@@ -16,7 +16,7 @@ func (m *FirestartrBootstrap) UpdateSecretStoreRef(
 	secretClaim, err := getYamlDataFromContainerFile(
 		ctx,
 		kindContainer,
-		"/resources/claims/claims/secrets/platform-secrets.yaml",
+		"/resources/claims/claims/secrets/firestartr-secrets.yaml",
 	)
 	if err != nil {
 		panic(err)
@@ -27,7 +27,7 @@ func (m *FirestartrBootstrap) UpdateSecretStoreRef(
 	kindContainer = saveYamlDataToContainerFile(
 		ctx,
 		kindContainer,
-		"/resources/claims/claims/secrets/platform-secrets.yaml",
+		"/resources/claims/claims/secrets/firestartr-secrets.yaml",
 		secretClaim,
 	)
 
