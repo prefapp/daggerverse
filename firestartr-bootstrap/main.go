@@ -107,10 +107,13 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		panic(err)
 	}
 
+	alreadyCreatedReposList := []string{}
 	if m.PreviousCrsDir == nil {
-		// only validate if we are not trying to re-run the bootstrap
-		// with the previous crs generated in the previous run
-		err = m.ValidateRepositoriesAreNotCreatedYet(ctx, tokenSecret)
+		// if any of the CRs already exist, we skip their creation
+		alreadyCreatedReposList, err = m.CheckAlreadyCreatedRepositories(
+			ctx,
+			tokenSecret,
+		)
 		if err != nil {
 			panic(err)
 		}
@@ -144,7 +147,7 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		}
 	}
 
-	kindContainer = m.RunImporter(ctx, kindContainer)
+	kindContainer = m.RunImporter(ctx, kindContainer, alreadyCreatedReposList)
 	kindContainer = m.RunOperator(ctx, kindContainer)
 	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
 
