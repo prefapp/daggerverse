@@ -1,17 +1,5 @@
 ---
-kind: SystemClaim
-version: "1.0"
-name: {{ $.DefaultSystemName }}
-domain: domain:{{ $.DefaultDomainName }}
-owner: group:{{ $.DefaultFirestartrGroup }}
-description: "The default system of {{ $.Org }}"
----
-kind: DomainClaim
-version: "1.0"
-name: {{ $.DefaultDomainName }}
-description: "The default domain of {{ $.Org }}"
-owner: group:{{ $.DefaultFirestartrGroup }}
----
+# Firestartr group
 kind: GroupClaim
 version: "1.0"
 name: {{ $.DefaultFirestartrGroup }}
@@ -24,6 +12,36 @@ providers:
   github:
     name: {{ $.DefaultFirestartrGroup }}
     org: {{ $.Org }}
+---
+# Firestartr system
+kind: SystemClaim
+version: "1.0"
+name: firestartr
+domain: domain:platform
+owner: group:{{ $.DefaultFirestartrGroup }}
+description: "The firestartr system"
+---
+# Firestartr domain
+kind: DomainClaim
+version: "1.0"
+name: platform
+description: "The firestartr platform domain"
+owner: group:{{ $.DefaultFirestartrGroup }}
+---
+# The default system for the organization
+kind: SystemClaim
+version: "1.0"
+name: {{ $.DefaultSystemName }}
+domain: domain:{{ $.DefaultDomainName }}
+owner: group:{{ $.Org }}-all
+description: "The default system of {{ $.Org }}"
+---
+# The default domain for the organization
+kind: DomainClaim
+version: "1.0"
+name: {{ $.DefaultDomainName }}
+description: "The default domain of {{ $.Org }}"
+owner: group:{{ $.Org }}-all
 ---
 kind: SecretsClaim
 lifecycle: production
