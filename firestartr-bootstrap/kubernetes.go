@@ -49,7 +49,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 			"kubectl", "wait",
 			"--for=condition=Ready",
 			strings.Trim(firestartrPodName, "\n"),
-			"--timeout=180s",
+			"--timeout=300s",
 			"-n", "external-secrets",
 		}).
 		WithFile("/secret_store/aws_secretstore.yaml", awsSecretStoreFile).

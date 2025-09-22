@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
-	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -125,113 +124,113 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		panic(err)
 	}
 
-	if !m.Bootstrap.HasFreePlan {
-		err = m.SetOrgVariables(ctx, tokenSecret)
-		if err != nil {
-			panic(err)
-		}
+	// if !m.Bootstrap.HasFreePlan {
+	// 	err = m.SetOrgVariables(ctx, tokenSecret)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
 
-		err = m.SetOrgSecrets(ctx, tokenSecret)
-		if err != nil {
-			panic(err)
-		}
-	}
+	// 	err = m.SetOrgSecrets(ctx, tokenSecret)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }
 
 	kindContainer := m.InstallCRDsAndInitialCRs(ctx, dockerSocket, kindSvc)
 
-	if m.Bootstrap.HasFreePlan {
-		kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)
+	// if m.Bootstrap.HasFreePlan {
+	// 	kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)
 
-		if err != nil {
-			panic(err)
-		}
-	}
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }
 
 	kindContainer = m.RunImporter(ctx, kindContainer, alreadyCreatedReposList)
-	kindContainer = m.RunOperator(ctx, kindContainer)
-	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
+	// kindContainer = m.RunOperator(ctx, kindContainer)
+	// kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
 
-	if m.Bootstrap.PushFiles.Claims.Push {
-		claimsDir := kindContainer.
-			Directory("/resources/claims").
-			WithoutFile(fmt.Sprintf("claims/groups/%s-all.yaml", m.GhOrg))
+	// if m.Bootstrap.PushFiles.Claims.Push {
+	// 	claimsDir := kindContainer.
+	// 		Directory("/resources/claims").
+	// 		WithoutFile(fmt.Sprintf("claims/groups/%s-all.yaml", m.GhOrg))
 
-		err := m.PushDirToRepo(
-			ctx,
-			claimsDir,
-			m.Bootstrap.PushFiles.Claims.Repo,
-			tokenSecret,
-		)
-		if err != nil {
-			panic(err)
-		}
+	// 	err := m.PushDirToRepo(
+	// 		ctx,
+	// 		claimsDir,
+	// 		m.Bootstrap.PushFiles.Claims.Repo,
+	// 		tokenSecret,
+	// 	)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
 
-		dotConfig := dag.Directory().
-			WithDirectory(".config", m.ClaimsDotConfigDir)
+	// 	dotConfig := dag.Directory().
+	// 		WithDirectory(".config", m.ClaimsDotConfigDir)
 
-		err = m.PushDirToRepo(
-			ctx,
-			dotConfig,
-			m.Bootstrap.PushFiles.Claims.Repo,
-			tokenSecret,
-		)
-		if err != nil {
-			panic(err)
-		}
-	}
+	// 	err = m.PushDirToRepo(
+	// 		ctx,
+	// 		dotConfig,
+	// 		m.Bootstrap.PushFiles.Claims.Repo,
+	// 		tokenSecret,
+	// 	)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }
 
-	if m.Bootstrap.PushFiles.Crs.Providers.Github.Push {
-		crsDir := kindContainer.Directory("/resources/firestartr-crs/github")
+	// if m.Bootstrap.PushFiles.Crs.Providers.Github.Push {
+	// 	crsDir := kindContainer.Directory("/resources/firestartr-crs/github")
 
-		err := m.PushDirToRepo(
-			ctx,
-			crsDir,
-			m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
-			tokenSecret,
-		)
+	// 	err := m.PushDirToRepo(
+	// 		ctx,
+	// 		crsDir,
+	// 		m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
+	// 		tokenSecret,
+	// 	)
 
-		if err != nil {
-			panic(err)
-		}
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
 
-		dotConfig := dag.Directory().
-			WithDirectory(".config", m.CrsDotConfigDir)
+	// 	dotConfig := dag.Directory().
+	// 		WithDirectory(".config", m.CrsDotConfigDir)
 
-		err = m.PushDirToRepo(
-			ctx,
-			dotConfig,
-			m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
-			tokenSecret,
-		)
-		if err != nil {
-			panic(err)
-		}
-	}
+	// 	err = m.PushDirToRepo(
+	// 		ctx,
+	// 		dotConfig,
+	// 		m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
+	// 		tokenSecret,
+	// 	)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }
 
-	if m.Bootstrap.PushFiles.Crs.Providers.Terraform.Push {
-		crsDir := kindContainer.Directory("/resources/firestartr-crs/infra")
+	// if m.Bootstrap.PushFiles.Crs.Providers.Terraform.Push {
+	// 	crsDir := kindContainer.Directory("/resources/firestartr-crs/infra")
 
-		err := m.PushDirToRepo(
-			ctx,
-			crsDir,
-			m.Bootstrap.PushFiles.Crs.Providers.Terraform.Repo,
-			tokenSecret,
-		)
+	// 	err := m.PushDirToRepo(
+	// 		ctx,
+	// 		crsDir,
+	// 		m.Bootstrap.PushFiles.Crs.Providers.Terraform.Repo,
+	// 		tokenSecret,
+	// 	)
 
-		if err != nil {
-			panic(err)
-		}
-	}
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }
 
-	for _, component := range m.Bootstrap.Components {
-		if len(component.Labels) > 0 {
-			err = m.CreateLabelsInRepo(ctx, component.Name, component.Labels, tokenSecret)
+	// for _, component := range m.Bootstrap.Components {
+	// 	if len(component.Labels) > 0 {
+	// 		err = m.CreateLabelsInRepo(ctx, component.Name, component.Labels, tokenSecret)
 
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
+	// 		if err != nil {
+	// 			panic(err)
+	// 		}
+	// 	}
+	// }
 
 	return kindContainer
 }

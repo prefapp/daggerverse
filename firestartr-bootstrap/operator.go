@@ -75,16 +75,16 @@ func (m *FirestartrBootstrap) InstallCRDsAndInitialCRs(
 			"apply",
 			"-f", "/resources/initial-crs",
 		}).
-		WithExec([]string{
-			"helm", "repo", "add",
-			"external-secrets", "https://charts.external-secrets.io",
-		}).
-		WithExec([]string{
-			"helm", "install", "external-secrets",
-			"external-secrets/external-secrets",
-			"-n", "external-secrets",
-			"--create-namespace",
-		}).
+		// WithExec([]string{
+		// 	"helm", "repo", "add",
+		// 	"external-secrets", "https://charts.external-secrets.io",
+		// }).
+		// WithExec([]string{
+		// 	"helm", "install", "external-secrets",
+		// 	"external-secrets/external-secrets",
+		// 	"-n", "external-secrets",
+		// 	"--create-namespace",
+		// }).
 		Sync(ctx)
 
 	if err != nil {
@@ -151,16 +151,16 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 			"-f", entry,
 		})
 
-	if waitForProvisioned {
-		kindContainer = kindContainer.
-			WithExec([]string{
-				"kubectl",
-				"wait",
-				"--for=condition=PROVISIONED=True",
-				fmt.Sprintf("%s/%s", getSingularByKind(cr.Kind), cr.Metadata.Name),
-				"--timeout=180s",
-			})
-	}
+	// if waitForProvisioned {
+	// 	kindContainer = kindContainer.
+	// 		WithExec([]string{
+	// 			"kubectl",
+	// 			"wait",
+	// 			"--for=condition=PROVISIONED=True",
+	// 			fmt.Sprintf("%s/%s", getSingularByKind(cr.Kind), cr.Metadata.Name),
+	// 			"--timeout=180s",
+	// 		})
+	// }
 
 	kindContainer, err = kindContainer.Sync(ctx)
 
