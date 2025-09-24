@@ -40,7 +40,7 @@ func (m *FirestartrBootstrap) RunImporter(
 		"--crs", "/import/crs",
 		"--claims", "/import/claims",
 		"--claimsDefaults", "/claims_defaults",
-		"--filters", "gh-group,REGEXP=[A-Za-z0-9\\-]+",
+		"--filters", fmt.Sprintf("gh-group,REGEXP=^(?!%s-all)[A-Za-z0-9\\-]+$", m.GhOrg),
 		"--filters", "gh-members,REGEXP=[A-Za-z0-9\\-]+",
 	}
 	if len(alreadyCreatedReposList) > 0 {
@@ -74,8 +74,7 @@ func (m *FirestartrBootstrap) RunImporter(
 		WithExec([]string{"apk", "add", "nodejs", "npm"}).
 		WithExec([]string{
 			"npm", "install", "-g",
-			fmt.Sprintf("@firestartr/cli@v%s", "1.50.1-snapshot-32"),
-			// fmt.Sprintf("@firestartr/cli@v%s", m.Bootstrap.Firestartr.Version),
+			fmt.Sprintf("@firestartr/cli@v%s", m.Bootstrap.Firestartr.Version),
 		}).
 		WithExec(importCommand)
 
