@@ -22,8 +22,22 @@ func (m *FirestartrBootstrap) RunOperator(
 	kindContainer = kindContainer.
 		WithDirectory("/resources", renderedCrsDir)
 
-	kindContainer = m.ApplyFirestartrCrs(ctx, kindContainer, "/resources/firestartr-crs/infra")
-	kindContainer = m.ApplyFirestartrCrs(ctx, kindContainer, "/resources/firestartr-crs/github")
+	kindContainer = m.ApplyFirestartrCrs(
+		ctx,
+		kindContainer,
+		"/resources/firestartr-crs/infra",
+		[]string{"ExternalSecret.*"},
+	)
+	kindContainer = m.ApplyFirestartrCrs(
+		ctx,
+		kindContainer,
+		"/resources/firestartr-crs/github",
+		[]string{
+			"FirestartrGithubGroup.*",
+			"FirestartrGithubRepository.*",
+			"FirestartrGithubRepositoryFeature.*",
+		},
+	)
 
 	return kindContainer
 
@@ -98,15 +112,10 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 	ctx context.Context,
 	kindContainer *dagger.Container,
 	crsDirectoryPath string,
+	crsToApplyList []string,
 ) *dagger.Container {
 
-	for _, kind := range []string{
-		"ExternalSecret.*",
-		"FirestartrGithubMembership.*",
-		"FirestartrGithubGroup.*",
-		"FirestartrGithubRepository.*",
-		"FirestartrGithubRepositoryFeature.*",
-	} {
+	for _, kind := range crsToApplyList {
 		entries, err := kindContainer.Directory(crsDirectoryPath).Glob(ctx, kind)
 		if err != nil {
 			panic(fmt.Sprintf("Failed to get glob entries: %s", err))

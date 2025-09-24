@@ -79,7 +79,17 @@ func (m *FirestartrBootstrap) RunImporter(
 		}).
 		WithExec(importCommand)
 
-	kindContainer = m.ApplyFirestartrCrs(ctx, kindContainer, "/import/crs")
+	kindContainer = m.ApplyFirestartrCrs(
+		ctx,
+		kindContainer,
+		"/import/crs",
+		[]string{
+			"FirestartrGithubMembership.*",
+			"FirestartrGithubGroup.*",
+			"FirestartrGithubRepository.*",
+			"FirestartrGithubRepositoryFeature.*",
+		},
+	)
 
 	return kindContainer
 
