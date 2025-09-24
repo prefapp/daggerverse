@@ -125,30 +125,28 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		panic(err)
 	}
 
-	if !m.Bootstrap.HasFreePlan {
-		err = m.SetOrgVariables(ctx, tokenSecret)
-		if err != nil {
-			panic(err)
-		}
-
-		err = m.SetOrgSecrets(ctx, tokenSecret)
-		if err != nil {
-			panic(err)
-		}
-	}
-
 	kindContainer := m.InstallCRDsAndInitialCRs(ctx, dockerSocket, kindSvc)
+	kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)
 
-	if m.Bootstrap.HasFreePlan {
-		kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)
-
-		if err != nil {
-			panic(err)
-		}
+	if err != nil {
+		panic(err)
 	}
 
 	kindContainer = m.RunImporter(ctx, kindContainer, alreadyCreatedReposList)
 	kindContainer = m.RunOperator(ctx, kindContainer)
+
+	if !m.Bootstrap.HasFreePlan {
+		err = m.SetOrgVariables(ctx, tokenSecret, kindContainer)
+		if err != nil {
+			panic(err)
+		}
+
+		err = m.SetOrgSecrets(ctx, tokenSecret, kindContainer)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
 
 	if m.Bootstrap.PushFiles.Claims.Push {

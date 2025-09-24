@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -63,4 +64,30 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 	}
 
 	return kindContainer, nil
+}
+
+func (m *FirestartrBootstrap) GetKubernetesSecretValue(
+	ctx context.Context,
+	kindContainer *dagger.Container,
+	fullRef string,
+) (string, error) {
+	secretRef := strings.Replace(fullRef, "ref:secretsclaim:", "", 1)
+	secretCR := strings.Split(secretRef, ":")[0]
+	secretName := strings.Split(secretRef, ":")[1]
+
+	encodedValue, err := kindContainer.
+		WithExec([]string{
+			"kubectl", "get", "secret", secretCR,
+			"-o", fmt.Sprintf("jsonpath=\"{.data.%s}\"", secretName),
+		}).Stdout(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	return kindContainer.
+		WithNewFile("/tmp/encoded_value.txt", strings.Trim(encodedValue, "\"\n")).
+		WithExec([]string{
+			"base64", "-d", "/tmp/encoded_value.txt",
+		}).Stdout(ctx)
+
 }

@@ -188,7 +188,11 @@ func (m *FirestartrBootstrap) SetRepoVariables(ctx context.Context, ghToken *dag
 	return nil
 }
 
-func (m *FirestartrBootstrap) SetOrgVariables(ctx context.Context, ghToken *dagger.Secret) error {
+func (m *FirestartrBootstrap) SetOrgVariables(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+	kindContainer *dagger.Container,
+) error {
 
 	mappedVars := map[string]string{
 		"FIRESTARTR_CLI_VERSION": "ref:secretsclaim:firestartr-secrets:firestartr-cli-version",
@@ -196,8 +200,12 @@ func (m *FirestartrBootstrap) SetOrgVariables(ctx context.Context, ghToken *dagg
 		"FS_CHECKS_APP_ID":       "ref:secretsclaim:firestartr-secrets:fs-checks-appid",
 	}
 
-	for name, value := range mappedVars {
-		_, err := m.SetOrgVariable(ctx, name, value, ghToken)
+	for name, ref := range mappedVars {
+		value, err := m.GetKubernetesSecretValue(ctx, kindContainer, ref)
+		if err != nil {
+			return err
+		}
+		_, err = m.SetOrgVariable(ctx, name, value, ghToken)
 		if err != nil {
 			return err
 		}
@@ -205,7 +213,12 @@ func (m *FirestartrBootstrap) SetOrgVariables(ctx context.Context, ghToken *dagg
 	return nil
 }
 
-func (m *FirestartrBootstrap) SetOrgSecret(ctx context.Context, name string, value string, ghToken *dagger.Secret) (*dagger.Container, error) {
+func (m *FirestartrBootstrap) SetOrgSecret(
+	ctx context.Context,
+	name string,
+	value string,
+	ghToken *dagger.Secret,
+) (*dagger.Container, error) {
 	alpCtr, err := m.GhContainer(ctx, ghToken).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
@@ -229,15 +242,24 @@ func (m *FirestartrBootstrap) SetOrgSecret(ctx context.Context, name string, val
 	return alpCtr, nil
 }
 
-func (m *FirestartrBootstrap) SetOrgSecrets(ctx context.Context, ghToken *dagger.Secret) error {
+func (m *FirestartrBootstrap) SetOrgSecrets(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+	kindContainer *dagger.Container,
+) error {
 	mappedVars := map[string]string{
 		"FS_STATE_PEM_FILE":  "ref:secretsclaim:firestartr-secrets:fs-state-pem",
 		"FS_CHECKS_PEM_FILE": "ref:secretsclaim:firestartr-secrets:fs-checks-pem",
 		"PREFAPP_BOT_PAT":    "ref:secretsclaim:firestartr-secrets:prefapp-bot-pat",
 	}
 
-	for name, value := range mappedVars {
-		_, err := m.SetOrgSecret(ctx, name, value, ghToken)
+	for name, ref := range mappedVars {
+		value, err := m.GetKubernetesSecretValue(ctx, kindContainer, ref)
+		if err != nil {
+			return err
+		}
+
+		_, err = m.SetOrgSecret(ctx, name, value, ghToken)
 		if err != nil {
 			return err
 		}
