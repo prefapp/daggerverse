@@ -341,7 +341,7 @@ func (m *FirestartrBootstrap) GetOrganizationPlanName(
 	planName, err := m.GhContainer(ctx, ghToken).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
-			"gh", "api", "/orgs/" + m.GhOrg, "--jq", ".plan.name",
+			"gh", "api", fmt.Sprintf("/orgs/%s", m.GhOrg), "--jq", ".plan.name",
 		}).
 		Stdout(ctx)
 

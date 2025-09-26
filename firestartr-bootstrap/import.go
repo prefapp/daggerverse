@@ -65,7 +65,7 @@ func (m *FirestartrBootstrap) RunImporter(
 		WithDirectory("/config", m.CrsDotConfigDir).
 		WithDirectory("/claims_defaults", m.ClaimsDotConfigDir).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
-		WithEnvVariable("DEBUG", "*").
+		WithEnvVariable("LOG_LEVEL", "debug").
 		WithEnvVariable("GITHUB_APP_ID", m.Creds.GithubApp.GhAppId).
 		WithEnvVariable("GITHUB_APP_INSTALLATION_ID", m.Creds.GithubApp.InstallationId).
 		WithEnvVariable("GITHUB_APP_PEM_FILE", m.Creds.GithubApp.Pem).

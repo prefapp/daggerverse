@@ -68,7 +68,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 				"PREFAPP_BOT_PAT":                  m.Creds.GithubApp.BotPat,
 				"NODE_TLS_REJECT_UNAUTHORIZED":     "0",
 				"ORG":                              m.GhOrg,
-				"DEBUG":                            "*",
+				"LOG_LEVEL":                        "debug",
 				"AVOID_PROVIDER_SECRET_ENCRYPTION": "1",
 			},
 		},
