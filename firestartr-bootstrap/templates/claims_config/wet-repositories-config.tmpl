@@ -6,9 +6,6 @@ states:
       FirestartrGithubGroup:
       FirestartrGithubMembership:
       FirestartrGithubRepositoryFeature:
-    workflows:
-      hydrate: "hydrate_and_notify.yaml"
-      notify: "notify_and_hydrate.yaml"
   catalog:
     repo: {{ $.Org }}/catalog
     crKinds:
@@ -18,13 +15,7 @@ states:
       Component:
       Group:
       Resource:
-    workflows:
-      hydrate: "hydrate.yaml"
-      notify: "notify.yaml"
   terraform:
     repo: {{ $.Org }}/state-infra
     crKinds:
       FirestartrTerraformWorkspace:
-    workflows:
-      hydrate: "hydrate.yaml"
-      notify: "notify_and_hydrate.yaml"

@@ -22,11 +22,13 @@ providers:
         useDefault: false
         includeClaimKeys:
           - repo
+    {{- if $claim.Features}}
     features:
       {{- range $index, $feature := $claim.Features }}
       - name: {{ $feature.Name }}
         version: {{ $feature.Version }}
       {{- end }}
+    {{- end }}
     {{- if or $.HasFreePlan $claim.Secrets}}
     secrets:
       actions:
