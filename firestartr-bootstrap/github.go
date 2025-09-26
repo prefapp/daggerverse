@@ -5,7 +5,6 @@ import (
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
 	"path"
-	"slices"
 	"strings"
 	"time"
 )
@@ -21,38 +20,26 @@ func (m *FirestartrBootstrap) PushDirToRepo(
 		return err
 	}
 
-	existingEntries, err := ghCtr.Directory("/repo").Glob(ctx, "**")
-
 	entries, err := dir.Glob(ctx, "**")
 	if err != nil {
 		return err
 	}
 
-	doCommit := false
-
 	for _, entry := range entries {
-		if slices.Contains(existingEntries, entry) {
-			continue
-		}
 		if strings.HasSuffix(entry, "/") {
 			continue
 		}
 		ghCtr = ghCtr.WithFile(path.Join("/repo", entry), dir.File(entry))
-		doCommit = true
 	}
 
-	if doCommit {
-		_, err = ghCtr.
-			WithWorkdir("/repo").
-			WithExec([]string{"git", "add", "."}).
-			WithExec([]string{"git", "commit", "-m", "automated commit from firestartr-bootstrap"}).
-			WithExec([]string{"git", "push"}).
-			Sync(ctx)
-		if err != nil {
-			return err
-		}
-	} else {
-		fmt.Printf("No new files to push to repo %s\n", repoName)
+	_, err = ghCtr.
+		WithWorkdir("/repo").
+		WithExec([]string{"git", "add", "."}).
+		WithExec([]string{"git", "commit", "-m", "automated commit from firestartr-bootstrap"}).
+		WithExec([]string{"git", "push"}).
+		Sync(ctx)
+	if err != nil {
+		return err
 	}
 
 	return nil
