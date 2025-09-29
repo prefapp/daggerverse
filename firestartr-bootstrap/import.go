@@ -40,7 +40,7 @@ func (m *FirestartrBootstrap) RunImporter(
 		"--crs", "/import/crs",
 		"--claims", "/import/claims",
 		"--claimsDefaults", "/claims_defaults",
-		"--filters", fmt.Sprintf("gh-group,REGEXP=^(?!%s-all)[A-Za-z0-9\\-]+$", m.GhOrg),
+		"--filters", "gh-group,REGEXP=[A-Za-z0-9\\-]+",
 		"--filters", "gh-members,REGEXP=[A-Za-z0-9\\-]+",
 	}
 	if len(alreadyCreatedReposList) > 0 {

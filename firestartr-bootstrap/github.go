@@ -334,6 +334,33 @@ func (m *FirestartrBootstrap) WorkflowRun(ctx context.Context, jsonInput string,
 	return nil
 }
 
+func (m *FirestartrBootstrap) CheckIfOrgAllGroupExists(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) error {
+	_, err := m.GhContainer(ctx, ghToken).
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithExec([]string{
+			"gh", "api", fmt.Sprintf("/orgs/%s/teams/%s-all", m.GhOrg, m.GhOrg),
+		}).
+		Sync(ctx)
+
+	if err != nil {
+		// If the group does not exist, we want to include it as part of
+		// the initial CR rendering (see the SplitRenderedCrsInFiles function)
+		m.IncludeAllGroup = true
+		if strings.Contains(err.Error(), "404") {
+			return nil
+		}
+		return err
+	}
+
+	// If the group does exist, we do not want to include it as part of
+	// the initial CR rendering (see the SplitRenderedCrsInFiles function)
+	m.IncludeAllGroup = false
+	return nil
+}
+
 func (m *FirestartrBootstrap) GetOrganizationPlanName(
 	ctx context.Context,
 	ghToken *dagger.Secret,
