@@ -7,7 +7,7 @@ expanderValues:
       values:
         defaultBranch: {{ or .DefaultBranch "main"}}
         branchProtections:
-          - branch:
+          - branch: {{ or .DefaultBranch "main"}}
             statusChecks:
               - "pr_verify"
             requiredReviewersCount: 2
