@@ -86,14 +86,14 @@ type ConfigProvider struct {
 
 type GithubApp struct {
 	ProviderConfigName    string `yaml:"providerConfigName"`
-	Pem                   string `yaml:"pem"`
+	Pem                   string
 	RawPem                string
-	GhAppId               string `yaml:"id"`
-	InstallationId        string `yaml:"installationId"`
-	PrefappInstallationId string `yaml:"prefappInstallationId"`
-	Owner                 string `yaml:"owner"`
-	BotName               string `yaml:"botName"`
-	BotPat                string `yaml:"botPat"`
+	GhAppId               string
+	InstallationId        string
+	PrefappInstallationId string
+	Owner                 string
+	BotName               string
+	BotPat                string
 }
 
 type SecretData struct {

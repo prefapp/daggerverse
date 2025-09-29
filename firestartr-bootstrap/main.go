@@ -102,6 +102,13 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		panic(err)
 	}
 
+	kindContainer := m.InstallCRDsAndInitialCRs(ctx, dockerSocket, kindSvc)
+	kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)
+
+	if err != nil {
+		panic(err)
+	}
+
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
 		panic(err)
@@ -121,13 +128,6 @@ func (m *FirestartrBootstrap) RunBootstrap(
 
 	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
 	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
-	if err != nil {
-		panic(err)
-	}
-
-	kindContainer := m.InstallCRDsAndInitialCRs(ctx, dockerSocket, kindSvc)
-	kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)
-
 	if err != nil {
 		panic(err)
 	}
