@@ -33,6 +33,15 @@ func (m *FirestartrBootstrap) RunImporter(
 	crsDir := dag.Directory().
 		WithNewDirectory("/crs")
 
+	groupFilter := "gh-group,REGEXP=[A-Za-z0-9\\-]+"
+
+	if m.IncludeAllGroup {
+		// If the group has been included (that is, created locally by the
+		// bootstrap process), we want to exclude it from the import,
+		// to avoid duplications.
+		groupFilter = fmt.Sprintf("gh-group,REGEXP=^(?!%s-all)[A-Za-z0-9\\-]+$", m.GhOrg)
+	}
+
 	importCommand := []string{
 		"firestartr-cli", "importer",
 		"--org", m.GhOrg,
@@ -40,7 +49,7 @@ func (m *FirestartrBootstrap) RunImporter(
 		"--crs", "/import/crs",
 		"--claims", "/import/claims",
 		"--claimsDefaults", "/claims_defaults",
-		"--filters", "gh-group,REGEXP=[A-Za-z0-9\\-]+",
+		"--filters", groupFilter,
 		"--filters", "gh-members,REGEXP=[A-Za-z0-9\\-]+",
 	}
 	if len(alreadyCreatedReposList) > 0 {

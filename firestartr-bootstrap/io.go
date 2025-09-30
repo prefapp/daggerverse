@@ -96,10 +96,10 @@ func (m *FirestartrBootstrap) SplitRenderedCrsInFiles(
 		fileName := fmt.Sprintf("%s.%s.yml", cr.Kind, cr.Metadata.Name)
 
 		// Only add the <org>-all group file if the group doesn't already exist
-		if m.IncludeAllGroup || fileName != fmt.Sprintf(
-			"FirestartrGithubGroup.%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669.yaml",
+		if m.IncludeAllGroup || (fileName != fmt.Sprintf(
+			"FirestartrGithubGroup.%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669.yml",
 			m.GhOrg,
-		) {
+		)) {
 			manifest = "---\n" + manifest
 
 			dir = dir.WithNewFile(fileName, manifest)
