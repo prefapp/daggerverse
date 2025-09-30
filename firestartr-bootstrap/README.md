@@ -114,7 +114,7 @@ githubApp:
   # ID and InstallationID for the fs-<org>-admin GitHub App
   id: "000000"
   installationId: "00000000"
-  prefappInstallationId: "00000000"
+  prefappInstallationId: "00000000"  # Currently unused, to be removed in the future but needs to exist
 
   owner: <org>
   botName: "fs-<org>[bot]"
@@ -146,7 +146,7 @@ githubApp:
   # ID and InstallationID for the fs-<org>-admin GitHub App
   id: "000000"
   installationId: "00000000"
-  prefappInstallationId: "00000000"
+  prefappInstallationId: "00000000"  # Currently unused, to be removed in the future but needs to exist
 
   owner: "firestartr-test"
   botName: "firestartr-local-development-app[bot]"
