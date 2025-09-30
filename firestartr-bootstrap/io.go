@@ -59,9 +59,10 @@ func (m *FirestartrBootstrap) SplitRenderedClaimsInFiles(renderedContent string)
 func getPathByKind(kind string) string {
 	mapKindPath := map[string]string{
 		"ComponentClaim": "components",
-		"GroupClaims":    "groups",
+		"GroupClaim":     "groups",
 		"SystemClaim":    "systems",
 		"DomainClaim":    "domains",
+		"SecretsClaim":   "secrets",
 	}
 
 	if path, ok := mapKindPath[kind]; ok {
@@ -71,7 +72,9 @@ func getPathByKind(kind string) string {
 	}
 }
 
-func (m *FirestartrBootstrap) SplitRenderedCrsInFiles(renderedContent string) (*dagger.Directory, error) {
+func (m *FirestartrBootstrap) SplitRenderedCrsInFiles(
+	renderedContent string,
+) (*dagger.Directory, error) {
 	fmt.Printf("Rendered Content: %s\n", renderedContent)
 
 	claims := regexp.MustCompile(`(?m)^(---\n)`).Split(string(renderedContent), -1)
@@ -92,9 +95,15 @@ func (m *FirestartrBootstrap) SplitRenderedCrsInFiles(renderedContent string) (*
 
 		fileName := fmt.Sprintf("%s.%s.yml", cr.Kind, cr.Metadata.Name)
 
-		manifest = "---\n" + manifest
+		// Only add the <org>-all group file if the group doesn't already exist
+		if m.IncludeAllGroup || (fileName != fmt.Sprintf(
+			"FirestartrGithubGroup.%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669.yml",
+			m.GhOrg,
+		)) {
+			manifest = "---\n" + manifest
 
-		dir = dir.WithNewFile(fileName, manifest)
+			dir = dir.WithNewFile(fileName, manifest)
+		}
 	}
 
 	return dir, nil

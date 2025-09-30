@@ -1,8 +1,8 @@
 strategies:
   - name: gitflow
-    defaultBranch: master
+    defaultBranch: {{ or .DefaultBranch "main"}}
     branchProtections:
-    
+
       - pattern: dev
         enforceAdmins: false
         requireSignedCommits: true
@@ -13,8 +13,8 @@ strategies:
           - dismissStaleReviews: true
             requireCodeOwnerReviews: true
             requiredApprovingReviewCount: 1
-            
-      - pattern: master
+
+      - pattern: {{ or .DefaultBranch "main"}}
         enforceAdmins: false
         requireSignedCommits: true
         allowsForcePushes: false

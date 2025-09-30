@@ -5,9 +5,9 @@ expanderValues:
   strategies:
     - name: gitflow
       values:
-        defaultBranch: master
+        defaultBranch: {{ or .DefaultBranch "main"}}
         branchProtections:
-          - branch: master
+          - branch: {{ or .DefaultBranch "main"}}
             statusChecks:
               - "pr_verify"
             requiredReviewersCount: 2

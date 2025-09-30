@@ -10,21 +10,59 @@ import (
 )
 
 func (m *FirestartrBootstrap) RunOperator(
-
 	ctx context.Context,
-
-	dockerSocket *dagger.Socket,
-
-	kindSvc *dagger.Service,
-
+	kindContainer *dagger.Container,
 ) *dagger.Container {
 
-	renderedCrsDir, err := m.RenderCrs(ctx)
+	renderedCrsDir, err := m.RenderCrs(ctx, kindContainer.Directory("/import"))
 	if err != nil {
 		panic(err)
 	}
 
-	kindContainer := GetKind(dockerSocket, kindSvc).
+	kindContainer = kindContainer.
+		WithDirectory("/resources", renderedCrsDir)
+
+	kindContainer = m.ApplyFirestartrCrs(
+		ctx,
+		kindContainer,
+		"/resources/firestartr-crs/infra",
+		[]string{"ExternalSecret.*"},
+	)
+	kindContainer = m.ApplyFirestartrCrs(
+		ctx,
+		kindContainer,
+		"/resources/firestartr-crs/github",
+		[]string{
+			"FirestartrGithubGroup.*",
+			"FirestartrGithubRepository.*",
+			"FirestartrGithubRepositoryFeature.*",
+		},
+	)
+
+	return kindContainer
+
+}
+
+func (m *FirestartrBootstrap) InstallCRDsAndInitialCRs(
+	ctx context.Context,
+	dockerSocket *dagger.Socket,
+	kindSvc *dagger.Service,
+) *dagger.Container {
+	initialCrsTemplate, err := m.RenderInitialCrs(ctx,
+		dag.CurrentModule().
+			Source().
+			File("templates/initial_crs.tmpl"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	initialCrsDir, err := m.SplitRenderedCrsInFiles(initialCrsTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	kindContainer, err := GetKind(dockerSocket, kindSvc).
 		WithExec([]string{"apk", "add", "helm", "curl"}).
 		WithMountedDirectory("/charts",
 			dag.CurrentModule().
@@ -43,37 +81,51 @@ func (m *FirestartrBootstrap) RunOperator(
 			"/tmp/crds.yaml",
 		}).
 		WithExec([]string{"kubectl", "apply", "-f", "/tmp/crds.yaml"}).
-		WithDirectory("/resources", renderedCrsDir).
 		WithWorkdir("/charts/firestartr-init").
 		WithExec([]string{"helm", "upgrade", "--install", "firestartr-init", ".", "--values", "values-file.yaml"}).
+		WithDirectory("/resources/initial-crs", initialCrsDir).
 		WithExec([]string{
 			"kubectl",
 			"apply",
 			"-f", "/resources/initial-crs",
-		})
+		}).
+		WithExec([]string{
+			"helm", "repo", "add",
+			"external-secrets", "https://charts.external-secrets.io",
+		}).
+		WithExec([]string{
+			"helm", "install", "external-secrets",
+			"external-secrets/external-secrets",
+			"-n", "external-secrets",
+			"--create-namespace",
+		}).
+		Sync(ctx)
 
-	kindContainer = m.ApplyFirestartrCrs(ctx, kindContainer)
+	if err != nil {
+		panic(err)
+	}
 
 	return kindContainer
-
 }
 
-func (m *FirestartrBootstrap) ApplyFirestartrCrs(ctx context.Context, kindContainer *dagger.Container) *dagger.Container {
+func (m *FirestartrBootstrap) ApplyFirestartrCrs(
+	ctx context.Context,
+	kindContainer *dagger.Container,
+	crsDirectoryPath string,
+	crsToApplyList []string,
+) *dagger.Container {
 
-	for _, kind := range []string{
-		"FirestartrGithubGroup.*",
-		"FirestartrGithubRepository.*",
-		"FirestartrGithubRepositoryFeature.*",
-	} {
-		entries, err := kindContainer.Directory("/resources/firestartr-crs/").Glob(ctx, kind)
+	for _, kind := range crsToApplyList {
+		entries, err := kindContainer.Directory(crsDirectoryPath).Glob(ctx, kind)
 		if err != nil {
 			panic(fmt.Sprintf("Failed to get glob entries: %s", err))
 		}
 		for _, entry := range entries {
-			kindContainer = m.ApplyCrAndWaitForProvisioned(ctx, kindContainer, fmt.Sprintf("/resources/firestartr-crs/%s", entry))
-			if err != nil {
-				panic(fmt.Sprintf("Failed to apply CR and wait for provisioned: %s", err))
-			}
+			kindContainer = m.ApplyCrAndWaitForProvisioned(
+				ctx, kindContainer,
+				fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
+				kind != "ExternalSecret.*",
+			)
 		}
 	}
 
@@ -84,6 +136,7 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 	ctx context.Context,
 	kindContainer *dagger.Container,
 	entry string,
+	waitForProvisioned bool,
 ) *dagger.Container {
 
 	crFile := kindContainer.File(entry)
@@ -99,21 +152,26 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 		panic(fmt.Sprintf("Failed to unmarshal CR: %s", err))
 	}
 
-	kindContainer, err = kindContainer.
+	kindContainer = kindContainer.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"kubectl",
 			"apply",
 			"-f", entry,
-		}).
-		WithExec([]string{
-			"kubectl",
-			"wait",
-			"--for=condition=PROVISIONED=True",
-			fmt.Sprintf("%s/%s", getSingularByKind(cr.Kind), cr.Metadata.Name),
-			"--timeout=180s",
-		}).
-		Sync(ctx)
+		})
+
+	if waitForProvisioned {
+		kindContainer = kindContainer.
+			WithExec([]string{
+				"kubectl",
+				"wait",
+				"--for=condition=PROVISIONED=True",
+				fmt.Sprintf("%s/%s", getSingularByKind(cr.Kind), cr.Metadata.Name),
+				"--timeout=180s",
+			})
+	}
+
+	kindContainer, err = kindContainer.Sync(ctx)
 
 	if err != nil {
 		m.FailedCrs = append(m.FailedCrs, cr)
@@ -133,18 +191,16 @@ func GetKind(
 ) *dagger.Container {
 
 	return dag.Kind(
-
 		dockerSocket,
 		kindSvc,
-		dagger.KindOpts{
-
-			ClusterName: "bootstrap-firestartr",
-		}).Container()
+		dagger.KindOpts{ClusterName: "bootstrap-firestartr"},
+	).Container()
 }
 
 func getSingularByKind(kind string) string {
 
 	mapSingular := map[string]string{
+		"ExternalSecret":                    "",
 		"FirestartrGithubRepository":        "githubrepository",
 		"FirestartrGithubGroup":             "githubgroup",
 		"FirestartrTerraformWorkspace":      "terraformworkspace",

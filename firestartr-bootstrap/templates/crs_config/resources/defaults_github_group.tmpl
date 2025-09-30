@@ -6,8 +6,8 @@ defaultValues:
     backend:
       ref:
         kind: FirestartrProviderConfig
-        name: firestartr-terraform-state
+        name: {{ .CloudProviderProviderConfigName }}
     provider:
       ref:
         kind: FirestartrProviderConfig
-        name: github-app
+        name: {{ .GithubAppProviderConfigName }}

@@ -5,12 +5,16 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 )
 
-func (m *FirestartrBootstrap) RenderCrs(ctx context.Context) (*dagger.Directory, error) {
+func (m *FirestartrBootstrap) RenderCrs(
+	ctx context.Context,
+	importResultDir *dagger.Directory,
+) (*dagger.Directory, error) {
 
 	initialCrsTemplate, err := m.RenderInitialCrs(ctx,
 		dag.CurrentModule().
@@ -24,6 +28,18 @@ func (m *FirestartrBootstrap) RenderCrs(ctx context.Context) (*dagger.Directory,
 	initialCrsDir, err := m.SplitRenderedCrsInFiles(initialCrsTemplate)
 	if err != nil {
 		return nil, err
+	}
+
+	importedCrsDir := importResultDir.Directory("crs")
+	importedCrs, err := importedCrsDir.Glob(ctx, "**")
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range importedCrs {
+		if strings.HasSuffix(entry, "/") {
+			continue
+		}
+		initialCrsDir = initialCrsDir.WithFile(entry, importedCrsDir.File(entry))
 	}
 
 	renderedClaims, err := m.RenderBootstrapFile(
@@ -41,10 +57,21 @@ func (m *FirestartrBootstrap) RenderCrs(ctx context.Context) (*dagger.Directory,
 		return nil, err
 	}
 
+	importedClaims, err := importResultDir.Glob(ctx, "claims/**")
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range importedClaims {
+		if strings.HasSuffix(entry, "/") {
+			continue
+		}
+		claimsDir = claimsDir.WithFile(entry, importResultDir.File(entry))
+	}
+
 	crsDir := initialCrsDir.WithoutFiles(
 		[]string{
-			"FirestartrProviderConfig.github-app.yml",
-			"FirestartrProviderConfig.firestartr-terraform-state.yml",
+			fmt.Sprintf("FirestartrProviderConfig.%s.yml", m.Creds.GithubApp.ProviderConfigName),
+			fmt.Sprintf("FirestartrProviderConfig.%s.yml", m.Creds.CloudProvider.ProviderConfigName),
 		},
 	)
 
@@ -62,6 +89,11 @@ func (m *FirestartrBootstrap) RenderCrs(ctx context.Context) (*dagger.Directory,
 		return nil, err
 	}
 
+	for _, entry := range importedCrs {
+		firestartrCrsDir = firestartrCrsDir.WithoutFile(entry)
+		firestartrCrsDir = firestartrCrsDir.WithFile(entry, importedCrsDir.File(entry))
+	}
+
 	return dag.Directory().
 		WithDirectory(
 			"firestartr-crs",
@@ -70,9 +102,11 @@ func (m *FirestartrBootstrap) RenderCrs(ctx context.Context) (*dagger.Directory,
 		WithDirectory(
 			"initial-crs",
 			initialCrsDir.WithoutFile(
-				fmt.Sprintf("FirestartrGithubGroup.%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669.yaml",
+				fmt.Sprintf(
+					"FirestartrGithubGroup.%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669.yaml",
 					m.GhOrg,
-				)),
+				),
+			),
 		).
 		WithDirectory(
 			"claims",
@@ -99,22 +133,17 @@ func (m *FirestartrBootstrap) RenderBootstrapFile(ctx context.Context, templ *da
 	return renderTmpl(templateContent, m.Bootstrap)
 }
 
-func (m *FirestartrBootstrap) RenderClaimsDefaults(ctx context.Context, templ *dagger.File) (string, error) {
-
+func RenderDotConfigFile(
+	ctx context.Context,
+	templ *dagger.File,
+	bootstrap interface{},
+) (string, error) {
 	templateContent, err := templ.Contents(ctx)
 	if err != nil {
 		return "", err
 	}
-	return renderTmpl(templateContent, m.Bootstrap)
-}
 
-func (m *FirestartrBootstrap) RenderWetReposConfig(ctx context.Context, templ *dagger.File) (string, error) {
-
-	templateContent, err := templ.Contents(ctx)
-	if err != nil {
-		return "", err
-	}
-	return renderTmpl(templateContent, m.Bootstrap)
+	return renderTmpl(templateContent, bootstrap)
 }
 
 func renderTmpl(tmpl string, data interface{}) (string, error) {

@@ -1,0 +1,57 @@
+ComponentClaim:
+  version: "1.0"
+  type: service
+  lifecycle: "production"
+  maintainedBy: []
+  platformOwner: "group:{{ $.DefaultFirestartrGroup }}"
+  system: "system:{{ $.DefaultSystemName }}"
+  providers:
+    github:
+      sync:
+        enabled: true
+        period: 24h
+      org: {{ $.Org }}
+      maintainedBy: []
+      branchStrategy:
+        name: {{ or $.DefaultBranchStrategy "none" }}
+        defaultBranch: {{ or $.DefaultBranch "main" }}
+      orgPermissions: {{ or $.DefaultOrgPermissions "view"}}
+      visibility: private
+      technology:
+        stack: "none"
+        version: "none"
+      features: []
+
+GroupClaim:
+  providers:
+    github:
+      sync:
+        enabled: true
+        period: 24h
+      org: {{ $.Org }}
+      privacy: closed
+
+UserClaim:
+  providers:
+    github:
+      sync:
+        enabled: true
+        period: 24h
+      org: {{ $.Org }}
+
+SystemClaim:
+  domain: "domain:{{ $.DefaultDomainName }}"
+  providers: {}
+
+DomainClaim:
+  providers: {}
+
+TFWorkspaceClaim:
+  providers:
+    terraform:
+      sync:
+        policy: observe
+        period: 24h
+        enabled: true
+      policy: apply
+
