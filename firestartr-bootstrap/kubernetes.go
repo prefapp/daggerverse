@@ -4,11 +4,20 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 )
 
 const SECRETS_FILE_PATH = "/secret_store/secrets.yaml"
+
+// Maps can't be actual constants in Go, so we use a variable here.
+var CREDS_SECRET_LIST = map[string]string{
+	"GhAppId":        "ref:secretsclaim:firestartr-secrets:fs-admin-appid",
+	"InstallationId": "ref:secretsclaim:firestartr-secrets:fs-admin-installationid",
+	"Pem":            "ref:secretsclaim:firestartr-secrets:fs-admin-pem",
+	"BotPat":         "ref:secretsclaim:firestartr-secrets:prefapp-bot-pat",
+}
 
 func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 	ctx context.Context,
@@ -64,6 +73,25 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 	}
 
 	return kindContainer, nil
+}
+
+func (m *FirestartrBootstrap) PopulateCredsFromParameterStore(
+	ctx context.Context,
+	kindContainer *dagger.Container,
+) {
+	credsReflector := reflect.ValueOf(&m.Creds.GithubApp).Elem()
+	for property, ref := range CREDS_SECRET_LIST {
+		secretValue, err := m.GetKubernetesSecretValue(ctx, kindContainer, ref)
+		if err != nil {
+			panic(err)
+		}
+
+		credsReflector.FieldByName(property).SetString(secretValue)
+	}
+
+	escaped := strings.ReplaceAll(m.Creds.GithubApp.Pem, "\n", "\\n")
+
+	m.Creds.GithubApp.RawPem = escaped
 }
 
 func (m *FirestartrBootstrap) GetKubernetesSecretValue(

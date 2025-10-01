@@ -109,6 +109,8 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		panic(err)
 	}
 
+	m.PopulateCredsFromParameterStore(ctx, kindContainer)
+
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
 		panic(err)
