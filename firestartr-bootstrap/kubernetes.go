@@ -10,13 +10,14 @@ import (
 )
 
 const SECRETS_FILE_PATH = "/secret_store/secrets.yaml"
+const BOOTSTRAP_SECRETS_FILE_PATH = "/secret_store/bootstrap_secrets.yaml"
 
 // Maps can't be actual constants in Go, so we use a variable here.
 var CREDS_SECRET_LIST = map[string]string{
-	"GhAppId":        "ref:secretsclaim:firestartr-secrets:fs-admin-appid",
-	"InstallationId": "ref:secretsclaim:firestartr-secrets:fs-admin-installationid",
-	"Pem":            "ref:secretsclaim:firestartr-secrets:fs-admin-pem",
-	"BotPat":         "ref:secretsclaim:firestartr-secrets:prefapp-bot-pat",
+	"GhAppId":        "ref:secretsclaim:bootstrap-secrets:fs-admin-appid",
+	"InstallationId": "ref:secretsclaim:bootstrap-secrets:fs-admin-installationid",
+	"Pem":            "ref:secretsclaim:bootstrap-secrets:fs-admin-pem",
+	"BotPat":         "ref:secretsclaim:bootstrap-secrets:prefapp-bot-pat",
 }
 
 func (m *FirestartrBootstrap) CreateKubernetesSecrets(
@@ -29,6 +30,16 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		Contents(ctx)
 
 	secretsCr, err := renderTmpl(secretsTmpl, m.Creds)
+	if err != nil {
+		return nil, err
+	}
+
+	bootstrapSecretsTmpl, err := dag.CurrentModule().
+		Source().
+		File("external_secrets/bootstrap_secrets.tmpl").
+		Contents(ctx)
+
+	bootstrapSecretsCr, err := renderTmpl(bootstrapSecretsTmpl, m.Bootstrap)
 	if err != nil {
 		return nil, err
 	}
@@ -52,6 +63,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 	kindContainer, err = kindContainer.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithNewFile(SECRETS_FILE_PATH, secretsCr).
+		WithNewFile(BOOTSTRAP_SECRETS_FILE_PATH, bootstrapSecretsCr).
 		WithExec([]string{
 			"kubectl", "apply", "-f", SECRETS_FILE_PATH,
 		}).
@@ -65,6 +77,16 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		WithFile("/secret_store/aws_secretstore.yaml", awsSecretStoreFile).
 		WithExec([]string{
 			"kubectl", "apply", "-f", "/secret_store/aws_secretstore.yaml",
+		}).
+		WithExec([]string{
+			"kubectl", "apply", "-f", BOOTSTRAP_SECRETS_FILE_PATH,
+		}).
+		WithExec([]string{
+			"kubectl",
+			"wait",
+			"--for=create",
+			"secret/bootstrap-secrets",
+			"--timeout=60s",
 		}).
 		Sync(ctx)
 

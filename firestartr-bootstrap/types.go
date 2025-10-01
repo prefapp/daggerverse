@@ -86,12 +86,12 @@ type ConfigProvider struct {
 
 type GithubApp struct {
 	ProviderConfigName string `yaml:"providerConfigName"`
+	Owner              string `yaml:"owner"`
+	BotName            string `yaml:"botName"`
 	Pem                string
 	RawPem             string
 	GhAppId            string
 	InstallationId     string
-	Owner              string
-	BotName            string
 	BotPat             string
 }
 
