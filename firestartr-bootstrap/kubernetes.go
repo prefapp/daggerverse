@@ -34,6 +34,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		return nil, err
 	}
 
+
 	bootstrapSecretsTmpl, err := dag.CurrentModule().
 		Source().
 		File("external_secrets/bootstrap_secrets.tmpl").
@@ -44,7 +45,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		return nil, err
 	}
 
-	awsSecretStoreFile := dag.CurrentModule().
+  awsSecretStoreFile := dag.CurrentModule().
 		Source().
 		File("external_secrets/aws_secretstore.yaml")
 

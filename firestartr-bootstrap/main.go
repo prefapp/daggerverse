@@ -22,6 +22,7 @@ type FirestartrBootstrap struct {
 	PreviousCrsDir     *dagger.Directory
 	ClaimsDotConfigDir *dagger.Directory
 	CrsDotConfigDir    *dagger.Directory
+	IncludeAllGroup    bool
 }
 
 func New(
@@ -130,6 +131,15 @@ func (m *FirestartrBootstrap) RunBootstrap(
 
 	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
 	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
+	if err != nil {
+		panic(err)
+	}
+
+	err = m.CheckIfOrgAllGroupExists(ctx, tokenSecret)
+
+	kindContainer := m.InstallCRDsAndInitialCRs(ctx, dockerSocket, kindSvc)
+	kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)
+
 	if err != nil {
 		panic(err)
 	}
