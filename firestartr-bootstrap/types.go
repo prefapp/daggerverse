@@ -33,7 +33,6 @@ type Bootstrap struct {
 	DefaultBranch          string      `yaml:"defaultBranch"`
 	DefaultBranchStrategy  string      `yaml:"defaultBranchStrategy"`
 	DefaultOrgPermissions  string      `yaml:"defaultOrgPermissions"`
-	DefaultOwnerGroup      string      `yaml:"defaultOwnerGroup"`
 	FinalSecretStoreName   string      `yaml:"finalSecretStoreName"`
 	HasFreePlan            bool        // Autocalculated
 	BotName                string      // Stored in Credentialsfile.yaml, but needed here for templating

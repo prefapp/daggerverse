@@ -28,7 +28,6 @@ defaultDomainName: default-domain
 defaultOrgPermissions: view
 defaultBranchStrategy: none
 defaultFirestartrGroup: firestartr
-defaultOwnerGroup: <client-group>
 finalSecretStoreName: <secret-store-name>
 
 firestartr:
@@ -104,6 +103,7 @@ cloudProvider:
     region: "eu-west-1"
     access_key: "AKIAXXXXXXXXXXXXXXXX"
     secret_key: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
   source: hashicorp/aws
   type: aws
   version: ~> 4.0
