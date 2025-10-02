@@ -21,7 +21,7 @@ You'll need to install on your local machine:
 ```yaml
 # Bootstrapfile.yaml
 ---
-org: <org>
+org: <github-org>
 defaultBranch: main
 defaultSystemName: default-system
 defaultDomainName: default-domain
@@ -32,7 +32,7 @@ defaultOwnerGroup: <client-group>
 finalSecretStoreName: <secret-store-name>
 
 firestartr:
-  version: "v1.39.1"
+  version: <cli-version> # Check latest avaliable at github.com/prefapp/gitops-k8s
 pushFiles:
   claims:
     push: true # When the process finishes, the generated claims will be pushed to the claims repository.
@@ -50,21 +50,14 @@ components:
     defaultBranch: main
     features: # features that will be provisioned
       - name: firestartr_repo
-        version: 1.0.0
+        version: <feature-version>  # Check latest avaliable at github.com/prefapp/features
 
   - name: "claims"
     description: "Firestartr configuration folders and files"
     defaultBranch: main
     features:
       - name: claims_repo
-        version: 1.6.1
-
-  - name: "catalog"
-    description: "Firestartr configuration folders and files"
-    defaultBranch: main
-    features:
-      - name: catalog_repo
-        version: 1.0.0
+        version: <feature-version>  # Check latest avaliable at github.com/prefapp/features
     secrets:
       - name: FS_IMPORT_PEM_FILE
         value: "ref:secretsclaim:firestartr-secrets:fs-import-pem"
@@ -72,19 +65,26 @@ components:
       - name: "FS_IMPORT_APP_ID"
         value: "ref:secretsclaim:firestartr-secrets:fs-import-appid"
 
+  - name: "catalog"
+    description: "Firestartr configuration folders and files"
+    defaultBranch: main
+    features:
+      - name: catalog_repo
+        version: <feature-version>  # Check latest avaliable at github.com/prefapp/features
+
   - name: "state-github"
     description: "Firestartr Github wet repository"
     defaultBranch: main
     features:
       - name: state_github
-        version: 1.0.0
+        version: <feature-version>  # Check latest avaliable at github.com/prefapp/features
 
   - name: "state-infra"
     description: "Firestartr Terraform workspaces wet repository"
     defaultBranch: main
     features:
       - name: state_infra
-        version: 1.1.0
+        version: <feature-version>  # Check latest avaliable at github.com/prefapp/features
     labels:
       - plan
 ```
