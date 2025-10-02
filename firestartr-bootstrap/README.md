@@ -109,12 +109,14 @@ cloudProvider:
   version: ~> 4.0
 githubApp:
   providerConfigName: github-app-provider-config-name
-  pem: "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
-
+  pem: |
+    -----BEGIN RSA PRIVATE KEY-----
+    ...
+    ...
+    -----END RSA PRIVATE KEY-----
   # ID and InstallationID for the fs-<org>-admin GitHub App
   id: "000000"
   installationId: "00000000"
-  prefappInstallationId: "00000000"  # Currently unused, to be removed in the future but needs to exist
 
   owner: <org>
   botName: "fs-<org>[bot]"
