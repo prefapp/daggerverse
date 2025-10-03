@@ -68,6 +68,20 @@ func (m *FirestartrBootstrap) RunImporter(
 		)
 	}
 
+	initialCrsTemplate, err := m.RenderInitialCrs(ctx,
+		dag.CurrentModule().
+			Source().
+			File("templates/initial_crs.tmpl"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	initialCrsDir, err := m.SplitRenderedCrsInFiles(initialCrsTemplate)
+	if err != nil {
+		panic(err)
+	}
+
 	kindContainer = kindContainer.
 		WithDirectory("/import", claimsDir).
 		WithDirectory("/import", crsDir).
@@ -84,6 +98,12 @@ func (m *FirestartrBootstrap) RunImporter(
 		WithExec([]string{
 			"npm", "install", "-g",
 			fmt.Sprintf("@firestartr/cli@v%s", m.Bootstrap.Firestartr.Version),
+		}).
+		WithDirectory("/resources/initial-crs", initialCrsDir).
+		WithExec([]string{
+			"kubectl",
+			"apply",
+			"-f", "/resources/initial-crs",
 		}).
 		WithExec(importCommand)
 

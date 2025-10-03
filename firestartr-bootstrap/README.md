@@ -41,6 +41,9 @@ pushFiles:
       github:
         push: true # When the process finishes, the generated crs will be pushed to the crs repository.
         repo: "state-github" # Normally, the state-github repository will be called "state-github", but it is possible to change the name.
+      terraform:
+        push: true # When the process finishes, the generated crs will be pushed to the crs repository.
+        repo: "state-infra" # Normally, the state-infra repository will be called "state-infra", but it is possible to change the name.
 
 components:
   - name: "dot-firestartr" # claim name
@@ -109,18 +112,8 @@ cloudProvider:
   version: ~> 4.0
 githubApp:
   providerConfigName: github-app-provider-config-name
-  pem: |
-    -----BEGIN RSA PRIVATE KEY-----
-    ...
-    ...
-    -----END RSA PRIVATE KEY-----
-  # ID and InstallationID for the fs-<org>-admin GitHub App
-  id: "000000"
-  installationId: "00000000"
-
   owner: <org>
   botName: "fs-<org>[bot]"
-  botPat: "XXXXXXXXXXXXXXXX"
 ```
 
 #### 3.2 Azure terraform backend provider configuration
@@ -143,23 +136,15 @@ cloudProvider:
   version: ~> 4.0
 githubApp:
   providerConfigName: github-app-provider-config-name
-  pem: "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
-
-  # ID and InstallationID for the fs-<org>-admin GitHub App
-  id: "000000"
-  installationId: "00000000"
-  prefappInstallationId: "00000000"  # Currently unused, to be removed in the future but needs to exist
-
   owner: "firestartr-test"
   botName: "firestartr-local-development-app[bot]"
-  botPat: "XXXXXXXXXXXXXXXX"
 ```
 
 ### 4. How to launch the bootstrap
 
 ```shell
 dagger --bootstrap-file="./Bootstrapfile.yaml" \
-       --credentials-secret="file:./Credentials.yaml" \
+       --credentials-secret="file:./Credentialsfile.yaml" \
        call run-bootstrap \
        --docker-socket=/var/run/docker.sock \
        --kind-svc=tcp://127.0.0.1:3000

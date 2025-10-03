@@ -48,19 +48,6 @@ func (m *FirestartrBootstrap) InstallCRDsAndInitialCRs(
 	dockerSocket *dagger.Socket,
 	kindSvc *dagger.Service,
 ) *dagger.Container {
-	initialCrsTemplate, err := m.RenderInitialCrs(ctx,
-		dag.CurrentModule().
-			Source().
-			File("templates/initial_crs.tmpl"),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	initialCrsDir, err := m.SplitRenderedCrsInFiles(initialCrsTemplate)
-	if err != nil {
-		panic(err)
-	}
 
 	kindContainer, err := GetKind(dockerSocket, kindSvc).
 		WithExec([]string{"apk", "add", "helm", "curl"}).
@@ -83,12 +70,6 @@ func (m *FirestartrBootstrap) InstallCRDsAndInitialCRs(
 		WithExec([]string{"kubectl", "apply", "-f", "/tmp/crds.yaml"}).
 		WithWorkdir("/charts/firestartr-init").
 		WithExec([]string{"helm", "upgrade", "--install", "firestartr-init", ".", "--values", "values-file.yaml"}).
-		WithDirectory("/resources/initial-crs", initialCrsDir).
-		WithExec([]string{
-			"kubectl",
-			"apply",
-			"-f", "/resources/initial-crs",
-		}).
 		WithExec([]string{
 			"helm", "repo", "add",
 			"external-secrets", "https://charts.external-secrets.io",
