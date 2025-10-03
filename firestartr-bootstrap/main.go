@@ -103,7 +103,7 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		panic(err)
 	}
 
-	kindContainer := m.InstallCRDsAndInitialCRs(ctx, dockerSocket, kindSvc)
+	kindContainer := m.InstallHelmAndExternalSecrets(ctx, dockerSocket, kindSvc)
 	kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)
 
 	if err != nil {
@@ -117,6 +117,19 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		panic(err)
 	}
 
+	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
+	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
+	if err != nil {
+		panic(err)
+	}
+
+	err = m.CheckIfOrgAllGroupExists(ctx, tokenSecret)
+	if err != nil {
+		panic(err)
+	}
+
+	kindContainer = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
+
 	alreadyCreatedReposList := []string{}
 	if m.PreviousCrsDir == nil {
 		// if any of the CRs already exist, we skip their creation
@@ -127,18 +140,6 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		if err != nil {
 			panic(err)
 		}
-	}
-
-	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
-	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
-	if err != nil {
-		panic(err)
-	}
-
-	err = m.CheckIfOrgAllGroupExists(ctx, tokenSecret)
-
-	if err != nil {
-		panic(err)
 	}
 
 	kindContainer = m.RunImporter(ctx, kindContainer, alreadyCreatedReposList)
