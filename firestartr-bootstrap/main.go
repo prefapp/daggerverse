@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -103,10 +104,34 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		panic(err)
 	}
 
+	kindContainer := m.InstallHelmAndExternalSecrets(ctx, dockerSocket, kindSvc)
+	kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)
+
+	if err != nil {
+		panic(err)
+	}
+
+	m.PopulateCredsFromParameterStore(ctx, kindContainer)
+
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
 		panic(err)
 	}
+
+	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
+	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
+	if err != nil {
+		panic(err)
+	}
+
+	err = m.CheckIfOrgAllGroupExists(ctx, tokenSecret)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			panic(err)
+		}
+	}
+
+	kindContainer = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
 
 	alreadyCreatedReposList := []string{}
 	if m.PreviousCrsDir == nil {
@@ -120,36 +145,8 @@ func (m *FirestartrBootstrap) RunBootstrap(
 		}
 	}
 
-	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
-	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
-	if err != nil {
-		panic(err)
-	}
-
-	err = m.CheckIfOrgAllGroupExists(ctx, tokenSecret)
-
-	kindContainer := m.InstallCRDsAndInitialCRs(ctx, dockerSocket, kindSvc)
-	kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)
-
-	if err != nil {
-		panic(err)
-	}
-
 	kindContainer = m.RunImporter(ctx, kindContainer, alreadyCreatedReposList)
 	kindContainer = m.RunOperator(ctx, kindContainer)
-
-	if !m.Bootstrap.HasFreePlan {
-		err = m.SetOrgVariables(ctx, tokenSecret, kindContainer)
-		if err != nil {
-			panic(err)
-		}
-
-		err = m.SetOrgSecrets(ctx, tokenSecret, kindContainer)
-		if err != nil {
-			panic(err)
-		}
-	}
-
 	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
 
 	if m.Bootstrap.PushFiles.Claims.Push {
@@ -190,7 +187,6 @@ func (m *FirestartrBootstrap) RunBootstrap(
 			m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
 			tokenSecret,
 		)
-
 		if err != nil {
 			panic(err)
 		}
@@ -218,7 +214,18 @@ func (m *FirestartrBootstrap) RunBootstrap(
 			m.Bootstrap.PushFiles.Crs.Providers.Terraform.Repo,
 			tokenSecret,
 		)
+		if err != nil {
+			panic(err)
+		}
+	}
 
+	if !m.Bootstrap.HasFreePlan {
+		err = m.SetOrgVariables(ctx, tokenSecret, kindContainer)
+		if err != nil {
+			panic(err)
+		}
+
+		err = m.SetOrgSecrets(ctx, tokenSecret, kindContainer)
 		if err != nil {
 			panic(err)
 		}
