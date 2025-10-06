@@ -8,13 +8,21 @@ The firestartr bootstrap is a dagger workflow that can provision the initial rep
 
 ### 1. Requirements
 
+#### 1.1 Local machine requirements
+
 You'll need to install on your local machine:
 - [**go**](https://go.dev/doc/install) (v1.22+)
 - [**docker**](https://docs.docker.com/engine/install/) (v24+)
 - [**dagger**](https://docs.dagger.io/install) (v0.18.5+)
 - [**kind**](https://kind.sigs.k8s.io/docs/user/quick-start#installation) (v0.24.0+).
 
+#### 1.2 AWS requirements
 
+The following AWS Parameter Store parameters are required:
+- `/firestartr/<org-name>/fs-<org-name>-admin/pem`
+- `/firestartr/<org-name>/fs-<org-name>-admin/app-id`
+- `/firestartr/<org-name>/fs-<org-name>-admin/installation-id`
+- `/firestartr/<org-name>/prefapp-bot-pat`
 
 ### 2. Bootstrap File
 
@@ -116,7 +124,7 @@ githubApp:
   botName: "fs-<org>[bot]"
 ```
 
-#### 3.2 Azure terraform backend provider configuration
+#### 3.2 Azure terraform backend provider configuration (currently not supported)
 
 ```yaml
 # Credentialsfile.yaml
