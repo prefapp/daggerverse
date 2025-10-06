@@ -97,22 +97,41 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 	return kindContainer, nil
 }
 
-func (m *FirestartrBootstrap) PopulateCredsFromParameterStore(
+func (m *FirestartrBootstrap) PopulateGithubAppCredsFromSecrets(
 	ctx context.Context,
 	kindContainer *dagger.Container,
 ) {
+	// Get the GitHub App credentials struct
 	credsReflector := reflect.ValueOf(&m.Creds.GithubApp).Elem()
+
+	// For each known secret property
 	for property, ref := range CREDS_SECRET_LIST {
+		// Fetch the secret value from Kubernetes
 		secretValue, err := m.GetKubernetesSecretValue(ctx, kindContainer, ref)
 		if err != nil {
 			panic(err)
 		}
 
-		credsReflector.FieldByName(property).SetString(secretValue)
+		// Check it exists and is settable within the struct
+		field := credsReflector.FieldByName(property)
+		if !field.IsValid() {
+			panic(fmt.Sprintf(
+				"Field %q does not exist in GithubApp struct", property,
+			))
+		}
+		if !field.CanSet() {
+			panic(fmt.Sprintf(
+				"Field %q in GithubApp struct is not settable", property,
+			))
+		}
+
+		// Set the field to the fetched secret value
+		field.SetString(secretValue)
 	}
 
+	// Lastly, set the RawPem field to the escaped version of the Pem field
+	// for use in the ProviderConfig template
 	escaped := strings.ReplaceAll(m.Creds.GithubApp.Pem, "\n", "\\n")
-
 	m.Creds.GithubApp.RawPem = escaped
 }
 
