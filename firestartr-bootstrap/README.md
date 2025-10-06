@@ -39,7 +39,7 @@ defaultFirestartrGroup: firestartr
 finalSecretStoreName: <secret-store-name>
 
 firestartr:
-  version: <cli-version> # Check latest avaliable at github.com/prefapp/gitops-k8s
+  version: <cli-version> # Check latest avaliable at github.com/prefapp/gitops-k8s. Omit the "v" (i.e. use "1.2.3" instead of "v1.2.3")
 pushFiles:
   claims:
     push: true # When the process finishes, the generated claims will be pushed to the claims repository.
