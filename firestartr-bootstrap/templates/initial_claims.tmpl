@@ -57,6 +57,8 @@ providers:
     externalSecrets:
       refreshInterval: 24h
       secrets:
+      - secretName: "github-webhook-secret"
+        remoteRef: "/firestartr/{{ $.Org }}/github-webhook/secret"
       - secretName: "prefapp-bot-pat"
         remoteRef: "/firestartr/{{ $.Org }}/prefapp-bot-pat"
       - secretName: "firestartr-cli-version"
