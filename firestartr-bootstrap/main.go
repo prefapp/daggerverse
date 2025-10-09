@@ -4,7 +4,6 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -126,9 +125,7 @@ func (m *FirestartrBootstrap) RunBootstrap(
 
 	err = m.CheckIfOrgAllGroupExists(ctx, tokenSecret)
 	if err != nil {
-		if strings.Contains(err.Error(), "404") {
-			panic(err)
-		}
+		panic(err)
 	}
 
 	kindContainer = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
