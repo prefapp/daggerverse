@@ -5,7 +5,6 @@ import (
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
 	"regexp"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -121,10 +120,6 @@ func loadCredsFile(ctx context.Context, creds *dagger.Secret) (*CredsFile, error
 	if err != nil {
 		return nil, err
 	}
-
-	escaped := strings.ReplaceAll(credsFile.GithubApp.Pem, "\n", "\\n")
-
-	credsFile.GithubApp.RawPem = escaped
 
 	return credsFile, nil
 }

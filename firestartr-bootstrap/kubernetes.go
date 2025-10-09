@@ -4,11 +4,21 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 )
 
 const SECRETS_FILE_PATH = "/secret_store/secrets.yaml"
+const BOOTSTRAP_SECRETS_FILE_PATH = "/secret_store/bootstrap_secrets.yaml"
+
+// Maps can't be actual constants in Go, so we use a variable here.
+var CREDS_SECRET_LIST = map[string]string{
+	"GhAppId":        "ref:secretsclaim:bootstrap-secrets:fs-admin-appid",
+	"InstallationId": "ref:secretsclaim:bootstrap-secrets:fs-admin-installationid",
+	"Pem":            "ref:secretsclaim:bootstrap-secrets:fs-admin-pem",
+	"BotPat":         "ref:secretsclaim:bootstrap-secrets:prefapp-bot-pat",
+}
 
 func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 	ctx context.Context,
@@ -20,6 +30,16 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		Contents(ctx)
 
 	secretsCr, err := renderTmpl(secretsTmpl, m.Creds)
+	if err != nil {
+		return nil, err
+	}
+
+	bootstrapSecretsTmpl, err := dag.CurrentModule().
+		Source().
+		File("external_secrets/bootstrap_secrets.tmpl").
+		Contents(ctx)
+
+	bootstrapSecretsCr, err := renderTmpl(bootstrapSecretsTmpl, m.Bootstrap)
 	if err != nil {
 		return nil, err
 	}
@@ -43,6 +63,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 	kindContainer, err = kindContainer.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithNewFile(SECRETS_FILE_PATH, secretsCr).
+		WithNewFile(BOOTSTRAP_SECRETS_FILE_PATH, bootstrapSecretsCr).
 		WithExec([]string{
 			"kubectl", "apply", "-f", SECRETS_FILE_PATH,
 		}).
@@ -57,6 +78,16 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		WithExec([]string{
 			"kubectl", "apply", "-f", "/secret_store/aws_secretstore.yaml",
 		}).
+		WithExec([]string{
+			"kubectl", "apply", "-f", BOOTSTRAP_SECRETS_FILE_PATH,
+		}).
+		WithExec([]string{
+			"kubectl",
+			"wait",
+			"--for=create",
+			"secret/bootstrap-secrets",
+			"--timeout=60s",
+		}).
 		Sync(ctx)
 
 	if err != nil {
@@ -64,6 +95,44 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 	}
 
 	return kindContainer, nil
+}
+
+func (m *FirestartrBootstrap) PopulateGithubAppCredsFromSecrets(
+	ctx context.Context,
+	kindContainer *dagger.Container,
+) {
+	// Get the GitHub App credentials struct
+	credsReflector := reflect.ValueOf(&m.Creds.GithubApp).Elem()
+
+	// For each known secret property
+	for property, ref := range CREDS_SECRET_LIST {
+		// Fetch the secret value from Kubernetes
+		secretValue, err := m.GetKubernetesSecretValue(ctx, kindContainer, ref)
+		if err != nil {
+			panic(err)
+		}
+
+		// Check it exists and is settable within the struct
+		field := credsReflector.FieldByName(property)
+		if !field.IsValid() {
+			panic(fmt.Sprintf(
+				"Field %q does not exist in GithubApp struct", property,
+			))
+		}
+		if !field.CanSet() {
+			panic(fmt.Sprintf(
+				"Field %q in GithubApp struct is not settable", property,
+			))
+		}
+
+		// Set the field to the fetched secret value
+		field.SetString(secretValue)
+	}
+
+	// Lastly, set the RawPem field to the escaped version of the Pem field
+	// for use in the ProviderConfig template
+	escaped := strings.ReplaceAll(m.Creds.GithubApp.Pem, "\n", "\\n")
+	m.Creds.GithubApp.RawPem = escaped
 }
 
 func (m *FirestartrBootstrap) GetKubernetesSecretValue(
