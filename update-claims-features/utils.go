@@ -108,7 +108,7 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 }
 
 func (m *UpdateClaimsFeatures) updateDirWithClaim(
-	claim *Claim,
+	claim map[string]interface{},
 	claimPath string,
 ) *dagger.Directory {
 	var buffer bytes.Buffer
@@ -123,7 +123,7 @@ func (m *UpdateClaimsFeatures) updateDirWithClaim(
 
 func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 	ctx context.Context,
-	updatedFeaturesList []Feature,
+	updatedFeaturesList []map[string]string,
 	allFeaturesMap map[string][]string,
 	originalVersionMap map[string]string,
 ) (string, error) {
@@ -131,16 +131,18 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 	var parsedJson ReleaseBody
 
 	for _, updatedFeature := range updatedFeaturesList {
-		if updatedFeature.Version != "" {
-			updatedFeatureVersionSemver, err := semver.NewVersion(updatedFeature.Version)
+		updatedFeatureName := updatedFeature["name"]
+		updatedFeatureVersion := updatedFeature["version"]
+		if updatedFeatureVersion != "" {
+			updatedFeatureVersionSemver, err := semver.NewVersion(updatedFeatureVersion)
 
 			if err != nil {
 				return "", err
 			}
 
-			if originalVersionMap[updatedFeature.Name] != "" && updatedFeature.Version != "" {
+			if originalVersionMap[updatedFeatureName] != "" && updatedFeatureVersion != "" {
 				versionIsDifferentThanOriginal, err := semver.NewConstraint(
-					fmt.Sprintf("!=%s", originalVersionMap[updatedFeature.Name]),
+					fmt.Sprintf("!=%s", originalVersionMap[updatedFeatureName]),
 				)
 				if err != nil {
 					return "", err
@@ -152,17 +154,16 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 				if versionIsDifferentThanOriginal.Check(updatedFeatureVersionSemver) {
 					addChangeLog, err := semver.NewConstraint(
 						fmt.Sprintf(
-							"> %s, <= %s || =%s",
-							originalVersionMap[updatedFeature.Name],
-							updatedFeature.Version,
-							updatedFeature.Version,
+							"> %1$s, <= %2$s || =%2$s",
+							originalVersionMap[updatedFeatureName],
+							updatedFeatureVersion,
 						),
 					)
 					if err != nil {
 						return "", err
 					}
 
-					for _, featureVersion := range allFeaturesMap[updatedFeature.Name] {
+					for _, featureVersion := range allFeaturesMap[updatedFeatureName] {
 						featureVersionSemver, err := semver.NewVersion(featureVersion)
 						if err != nil {
 							return "", err
@@ -176,7 +177,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 						versionInfo := ""
 						if addChangeLog.Check(featureVersionSemver) {
 							fullFeatureTag := fmt.Sprintf(
-								"%s-v%s", updatedFeature.Name, featureVersion,
+								"%s-v%s", updatedFeatureName, featureVersion,
 							)
 							changelog, err := m.getReleaseChangelog(ctx, fullFeatureTag)
 
@@ -211,12 +212,15 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 }
 
 func (m *UpdateClaimsFeatures) extractCurrentFeatureVersionsFromClaim(
-	claim *Claim,
+	claim map[string]interface{},
 ) map[string]string {
 	var currentFeaturesVersion = make(map[string]string)
+	featuresList := claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)
 
-	for _, featureData := range claim.Providers.Github.Features {
-		currentFeaturesVersion[featureData.Name] = featureData.Version
+	for _, featureData := range featuresList {
+		featureName := featureData.(map[string]any)["name"].(string)
+		featureVersion := featureData.(map[string]any)["version"].(string)
+		currentFeaturesVersion[featureName] = featureVersion
 	}
 
 	return currentFeaturesVersion
