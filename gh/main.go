@@ -94,7 +94,9 @@ func (m *Gh) Container(
 ) (*dagger.Container, error) {
 	file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx, localGhCliPath, token)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(
+			extractErrorMessage(err),
+		)
 	}
 
 	// get the github container configuration
@@ -127,7 +129,9 @@ func (m *Gh) Container(
 	if version != "" && localGhCliPath != nil {
 		versionOutput, err := ctr.WithExec([]string{"gh", "--version"}).Stdout(ctx)
 		if err != nil {
-			return nil, err
+			return nil, errors.New(
+				extractErrorMessage(err),
+			)
 		}
 
 		// versionOutput[0] example => "gh version <version> (<date>)"
@@ -191,7 +195,10 @@ func (m *Gh) Run(
 ) (*dagger.Container, error) {
 	ctr, err := m.Container(ctx, version, token, repo, pluginNames, pluginVersions, localGhCliPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(
+			extractErrorMessage(err),
+		)
+
 	}
 
 	// disable cache if requested
@@ -286,7 +293,9 @@ func (m *Gh) CreatePR(
 	if ctr == nil {
 		ctr, err = m.Container(ctx, version, token, "", []string{}, []string{}, localGhCliPath)
 		if err != nil {
-			return "", err
+			return "", errors.New(
+				extractErrorMessage(err),
+			)
 		}
 	}
 
@@ -324,7 +333,9 @@ func (m *Gh) CreatePR(
 			Sync(ctx)
 
 		if err != nil {
-			return "", err
+			return "", errors.New(
+				extractErrorMessage(err),
+			)
 		}
 
 		cmd = append(cmd, "--label", label)
@@ -340,7 +351,9 @@ func (m *Gh) CreatePR(
 
 	_, err = ctr.Sync(ctx)
 	if err != nil {
-		return "", err
+		return "", errors.New(
+			extractErrorMessage(err),
+		)
 	}
 
 	prId, err := ctr.
@@ -353,7 +366,9 @@ func (m *Gh) CreatePR(
 		Stdout(ctx)
 
 	if err != nil {
-		return "", err
+		return "", errors.New(
+			extractErrorMessage(err),
+		)
 	}
 
 	prLink, err := ctr.
@@ -366,7 +381,9 @@ func (m *Gh) CreatePR(
 		Stdout(ctx)
 
 	if err != nil {
-		return "", err
+		return "", errors.New(
+			extractErrorMessage(err),
+		)
 	}
 
 	return strings.TrimSpace(prLink), nil
@@ -428,7 +445,10 @@ func (m *Gh) Commit(
 			localGhCliPath,
 		)
 		if err != nil {
-			return nil, err
+			return nil, errors.New(
+				extractErrorMessage(err),
+			)
+
 		}
 	}
 
@@ -458,9 +478,15 @@ func (m *Gh) Commit(
 
 	if err != nil {
 		if e, ok := err.(*dagger.ExecError); ok && e.ExitCode == NoNewCommitsExitCode {
-			return nil, ErrorNoNewCommits
+			return nil, errors.New(
+				extractErrorMessage(err),
+			)
+			orNoNewCommits
 		}
-		return nil, err
+		return nil, errors.New(
+			extractErrorMessage(err),
+		)
+
 	}
 
 	return ctr, nil
@@ -536,12 +562,17 @@ func (m *Gh) CommitAndCreatePR(
 		localGhCliPath,
 	)
 	if err != nil {
-		return "", err
+		return "", errors.New(
+			extractErrorMessage(err),
+		)
 	}
 
 	err = m.DeleteRemoteBranch(ctx, repoDir, branchName, version, token, ctr, localGhCliPath)
 	if err != nil {
-		return "", err
+		return "", errors.New(
+			extractErrorMessage(err),
+		)
+
 	}
 
 	ctr, err = m.Commit(
@@ -553,7 +584,10 @@ func (m *Gh) CommitAndCreatePR(
 			return "", nil
 		}
 
-		return "", err
+		return "", errors.New(
+			extractErrorMessage(err),
+		)
+
 	}
 
 	return m.CreatePR(
@@ -604,7 +638,9 @@ func (m *Gh) DeleteRemoteBranch(
 			localGhCliPath,
 		)
 		if err != nil {
-			return err
+			return errors.New(
+				extractErrorMessage(err),
+			)
 		}
 	}
 
@@ -617,7 +653,9 @@ func (m *Gh) DeleteRemoteBranch(
 		WithExec([]string{"git", "ls-remote"}).
 		Stdout(ctx)
 	if err != nil {
-		return err
+		return errors.New(
+			extractErrorMessage(err),
+		)
 	}
 
 	exp := regexp.MustCompile(fmt.Sprintf("refs/heads/%s\n", branchName))
@@ -629,7 +667,9 @@ func (m *Gh) DeleteRemoteBranch(
 			Sync(ctx)
 
 		if err != nil {
-			return err
+			return errors.New(
+				extractErrorMessage(err),
+			)
 		}
 	}
 
