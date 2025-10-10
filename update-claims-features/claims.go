@@ -30,21 +30,21 @@ func (m *UpdateClaimsFeatures) getAllClaims(
 func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	ctx context.Context,
 	claimPath string,
-) (*Claim, error) {
+) (map[string]any, error) {
 	file := m.ClaimsDir.File(claimPath)
 	contents, err := file.Contents(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	claim := &Claim{}
-	err = yaml.Unmarshal([]byte(contents), claim)
+	var claim map[string]any
+	err = yaml.Unmarshal([]byte(contents), &claim)
 	if err != nil {
 		return nil, err
 	}
 
-	if claim.Kind == "ComponentClaim" &&
-		(m.ClaimsToUpdate == nil || slices.Contains(m.ClaimsToUpdate, claim.Name)) {
+	if claim["kind"].(string) == "ComponentClaim" &&
+		(m.ClaimsToUpdate == nil || slices.Contains(m.ClaimsToUpdate, claim["name"].(string))) {
 
 		return claim, nil
 
@@ -54,42 +54,44 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 }
 
 func (m *UpdateClaimsFeatures) updateClaimFeatures(
-	ctx context.Context,
-	claim *Claim,
+	claim map[string]any,
 	featuresMap map[string]string,
-) ([]Feature, bool, error) {
-	var updatedFeaturesList []Feature
+) ([]map[string]string, bool, error) {
+	updatedFeaturesList := []map[string]string{}
 	createPR := false
+	featuresList := claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)
 
-	for _, feature := range claim.Providers.Github.Features {
-		if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, feature.Name) {
+	for idx, feature := range featuresList {
+		featureName := feature.(map[string]any)["name"].(string)
+		featureVersion := feature.(map[string]any)["version"].(string)
+		if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, featureName) {
 			featureVersionSemver, err := semver.NewVersion(
-				featuresMap[feature.Name],
+				featuresMap[featureName],
 			)
 			if err != nil {
-				return []Feature{}, false, err
+				return []map[string]string{}, false, err
 			}
 
-			if feature.Version != "" {
+			if featureVersion != "" {
 				versionIsDifferent, err := semver.NewConstraint(
-					fmt.Sprintf("!=%s", feature.Version),
+					fmt.Sprintf("!=%s", featureVersion),
 				)
 				if err != nil {
-					return []Feature{}, false, err
+					return []map[string]string{}, false, err
 				}
 
 				// if instead of createPR = versionIsGreater.Check()
 				// because a later updated feature could override this value
 				if versionIsDifferent.Check(featureVersionSemver) {
 					createPR = true
-					feature.Version = featuresMap[feature.Name]
+					claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)[idx].(map[string]any)["version"] = featuresMap[featureName]
+					updatedFeaturesList = append(updatedFeaturesList, map[string]string{
+						"name":    featureName,
+						"version": featuresMap[featureName],
+					})
 				}
 			}
 		}
-
-		// Add feature whether its version is greater or not,
-		// so unupdated features are not deleted
-		updatedFeaturesList = append(updatedFeaturesList, feature)
 	}
 
 	return updatedFeaturesList, createPR, nil
