@@ -478,10 +478,7 @@ func (m *Gh) Commit(
 
 	if err != nil {
 		if e, ok := err.(*dagger.ExecError); ok && e.ExitCode == NoNewCommitsExitCode {
-			return nil, errors.New(
-				extractErrorMessage(err),
-			)
-			orNoNewCommits
+			return nil, ErrorNoNewCommits
 		}
 		return nil, errors.New(
 			extractErrorMessage(err),
