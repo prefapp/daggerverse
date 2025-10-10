@@ -18,7 +18,7 @@ func extractErrorMessage(err error) string {
 	case *dagger.ExecError:
 		return fmt.Sprintf("Failed: %s\nSTDERR: %s\nSTDOUT: %s", e.Error(), e.Stderr, e.Stdout)
 	default:
-		return fmt.Sprintf("Failed (%s): %s", err.Error(), e)
+		return fmt.Sprintf("Failed: %s", err.Error(), e)
 	}
 }
 
