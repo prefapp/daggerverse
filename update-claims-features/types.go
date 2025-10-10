@@ -81,6 +81,8 @@ type Github struct {
 	Actions             Actions        `yaml:"actions,omitempty"`
 	Overrides           Overrides      `yaml:"overrides,omitempty"`
 	Features            []Feature      `yaml:"features,omitempty"`
+	Secrets             Secrets        `yaml:"secrets,omitempty"`
+	Vars                Vars           `yaml:"vars,omitempty"`
 }
 
 type Technology struct {
@@ -128,4 +130,24 @@ type Overrides struct {
 	AdditionalMaintainers []string `yaml:"additionalMaintainers,omitempty"`
 	AdditionalWriters     []string `yaml:"additionalWriters,omitempty"`
 	AdditionalReaders     []string `yaml:"additionalReaders,omitempty"`
+}
+
+type Secrets struct {
+	Actions    []SecretDefinition `yaml:"actions,omitempty"`
+	Codespaces []SecretDefinition `yaml:"codespaces,omitempty"`
+	Dependabot []SecretDefinition `yaml:"dependabot,omitempty"`
+}
+
+type Vars struct {
+	Actions []VarDefinition `yaml:"actions,omitempty"`
+}
+
+type SecretDefinition struct {
+	Name  string `yaml:"name,omitempty"`
+	Value string `yaml:"value,omitempty"`
+}
+
+type VarDefinition struct {
+	Name  string `yaml:"name,omitempty"`
+	Value string `yaml:"value,omitempty"`
 }
