@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"gh/internal/dagger"
+	"strings"
 )
 
 func extractErrorMessage(err error) string {
@@ -19,6 +20,6 @@ func extractErrorMessage(err error) string {
 
 		return errorMsg
 	default:
-		return err.Error()
+		return fmt.Sprintf("::error::%s", strings.ReplaceAll(err.Error(), "::error::", ""))
 	}
 }

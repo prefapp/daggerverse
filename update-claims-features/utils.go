@@ -27,7 +27,7 @@ func extractErrorMessage(err error) string {
 
 		return errorMsg
 	default:
-		return fmt.Sprintf("::error::%s", err.Error())
+		return fmt.Sprintf("::error::%s", strings.ReplaceAll(err.Error(), "::error::", ""))
 	}
 }
 
