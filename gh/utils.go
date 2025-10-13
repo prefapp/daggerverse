@@ -10,6 +10,6 @@ func extractErrorMessage(err error) string {
 	case *dagger.ExecError:
 		return fmt.Sprintf("Command failed:\nSTDERR: %s\nSTDOUT: %s", e.Stderr, e.Stdout)
 	default:
-		return fmt.Sprintf("Dagger failed: %s", err.Error())
+		return err.Error()
 	}
 }
