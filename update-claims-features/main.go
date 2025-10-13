@@ -189,10 +189,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 	}
 
-	var returnedError error = nil
-	if errorMsg != "" {
-		returnedError = fmt.Errorf(errorMsg)
-	}
+	// var returnedError error = nil
+	// if errorMsg != "" {
+	// 	returnedError = fmt.Errorf(errorMsg)
+	// }
 
-	return m.DeploymentSummaryToFile(ctx, summary), returnedError
+	return m.DeploymentSummaryToFile(ctx, summary), nil //returnedError
 }
