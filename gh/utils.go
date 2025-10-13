@@ -8,7 +8,7 @@ import (
 func extractErrorMessage(err error) string {
 	switch e := err.(type) {
 	case *dagger.ExecError:
-		return fmt.Sprintf("Command failed:\nSTDERR: %s\nSTDOUT: %s", e.Stderr, e.Stdout)
+		return fmt.Sprintf("::error::Command failed:\nSTDERR: %s\nSTDOUT: %s", e.Stderr, e.Stdout)
 	default:
 		return err.Error()
 	}
