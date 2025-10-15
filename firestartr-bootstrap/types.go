@@ -33,7 +33,6 @@ type Bootstrap struct {
 	DefaultBranch          string      `yaml:"defaultBranch"`
 	DefaultBranchStrategy  string      `yaml:"defaultBranchStrategy"`
 	DefaultOrgPermissions  string      `yaml:"defaultOrgPermissions"`
-	DefaultOwnerGroup      string      `yaml:"defaultOwnerGroup"`
 	FinalSecretStoreName   string      `yaml:"finalSecretStoreName"`
 	HasFreePlan            bool        // Autocalculated
 	BotName                string      // Stored in Credentialsfile.yaml, but needed here for templating
@@ -85,15 +84,14 @@ type ConfigProvider struct {
 }
 
 type GithubApp struct {
-	ProviderConfigName    string `yaml:"providerConfigName"`
-	Pem                   string `yaml:"pem"`
-	RawPem                string
-	GhAppId               string `yaml:"id"`
-	InstallationId        string `yaml:"installationId"`
-	PrefappInstallationId string `yaml:"prefappInstallationId"`
-	Owner                 string `yaml:"owner"`
-	BotName               string `yaml:"botName"`
-	BotPat                string `yaml:"botPat"`
+	ProviderConfigName string `yaml:"providerConfigName"`
+	Owner              string `yaml:"owner"`
+	BotName            string `yaml:"botName"`
+	Pem                string
+	RawPem             string
+	GhAppId            string
+	InstallationId     string
+	BotPat             string
 }
 
 type SecretData struct {

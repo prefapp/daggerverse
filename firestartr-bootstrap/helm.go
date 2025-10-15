@@ -37,12 +37,8 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 		RoleRules: []RoleRule{
 			{
 				APIGroups: []string{"*"},
-				Resources: []string{
-					"*",
-				},
-				Verbs: []string{
-					"*",
-				},
+				Resources: []string{"*"},
+				Verbs:     []string{"*"},
 			},
 		},
 		Secret: Secret{

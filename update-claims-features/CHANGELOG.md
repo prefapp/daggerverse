@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.11](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.10...update-claims-features-v1.1.11) (2025-10-10)
+
+
+### Bug Fixes
+
+* Update claim struct to allow secrets and vars ([#336](https://github.com/prefapp/daggerverse/issues/336)) ([1431e45](https://github.com/prefapp/daggerverse/commit/1431e45375b367323fd86e33443de0a24fa0d044))
+
 ## [1.1.10](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.9...update-claims-features-v1.1.10) (2025-08-22)
 
 

@@ -345,20 +345,20 @@ func (m *FirestartrBootstrap) CheckIfOrgAllGroupExists(
 		}).
 		Sync(ctx)
 
-	if err != nil {
-		// If the group does not exist, we want to include it as part of
-		// the initial CR rendering (see the SplitRenderedCrsInFiles function)
-		m.IncludeAllGroup = true
-		if strings.Contains(err.Error(), "404") {
+	switch err := err.(type) {
+	case nil:
+		m.IncludeAllGroup = false
+		return nil
+	case *dagger.ExecError:
+		if strings.Contains(err.Stderr, "404") {
+			m.IncludeAllGroup = true
 			return nil
+		} else {
+			return err
 		}
+	default:
 		return err
 	}
-
-	// If the group does exist, we do not want to include it as part of
-	// the initial CR rendering (see the SplitRenderedCrsInFiles function)
-	m.IncludeAllGroup = false
-	return nil
 }
 
 func (m *FirestartrBootstrap) GetOrganizationPlanName(
