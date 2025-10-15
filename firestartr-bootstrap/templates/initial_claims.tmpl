@@ -75,3 +75,19 @@ providers:
         remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-checks/app-id"
       - secretName: "fs-import-appid"
         remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-import/app-id"
+---
+kind: OrgWebhookClaim
+version: "1.0"
+name: firestartr-webhook
+providers:
+  github:
+    name: firestartr-webhook
+    orgName: {{ $.Org }}
+    webhook:
+      url: https://{{ $.Owner }}.events.firestartr.dev
+      active: true
+      contentType: json
+      events:
+        - push
+        - pull_request
+      secretRef: ref:secretsclaim:firestartr-secrets:github-webhook-secret
