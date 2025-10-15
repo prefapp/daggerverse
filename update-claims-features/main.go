@@ -130,7 +130,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		if claim != nil {
 			updatedFeaturesList, createPR, err := m.updateClaimFeatures(
-				ctx,
 				claim,
 				latestFeaturesMap,
 			)
