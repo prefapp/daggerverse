@@ -36,6 +36,7 @@ type Bootstrap struct {
 	FinalSecretStoreName   string      `yaml:"finalSecretStoreName"`
 	HasFreePlan            bool        // Autocalculated
 	BotName                string      // Stored in Credentialsfile.yaml, but needed here for templating
+	Owner                  string      // Stored in Credentialsfile.yaml, but needed here for templating
 }
 
 type PushFiles struct {
