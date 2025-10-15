@@ -188,7 +188,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 	}
 
-	var returnedError error = nil
+	var returnedError error
 	if errorMsg != "" {
 		returnedError = fmt.Errorf(errorMsg)
 	}
