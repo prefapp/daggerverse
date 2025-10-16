@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.5](https://github.com/prefapp/daggerverse/compare/gh-v1.3.4...gh-v1.3.5) (2025-10-16)
+
+
+### Bug Fixes
+
+* Fix logging ([#338](https://github.com/prefapp/daggerverse/issues/338)) ([3f57a95](https://github.com/prefapp/daggerverse/commit/3f57a954441b95347d922523acfc706beead8146))
+
 ## [1.3.4](https://github.com/prefapp/daggerverse/compare/gh-v1.3.3...gh-v1.3.4) (2025-08-21)
 
 
