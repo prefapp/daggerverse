@@ -26,7 +26,6 @@ func (m *FirestartrBootstrap) PushDirToRepo(
 	}
 
 	for _, entry := range entries {
-
 		if strings.HasSuffix(entry, "/") {
 			continue
 		}
@@ -46,7 +45,11 @@ func (m *FirestartrBootstrap) PushDirToRepo(
 	return nil
 }
 
-func (m *FirestartrBootstrap) CloneRepo(ctx context.Context, repoName string, ghToken *dagger.Secret) (*dagger.Container, error) {
+func (m *FirestartrBootstrap) CloneRepo(
+	ctx context.Context,
+	repoName string,
+	ghToken *dagger.Secret,
+) (*dagger.Container, error) {
 	alpCtr, err := m.GhContainer(ctx, ghToken).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
@@ -65,7 +68,43 @@ func (m *FirestartrBootstrap) CloneRepo(ctx context.Context, repoName string, gh
 	return alpCtr, nil
 }
 
-func (m *FirestartrBootstrap) SetOrgVariable(ctx context.Context, name string, value string, ghToken *dagger.Secret) (*dagger.Container, error) {
+func (m *FirestartrBootstrap) CreateLabelsInRepo(
+	ctx context.Context,
+	repoName string,
+	labelList []string,
+	ghToken *dagger.Secret,
+) error {
+	ghCtr, err := m.CloneRepo(ctx, repoName, ghToken)
+	if err != nil {
+		return err
+	}
+
+	ghCtr = ghCtr.WithWorkdir("/repo")
+
+	for _, label := range labelList {
+		ghCtr, err = ghCtr.
+			WithExec([]string{
+				"gh",
+				"label",
+				"create",
+				label,
+			}).
+			Sync(ctx)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *FirestartrBootstrap) SetOrgVariable(
+	ctx context.Context,
+	name string,
+	value string,
+	ghToken *dagger.Secret,
+) (*dagger.Container, error) {
 	alpCtr, err := m.GhContainer(ctx, ghToken).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
@@ -89,7 +128,13 @@ func (m *FirestartrBootstrap) SetOrgVariable(ctx context.Context, name string, v
 	return alpCtr, nil
 }
 
-func (m *FirestartrBootstrap) SetRepoVariable(ctx context.Context, repoName string, name string, value string, ghToken *dagger.Secret) (*dagger.Container, error) {
+func (m *FirestartrBootstrap) SetRepoVariable(
+	ctx context.Context,
+	repoName string,
+	name string,
+	value string,
+	ghToken *dagger.Secret,
+) (*dagger.Container, error) {
 	alpCtr, err := m.GhContainer(ctx, ghToken).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
@@ -130,19 +175,24 @@ func (m *FirestartrBootstrap) SetRepoVariables(ctx context.Context, ghToken *dag
 	return nil
 }
 
-func (m *FirestartrBootstrap) SetOrgVariables(ctx context.Context, ghToken *dagger.Secret) error {
+func (m *FirestartrBootstrap) SetOrgVariables(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+	kindContainer *dagger.Container,
+) error {
 
 	mappedVars := map[string]string{
-		"FIRESTARTER_GITHUB_APP_ID":                      m.Creds.GithubApp.GhAppId,
-		"FIRESTARTER_GITHUB_APP_NAME":                    m.Creds.GithubApp.BotName,
-		"FIRESTARTER_WORKFLOW_DOCKER_IMAGE_TAG":          fmt.Sprintf("%s_slim", m.Bootstrap.Firestartr.Version),
-		"FIRESTARTER_GITHUB_APP_INSTALLATION_ID_PREFAPP": m.Creds.GithubApp.PrefappInstallationId,
-		"FIRESTARTER_GITHUB_APP_INSTALLATION_ID":         m.Creds.GithubApp.InstallationId,
-		"FIRESTARTR_CLI_VERSION":                         strings.TrimPrefix(m.Bootstrap.Firestartr.Version, "v"),
+		"FIRESTARTR_CLI_VERSION": "ref:secretsclaim:firestartr-secrets:firestartr-cli-version",
+		"FS_STATE_APP_ID":        "ref:secretsclaim:firestartr-secrets:fs-state-appid",
+		"FS_CHECKS_APP_ID":       "ref:secretsclaim:firestartr-secrets:fs-checks-appid",
 	}
 
-	for name, value := range mappedVars {
-		_, err := m.SetOrgVariable(ctx, name, value, ghToken)
+	for name, ref := range mappedVars {
+		value, err := m.GetKubernetesSecretValue(ctx, kindContainer, ref)
+		if err != nil {
+			return err
+		}
+		_, err = m.SetOrgVariable(ctx, name, value, ghToken)
 		if err != nil {
 			return err
 		}
@@ -150,7 +200,12 @@ func (m *FirestartrBootstrap) SetOrgVariables(ctx context.Context, ghToken *dagg
 	return nil
 }
 
-func (m *FirestartrBootstrap) SetOrgSecret(ctx context.Context, name string, value string, ghToken *dagger.Secret) (*dagger.Container, error) {
+func (m *FirestartrBootstrap) SetOrgSecret(
+	ctx context.Context,
+	name string,
+	value string,
+	ghToken *dagger.Secret,
+) (*dagger.Container, error) {
 	alpCtr, err := m.GhContainer(ctx, ghToken).
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
@@ -174,14 +229,24 @@ func (m *FirestartrBootstrap) SetOrgSecret(ctx context.Context, name string, val
 	return alpCtr, nil
 }
 
-func (m *FirestartrBootstrap) SetOrgSecrets(ctx context.Context, ghToken *dagger.Secret) error {
+func (m *FirestartrBootstrap) SetOrgSecrets(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+	kindContainer *dagger.Container,
+) error {
 	mappedVars := map[string]string{
-		"FIRESTARTER_GITHUB_APP_PEM_FILE": m.Creds.GithubApp.RawPem,
-		"FIRESTARTR_GITHUB_APP_PEM_FILE":  m.Creds.GithubApp.Pem,
+		"FS_STATE_PEM_FILE":  "ref:secretsclaim:firestartr-secrets:fs-state-pem",
+		"FS_CHECKS_PEM_FILE": "ref:secretsclaim:firestartr-secrets:fs-checks-pem",
+		"PREFAPP_BOT_PAT":    "ref:secretsclaim:firestartr-secrets:prefapp-bot-pat",
 	}
 
-	for name, value := range mappedVars {
-		_, err := m.SetOrgSecret(ctx, name, value, ghToken)
+	for name, ref := range mappedVars {
+		value, err := m.GetKubernetesSecretValue(ctx, kindContainer, ref)
+		if err != nil {
+			return err
+		}
+
+		_, err = m.SetOrgSecret(ctx, name, value, ghToken)
 		if err != nil {
 			return err
 		}
@@ -269,17 +334,59 @@ func (m *FirestartrBootstrap) WorkflowRun(ctx context.Context, jsonInput string,
 	return nil
 }
 
-func (m *FirestartrBootstrap) RunImportsWorkflow(ctx context.Context, ghToken *dagger.Secret) error {
-	err := m.WorkflowRun(
-		ctx,
-		`{"gh-repo-filter":"SKIP=SKIP","gh-members-filter":"REGEXP=[A-Za-z0-9\\-]+","gh-group-filter":"REGEXP=[A-Za-z0-9\\-]+"}`,
-		"github-import.yaml",
-		m.Bootstrap.PushFiles.Claims.Repo,
-		ghToken,
-	)
-	if err != nil {
+func (m *FirestartrBootstrap) CheckIfOrgAllGroupExists(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) error {
+	_, err := m.GhContainer(ctx, ghToken).
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithExec([]string{
+			"gh", "api", fmt.Sprintf("/orgs/%s/teams/%s-all", m.GhOrg, m.GhOrg),
+		}).
+		Sync(ctx)
+
+	switch err := err.(type) {
+	case nil:
+		m.IncludeAllGroup = false
+		return nil
+	case *dagger.ExecError:
+		if strings.Contains(err.Stderr, "404") {
+			m.IncludeAllGroup = true
+			return nil
+		} else {
+			return err
+		}
+	default:
 		return err
 	}
+}
 
-	return nil
+func (m *FirestartrBootstrap) GetOrganizationPlanName(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) (string, error) {
+	planName, err := m.GhContainer(ctx, ghToken).
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithExec([]string{
+			"gh", "api", fmt.Sprintf("/orgs/%s", m.GhOrg), "--jq", ".plan.name",
+		}).
+		Stdout(ctx)
+
+	if err != nil {
+		return "", err
+	}
+
+	return strings.Trim(planName, "\n"), nil
+}
+
+func (m *FirestartrBootstrap) OrgHasFreePlan(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) (bool, error) {
+	planName, err := m.GetOrganizationPlanName(ctx, ghToken)
+	if err != nil {
+		return false, err
+	}
+
+	return strings.EqualFold(planName, "free"), nil
 }

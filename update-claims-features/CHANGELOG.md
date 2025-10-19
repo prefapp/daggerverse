@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.1.11](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.10...update-claims-features-v1.1.11) (2025-10-10)
+
+
+### Bug Fixes
+
+* Update claim struct to allow secrets and vars ([#336](https://github.com/prefapp/daggerverse/issues/336)) ([1431e45](https://github.com/prefapp/daggerverse/commit/1431e45375b367323fd86e33443de0a24fa0d044))
+
+## [1.1.10](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.9...update-claims-features-v1.1.10) (2025-08-22)
+
+
+### Bug Fixes
+
+* `update-claims-features` improvements ([#312](https://github.com/prefapp/daggerverse/issues/312)) ([b37b8ba](https://github.com/prefapp/daggerverse/commit/b37b8ba55d167243575525ae7ca07d8194d7685e))
+* Handle errors better when no files are committed ([#311](https://github.com/prefapp/daggerverse/issues/311)) ([3aa0431](https://github.com/prefapp/daggerverse/commit/3aa04318ba9d5a493c533fa596b02e4dea1e7d06))
+* Use local gh binary instead of downloading ([#309](https://github.com/prefapp/daggerverse/issues/309)) ([cc8d4c4](https://github.com/prefapp/daggerverse/commit/cc8d4c432a158eb47fa8c9aedc342ad56b4b4460))
+
+## [1.1.9](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.8...update-claims-features-v1.1.9) (2025-08-12)
+
+
+### Bug Fixes
+
+* Update gh version ([#303](https://github.com/prefapp/daggerverse/issues/303)) ([f8fa1db](https://github.com/prefapp/daggerverse/commit/f8fa1db2ac185b5e5361f7788fdceb32eed4e9f6))
+
+## [1.1.8](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.7...update-claims-features-v1.1.8) (2025-08-12)
+
+
+### Bug Fixes
+
+* Refactor labels creation ([#299](https://github.com/prefapp/daggerverse/issues/299)) ([47df764](https://github.com/prefapp/daggerverse/commit/47df764bbac01aac87de2240b73efa0137853569))
+* Updated GH version to 1.3.0 for hydrate-orchestrator and update-claims-features ([#283](https://github.com/prefapp/daggerverse/issues/283)) ([32fc094](https://github.com/prefapp/daggerverse/commit/32fc094252f9c8f4a41194e1d377b086ce53db0b))
+
+## [1.1.7](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.6...update-claims-features-v1.1.7) (2025-07-24)
+
+
+### Bug Fixes
+
+* Unused gh-commit plugin ([#278](https://github.com/prefapp/daggerverse/issues/278)) ([59b79ac](https://github.com/prefapp/daggerverse/commit/59b79ace48707136655759711b7e43e63d853f27))
+
 ## [1.1.6](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.5...update-claims-features-v1.1.6) (2025-07-09)
 
 

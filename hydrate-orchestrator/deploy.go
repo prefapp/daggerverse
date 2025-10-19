@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
+
+const DEPLOYMENT_BRANCH_NAME string = "deployment"
+const NO_PR_CREATED_MESSAGE string = "No changes detected. PR creation skipped."
 
 // Hydrate deployments based on the updated deployments
 func (m *HydrateOrchestrator) GenerateDeployment(
@@ -22,7 +24,7 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 	// Glob Pattern
 	// +required
 	globPattern string,
-	// Aritfact ref. This param could be used to reference the artifact that triggered the deployment
+	// Artifact ref. This param could be used to reference the artifact that triggered the deployment
 	// It contains the image tag, sha, etc.
 	// +optional
 	// +default=""
@@ -75,15 +77,18 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		_, err = m.upsertPR(
+		labels := kubernetesAppDeploymentLabels(kdep.Cluster, kdep.Tenant, kdep.Environment)
+
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			kdep.Labels(),
+			labels,
 			kdep.String(true),
 			prBody,
 			kdep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
+			DEPLOYMENT_BRANCH_NAME,
 		)
 
 		if err != nil {
@@ -93,12 +98,25 @@ Created by @%s from %s within commit [%s](%s)
 			)
 
 			continue
-		} else {
+		}
+
+		if output == "" {
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
-				"Success",
+				NO_PR_CREATED_MESSAGE,
 			)
+
+			continue
 		}
+
+		summary.addDeploymentSummaryRow(
+			kdep.DeploymentPath,
+			fmt.Sprintf(
+				"Success: <a href=\"%s\">%s</a>",
+				output,
+				output,
+			),
+		)
 	}
 
 	for _, kdep := range deployments.KubernetesSysDeployments {
@@ -135,32 +153,46 @@ Created by @%s from %s within commit [%s](%s)
 			kdep.String(false),
 		)
 
-		_, err = m.upsertPR(
+		labels := kubernetesSysServiceDeploymentLabels(kdep.Cluster, kdep.SysServiceName)
+
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			kdep.Labels(),
+			labels,
 			kdep.String(true),
 			prBody,
 			kdep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
+			DEPLOYMENT_BRANCH_NAME,
 		)
 
 		if err != nil {
-
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
 				extractErrorMessage(err),
 			)
 
 			continue
-		} else {
-			summary.addDeploymentSummaryRow(
-				kdep.DeploymentPath,
-				"Success",
-			)
 		}
 
+		if output == "" {
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				NO_PR_CREATED_MESSAGE,
+			)
+
+			continue
+		}
+
+		summary.addDeploymentSummaryRow(
+			kdep.DeploymentPath,
+			fmt.Sprintf(
+				"Success: <a href=\"%s\">%s</a>",
+				output,
+				output,
+			),
+		)
 	}
 
 	for _, tfDep := range deployments.TfWorkspaceDeployments {
@@ -196,36 +228,61 @@ Created by @%s from %s within commit [%s](%s)
 			tfDep.String(false),
 		)
 
-		prLink, err := m.upsertPR(
+		labels := []LabelInfo{
+			{
+				Name:        "plan",
+				Color:       "7E7C7A",
+				Description: "Run terraform plan",
+			},
+		}
+
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDep[0],
-			tfDep.Labels(),
+			labels,
 			tfDep.String(true),
 			prBody,
 			tfDep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
+			DEPLOYMENT_BRANCH_NAME,
 		)
 
 		if err != nil {
-
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
 				extractErrorMessage(err),
 			)
 
 			continue
+		}
 
+		if output == "" {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				NO_PR_CREATED_MESSAGE,
+			)
+
+			continue
+		}
+
+		parts := strings.Split(output, "/")
+		if err := m.validatePrUrl(output, parts); err != nil {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				extractErrorMessage(err),
+			)
+			continue
 		}
 
 		// https://github.com/org/app-repo/pull/8
 		// parts:    [https:, , github.com, org, app-repo, pull, 8]
 		// positions:  0     1       2        3     4        5   6
-		prNumber := strings.Split(prLink, "/")[6]
-		repo := strings.Split(prLink, "/")[4]
-		org := strings.Split(prLink, "/")[3]
+		prNumber := parts[6]
+		repo := parts[4]
+		org := parts[3]
 		fmt.Printf("🔗 Getting PR number from PR link\n")
-		fmt.Printf("PR link: %s\n", prLink)
+		fmt.Printf("PR link: %s\n", output)
 		fmt.Printf("PR number: %s\n", prNumber)
 		fmt.Printf("Repo: %s\n", repo)
 		fmt.Printf("Org: %s\n", org)
@@ -242,43 +299,35 @@ Created by @%s from %s within commit [%s](%s)
 			&renderedDep[0],
 		)
 
-		contentsDirPath := "/contents"
-
-		_, err = dag.Gh(dagger.GhOpts{
-			Version: m.GhCliVersion,
-		}).Container(dagger.GhContainerOpts{
-			Token:          m.GhToken,
-			PluginNames:    []string{"prefapp/gh-commit"},
-			PluginVersions: []string{"v1.2.3"},
-		}).WithMountedDirectory(contentsDirPath, updatedDir).
-			WithWorkdir(contentsDirPath).
-			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-			WithExec([]string{
-				"gh",
-				"commit",
-				"-R", m.Repo,
-				"-b", branchName,
-				"-m", "Update deployments",
-				"--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
-			}).
-			Sync(ctx)
+		_, err = dag.Gh().Commit(
+			updatedDir,
+			branchName,
+			"Update deployments",
+			m.GhToken,
+			dagger.GhCommitOpts{
+				BaseBranch:     DEPLOYMENT_BRANCH_NAME,
+				DeletePath:     fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+				LocalGhCliPath: m.LocalGhCliPath,
+			},
+		).Sync(ctx)
 
 		if err != nil {
-
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
 				extractErrorMessage(err),
 			)
 
 			continue
-
-		} else {
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				"Success",
-			)
 		}
 
+		summary.addDeploymentSummaryRow(
+			tfDep.DeploymentPath,
+			fmt.Sprintf(
+				"Success: <a href=\"%s\">%s</a>",
+				output,
+				output,
+			),
+		)
 	}
 
 	for _, secDep := range deployments.SecretsDeployment {
@@ -309,16 +358,34 @@ Created by @%s from %s within commit [%s](%s)
 			fmt.Sprintf("https://github.com/%s/commit/%s", m.Repo, branchInfo.SHA),
 			secDep.String(false),
 		)
+		labels := []LabelInfo{
+			{
+				Name:        "type/secrets",
+				Color:       getDefaultColorForDeploymentLabel("type/secrets"),
+				Description: getDefaultDescriptionForDeploymentLabel("type/secrets"),
+			},
+			{
+				Name:        fmt.Sprintf("tenant/%s", secDep.Tenant),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("tenant/%s", secDep.Tenant)),
+				Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("tenant/%s", secDep.Tenant)),
+			},
+			{
+				Name:        fmt.Sprintf("env/%s", secDep.Environment),
+				Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("env/%s", secDep.Environment)),
+				Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("env/%s", secDep.Environment)),
+			},
+		}
 
-		_, err = m.upsertPR(
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			secDep.Labels(),
+			labels,
 			secDep.String(true),
 			prBody,
 			secDep.DeploymentPath,
 			lo.Ternary(author == "author", []string{}, []string{author}),
+			"deployment",
 		)
 
 		if err != nil {
@@ -328,13 +395,25 @@ Created by @%s from %s within commit [%s](%s)
 			)
 
 			continue
+		}
 
-		} else {
+		if output == "" {
 			summary.addDeploymentSummaryRow(
 				secDep.DeploymentPath,
-				"Success",
+				NO_PR_CREATED_MESSAGE,
 			)
+
+			continue
 		}
+
+		summary.addDeploymentSummaryRow(
+			secDep.DeploymentPath,
+			fmt.Sprintf(
+				"Success: <a href=\"%s\">%s</a>",
+				output,
+				output,
+			),
+		)
 	}
 
 	return m.DeploymentSummaryToFile(ctx, summary)

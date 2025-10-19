@@ -1,5 +1,36 @@
 # Changelog
 
+## [6.3.8](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.7...hydrate-orchestrator-v6.3.8) (2025-09-05)
+
+
+### Bug Fixes
+
+* Missing LocalGhCliPath parameters ([#320](https://github.com/prefapp/daggerverse/issues/320)) ([ae4bf4f](https://github.com/prefapp/daggerverse/commit/ae4bf4f5fe1398ba0cccef9089fd32c240833e20))
+
+## [6.3.7](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.6...hydrate-orchestrator-v6.3.7) (2025-08-22)
+
+
+### Bug Fixes
+
+* Handle errors better when no files are committed ([#311](https://github.com/prefapp/daggerverse/issues/311)) ([3aa0431](https://github.com/prefapp/daggerverse/commit/3aa04318ba9d5a493c533fa596b02e4dea1e7d06))
+* Use local gh binary instead of downloading ([#309](https://github.com/prefapp/daggerverse/issues/309)) ([cc8d4c4](https://github.com/prefapp/daggerverse/commit/cc8d4c432a158eb47fa8c9aedc342ad56b4b4460))
+
+## [6.3.6](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.5...hydrate-orchestrator-v6.3.6) (2025-08-12)
+
+
+### Bug Fixes
+
+* Update gh version ([#303](https://github.com/prefapp/daggerverse/issues/303)) ([f8fa1db](https://github.com/prefapp/daggerverse/commit/f8fa1db2ac185b5e5361f7788fdceb32eed4e9f6))
+
+## [6.3.5](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.4...hydrate-orchestrator-v6.3.5) (2025-08-12)
+
+
+### Bug Fixes
+
+* Commit() call not being executed ([#296](https://github.com/prefapp/daggerverse/issues/296)) ([713daff](https://github.com/prefapp/daggerverse/commit/713daff9c0c02d105dddf69d6dae6e407ca61018))
+* Refactor labels creation ([#299](https://github.com/prefapp/daggerverse/issues/299)) ([47df764](https://github.com/prefapp/daggerverse/commit/47df764bbac01aac87de2240b73efa0137853569))
+* Updated GH version to 1.3.0 for hydrate-orchestrator and update-claims-features ([#283](https://github.com/prefapp/daggerverse/issues/283)) ([32fc094](https://github.com/prefapp/daggerverse/commit/32fc094252f9c8f4a41194e1d377b086ce53db0b))
+
 ## [6.3.4](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.3...hydrate-orchestrator-v6.3.4) (2025-07-09)
 
 

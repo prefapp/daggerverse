@@ -51,18 +51,30 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 		globPattern := fmt.
 			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
 
-		prLink, err := m.upsertPR(
+		labels := kubernetesAppDeploymentLabels(kdep.Cluster, kdep.Tenant, kdep.Environment)
+
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			kdep.Labels(),
+			labels,
 			kdep.String(true, repoURL),
 			prBody,
 			fmt.Sprintf("kubernetes/%s/%s/%s", kdep.Cluster, kdep.Tenant, kdep.Environment),
 			reviewers,
+			"deployment",
 		)
 
 		if err != nil {
+			if output != "" {
+				summary.addDeploymentSummaryRow(
+					kdep.DeploymentPath,
+					output,
+				)
+
+				continue
+			}
+
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
 				extractErrorMessage(err),
@@ -73,9 +85,9 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 
 		if m.AutomergeFileExists(ctx, globPattern) {
 
-			fmt.Printf("Automerge file found, merging PR %s\n", prLink)
+			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
 
-			if prLink == "" {
+			if output == "" {
 
 				summary.addDeploymentSummaryRow(
 					kdep.DeploymentPath,
@@ -84,7 +96,7 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 				continue
 			}
 
-			err := m.MergePullRequest(ctx, prLink)
+			err := m.MergePullRequest(ctx, output)
 
 			if err != nil {
 
@@ -99,21 +111,21 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 				kdep.DeploymentPath,
 				fmt.Sprintf(
 					"Success, pr merged: <a href=\"%s\">%s</a>",
-					prLink,
-					prLink,
+					output,
+					output,
 				),
 			)
 
 		} else {
 
-			fmt.Println("Automerge file does not exist, skipping automerge")
+			fmt.Println("AUTO_MERGE file does not exist, skipping automerge")
 
 			summary.addDeploymentSummaryRow(
 				kdep.DeploymentPath,
 				fmt.Sprintf(
 					"Success, pr created: <a href=\"%s\">%s</a>",
-					prLink,
-					prLink,
+					output,
+					output,
 				),
 			)
 		}
@@ -121,6 +133,51 @@ func (m *HydrateOrchestrator) GenerateKubernetesDeployments(
 	}
 
 	return m.DeploymentSummaryToFile(ctx, summary), nil
+}
+
+func kubernetesAppDeploymentLabels(cluster_name string, tenant_name string, env_name string) []LabelInfo {
+	return []LabelInfo{
+		{
+			Name:        "type/kubernetes",
+			Color:       getDefaultColorForDeploymentLabel("type/kubernetes"),
+			Description: getDefaultDescriptionForDeploymentLabel("type/kubernetes"),
+		},
+		{
+			Name:        fmt.Sprintf("cluster/%s", cluster_name),
+			Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("cluster/%s", cluster_name)),
+			Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("cluster/%s", cluster_name)),
+		},
+		{
+			Name:        fmt.Sprintf("tenant/%s", tenant_name),
+			Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("tenant/%s", tenant_name)),
+			Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("tenant/%s", tenant_name)),
+		},
+		{
+			Name:        fmt.Sprintf("env/%s", env_name),
+			Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("env/%s", env_name)),
+			Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("env/%s", env_name)),
+		},
+	}
+}
+
+func kubernetesSysServiceDeploymentLabels(cluster_name string, sys_service_name string) []LabelInfo {
+	return []LabelInfo{
+		{
+			Name:        "type/kubernetes",
+			Color:       getDefaultColorForDeploymentLabel("type/kubernetes"),
+			Description: getDefaultDescriptionForDeploymentLabel("type/kubernetes"),
+		},
+		{
+			Name:        fmt.Sprintf("cluster/%s", cluster_name),
+			Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("cluster/%s", cluster_name)),
+			Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("cluster/%s", cluster_name)),
+		},
+		{
+			Name:        fmt.Sprintf("sys-service/%s", sys_service_name),
+			Color:       getDefaultColorForDeploymentLabel(fmt.Sprintf("sys-service/%s", sys_service_name)),
+			Description: getDefaultDescriptionForDeploymentLabel(fmt.Sprintf("sys-service/%s", sys_service_name)),
+		},
+	}
 }
 
 func (m *HydrateOrchestrator) processImagesMatrix(

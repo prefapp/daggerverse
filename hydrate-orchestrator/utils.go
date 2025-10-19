@@ -26,6 +26,64 @@ func extractErrorMessage(err error) string {
 }
 
 /*
+Label-related functions and structs
+*/
+type LabelInfo struct {
+	Name        string
+	Color       string
+	Description string
+}
+
+func getDefaultColorForDeploymentLabel(label string) string {
+	labelParts := strings.Split(label, "/")
+	if len(labelParts) < 2 {
+		return "7E7C7A"
+	}
+
+	switch {
+	case labelParts[0] == "tenant":
+		return "234099"
+	case labelParts[0] == "env":
+		return "33810B"
+	case labelParts[0] == "service":
+		return "F1C232"
+	case labelParts[0] == "cluster":
+		return "AC1CAA"
+	case labelParts[0] == "type":
+		return "6C3B2A"
+	case labelParts[0] == "tfworkspace":
+		return "7B42BC"
+	default:
+		return "7E7C7A"
+	}
+}
+
+func getDefaultDescriptionForDeploymentLabel(label string) string {
+	// Return a default description based on the label type
+	labelParts := strings.Split(label, "/")
+	if len(labelParts) < 2 {
+		return ""
+	}
+
+	switch {
+	case labelParts[0] == "tenant":
+		return fmt.Sprintf("Tenant %s", labelParts[1])
+	case labelParts[0] == "env":
+		return fmt.Sprintf("Environment %s", labelParts[1])
+	case labelParts[0] == "service":
+		return fmt.Sprintf("Service %s", labelParts[1])
+	case labelParts[0] == "cluster":
+		return fmt.Sprintf("Cluster %s", labelParts[1])
+	case labelParts[0] == "type":
+		return fmt.Sprintf("Deployment type %s", labelParts[1])
+	case labelParts[0] == "tfworkspace":
+		return fmt.Sprintf("Terraform workspace %s", labelParts[1])
+	default:
+		return ""
+	}
+}
+
+/*
 struct to hold the updated deployments
 */
 
@@ -142,20 +200,6 @@ func (sd *SecretsDeployment) String(summary bool) string {
 	}
 }
 
-func (tfd *TfWorkspaceDeployment) Labels() []string {
-	return []string{
-		"plan",
-	}
-}
-
-func (sd *SecretsDeployment) Labels() []string {
-	return []string{
-		"type/secrets",
-		fmt.Sprintf("tenant/%s", sd.Tenant),
-		fmt.Sprintf("env/%s", sd.Environment),
-	}
-}
-
 // Check if two KubernetesAppDeployment are equal
 func (kd *KubernetesAppDeployment) Equals(other KubernetesAppDeployment) bool {
 	return kd.DeploymentPath == other.DeploymentPath &&
@@ -223,15 +267,6 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 	}
 }
 
-func (kd *KubernetesAppDeployment) Labels() []string {
-	return []string{
-		"type/kubernetes",
-		fmt.Sprintf("cluster/%s", kd.Cluster),
-		fmt.Sprintf("tenant/%s", kd.Tenant),
-		fmt.Sprintf("env/%s", kd.Environment),
-	}
-}
-
 /*
 - Kubernetes sys service specific deployment struct
 */
@@ -261,14 +296,6 @@ func (kd *KubernetesSysDeployment) String(summary bool) string {
 		return "Deployment coordinates:" +
 			fmt.Sprintf("\n\t* Cluster: `%s`", kd.Cluster) +
 			fmt.Sprintf("\n\t* Sys Service: `%s`", kd.SysServiceName)
-	}
-}
-
-func (kd *KubernetesSysDeployment) Labels() []string {
-	return []string{
-		"type/kubernetes",
-		fmt.Sprintf("cluster/%s", kd.Cluster),
-		fmt.Sprintf("sys-service/%s", kd.SysServiceName),
 	}
 }
 
@@ -378,8 +405,9 @@ func (m *HydrateOrchestrator) getBranchInfo(
 
 	gitDirPath := "/git_dir"
 	ctr := dag.Gh().Container(dagger.GhContainerOpts{
-		Token:   m.GhToken,
-		Version: m.GhCliVersion,
+		Token:          m.GhToken,
+		Version:        m.GhCliVersion,
+		LocalGhCliPath: m.LocalGhCliPath,
 	}).
 		WithDirectory(gitDirPath, m.ValuesStateDir).
 		WithWorkdir(gitDirPath).
@@ -413,4 +441,16 @@ func (m *HydrateOrchestrator) getBranchInfo(
 		Name: strings.TrimSpace(branch),
 		SHA:  sha,
 	}
+}
+
+func (m *HydrateOrchestrator) validatePrUrl(prURL string, urlSplitted []string) error {
+	if prURL == "" {
+		return fmt.Errorf("PR URL cannot be empty")
+	}
+
+	if !strings.HasPrefix(prURL, "https://github.com/") || len(urlSplitted) < 7 {
+		return fmt.Errorf("invalid PR URL format: %s", prURL)
+	}
+
+	return nil
 }
