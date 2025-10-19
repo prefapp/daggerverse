@@ -1,0 +1,51 @@
+---
+bases:
+  - kubernetes/environments.yaml
+  - kubernetes/repositories.yaml
+
+releases:
+  - name: 
+      {{- if hasKey .StateValues "releaseName" -}}
+      {{.StateValues.releaseName | quote | indent 1}}
+      {{- else -}}
+      {{ .StateValues.app | quote | indent 1}}
+      {{- end }}
+    chart: {{.StateValues.chart}}
+    version: {{.StateValues.version}}
+    namespace:  
+      {{- if hasKey .StateValues "namespace" -}}
+      {{.StateValues.namespace | quote | indent 1}}
+      {{- else -}}
+      {{- $nmspc := printf "%s-%s-%s" .StateValues.tenant .StateValues.app .Environment.Name -}}
+      {{- $nmspc | quote | indent 1 -}}
+      {{- end }}
+    values:
+      - values.yaml.gotmpl 
+
+    {{- if hasKey .StateValues "hooks" }}
+    hooks: {{.StateValues.hooks | toYaml | nindent 6 -}}
+    {{- end }}
+
+    
+    jsonPatches:
+    {{- if hasKey .StateValues "patches" }}
+    {{- $patches_lib := readFile "./lib/kustomizations/json_patches.yaml" | fromYaml }}
+    {{- range $index, $key := .StateValues.patches}}
+    {{- if hasKey $patches_lib $key }}
+    {{- index $patches_lib $key | toYaml | nindent 6 }}
+    {{- else }}
+    {{- printf "Patch '%s' not found in kustomization patches library" $key | fail }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- if hasKey .StateValues "extraPatches" }}
+    {{ .StateValues.extraPatches | toYaml | nindent 6 }}
+    {{- end }}
+
+    {{- if hasKey .StateValues "set" }}
+    set:
+      {{- range .StateValues.set }}
+      - name: {{.name}}
+        value: {{ tpl .value $}}
+      {{- end }}
+    {{- end }}

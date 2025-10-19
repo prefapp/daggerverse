@@ -1,0 +1,72 @@
+{{/* Init combined dict values */}}
+{{- $combined := dict }}
+
+{{/* Main coordinates dir ./kubernetes/<cluster>/<tenant>/<env> .  It will be used further to process files */}}
+{{- $mainCoordinatesDir := printf "kubernetes/%s/%s/%s" .StateValues.cluster .StateValues.tenant .Environment.Name }}
+
+{{/* ⚙️ Execs
+
+execs is a list of execs to run. Each exec is a map with the.
+You can pass execs through a state-values for helmfile.
+
+Example:
+
+execs:
+  - command: "./my-script.sh"
+    args: ["--do-something", "--format", "yaml"]
+
+*/}} 
+
+{{- if hasKey .StateValues "execs" }}
+    
+    {{- range .StateValues.execs }}
+
+        {{- /* Process command as Go template, passing the global scope "$" */}}
+        {{- $command := tpl .command $ }}
+
+        {{- /* Process args as Go templates */}}
+        {{- $args := .args }}
+        {{- $renderedArgs := list }} 
+        {{- range $args }}
+            {{- $arg := . }}
+            {{- $renderedArg := tpl $arg $ }} 
+            {{- $renderedArgs = append $renderedArgs $renderedArg }}
+        {{- end }}
+
+        {{- /* Run the command and merge the output */}}
+        {{- $output := exec $command $renderedArgs }}
+        {{- $content := fromYaml $output }}
+        {{- $combined = merge $combined $content }}
+    
+    {{- end }}
+
+{{- end }}
+
+{{/* Iterate over the dir entries and merge contents */}}
+{{- $files := readDirEntries $mainCoordinatesDir }}
+{{- range $files }}
+  {{- if not .IsDir }}
+    {{- $path := printf "./%s/%s" $mainCoordinatesDir .Name }}
+    {{- $content := readFile $path | fromYaml }}
+    {{- $combined = merge $combined $content }}
+  {{- end }}
+{{- end }}
+
+{{/* Read previous_images.yaml */}}
+{{- $previousImages := printf "./%s/%s" $mainCoordinatesDir "previous_images.yaml" }}
+{{- $previousImagesContent := readFile $previousImages | fromYaml }}
+{{- $combined = merge $combined $previousImagesContent }}
+
+{{/* Read new_images.yaml */}}
+{{- $newImages := printf "./%s/%s" $mainCoordinatesDir "new_images.yaml" }}
+{{- $newImagesContent := readFile $newImages | fromYaml }}
+{{- $combined = merge $combined $newImagesContent }}
+
+{{/* Read images.yaml */}}
+{{- $images := printf "./%s/%s" $mainCoordinatesDir "images.yaml" }}
+{{- $imagesContent := readFile $images | fromYaml }}
+{{- $combined = merge $combined $imagesContent }}
+
+{{/* Print the values */}}
+{{ toYaml $combined | nindent 0 }}
+

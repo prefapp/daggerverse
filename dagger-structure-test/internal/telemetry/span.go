@@ -1,6 +1,8 @@
 package telemetry
 
 import (
+	"context"
+
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -12,10 +14,32 @@ func Encapsulate() trace.SpanStartOption {
 	return trace.WithAttributes(attribute.Bool(UIEncapsulateAttr, true))
 }
 
+// Encapsulated can be applied to a child span to indicate that it should be
+// collapsed by default.
+func Encapsulated() trace.SpanStartOption {
+	return trace.WithAttributes(attribute.Bool(UIEncapsulatedAttr, true))
+}
+
+func Resume(ctx context.Context) trace.SpanStartOption {
+	return trace.WithLinks(trace.Link{SpanContext: trace.SpanContextFromContext(ctx)})
+}
+
 // Internal can be applied to a span to indicate that this span should not be
 // shown to the user by default.
 func Internal() trace.SpanStartOption {
-	return trace.WithAttributes(attribute.Bool(InternalAttr, true))
+	return trace.WithAttributes(attribute.Bool(UIInternalAttr, true))
+}
+
+// Passthrough can be applied to a span to cause the UI to skip over it and
+// show its children instead.
+func Passthrough() trace.SpanStartOption {
+	return trace.WithAttributes(attribute.Bool(UIPassthroughAttr, true))
+}
+
+// Tracer returns a Tracer for the given library using the provider from
+// the current span.
+func Tracer(ctx context.Context, lib string) trace.Tracer {
+	return trace.SpanFromContext(ctx).TracerProvider().Tracer(lib)
 }
 
 // End is a helper to end a span with an error if the function returns an error.

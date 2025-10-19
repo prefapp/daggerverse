@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"regexp"
+	"dagger/dagger-structure-test/internal/dagger"
 	"time"
 )
 
@@ -14,7 +15,7 @@ type AssertOutputOpts struct {
 }
 
 // Test a container output
-func (m *DaggerStructureTest) AssertOutput(ctx context.Context, container *Container, options *AssertOutputOpts) (bool, error) {
+func (m *DaggerStructureTest) AssertOutput(ctx context.Context, container *dagger.Container, options *AssertOutputOpts) (bool, error) {
 
 	ctr := container
 
@@ -63,7 +64,7 @@ func (m *DaggerStructureTest) AssertOutput(ctx context.Context, container *Conta
 	}
 	
 	if options.ExpectedExitCode != nil {
-		exitCode, err := m.getExitCode(ctx, ctr)
+		exitCode, err := m.GetExitCode(ctx, ctr)
 		if err != nil {
 			return false, err
 		}
@@ -76,7 +77,7 @@ func (m *DaggerStructureTest) AssertOutput(ctx context.Context, container *Conta
 }
 
 // Returns a container exit code
-func (m *DaggerStructureTest) getExitCode(ctx context.Context, ctr *Container) (int, error) {
+func (m *DaggerStructureTest) GetExitCode(ctx context.Context, ctr *dagger.Container) (int, error) {
 
 	_, err := ctr.Sync(ctx)
     if e, ok := err.(*ExecError); ok {

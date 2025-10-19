@@ -1,0 +1,14 @@
+name: membership_base
+apiVersion: firestartr.dev/v1
+kind: UserClaim
+defaultValues:
+  context:
+    backend:
+      ref:
+        kind: FirestartrProviderConfig
+        name: {{ .CloudProviderProviderConfigName }}
+    provider:
+      ref:
+        kind: FirestartrProviderConfig
+        name: {{ .GithubAppProviderConfigName }}
+  role: member

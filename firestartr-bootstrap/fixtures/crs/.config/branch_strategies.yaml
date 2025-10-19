@@ -1,0 +1,26 @@
+strategies:
+  - name: gitflow
+    defaultBranch: master
+    branchProtections:
+    
+      - pattern: dev
+        enforceAdmins: false
+        requireSignedCommits: true
+        allowsForcePushes: false
+        allowDeletions: false
+        requiredLinearHistory: true
+        requiredPullRequestReviews:
+          - dismissStaleReviews: true
+            requireCodeOwnerReviews: true
+            requiredApprovingReviewCount: 1
+            
+      - pattern: master
+        enforceAdmins: false
+        requireSignedCommits: true
+        allowsForcePushes: false
+        allowDeletions: false
+        requiredLinearHistory: true
+        requiredPullRequestReviews:
+          - dismissStaleReviews: true
+            requireCodeOwnerReviews: true
+            requiredApprovingReviewCount: 1

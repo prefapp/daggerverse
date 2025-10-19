@@ -1,0 +1,39 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    firestartr.dev/image: image-a:1.16.0
+    firestartr.dev/microservice: micro-a
+  labels:
+    app: example
+    manolo: escobar
+  name: sample-app-micro-a
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-app
+      chart: micro-a
+  template:
+    metadata:
+      labels:
+        app: sample-app
+        chart: micro-a
+    spec:
+      containers:
+      - command: null
+        envFrom: null
+        image: image-a:1.16.0
+        imagePullPolicy: null
+        name: example
+        ports:
+        - containerPort: 9898
+        resources:
+          limits:
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts: null
+      volumes: null

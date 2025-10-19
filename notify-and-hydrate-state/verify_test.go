@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -14,7 +15,7 @@ func TestCrHasPendingPr(t *testing.T) {
 		},
 	}
 
-	prs := []PrBranchName{
+	prs := []Pr{
 		{
 			HeadRefName: "automated/notify-and-hydrate-state-uuid-1",
 		},
@@ -31,5 +32,7 @@ func TestCrHasPendingPr(t *testing.T) {
 		t.Errorf("Expected false, got true")
 
 	}
+
+	fmt.Printf("Test passed\n")
 
 }

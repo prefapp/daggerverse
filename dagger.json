@@ -1,4 +1,11 @@
 {
-    "name": "prefapp",
-    "engineVersion": "v0.11.0"
+  "name": "prefapp",
+  "engineVersion": "v0.13.5",
+  "dependencies": [
+    {
+      "name": "hydrate-kubernetes",
+      "source": "github.com/prefapp/daggerverse/hydrate-kubernetes@main",
+      "pin": "d9df2386b0d9bf5ee32adeebdeb48166cb707cbb"
+    }
+  ]
 }

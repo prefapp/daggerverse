@@ -2,32 +2,24 @@ package main
 
 import (
 	"context"
+	"dagger/notify-and-hydrate-state/internal/dagger"
 	"fmt"
 	"strings"
 
-	jsonpatch "github.com/evanphx/json-patch/v5"
+	"reflect"
+
 	"github.com/tidwall/gjson"
 	"golang.org/x/exp/slices"
 	"sigs.k8s.io/yaml"
 )
 
-type DiffResult struct {
-	AddedFiles []*File
-
-	DeletedFiles []*File
-
-	ModifiedFiles []*File
-
-	UnmodifiedFiles []*File
-}
-
 func (m *NotifyAndHydrateState) CompareDirs(
 
 	ctx context.Context,
 
-	oldCrs *Directory,
+	oldCrs *dagger.Directory,
 
-	newCrs *Directory,
+	newCrs *dagger.Directory,
 
 	affectedClaims []string,
 
@@ -144,7 +136,7 @@ func PrintFileList(
 
 	ctx context.Context,
 
-	listToPrint []*File,
+	listToPrint []*dagger.File,
 
 ) {
 
@@ -173,24 +165,31 @@ func (m *NotifyAndHydrateState) AreYamlsEqual(
 	yamlB string,
 
 ) bool {
+	var obj1, obj2 map[string]interface{}
 
-	jsonString1, err := yaml.YAMLToJSON([]byte(yamlA))
+	yaml.Unmarshal([]byte(yamlA), &obj1)
 
-	jsonString2, err2 := yaml.YAMLToJSON([]byte(yamlB))
+	yaml.Unmarshal([]byte(yamlB), &obj2)
 
-	if err != nil {
+	ignoredAnnotations := []string{
+		"firestartr.dev/last-state-pr",
+		"firestartr.dev/last-claim-pr",
+	}
 
-		panic(err)
+	for _, annotation := range ignoredAnnotations {
+
+		unsetAnnotation(annotation, obj1)
+
+		unsetAnnotation(annotation, obj2)
 
 	}
 
-	if err2 != nil {
+	return reflect.DeepEqual(obj1, obj2)
+}
 
-		panic(err2)
+func unsetAnnotation(annotation string, obj map[string]interface{}) {
 
-	}
-
-	return jsonpatch.Equal(jsonString1, jsonString2)
+	obj["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})[annotation] = nil
 
 }
 
@@ -200,7 +199,7 @@ func (m *NotifyAndHydrateState) IsAffectedCRFromPr(
 
 	affectedClaims []string,
 
-	cr *File,
+	cr *dagger.File,
 
 ) bool {
 
@@ -226,6 +225,8 @@ func (m *NotifyAndHydrateState) IsAffectedCRFromPr(
 
 	claimName := strings.Split(claimRef, "/")[1]
 
-	return slices.Contains(affectedClaims, claimName)
+	isAffected := slices.Contains(affectedClaims, claimName)
+
+	return isAffected
 
 }

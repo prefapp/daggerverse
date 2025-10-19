@@ -1,0 +1,10 @@
+type: tfworkspaces
+name: example-platform
+tenants: [tenant-test]
+envs: [env-test]
+allowedClaims:
+  - resourceTypes: 
+      - az-vmss
+    providers:
+      - azure-provider-example
+    backend: azure-backend-terraform

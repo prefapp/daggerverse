@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
+	"dagger/notify-and-hydrate-state/internal/dagger"
 	"fmt"
 	"path"
 )
 
-func (m *NotifyAndHydrateState) CmdContainer() *Container {
+func (m *NotifyAndHydrateState) CmdContainer() *dagger.Container {
 
 	return dag.Container().
 		From(fmt.Sprintf("%s:%s", m.FirestarterImage, m.FirestarterImageTag))
@@ -20,16 +21,18 @@ func (m *NotifyAndHydrateState) CmdHydrate(
 	claimsRepo string,
 	// Claims directory
 	// +required
-	claimsDir *Directory,
+	claimsDir *dagger.Directory,
 	// Previous CRs directory
 	// +required
-	crsDir *Directory,
+	crsDir *dagger.Directory,
 	// Provider to render
 	// +required
 	provider string,
 	// GitHub application ID
 	// +required
-) *Directory {
+) *dagger.Directory {
+
+	fsLog(fmt.Sprintf("Hydrating CRs for %s", provider))
 
 	claimsTargetDir := "/claims"
 	crsTargetDir := "/crs"
@@ -76,11 +79,11 @@ func (m *NotifyAndHydrateState) CmdAnnotateCrPr(
 	lastStatePrLink string,
 	// Previous CRs directory
 	// +required
-	wetRepo *Directory,
+	wetRepo *dagger.Directory,
 	// Path to the cr
 	// +required
 	crFileName string,
-) *Directory {
+) *dagger.Directory {
 
 	wetRepoPath := "/repo"
 
@@ -107,12 +110,12 @@ func (m *NotifyAndHydrateState) CmdAnnotateCrPr(
 }
 func (m *NotifyAndHydrateState) CmdAffectedWetRepos(
 
-	claimsFromMain *Directory,
-	claimsFromPr *Directory,
-	claimsDefaults *Directory,
-	wetReposConfig *File,
+	claimsFromMain *dagger.Directory,
+	claimsFromPr *dagger.Directory,
+	claimsDefaults *dagger.Directory,
+	wetReposConfig *dagger.File,
 
-) *File {
+) *dagger.File {
 
 	return m.CmdContainer().
 		WithMountedDirectory("/w/main/claims", claimsFromMain).
@@ -151,8 +154,8 @@ func (m *NotifyAndHydrateState) CmdAnnotateCRs(
 	wetPrNumber string,
 	// CRs directory
 	// +required
-	crsDir *Directory,
-) *Directory {
+	crsDir *dagger.Directory,
+) *dagger.Directory {
 
 	targetCrsDir := "/output"
 

@@ -1,0 +1,13 @@
+name: group_base
+apiVersion: firestartr.dev/v1
+kind: GroupClaim
+defaultValues:
+  context:
+    backend:
+      ref:
+        kind: FirestartrProviderConfig
+        name: {{ .CloudProviderProviderConfigName }}
+    provider:
+      ref:
+        kind: FirestartrProviderConfig
+        name: {{ .GithubAppProviderConfigName }}

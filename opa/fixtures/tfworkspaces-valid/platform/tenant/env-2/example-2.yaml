@@ -1,0 +1,7 @@
+name: soups-workspace-2
+kind: TFWorkspaceClaim
+resourceType: "az-vmss"
+description: "This is a fake workspace"
+providers:
+  terraform:
+    values: {}

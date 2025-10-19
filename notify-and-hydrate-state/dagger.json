@@ -1,16 +1,18 @@
 {
   "name": "notify-and-hydrate-state",
+  "engineVersion": "v0.15.1",
   "sdk": "go",
   "dependencies": [
     {
       "name": "gh",
-      "source": "github.com/aweris/daggerverse/gh@ff990b1897334421e5619afd4559279f445aeb57"
+      "source": "github.com/aweris/daggerverse/gh@ff990b1897334421e5619afd4559279f445aeb57",
+      "pin": "ff990b1897334421e5619afd4559279f445aeb57"
     },
     {
       "name": "supergit",
-      "source": "github.com/shykes/daggerverse/supergit@dfb1f91fa463b779021d65011f0060f7decda0ba"
+      "source": "github.com/shykes/daggerverse/supergit@dfb1f91fa463b779021d65011f0060f7decda0ba",
+      "pin": "dfb1f91fa463b779021d65011f0060f7decda0ba"
     }
   ],
-  "source": ".",
-  "engineVersion": "v0.11.0"
+  "source": "."
 }

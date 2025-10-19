@@ -1,8 +1,10 @@
+[![Pr verify](https://github.com/prefapp/daggerverse/actions/workflows/pr_verify.yaml/badge.svg)](https://github.com/prefapp/daggerverse/actions/workflows/pr_verify.yaml)
+
 # Prefapp daggerverse
 
 ### Requirements to develop
-- dagger v0.11.0
-- go 1.22+
+- dagger v0.16.3
+- go 1.23.4+
 
 ### Develop an existing dagger module
 

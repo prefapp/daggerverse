@@ -2,25 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"dagger/notify-and-hydrate-state/internal/dagger"
 	"fmt"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
-
-type Metadata struct {
-	Name string `yaml:"name"`
-}
-
-type Cr struct {
-	Metadata Metadata
-}
-
-type PrBranchName struct {
-	HeadRefName string `json:"headRefName"`
-	Url         string `json:"url"`
-}
 
 func (m *NotifyAndHydrateState) Verify(
 
@@ -33,9 +20,9 @@ func (m *NotifyAndHydrateState) Verify(
 	ghRepo string,
 
 	// CRs to verify
-	crs []*File,
+	crs []*dagger.File,
 
-	prs []PrBranchName,
+	prs []Pr,
 
 ) (bool, error) {
 
@@ -70,7 +57,7 @@ func (m *NotifyAndHydrateState) Verify(
 	return true, nil
 }
 
-func (*NotifyAndHydrateState) unmarshalCr(ctx context.Context, cr *File) (Cr, error) {
+func (*NotifyAndHydrateState) unmarshalCr(ctx context.Context, cr *dagger.File) (Cr, error) {
 
 	crInstance := Cr{}
 
@@ -89,7 +76,7 @@ func (*NotifyAndHydrateState) unmarshalCr(ctx context.Context, cr *File) (Cr, er
 
 func (*NotifyAndHydrateState) CrHasPendingPr(
 
-	prs []PrBranchName,
+	prs []Pr,
 
 	currentPrNumber string,
 
@@ -115,29 +102,4 @@ func (*NotifyAndHydrateState) CrHasPendingPr(
 
 	return false, nil
 
-}
-
-func (m *NotifyAndHydrateState) GetRepoPrs(
-
-	ctx context.Context,
-
-	// Repository name ("<owner>/<repo>")
-	ghRepo string,
-
-) ([]PrBranchName, error) {
-
-	command := strings.Join([]string{"pr", "list", "--json", "headRefName", "--json", "url", "-L", "1000", "-R", ghRepo}, " ")
-
-	content, err := dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
-
-	if err != nil {
-
-		return nil, err
-	}
-
-	prs := []PrBranchName{}
-
-	json.Unmarshal([]byte(content), &prs)
-
-	return prs, nil
 }

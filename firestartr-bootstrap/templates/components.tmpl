@@ -1,0 +1,63 @@
+{{ range $index, $claim := .Components }}
+{{- if not $claim.Skipped }}
+---
+kind: ComponentClaim
+version: "1.0"
+type: service
+lifecycle: production
+system: system:firestartr
+owner: group:{{ $.DefaultFirestartrGroup }}
+name: {{ $claim.Name }}
+providers:
+  github:
+    description: {{ $claim.Description }}
+    name: {{ default $claim.Name $claim.RepoName }}
+    org: {{ $.Org }}
+    visibility: private
+    branchStrategy:
+      name: none
+      defaultBranch: {{ $claim.DefaultBranch }}
+    actions:
+      oidc:
+        useDefault: false
+        includeClaimKeys:
+          - repo
+    {{- if $claim.Features}}
+    features:
+      {{- range $index, $feature := $claim.Features }}
+      - name: {{ $feature.Name }}
+        version: {{ $feature.Version }}
+      {{- end }}
+    {{- end }}
+    {{- if or $.HasFreePlan $claim.Secrets}}
+    secrets:
+      actions:
+        {{- range $index, $secret := $claim.Secrets }}
+        - name: {{ $secret.Name }}
+          value: {{ $secret.Value }}
+        {{- end }}
+        {{- if $.HasFreePlan }}
+        - name: FS_STATE_PEM_FILE
+          value: "ref:secretsclaim:firestartr-secrets:fs-state-pem"
+        - name: FS_CHECKS_PEM_FILE
+          value: "ref:secretsclaim:firestartr-secrets:fs-checks-pem"
+        {{- end }}
+    {{- end }}
+    {{- if or $.HasFreePlan $claim.Variables}}
+    vars:
+      actions:
+        {{- range $index, $variable := $claim.Variables }}
+        - name: {{ $variable.Name }}
+          value: {{ $variable.Value }}
+        {{- end }}
+        {{- if $.HasFreePlan }}
+        - name: "FIRESTARTR_CLI_VERSION"
+          value: "ref:secretsclaim:firestartr-secrets:firestartr-cli-version"
+        - name: "FS_STATE_APP_ID"
+          value: "ref:secretsclaim:firestartr-secrets:fs-state-appid"
+        - name: "FS_CHECKS_APP_ID"
+          value: "ref:secretsclaim:firestartr-secrets:fs-checks-appid"
+        {{- end }}
+    {{- end }}
+{{ end }}
+{{ end }}

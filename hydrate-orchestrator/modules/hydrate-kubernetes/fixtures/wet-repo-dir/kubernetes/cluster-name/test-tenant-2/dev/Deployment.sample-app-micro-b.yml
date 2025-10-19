@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    firestartr.dev/image: image-b:1.16.0
+    firestartr.dev/microservice: micro-b
+  labels:
+    app: example
+  name: sample-app-micro-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-app
+      chart: micro-b
+  template:
+    metadata:
+      labels:
+        app: sample-app
+        chart: micro-b
+    spec:
+      containers:
+      - command: null
+        envFrom: null
+        image: image-b:1.16.0
+        imagePullPolicy: null
+        name: example
+        ports:
+        - containerPort: 9898
+        resources:
+          limits:
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts: null
+      volumes: null

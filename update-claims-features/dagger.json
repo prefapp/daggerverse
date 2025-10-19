@@ -1,0 +1,14 @@
+{
+  "name": "update-claims-features",
+  "engineVersion": "v0.17.1",
+  "sdk": {
+    "source": "go"
+  },
+  "dependencies": [
+    {
+      "name": "gh",
+      "source": "github.com/prefapp/daggerverse/gh",
+      "pin": "51911ece701e8151ccd8f2c29aacc71c8c4ffe5d"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+    "last-release-sha": "f3d25fa31537f1da169fac1af64530b35a460fff",
+    "separate-pull-requests": true,
+    "packages": {
+       "dagger-structure-test": {
+           "package-name": "dagger-structure-test",
+           "release-type": "go"
+       },
+       "k6": {
+           "package-name": "k6",
+           "release-type": "go"
+       },
+       "notify-and-hydrate-state": {
+           "package-name": "notify-and-hydrate-state",
+           "release-type": "go"
+       },
+       "hydrate-orchestrator": {
+            "package-name": "hydrate-orchestrator",
+            "release-type": "go"
+       },
+       "kind": {
+           "package-name": "kind",
+           "release-type": "go"
+       },
+       "validate-crds": {
+           "package-name": "validate-crds",
+           "release-type": "go"
+       },
+       "update-claims-features": {
+            "package-name": "update-claims-features",
+            "release-type": "go"
+       },
+       "gh": {
+            "package-name": "gh",
+            "release-type": "go"
+       },
+       "firestartr-bootstrap": {
+           "package-name": "firestartr-bootstrap",
+           "release-type": "go"
+       }
+    }
+}

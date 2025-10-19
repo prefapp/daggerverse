@@ -2,82 +2,85 @@ package main
 
 import (
 	"context"
+	"dagger/notify-and-hydrate-state/internal/dagger"
 	"fmt"
 	"strings"
 	"time"
 )
 
-func (m *NotifyAndHydrateState) CreatePrsFromDiff(
+func (m *NotifyAndHydrateState) UpsertPrsFromDiff(
 
 	ctx context.Context,
 
 	diff *DiffResult,
 
-	wetRepositoryDir *Directory,
+	wetRepositoryDir *dagger.Directory,
 
 	wetRepoName string,
 
 	claimPrNumber string,
 
-	prs []PrBranchName,
+	prList []Pr,
 
-) []string {
+	claimsRepo string,
 
-	createdPrs := []string{}
+) (PrsResult, error) {
+	createdOrUpdatedPrs := []Pr{}
 
-	for _, file := range diff.AddedFiles {
+	orphanPrs := make([]Pr, len(prList))
 
-		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "create", claimPrNumber, prs)
+	copy(orphanPrs, prList)
 
-		if err != nil {
+	claimsRepoPRLink := fmt.Sprintf(
+		"https://www.github.com/%s/pull/%s", claimsRepo, claimPrNumber,
+	)
 
-			panic(err)
+	result, err := m.upsertPrsFromFileList(
+		ctx, diff.AddedFiles, wetRepositoryDir, wetRepoName, "create",
+		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
+	)
 
-		}
-
-		createdPrs = append(createdPrs, pr)
-
+	if err != nil {
+		panic(err)
 	}
 
-	for _, file := range diff.ModifiedFiles {
+	createdOrUpdatedPrs = result.Prs
+	orphanPrs = result.Orphans
 
-		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "update", claimPrNumber, prs)
+	result, err = m.upsertPrsFromFileList(
+		ctx, diff.ModifiedFiles, wetRepositoryDir, wetRepoName, "update",
+		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
+	)
 
-		if err != nil {
-
-			panic(err)
-
-		}
-
-		createdPrs = append(createdPrs, pr)
-
+	if err != nil {
+		panic(err)
 	}
 
-	for _, file := range diff.DeletedFiles {
+	createdOrUpdatedPrs = result.Prs
+	orphanPrs = result.Orphans
 
-		pr, err := m.CreatePr(ctx, file, wetRepositoryDir, wetRepoName, "delete", claimPrNumber, prs)
+	result, err = m.upsertPrsFromFileList(
+		ctx, diff.DeletedFiles, wetRepositoryDir, wetRepoName, "delete",
+		claimPrNumber, prList, claimsRepoPRLink, createdOrUpdatedPrs, orphanPrs,
+	)
 
-		if err != nil {
-
-			panic(err)
-
-		}
-
-		createdPrs = append(createdPrs, pr)
-
+	if err != nil {
+		panic(err)
 	}
 
-	return createdPrs
+	createdOrUpdatedPrs = result.Prs
+	orphanPrs = result.Orphans
 
+	return PrsResult{Orphans: orphanPrs, Prs: createdOrUpdatedPrs}, nil
 }
 
-func (m *NotifyAndHydrateState) CreatePr(
+func (m *NotifyAndHydrateState) upsertPrsFromFileList(
 
 	ctx context.Context,
 
-	file *File,
+	fileList []*dagger.File,
 
-	wetRepositoryDir *Directory,
+	wetRepositoryDir *dagger.Directory,
 
 	wetRepoName string,
 
@@ -85,9 +88,68 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	claimPrNumber string,
 
-	prs []PrBranchName,
+	prList []Pr,
 
-) (string, error) {
+	claimsRepoPRLink string,
+
+	createdOrUpdatedPrs []Pr,
+
+	orphanPrs []Pr,
+
+) (PrsResult, error) {
+	for _, file := range fileList {
+		pr, err := m.UpsertPr(
+			ctx, file, wetRepositoryDir, wetRepoName, action,
+			claimPrNumber, prList, claimsRepoPRLink,
+		)
+
+		if err != nil {
+			panic(err)
+		}
+
+		createdOrUpdatedPrs = append(createdOrUpdatedPrs, pr)
+		orphanPrs = removeOrphan(orphanPrs, pr)
+	}
+
+	return PrsResult{Orphans: orphanPrs, Prs: createdOrUpdatedPrs}, nil
+}
+
+func removeOrphan(orphanPrs []Pr, pr Pr) []Pr {
+
+	for i, orphanPr := range orphanPrs {
+
+		if orphanPr.Url == pr.Url {
+
+			orphanPrs = append(orphanPrs[:i], orphanPrs[i+1:]...)
+
+		}
+
+	}
+
+	return orphanPrs
+}
+
+func (m *NotifyAndHydrateState) UpsertPr(
+
+	ctx context.Context,
+
+	file *dagger.File,
+
+	wetRepositoryDir *dagger.Directory,
+
+	wetRepoName string,
+
+	action string,
+
+	claimPrNumber string,
+
+	prs []Pr,
+
+	claimsRepoPrLink string,
+
+) (Pr, error) {
+
+	createdOrUpdatedPr := Pr{}
 
 	fileName, err := file.Name(ctx)
 
@@ -120,10 +182,10 @@ func (m *NotifyAndHydrateState) CreatePr(
 		WithEnvVariable("CACHEBUSTER", time.Now().String()).
 		WithMountedDirectory("/repo", wetRepositoryDir).
 		WithWorkdir("/repo").
-		WithExec([]string{"checkout", "-b", prBranch}).
-		WithExec([]string{"add", fileName}).
-		WithExec([]string{"commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
-		WithExec([]string{"push", "origin", prBranch, "--force"}).
+		WithExec([]string{"git", "checkout", "-b", prBranch}).
+		WithExec([]string{"git", "add", fileName}).
+		WithExec([]string{"git", "commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
+		WithExec([]string{"git", "push", "origin", prBranch, "--force"}).
 		Sync(ctx)
 
 	if err != nil {
@@ -136,9 +198,17 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	prTitle := fmt.Sprintf("\"hydrate: %s \"", cr.Metadata.Name)
 
-	prBody := fmt.Sprintf("\"changes come from %s/%s#%s\"", strings.Split(wetRepoName, "/")[0], "claims", claimPrNumber)
+	prBody := fmt.Sprintf(
+		"\"changes come from %s/%s#%s\"",
+		strings.Split(wetRepoName, "/")[0],
+		"claims",
+		claimPrNumber,
+	)
 
 	prLink, err := m.CreatePrIfNotExists(ctx, prBranch, wetRepoName, prTitle, prBody, prs)
+
+	createdOrUpdatedPr.Url = prLink
+	createdOrUpdatedPr.HeadRefName = prBranch
 
 	if err != nil {
 
@@ -148,7 +218,7 @@ func (m *NotifyAndHydrateState) CreatePr(
 
 	wetRepositoryDir = m.CmdAnnotateCrPr(
 		ctx,
-		prLink,
+		claimsRepoPrLink,
 		prLink,
 		wetRepositoryDir,
 		fileName,
@@ -157,20 +227,20 @@ func (m *NotifyAndHydrateState) CreatePr(
 	gitContainer.
 		WithMountedDirectory("/repo", wetRepositoryDir).
 		WithWorkdir("/repo").
-		WithExec([]string{"checkout", prBranch}).
-		WithExec([]string{"add", fileName}).
-		WithExec([]string{"commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
-		WithExec([]string{"push", "origin", prBranch, "--force"}).
+		WithExec([]string{"git", "checkout", prBranch}).
+		WithExec([]string{"git", "add", fileName}).
+		WithExec([]string{"git", "commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
+		WithExec([]string{"git", "push", "origin", prBranch, "--force"}).
 		Stdout(ctx)
 
-	return prLink, nil
+	return createdOrUpdatedPr, nil
 }
 
 func (m *NotifyAndHydrateState) ConfigGitContainer(
 
 	ctx context.Context,
 
-) *Container {
+) *dagger.Container {
 
 	plainTextToken, err := m.GhToken.Plaintext(ctx)
 
@@ -185,18 +255,21 @@ func (m *NotifyAndHydrateState) ConfigGitContainer(
 	return dag.Container().
 		From("alpine/git").
 		WithExec([]string{
+			"git",
 			"config",
 			"--global",
 			"url." + gitConfigContent + ".insteadOf",
 			"https://github.com",
 		}).
 		WithExec([]string{
+			"git",
 			"config",
 			"--global",
 			"user.email",
 			"firestartr-bot@firestartr.dev",
 		}).
 		WithExec([]string{
+			"git",
 			"config",
 			"--global",
 			"user.name",
@@ -217,7 +290,7 @@ func (m *NotifyAndHydrateState) CreatePrIfNotExists(
 
 	body string,
 
-	prs []PrBranchName,
+	prs []Pr,
 
 ) (string, error) {
 
@@ -244,6 +317,6 @@ func (m *NotifyAndHydrateState) CreatePrIfNotExists(
 		body,
 	}, " ")
 
-	return dag.Gh().Run(ctx, m.GhToken, command, GhRunOpts{DisableCache: true})
+	return dag.Gh().Run(ctx, m.GhToken, command, dagger.GhRunOpts{DisableCache: true})
 
 }
