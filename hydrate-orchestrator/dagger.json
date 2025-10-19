@@ -1,6 +1,6 @@
 {
   "name": "hydrate-orchestrator",
-  "engineVersion": "v0.18.5",
+  "engineVersion": "v0.18.8",
   "sdk": {
     "source": "go"
   },
@@ -11,8 +11,8 @@
     },
     {
       "name": "gh",
-      "source": "github.com/prefapp/aweris-daggerverse/gh",
-      "pin": "b301adc888e6c420b46e5b71f48ea4ea68023865"
+      "source": "github.com/prefapp/daggerverse/gh",
+      "pin": "3e0911c41e76560ccaa0e84a05de6786fe725778"
     },
     {
       "name": "hydrate-kubernetes",

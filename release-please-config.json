@@ -18,8 +18,20 @@
             "package-name": "hydrate-orchestrator",
             "release-type": "go"
        },
+       "kind": {
+           "package-name": "kind",
+           "release-type": "go"
+       },
+       "validate-crds": {
+           "package-name": "validate-crds",
+           "release-type": "go"
+       },
        "update-claims-features": {
             "package-name": "update-claims-features",
+            "release-type": "go"
+       },
+       "gh": {
+            "package-name": "gh",
             "release-type": "go"
        },
        "firestartr-bootstrap": {

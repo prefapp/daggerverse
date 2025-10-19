@@ -7,6 +7,8 @@ type Component struct {
 	DefaultBranch string `yaml:"defaultBranch"`
 	Features      []Feature
 	Variables     []Variable `yaml:"variables"`
+	Secrets       []Variable `yaml:"secrets"` // Secrets have the same structure as Variables
+	Labels        []string   `yaml:"labels"`
 	Skipped       bool       `yaml:"skip"`
 }
 
@@ -19,11 +21,21 @@ type Feature struct {
 	Name    string `yaml:"name"`
 	Version string `yaml:"version"`
 }
+
 type Bootstrap struct {
-	Firestartr Firestartr  `yaml:"firestartr"`
-	PushFiles  PushFiles   `yaml:"pushFiles"`
-	Org        string      `yaml:"org"`
-	Components []Component `yaml:"components"`
+	Firestartr             Firestartr  `yaml:"firestartr"`
+	PushFiles              PushFiles   `yaml:"pushFiles"`
+	Org                    string      `yaml:"org"`
+	Components             []Component `yaml:"components"`
+	DefaultSystemName      string      `yaml:"defaultSystemName"`
+	DefaultDomainName      string      `yaml:"defaultDomainName"`
+	DefaultFirestartrGroup string      `yaml:"defaultFirestartrGroup"`
+	DefaultBranch          string      `yaml:"defaultBranch"`
+	DefaultBranchStrategy  string      `yaml:"defaultBranchStrategy"`
+	DefaultOrgPermissions  string      `yaml:"defaultOrgPermissions"`
+	FinalSecretStoreName   string      `yaml:"finalSecretStoreName"`
+	HasFreePlan            bool        // Autocalculated
+	BotName                string      // Stored in Credentialsfile.yaml, but needed here for templating
 }
 
 type PushFiles struct {
@@ -41,7 +53,8 @@ type PushFilesRepo struct {
 }
 
 type Providers struct {
-	Github PushFilesRepo `yaml:"github"`
+	Github    PushFilesRepo `yaml:"github"`
+	Terraform PushFilesRepo `yaml:"terraform"`
 }
 
 type Firestartr struct {
@@ -54,11 +67,12 @@ type CredsFile struct {
 }
 
 type CloudProvider struct {
-	Config  ConfigProvider `yaml:"config"`
-	Source  string         `yaml:"source"`
-	Type    string         `yaml:"type"`
-	Version string         `yaml:"version"`
-	Name    string         `yaml:"name"`
+	ProviderConfigName string         `yaml:"providerConfigName"`
+	Config             ConfigProvider `yaml:"config"`
+	Source             string         `yaml:"source"`
+	Type               string         `yaml:"type"`
+	Version            string         `yaml:"version"`
+	Name               string         `yaml:"name"`
 }
 
 type ConfigProvider struct {
@@ -66,14 +80,27 @@ type ConfigProvider struct {
 	Region    string `json:"region" yaml:"region"`
 	AccessKey string `json:"access_key" yaml:"access_key"`
 	SecretKey string `json:"secret_key" yaml:"secret_key"`
+	Token     string `json:"token" yaml:"token"`
 }
 
 type GithubApp struct {
-	Pem                   string `yaml:"pem"`
-	RawPem                string
-	GhAppId               string `yaml:"id"`
-	InstallationId        string `yaml:"installationId"`
-	PrefappInstallationId string `yaml:"prefappInstallationId"`
-	Owner                 string `yaml:"owner"`
-	BotName               string `yaml:"botName"`
+	ProviderConfigName string `yaml:"providerConfigName"`
+	Owner              string `yaml:"owner"`
+	BotName            string `yaml:"botName"`
+	Pem                string
+	RawPem             string
+	GhAppId            string
+	InstallationId     string
+	BotPat             string
+}
+
+type SecretData struct {
+	Name  string
+	Value string
+}
+
+type CrsDefaultsData struct {
+	DefaultBranch                   string
+	CloudProviderProviderConfigName string
+	GithubAppProviderConfigName     string
 }

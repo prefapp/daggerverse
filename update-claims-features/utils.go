@@ -13,31 +13,55 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func extractErrorMessage(err error) string {
+	switch e := err.(type) {
+	case *dagger.ExecError:
+		errorMsg := ""
+
+		if e.Stderr != "" {
+			errorMsg += fmt.Sprintf("::error::%s\n", e.Stderr)
+		}
+		if e.Stdout != "" {
+			errorMsg += fmt.Sprintf("::info::%s", e.Stdout)
+		}
+
+		return errorMsg
+	default:
+		return fmt.Sprintf("::error::%s", strings.ReplaceAll(err.Error(), "::error::", ""))
+	}
+}
+
 func (m *UpdateClaimsFeatures) getFeaturesMapData(
-	ctx context.Context,
 	ghReleaseListResult string,
 ) (map[string]string, map[string][]string, error) {
 	var latestFeaturesMap = make(map[string]string)
 	var allFeaturesMap = make(map[string][]string)
 	var sortedFeaturesMap = make(map[string][]*semver.Version)
-	var releasesList []ReleasesList
-	err := json.Unmarshal([]byte(ghReleaseListResult), &releasesList)
+	releasesList := strings.Split(ghReleaseListResult, "\n")
 
-	if err != nil {
-		return nil, nil, err
-	}
+	for _, featureTag := range releasesList {
+		if featureTag == "" {
+			continue
+		}
 
-	for _, feature := range releasesList {
-		featureData := strings.Split(feature.TagName, "-")
+		featureData := strings.Split(featureTag, "-")
 
-		featureTag := featureData[0]
+		if len(featureData) < 2 {
+			fmt.Printf(
+				"Feature tag %s is not valid, skipping\n",
+				featureTag,
+			)
+			continue
+		}
+
+		featureName := featureData[0]
 		featureVersion := strings.Trim(featureData[1], "v")
 		featureVersionSemver, err := semver.NewVersion(featureData[1])
 		if err != nil {
 			fmt.Printf(
 				"Version %s of feature %s is not valid SemVer, skipping",
 				featureData[1],
-				featureTag,
+				featureName,
 			)
 			continue
 		}
@@ -49,7 +73,7 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 				return nil, nil, err
 			}
 		} else {
-			versionToCompareTo, hasVersion := latestFeaturesMap[featureTag]
+			versionToCompareTo, hasVersion := latestFeaturesMap[featureName]
 			if !hasVersion {
 				versionToCompareTo = "0.0.0"
 			}
@@ -63,20 +87,20 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 		}
 
 		if versionIsValid.Check(featureVersionSemver) {
-			latestFeaturesMap[featureTag] = featureVersion
+			latestFeaturesMap[featureName] = featureVersion
 		}
 
-		if sortedFeaturesMap[featureTag] == nil {
-			sortedFeaturesMap[featureTag] = []*semver.Version{}
+		if sortedFeaturesMap[featureName] == nil {
+			sortedFeaturesMap[featureName] = []*semver.Version{}
 		}
 
-		sortedFeaturesMap[featureTag] = append(
-			sortedFeaturesMap[featureTag], featureVersionSemver,
+		sortedFeaturesMap[featureName] = append(
+			sortedFeaturesMap[featureName], featureVersionSemver,
 		)
 	}
 
 	// Sort map
-	for key, _ := range sortedFeaturesMap {
+	for key := range sortedFeaturesMap {
 		sort.Sort(semver.Collection(sortedFeaturesMap[key]))
 	}
 
@@ -93,7 +117,6 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 }
 
 func (m *UpdateClaimsFeatures) updateDirWithClaim(
-	ctx context.Context,
 	claim *Claim,
 	claimPath string,
 ) *dagger.Directory {
@@ -102,7 +125,7 @@ func (m *UpdateClaimsFeatures) updateDirWithClaim(
 	yamlEncoder.SetIndent(2)
 	yamlEncoder.Encode(&claim)
 
-	updatedDir := m.ClaimsDir.WithNewFile(claimPath, string(buffer.Bytes()))
+	updatedDir := m.ClaimsDir.WithNewFile(claimPath, buffer.String())
 
 	return updatedDir
 }
@@ -117,71 +140,78 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 	var parsedJson ReleaseBody
 
 	for _, updatedFeature := range updatedFeaturesList {
-		updatedFeatureVersionSemver, err := semver.NewVersion(updatedFeature.Version)
+		if updatedFeature.Version != "" {
+			updatedFeatureVersionSemver, err := semver.NewVersion(updatedFeature.Version)
 
-		versionIsDifferentThanOriginal, err := semver.NewConstraint(
-			fmt.Sprintf("!=%s", originalVersionMap[updatedFeature.Name]),
-		)
-		if err != nil {
-			return "", err
-		}
+			if err != nil {
+				return "", err
+			}
 
-		// Unupdated features are still added to the updatedFeaturesList with
-		// the same version as they originally had, so we filter them here
-		// (they are added so they don't get deleted when updating the feature list)
-		if versionIsDifferentThanOriginal.Check(updatedFeatureVersionSemver) {
-			prBody = fmt.Sprintf("%s## %s:", prBody, updatedFeature.Name)
-			for _, featureVersion := range allFeaturesMap[updatedFeature.Name] {
-				featureVersionSemver, err := semver.NewVersion(featureVersion)
-				if err != nil {
-					return "", err
-				}
-
-				addChangeLog, err := semver.NewConstraint(
-					fmt.Sprintf(
-						"> %s, <= %s || =%s",
-						originalVersionMap[updatedFeature.Name],
-						updatedFeature.Version,
-						updatedFeature.Version,
-					),
+			if originalVersionMap[updatedFeature.Name] != "" && updatedFeature.Version != "" {
+				versionIsDifferentThanOriginal, err := semver.NewConstraint(
+					fmt.Sprintf("!=%s", originalVersionMap[updatedFeature.Name]),
 				)
 				if err != nil {
 					return "", err
 				}
 
-				// allFeaturesMap contains every release for every feature, so
-				// they are filtered here so only the changelogs for versions
-				// that are greater than the originally installed one but
-				// lesser or equal to the version that is being currently
-				// installed (which won't necessarily be latest)
-				versionInfo := ""
-				if addChangeLog.Check(featureVersionSemver) {
-					fullFeatureTag := fmt.Sprintf(
-						"%s-v%s", updatedFeature.Name, featureVersion,
+				// Updated features are still added to the updatedFeaturesList with
+				// the same version as they originally had, so we filter them here
+				// (they are added so they don't get deleted when updating the feature list)
+				if versionIsDifferentThanOriginal.Check(updatedFeatureVersionSemver) {
+					addChangeLog, err := semver.NewConstraint(
+						fmt.Sprintf(
+							"> %s, <= %s || =%s",
+							originalVersionMap[updatedFeature.Name],
+							updatedFeature.Version,
+							updatedFeature.Version,
+						),
 					)
-					changelog, err := m.getReleaseChangelog(ctx, fullFeatureTag)
-
 					if err != nil {
 						return "", err
 					}
 
-					err = json.Unmarshal([]byte(changelog), &parsedJson)
-					if err != nil {
-						return "", err
-					}
+					for _, featureVersion := range allFeaturesMap[updatedFeature.Name] {
+						featureVersionSemver, err := semver.NewVersion(featureVersion)
+						if err != nil {
+							return "", err
+						}
 
-					versionInfo = fmt.Sprintf(
-						"%s\n%s",
-						versionInfo,
-						parsedJson.Body,
-					)
+						// allFeaturesMap contains every release for every feature, so
+						// they are filtered here so only the changelogs for versions
+						// that are greater than the originally installed one but
+						// lesser or equal to the version that is being currently
+						// installed (which won't necessarily be latest)
+						versionInfo := ""
+						if addChangeLog.Check(featureVersionSemver) {
+							fullFeatureTag := fmt.Sprintf(
+								"%s-v%s", updatedFeature.Name, featureVersion,
+							)
+							changelog, err := m.getReleaseChangelog(ctx, fullFeatureTag)
+
+							if err != nil {
+								return "", err
+							}
+
+							err = json.Unmarshal([]byte(changelog), &parsedJson)
+							if err != nil {
+								return "", err
+							}
+
+							versionInfo = fmt.Sprintf(
+								"%s\n%s",
+								versionInfo,
+								parsedJson.Body,
+							)
+						}
+
+						prBody = fmt.Sprintf(
+							"%s\n%s\n\n\n",
+							prBody,
+							versionInfo,
+						)
+					}
 				}
-
-				prBody = fmt.Sprintf(
-					"%s\n%s\n\n\n",
-					prBody,
-					versionInfo,
-				)
 			}
 		}
 	}
@@ -190,7 +220,6 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 }
 
 func (m *UpdateClaimsFeatures) extractCurrentFeatureVersionsFromClaim(
-	ctx context.Context,
 	claim *Claim,
 ) map[string]string {
 	var currentFeaturesVersion = make(map[string]string)

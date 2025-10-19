@@ -7,8 +7,8 @@
   "dependencies": [
     {
       "name": "gh",
-      "source": "github.com/prefapp/aweris-daggerverse/gh",
-      "pin": "b301adc888e6c420b46e5b71f48ea4ea68023865"
+      "source": "github.com/prefapp/daggerverse/gh",
+      "pin": "51911ece701e8151ccd8f2c29aacc71c8c4ffe5d"
     }
   ]
 }

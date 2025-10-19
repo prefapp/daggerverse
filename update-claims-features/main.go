@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -25,7 +26,7 @@ func (m *UpdateClaimsFeatures) New(
 
 	// Gh CLI Version
 	// +optional
-	// +default="v2.66.1"
+	// +default="v2.74.2"
 	ghCliVersion string,
 
 	// Claims repo name
@@ -36,11 +37,6 @@ func (m *UpdateClaimsFeatures) New(
 	// +optional
 	// +default="main"
 	defaultBranch string,
-
-	// Name of the components folder name
-	// +optional
-	// +default="components"
-	componentsFolderName string,
 
 	// Name of the claim to be updated
 	// +optional
@@ -61,79 +57,95 @@ func (m *UpdateClaimsFeatures) New(
 	// +optional
 	// +default=false
 	automerge bool,
+
+	// Path to the local GitHub CLI binary file (not a directory).
+	// If not provided, the GitHub CLI will be downloaded automatically.
+	// +optional
+	localGhCliPath *dagger.File,
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
 	var featuresToUpdateList []string = nil
+	rexp := regexp.MustCompile(`,\s+`)
 
 	if claimsToUpdate != "" {
+		claimsToUpdate = rexp.ReplaceAllString(claimsToUpdate, ",")
 		claimsToUpdateList = strings.Split(claimsToUpdate, ",")
 	}
 
 	if featuresToUpdate != "" {
+		featuresToUpdate = rexp.ReplaceAllString(featuresToUpdate, ",")
 		featuresToUpdateList = strings.Split(featuresToUpdate, ",")
 	}
 
 	return &UpdateClaimsFeatures{
-		Repo:                 repo,
-		GhToken:              ghToken,
-		PrefappGhToken:       prefappGhToken,
-		GhCliVersion:         ghCliVersion,
-		ClaimsDir:            claimsDir,
-		ClaimsDirPath:        claimsDirPath,
-		DefaultBranch:        defaultBranch,
-		ComponentsFolderName: componentsFolderName,
-		ClaimsToUpdate:       claimsToUpdateList,
-		FeaturesToUpdate:     featuresToUpdateList,
-		VersionConstraint:    versionConstraint,
-		Automerge:            automerge,
+		Repo:              repo,
+		Org:               strings.Split(repo, "/")[0],
+		GhToken:           ghToken,
+		PrefappGhToken:    prefappGhToken,
+		GhCliVersion:      ghCliVersion,
+		ClaimsDir:         claimsDir,
+		ClaimsDirPath:     claimsDirPath,
+		DefaultBranch:     defaultBranch,
+		ClaimsToUpdate:    claimsToUpdateList,
+		FeaturesToUpdate:  featuresToUpdateList,
+		VersionConstraint: versionConstraint,
+		Automerge:         automerge,
+		LocalGhCliPath:    localGhCliPath,
 	}, nil
 }
 
 func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	ctx context.Context,
-) (string, error) {
+) (*dagger.File, error) {
+	errorMsg := ""
+	summary := &UpdateSummary{
+		Items: []UpdateSummaryRow{},
+	}
 	ghReleaseListResult, err := m.getReleases(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	latestFeaturesMap, allFeaturesMap, err := m.getFeaturesMapData(
-		ctx, ghReleaseListResult,
+		ghReleaseListResult,
 	)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Get all ComponentClaim claims
 	claims, err := m.getAllClaims(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	for _, entry := range claims {
-		fmt.Printf("Classifying claims in %s\n", entry)
+		fmt.Printf("Reading claim %s\n", entry)
 
 		claim, err := m.getClaimIfKindComponent(ctx, entry)
 		if err != nil {
-			return "", err
+			summary.addUpdateSummaryRow(entry, extractErrorMessage(err))
+			continue
 		}
 
 		if claim != nil {
 			updatedFeaturesList, createPR, err := m.updateClaimFeatures(
-				ctx,
 				claim,
 				latestFeaturesMap,
 			)
 			if err != nil {
-				return "", err
+				summary.addUpdateSummaryRow(
+					claim.Name, extractErrorMessage(err),
+				)
+				continue
 			}
 
 			if createPR {
 				currentFeatureVersionsMap := m.extractCurrentFeatureVersionsFromClaim(
-					ctx, claim,
+					claim,
 				)
 				claim.Providers.Github.Features = updatedFeaturesList
-				updatedDir := m.updateDirWithClaim(ctx, claim, entry)
+				updatedDir := m.updateDirWithClaim(claim, entry)
 				releaseBody, err := m.getPrBodyForFeatureUpdate(
 					ctx,
 					updatedFeaturesList,
@@ -141,7 +153,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					currentFeatureVersionsMap,
 				)
 				if err != nil {
-					return "", err
+					summary.addUpdateSummaryRow(
+						claim.Name, extractErrorMessage(err),
+					)
+					continue
 				}
 
 				prLink, err := m.upsertPR(
@@ -151,14 +166,20 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					[]string{},
 					fmt.Sprintf("Update %s features to latest version", claim.Name),
 					releaseBody,
-					[]string{},
 				)
 
 				if err != nil {
-					return "", err
+					summary.addUpdateSummaryRow(
+						claim.Name, extractErrorMessage(err),
+					)
+					errorMsg = fmt.Sprintf("%s\n%s", errorMsg, extractErrorMessage(err))
+					continue
 				}
 
-				fmt.Printf("PR LINK: %s", prLink)
+				summary.addUpdateSummaryRow(
+					claim.Name,
+					fmt.Sprintf("Success: <a href=\"%s\">%s</a>", prLink, prLink),
+				)
 
 				if m.Automerge {
 					m.MergePullRequest(ctx, prLink)
@@ -167,5 +188,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 	}
 
-	return "ok", nil
+	var returnedError error
+	if errorMsg != "" {
+		returnedError = fmt.Errorf(errorMsg)
+	}
+
+	return m.DeploymentSummaryToFile(ctx, summary), returnedError
 }

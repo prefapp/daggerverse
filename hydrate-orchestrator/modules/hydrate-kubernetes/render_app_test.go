@@ -24,7 +24,7 @@ func TestRenderAppCanRender(t *testing.T) {
 		ValuesDir:        valuesRepoDir.Directory("fixtures/values-repo-dir"),
 		WetRepoDir:       wetRepoDir.Directory("fixtures/wet-repo-dir"),
 		Container:        dag.Container().From("ghcr.io/helmfile/helmfile:latest"),
-		Helmfile:         helmDir.File("helm-apps/helmfile.yaml"),
+		Helmfile:         helmDir.File("helm-apps/helmfile.yaml.gotmpl"),
 		ValuesGoTmpl:     helmDir.File("helm-apps/values.yaml.gotmpl"),
 		RepositoriesFile: repositoryFileDir.File("fixtures/repository_file/repositories.yaml"),
 		RenderType:       "apps",

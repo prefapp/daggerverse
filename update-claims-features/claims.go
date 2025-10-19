@@ -15,10 +15,7 @@ func (m *UpdateClaimsFeatures) getAllClaims(
 	var claims []string
 
 	for _, ext := range []string{".yml", ".yaml"} {
-		extClaims, err := m.ClaimsDir.Glob(
-			ctx,
-			fmt.Sprintf("claims/%s/*%s", m.ComponentsFolderName, ext),
-		)
+		extClaims, err := m.ClaimsDir.Glob(ctx, fmt.Sprintf("**/*%s", ext))
 
 		if err != nil {
 			return []string{}, err
@@ -57,7 +54,6 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 }
 
 func (m *UpdateClaimsFeatures) updateClaimFeatures(
-	ctx context.Context,
 	claim *Claim,
 	featuresMap map[string]string,
 ) ([]Feature, bool, error) {
@@ -73,18 +69,20 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 				return []Feature{}, false, err
 			}
 
-			versionIsDifferent, err := semver.NewConstraint(
-				fmt.Sprintf("!=%s", feature.Version),
-			)
-			if err != nil {
-				return []Feature{}, false, err
-			}
+			if feature.Version != "" {
+				versionIsDifferent, err := semver.NewConstraint(
+					fmt.Sprintf("!=%s", feature.Version),
+				)
+				if err != nil {
+					return []Feature{}, false, err
+				}
 
-			// if instead of createPR = versionIsGreater.Check()
-			// because a latter unupdated feature could override this value
-			if versionIsDifferent.Check(featureVersionSemver) {
-				createPR = true
-				feature.Version = featuresMap[feature.Name]
+				// if instead of createPR = versionIsGreater.Check()
+				// because a later updated feature could override this value
+				if versionIsDifferent.Check(featureVersionSemver) {
+					createPR = true
+					feature.Version = featuresMap[feature.Name]
+				}
 			}
 		}
 

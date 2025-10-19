@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 )
 
 func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
@@ -40,7 +39,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
@@ -53,36 +52,63 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 
 		globPattern := fmt.Sprintf("%s/%s/%s/%s", "tfworkspaces", tfDep.ClaimName, "*", "*")
 
-		prLink, err := m.upsertPR(
+		labels := []LabelInfo{
+			{
+				Name:        "plan",
+				Color:       "7E7C7A",
+				Description: "Run terraform plan",
+			},
+		}
+
+		output, err := m.upsertPR(
 			ctx,
 			branchName,
 			&renderedDeployment[0],
-			tfDep.Labels(),
+			labels,
 			tfDep.String(true),
 			prBody,
 			fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
 			reviewers,
+			DEPLOYMENT_BRANCH_NAME,
 		)
 
 		if err != nil {
 
+			if output != "" {
+				summary.addDeploymentSummaryRow(
+					tfDep.DeploymentPath,
+					output,
+				)
+
+				continue
+			}
+
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
 
 		}
 
+		parts := strings.Split(output, "/")
+		if err := m.validatePrUrl(output, parts); err != nil {
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				extractErrorMessage(err),
+			)
+			continue
+		}
+
 		// https://github.com/org/app-repo/pull/8
 		// parts:    [https:, , github.com, org, app-repo, pull, 8]
 		// positions:  0     1       2        3     4        5   6
-		prNumber := strings.Split(prLink, "/")[6]
-		repo := strings.Split(prLink, "/")[4]
-		org := strings.Split(prLink, "/")[3]
+		prNumber := parts[6]
+		repo := parts[4]
+		org := parts[3]
 		fmt.Printf("🔗 Getting PR number from PR link\n")
-		fmt.Printf("PR link: %s\n", prLink)
+		fmt.Printf("PR link: %s\n", output)
 		fmt.Printf("PR number: %s\n", prNumber)
 		fmt.Printf("Repo: %s\n", repo)
 		fmt.Printf("Org: %s\n", org)
@@ -99,60 +125,37 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			&renderedDeployment[0],
 		)
 
-		contentsDirPath := "/contents"
-
-		_, err = dag.Gh(dagger.GhOpts{
-			Version: m.GhCliVersion,
-		}).Container(dagger.GhContainerOpts{
-			Token:   m.GhToken,
-			Plugins: []string{"prefapp/gh-commit"},
-		}).WithDirectory(contentsDirPath, updatedDir, dagger.ContainerWithDirectoryOpts{
-			Exclude: []string{".git"},
-		}).WithWorkdir(contentsDirPath).
-			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-			WithExec([]string{
-				"gh",
-				"commit",
-				"-R", m.Repo,
-				"-b", branchName,
-				"-m", "Update deployments",
-				"--delete-path", fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
-			}).
-			Sync(ctx)
+		_, err = dag.Gh().Commit(
+			updatedDir,
+			branchName,
+			"Update deployments",
+			m.GhToken,
+			dagger.GhCommitOpts{
+				BaseBranch:     DEPLOYMENT_BRANCH_NAME,
+				DeletePath:     fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+				LocalGhCliPath: m.LocalGhCliPath,
+			},
+		).Sync(ctx)
 
 		if err != nil {
-
 			summary.addDeploymentSummaryRow(
 				tfDep.DeploymentPath,
-				fmt.Sprintf("Failed: %s", err.Error()),
+				extractErrorMessage(err),
 			)
 
 			continue
-
 		}
 
 		if m.AutomergeFileExists(ctx, globPattern) {
 
-			fmt.Printf("Automerge file found, merging PR %s\n", prLink)
+			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
 
-			if prLink == "" {
-
-				summary.addDeploymentSummaryRow(
-					tfDep.DeploymentPath,
-					"Failed: PR link is empty, cannot merge PR",
-				)
-
-				continue
-
-			}
-
-			err := m.MergePullRequest(ctx, prLink)
-
+			err := m.MergePullRequest(ctx, output)
 			if err != nil {
 
 				summary.addDeploymentSummaryRow(
 					tfDep.DeploymentPath,
-					fmt.Sprintf("Failed: %s", err.Error()),
+					extractErrorMessage(err),
 				)
 
 				continue
@@ -167,8 +170,8 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 				),
 				fmt.Sprintf(
 					"Success, pr merged: <a href=\"%s\">%s</a>",
-					prLink,
-					prLink,
+					output,
+					output,
 				),
 			)
 
@@ -184,8 +187,8 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 				),
 				fmt.Sprintf(
 					"Success, pr created: <a href=\"%s\">%s</a>",
-					prLink,
-					prLink,
+					output,
+					output,
 				),
 			)
 

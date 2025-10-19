@@ -30,6 +30,7 @@ type HydrateOrchestrator struct {
 	DotFirestartr    *dagger.Directory
 	GhCliVersion     string
 	ArtifactRef      string
+	LocalGhCliPath   *dagger.File
 }
 
 func New(
@@ -67,6 +68,11 @@ func New(
 	// +default="v2.66.1"
 	ghCliVersion string,
 
+	// Path to the GitHub CLI binary file on the runner
+	// If not provided, the workflow will download the GitHub CLI binary automatically.
+	// +optional
+	localGhCliPath *dagger.File,
+
 ) *HydrateOrchestrator {
 	appName := ""
 	appData, err := dag.FirestartrConfig(dotFirestartr).Apps(ctx)
@@ -78,7 +84,7 @@ func New(
 		appStateRepo, asrErr := app.StateRepo(ctx)
 
 		if asrErr != nil {
-			panic(err)
+			panic(asrErr)
 		}
 
 		if appStateRepo == repo {
@@ -97,5 +103,6 @@ func New(
 		Event:            event,
 		DotFirestartr:    dotFirestartr,
 		GhCliVersion:     ghCliVersion,
+		LocalGhCliPath:   localGhCliPath,
 	}
 }

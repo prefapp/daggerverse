@@ -1,0 +1,21 @@
+states:
+  github:
+    repo: {{ $.Org }}/state-github
+    crKinds:
+      FirestartrGithubRepository:
+      FirestartrGithubGroup:
+      FirestartrGithubMembership:
+      FirestartrGithubRepositoryFeature:
+  catalog:
+    repo: {{ $.Org }}/catalog
+    crKinds:
+      Domain:
+      User:
+      System:
+      Component:
+      Group:
+      Resource:
+  terraform:
+    repo: {{ $.Org }}/state-infra
+    crKinds:
+      FirestartrTerraformWorkspace:
