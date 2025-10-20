@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.12](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.11...update-claims-features-v1.1.12) (2025-10-16)
+
+
+### Bug Fixes
+
+* Fix logging ([#338](https://github.com/prefapp/daggerverse/issues/338)) ([3f57a95](https://github.com/prefapp/daggerverse/commit/3f57a954441b95347d922523acfc706beead8146))
+
 ## [1.1.11](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.10...update-claims-features-v1.1.11) (2025-10-10)
 
 
