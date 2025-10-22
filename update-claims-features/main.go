@@ -97,6 +97,7 @@ func (m *UpdateClaimsFeatures) New(
 func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	ctx context.Context,
 ) (*dagger.File, error) {
+	errorMsg := ""
 	summary := &UpdateSummary{
 		Items: []UpdateSummaryRow{},
 	}
@@ -129,7 +130,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		if claim != nil {
 			updatedFeaturesList, createPR, err := m.updateClaimFeatures(
-				ctx,
 				claim,
 				latestFeaturesMap,
 			)
@@ -172,6 +172,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					summary.addUpdateSummaryRow(
 						claim.Name, extractErrorMessage(err),
 					)
+					errorMsg = fmt.Sprintf("%s\n%s", errorMsg, extractErrorMessage(err))
 					continue
 				}
 
@@ -187,5 +188,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 	}
 
-	return m.DeploymentSummaryToFile(ctx, summary), nil
+	var returnedError error
+	if errorMsg != "" {
+		returnedError = fmt.Errorf(errorMsg)
+	}
+
+	return m.DeploymentSummaryToFile(ctx, summary), returnedError
 }

@@ -54,7 +54,6 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 }
 
 func (m *UpdateClaimsFeatures) updateClaimFeatures(
-	ctx context.Context,
 	claim *Claim,
 	featuresMap map[string]string,
 ) ([]Feature, bool, error) {
