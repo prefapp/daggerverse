@@ -36,6 +36,7 @@ func (m *FirestartrBootstrap) RunOperator(
 			"FirestartrGithubGroup.*",
 			"FirestartrGithubRepository.*",
 			"FirestartrGithubRepositoryFeature.*",
+			"FirestartrGithubOrgWebhook.*",
 		},
 	)
 
@@ -214,6 +215,7 @@ func getSingularByKind(kind string) string {
 		"FirestartrTerraformWorkspace":      "terraformworkspace",
 		"FirestartrGithubMembership":        "githubmembership",
 		"FirestartrGithubRepositoryFeature": "githubrepositoryfeature",
+		"FirestartrGithubOrgWebhook":        "githuborgwebhook",
 	}
 
 	if singular, ok := mapSingular[kind]; ok {
