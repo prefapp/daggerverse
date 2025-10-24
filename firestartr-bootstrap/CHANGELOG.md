@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.1.0...firestartr-bootstrap-v1.2.0) (2025-10-24)
+
+
+### Features
+
+* Add webhook creation support ([#339](https://github.com/prefapp/daggerverse/issues/339)) ([a48e7bc](https://github.com/prefapp/daggerverse/commit/a48e7bc854c1690b848b2cf6df9b036b6bd7838d))
+* Added webhookUrl config parameter ([#346](https://github.com/prefapp/daggerverse/issues/346)) ([615802a](https://github.com/prefapp/daggerverse/commit/615802a133028343c47e7c9b68607b4cee7dd559))
+
 ## [1.1.0](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.0.0...firestartr-bootstrap-v1.1.0) (2025-10-09)
 
 
