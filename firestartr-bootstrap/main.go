@@ -118,7 +118,6 @@ func (m *FirestartrBootstrap) RunBootstrap(
 	}
 
 	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
-	m.Bootstrap.Owner = m.Creds.GithubApp.Owner
 	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
 	if err != nil {
 		panic(err)

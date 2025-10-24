@@ -34,9 +34,9 @@ type Bootstrap struct {
 	DefaultBranchStrategy  string      `yaml:"defaultBranchStrategy"`
 	DefaultOrgPermissions  string      `yaml:"defaultOrgPermissions"`
 	FinalSecretStoreName   string      `yaml:"finalSecretStoreName"`
+	WebhookUrl             string      `yaml:"webhookUrl"`
 	HasFreePlan            bool        // Autocalculated
 	BotName                string      // Stored in Credentialsfile.yaml, but needed here for templating
-	Owner                  string      // Stored in Credentialsfile.yaml, but needed here for templating
 }
 
 type PushFiles struct {

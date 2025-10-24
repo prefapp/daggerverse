@@ -84,7 +84,7 @@ providers:
     name: firestartr-webhook
     orgName: {{ $.Org }}
     webhook:
-      url: https://{{ $.Owner }}.events.firestartr.dev
+      url: {{ $.WebhookUrl }}
       active: true
       contentType: json
       events:
