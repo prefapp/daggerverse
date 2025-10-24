@@ -37,6 +37,7 @@ defaultOrgPermissions: view
 defaultBranchStrategy: none
 defaultFirestartrGroup: firestartr
 finalSecretStoreName: <secret-store-name>
+webhookUrl: <webhook-url>
 
 firestartr:
   version: <cli-version> # Check latest avaliable at github.com/prefapp/gitops-k8s. Omit the "v" (i.e. use "1.2.3" instead of "v1.2.3")
