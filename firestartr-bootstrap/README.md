@@ -40,7 +40,7 @@ finalSecretStoreName: <secret-store-name>
 webhookUrl: <webhook-url>
 
 firestartr:
-  version: <cli-version> # Check latest avaliable at github.com/prefapp/gitops-k8s. Omit the "v" (i.e. use "1.2.3" instead of "v1.2.3")
+  version: <cli-version> # Check latest available at github.com/prefapp/gitops-k8s. Omit the "v" (i.e. use "1.2.3" instead of "v1.2.3")
 pushFiles:
   claims:
     push: true # When the process finishes, the generated claims will be pushed to the claims repository.
@@ -61,14 +61,14 @@ components:
     defaultBranch: main
     features: # features that will be provisioned
       - name: firestartr_repo
-        version: <feature-version>  # Check latest avaliable at github.com/prefapp/features
+        version: <feature-version>  # Check latest available at github.com/prefapp/features
 
   - name: "claims"
     description: "Firestartr configuration folders and files"
     defaultBranch: main
     features:
       - name: claims_repo
-        version: <feature-version>  # Check latest avaliable at github.com/prefapp/features
+        version: <feature-version>  # Check latest available at github.com/prefapp/features
     secrets:
       - name: FS_IMPORT_PEM_FILE
         value: "ref:secretsclaim:firestartr-secrets:fs-import-pem"
@@ -81,21 +81,21 @@ components:
     defaultBranch: main
     features:
       - name: catalog_repo
-        version: <feature-version>  # Check latest avaliable at github.com/prefapp/features
+        version: <feature-version>  # Check latest available at github.com/prefapp/features
 
   - name: "state-github"
     description: "Firestartr Github wet repository"
     defaultBranch: main
     features:
       - name: state_github
-        version: <feature-version>  # Check latest avaliable at github.com/prefapp/features
+        version: <feature-version>  # Check latest available at github.com/prefapp/features
 
   - name: "state-infra"
     description: "Firestartr Terraform workspaces wet repository"
     defaultBranch: main
     features:
       - name: state_infra
-        version: <feature-version>  # Check latest avaliable at github.com/prefapp/features
+        version: <feature-version>  # Check latest available at github.com/prefapp/features
     labels:
       - plan
 ```
