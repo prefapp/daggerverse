@@ -19,10 +19,19 @@ You'll need to install on your local machine:
 #### 1.2 AWS requirements
 
 The following AWS Parameter Store parameters are required:
+
 - `/firestartr/<org-name>/fs-<org-name>-admin/pem`
 - `/firestartr/<org-name>/fs-<org-name>-admin/app-id`
 - `/firestartr/<org-name>/fs-<org-name>-admin/installation-id`
-- `/firestartr/<org-name>/prefapp-bot-pat`
+- `/firestartr/<org-name>/fs-<org-name>-checks/pem`
+- `/firestartr/<org-name>/fs-<org-name>-checks/app-id`
+- `/firestartr/<org-name>/fs-<org-name>-state/pem`
+- `/firestartr/<org-name>/fs-<org-name>-state/app-id`
+- `/firestartr/<org-name>/fs-<org-name>-import/pem`
+- `/firestartr/<org-name>/fs-<org-name>-import/app-id`
+- `/firestartr/<org-name>/prefapp-bot-pat`: Personal Access Token for the Prefapp Bot user
+- `/firestartr/<org-name>/firestartr-cli-version`: Version of the Firestartr CLI to set as the default in the organization
+- `/firestartr/<org-name>/github-webhook/secret`: Secret for the GitHub Webhook
 
 ### 2. Bootstrap File
 
@@ -108,10 +117,10 @@ components:
 # Credentialsfile.yaml
 ---
 cloudProvider:
-  providerConfigName: backend-provider-config-name
+  providerConfigName: <your-backend-provider-config-name>
   name: aws
   config:
-    bucket: "my-bucket"
+    bucket: <your-bucket-name>
     region: "eu-west-1"
     access_key: "AKIAXXXXXXXXXXXXXXXX"
     secret_key: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -120,7 +129,7 @@ cloudProvider:
   type: aws
   version: ~> 4.0
 githubApp:
-  providerConfigName: github-app-provider-config-name
+  providerConfigName: <your-github-app-provider-config-name>
   owner: <org>
   botName: "fs-<org>[bot]"
 ```
