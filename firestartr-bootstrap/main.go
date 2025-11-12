@@ -240,3 +240,7 @@ func (m *FirestartrBootstrap) RunBootstrap(
 
 	return kindContainer
 }
+
+func Rollback(ctx context.Context) {
+
+}
