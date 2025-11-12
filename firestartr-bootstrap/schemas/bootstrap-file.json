@@ -17,6 +17,11 @@
       "org": {
         "type": "string"
       },
+      "webhookUrl": {
+        "type": "string",
+        "format": "uri",
+        "pattern": "^https?://"
+      },
       "pushFiles": {
         "type": "object",
         "properties": {
