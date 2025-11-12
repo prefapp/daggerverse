@@ -32,16 +32,19 @@ var baseTemplates = []string{
 	"/firestartr/<client>/fs-<client>-argocd/<github_org>/app-installation-id",
 	"/firestartr/<client>/fs-<client>-state/<github_org>/app-installation-id",
 	"/firestartr/<client>/fs-<client>-checks/<github_org>/app-installation-id",
+	"/firestartr/<client>/fs-<client>-import/<github_org>/app-installation-id",
 
 	"/firestartr/<client>/fs-<client>-admin/pem",
 	"/firestartr/<client>/fs-<client>-argocd/pem",
 	"/firestartr/<client>/fs-<client>-state/pem",
 	"/firestartr/<client>/fs-<client>-checks/pem",
+	"/firestartr/<client>/fs-<client>-import/pem",
 
 	"/firestartr/<client>/fs-<client>-admin/app-id",
 	"/firestartr/<client>/fs-<client>-argocd/app-id",
 	"/firestartr/<client>/fs-<client>-state/app-id",
 	"/firestartr/<client>/fs-<client>-checks/app-id",
+	"/firestartr/<client>/fs-<client>-import/app-id",
 
 	"/firestartr/<client>/fs-<client>/pem",
 	"/firestartr/<client>/fs-<client>/app-id",
