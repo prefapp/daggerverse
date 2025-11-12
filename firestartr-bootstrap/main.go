@@ -4,7 +4,7 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
-
+    "strings"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,6 +23,29 @@ type FirestartrBootstrap struct {
 	ClaimsDotConfigDir *dagger.Directory
 	CrsDotConfigDir    *dagger.Directory
 	IncludeAllGroup    bool
+    ExpectedAWSParameters []string
+}
+
+// baseTemplates holds the parameter paths with placeholders.
+var baseTemplates = []string{
+	"/firestartr/<client>/fs-<client>-admin/<github_org>/app-installation-id",
+	"/firestartr/<client>/fs-<client>-argocd/<github_org>/app-installation-id",
+	"/firestartr/<client>/fs-<client>-state/<github_org>/app-installation-id",
+	"/firestartr/<client>/fs-<client>-checks/<github_org>/app-installation-id",
+
+	"/firestartr/<client>/fs-<client>-admin/pem",
+	"/firestartr/<client>/fs-<client>-argocd/pem",
+	"/firestartr/<client>/fs-<client>-state/pem",
+	"/firestartr/<client>/fs-<client>-checks/pem",
+
+	"/firestartr/<client>/fs-<client>-admin/app-id",
+	"/firestartr/<client>/fs-<client>-argocd/app-id",
+	"/firestartr/<client>/fs-<client>-state/app-id",
+	"/firestartr/<client>/fs-<client>-checks/app-id",
+
+	"/firestartr/<client>/fs-<client>/pem",
+	"/firestartr/<client>/fs-<client>/app-id",
+	"/firestartr/<client>/fs-<client>/<github_org>/app-installation-id",
 }
 
 func New(
@@ -84,14 +107,33 @@ func New(
 		PreviousCrsDir:     previousCrsDir,
 		ClaimsDotConfigDir: claimsDotConfigDir,
 		CrsDotConfigDir:    crsDotConfigDir,
+        ExpectedAWSParameters: calculateParameters(bootstrap.Customer, bootstrap.Org),
 	}, nil
 }
 
-func (m *FirestartrBootstrap) RunBootstrap(
+func calculateParameters(customer string, githuborg string) []string{
+
+    results := make([]string, 0, len(baseTemplates))
+
+
+    clientPlaceholder := "<client>"
+    githubOrgPlaceholder := "<github_org>"
+
+    for _, template := range baseTemplates {
+
+        path := strings.ReplaceAll(template, clientPlaceholder, customer)
+
+        path = strings.ReplaceAll(path, githubOrgPlaceholder, githuborg)
+
+        results = append(results, path)
+    }
+
+    return results
+}
+
+func (m *FirestartrBootstrap) ValidateBootstrap(
 	ctx context.Context,
-	dockerSocket *dagger.Socket,
-	kindSvc *dagger.Service,
-) *dagger.Container {
+) error {
 
 	err := m.ValidateBootstrapFile(ctx, m.BootstrapFile)
 	if err != nil {
@@ -102,6 +144,31 @@ func (m *FirestartrBootstrap) RunBootstrap(
 	if err != nil {
 		panic(err)
 	}
+
+    err = m.ValidateBucket(ctx)
+    if err != nil {
+        panic(err)
+    }
+
+    err = m.ValidateParameters(ctx, fmt.Sprintf("/firestartr/%s", m.Bootstrap.Customer))
+    if err != nil {
+        panic(err)
+    }
+
+    return nil
+
+}
+
+func (m *FirestartrBootstrap) RunBootstrap(
+	ctx context.Context,
+	dockerSocket *dagger.Socket,
+	kindSvc *dagger.Service,
+) *dagger.Container {
+
+    err := m.ValidateBootstrap(ctx)
+    if err != nil {
+        panic(err)
+    }
 
 	kindContainer := m.InstallHelmAndExternalSecrets(ctx, dockerSocket, kindSvc)
 	kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)

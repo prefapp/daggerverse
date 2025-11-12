@@ -3,3 +3,5 @@
 /internal/querybuilder
 /internal/telemetry
 Credentials.yaml
+boot/
+/.env
