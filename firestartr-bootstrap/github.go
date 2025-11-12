@@ -390,3 +390,24 @@ func (m *FirestartrBootstrap) OrgHasFreePlan(
 
 	return strings.EqualFold(planName, "free"), nil
 }
+
+func (m *FirestartrBootstrap) GetRepositoryTopics(
+	ctx context.Context,
+	repo string,
+	ghToken *dagger.Secret,
+) ([]string, error) {
+	planName, err := m.GhContainer(ctx, ghToken).
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithExec([]string{
+			"gh", "api", fmt.Sprintf("/repos/%s/%s/topics", m.GhOrg, repo), "--jq", ".names[]",
+		}).
+		Stdout(ctx)
+
+	if err != nil {
+		return []string{}, err
+	}
+
+	return strings.Split(
+		strings.Trim(planName, "\n"), "\n",
+	), nil
+}

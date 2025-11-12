@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/xeipuuv/gojsonschema"
@@ -136,4 +137,18 @@ func (m *FirestartrBootstrap) CheckAlreadyCreatedRepositories(
 	}
 
 	return alreadyCreatedRepos, nil
+}
+
+func (m *FirestartrBootstrap) CheckManagedByFirestartrTopicExists(
+	ctx context.Context,
+	repo string,
+	ghToken *dagger.Secret,
+) (bool, error) {
+	topicList, err := m.GetRepositoryTopics(ctx, repo, ghToken)
+
+	if err != nil {
+		return false, err
+	}
+
+	return slices.Contains(topicList, "managed-by-firestartr"), nil
 }
