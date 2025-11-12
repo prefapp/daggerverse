@@ -22,8 +22,6 @@ providers:
         useDefault: false
         includeClaimKeys:
           - repo
-    topics:
-      - managed-by-firestartr
     {{- if $claim.Features}}
     features:
       {{- range $index, $feature := $claim.Features }}

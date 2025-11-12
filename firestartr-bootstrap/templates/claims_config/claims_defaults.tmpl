@@ -12,6 +12,8 @@ ComponentClaim:
         period: 24h
       org: {{ $.Org }}
       maintainedBy: []
+      topics:
+        - managed-by-firestartr
       branchStrategy:
         name: {{ or $.DefaultBranchStrategy "none" }}
         defaultBranch: {{ or $.DefaultBranch "main" }}
