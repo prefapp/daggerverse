@@ -26,6 +26,7 @@ type Bootstrap struct {
 	Firestartr             Firestartr  `yaml:"firestartr"`
 	PushFiles              PushFiles   `yaml:"pushFiles"`
 	Org                    string      `yaml:"org"`
+    Customer               string      `yaml:"customer"`
 	Components             []Component `yaml:"components"`
 	DefaultSystemName      string      `yaml:"defaultSystemName"`
 	DefaultDomainName      string      `yaml:"defaultDomainName"`
