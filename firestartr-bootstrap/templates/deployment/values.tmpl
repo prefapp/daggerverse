@@ -1,0 +1,95 @@
+org: {{ .Org }}
+
+argoEvents:
+  host: {{ .Webhook.URL }}
+  ingress:
+    enabled: true
+    annotations:
+      alb.ingress.kubernetes.io/backend-protocol: HTTP
+      alb.ingress.kubernetes.io/group.name: default-group
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/target-type: ip
+  webhooks:
+    - state-infra
+    - state-github
+  secretStoreKeysRefs:
+    webhookSecret: {{ .Webhook.Secret }}
+
+general:
+  image: {{ .Controller.Image }}
+  auth:
+    provider: aws
+    config:
+      awsIdentity:
+        roleArn: "{{ .Controller.RoleARN }}"
+
+externalSecrets:
+  auth:
+    provider: aws
+    config:
+      awsIdentity:
+        roleArn: "{{ .ExternalSecrets.RoleARN }}"
+        region: "eu-west-1"
+
+controller:
+  enabled: true
+  secretStoreKeysRefs:
+    githubAppId: {{ .Controller.GithubApp.GithubAppId }}
+    githubAppPem: {{ .Controller.GithubApp.GithubAppPem }}
+  metrics:
+    enabled: true
+  datadog:
+    enabled: true
+    service: "firestartr-controller-"
+    extraTags:
+      tenant: {{ .Customer }}
+      datacenter: aws-eu-west-1
+    apm:
+      enabled: true
+      correlateLogs: true
+      traceSampleRate:
+        enabled: true
+
+crsAnalyzer:
+  enabled: false
+
+providerConfigs:
+  tfstate-{{ .Customer }}:
+    config: |
+      {
+        "bucket": {{ .Aws.Bucket }}",
+        "region": "{{ .Aws.Region }}"
+      }
+    type: aws
+    source: "hashicorp/aws"
+    version: 1.0.0
+  github-{{ .Customer }}:
+    config: |
+      {
+        "owner": "{{ .Org }}",
+        "app_auth": {
+          "id": "{{ .Provider.GithubAppId}}",
+          "installation_id": "{{ .Provider.GithubAppInstallationId}}",
+          "pem_file": "${{"{{"}} secrets.GITHUB_APP_PEM_FILE {{"}}"}}"
+        }
+      }
+    secrets:
+      GITHUB_APP_PEM_FILE:
+        secretRef:
+          key: github-app-pem-file
+          secretStoreKeyRef: {{ .Provider.GithubAppPem }}
+    type: github
+    source: integrations/github
+    version: "~> 6.0"
+
+tfPlanner:
+  enabled: true
+  secretStoreKeysRefs:
+    githubAppId: {{ .Controller.GithubApp.GithubAppId }}
+    githubAppPem: {{ .Controller.GithubApp.GithubAppPem }}
+
+argoRefresher:
+  enabled: true
+
