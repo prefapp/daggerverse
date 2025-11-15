@@ -11,8 +11,31 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 
+    "github.com/aws/aws-sdk-go-v2/service/sts"
     "github.com/aws/aws-sdk-go-v2/service/s3"
 )
+
+func (m *FirestartrBootstrap) ValidateSTSCredentials(
+	ctx context.Context, 
+) error {
+	log.Println("Attempting to validate credentials via STS:GetCallerIdentity...")
+
+    cfg := loginAWS(ctx, m.Creds)
+    
+	stsClient := sts.NewFromConfig(cfg)
+
+	output, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	if err != nil {
+		return fmt.Errorf("authentication failed for STS:GetCallerIdentity: %w", err)
+	}
+
+    // 5. Success!
+	log.Printf("✅ Credentials validated successfully.")
+	log.Printf("   User ARN: %s", aws.ToString(output.Arn))
+	log.Printf("   Account ID: %s", aws.ToString(output.Account))
+	
+	return nil
+}
 
 func (m *FirestartrBootstrap) ValidateBucket(
     ctx context.Context,
@@ -22,7 +45,7 @@ func (m *FirestartrBootstrap) ValidateBucket(
     
     s3Client := s3.NewFromConfig(cfg)
 
-    bucketName := m.Creds.CloudProvider.Config.Bucket
+    bucketName := *m.Creds.CloudProvider.Config.Bucket
 
     input := &s3.HeadBucketInput{
 		Bucket: aws.String(bucketName),
@@ -93,7 +116,7 @@ func (m *FirestartrBootstrap) ValidateParameters(
 		for k := range keysToFind {
 			missingKeys = append(missingKeys, k)
 		}
-		return fmt.Errorf("parameter validation failed. The following keys are missing: %s", strings.Join(missingKeys, ", "))
+		return fmt.Errorf("parameter validation failed. The following keys are missing: \n - %s", strings.Join(missingKeys, "\n - "))
 	}
 
 	log.Println("✅ All required parameters were successfully validated.")
