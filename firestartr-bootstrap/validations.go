@@ -108,6 +108,92 @@ func (m *FirestartrBootstrap) ValidatePrefappBotPat(
     return nil
 }
 
+func (m *FirestartrBootstrap) ValidateExistenceOfNeededImages(
+    ctx context.Context,
+) error {
+		
+    slimImage := fmt.Sprintf(
+			"ghcr.io/prefapp/gitops-k8s:%s_slim",
+			m.Bootstrap.Firestartr.OperatorVersion,
+    )
+
+    err := validateExistenceOfImage(ctx, slimImage)
+    if err != nil {
+        return err
+    }
+
+	fullImage := fmt.Sprintf("ghcr.io/prefapp/gitops-k8s:%s", fmt.Sprintf(
+
+		"%s_full-%s",
+		m.Bootstrap.Firestartr.OperatorVersion,
+		m.Creds.CloudProvider.Name,
+
+	))
+
+    err = validateExistenceOfImage(ctx, fullImage)
+    if err != nil {
+        return err
+    }
+
+    return nil
+
+}
+
+func validateExistenceOfImage(
+    ctx context.Context,
+    imageRef string,
+) error {
+
+    // Use an image that has the 'crane' tool (from Google's container-registry tools)
+    craneContainer := dag.Container().
+        From("gcr.io/go-containerregistry/crane:latest")
+
+    craneArgs := []string{
+        "crane",
+        "manifest",
+        imageRef,
+    }
+
+    _, err := craneContainer.
+        WithExec(craneArgs).
+        Stdout(ctx)
+
+    if err != nil {
+        return fmt.Errorf("Image does not exist: %s", imageRef)
+    }
+
+    return nil
+}
+
+func (m *FirestartrBootstrap) ValidateCliExistence(
+    ctx context.Context,
+) error {
+
+    moduleName := fmt.Sprintf("@firestartr/cli@%s", m.Bootstrap.Firestartr.CliVersion)
+
+    npmContainer := dag.Container().
+        From("node:20-alpine")
+
+    // 'npm view' queries the metadata. We use '--json' for a faster, less verbose response.
+    npmArgs := []string{
+        "npm",
+        "view",
+        moduleName,
+        "--json",
+    }
+
+    _, err := npmContainer.
+        WithExec(npmArgs).
+        Stdout(ctx)
+
+    if err != nil {
+        return fmt.Errorf("Cli version:  '%s' does not exist.\n", moduleName)
+    }
+
+    return nil
+
+}
+
 func (m *FirestartrBootstrap) GithubRepositoryExists(ctx context.Context, repo string, ghToken *dagger.Secret) (bool, error) {
 	ctr, err := m.GhContainer(ctx, ghToken).
 		WithExec([]string{
