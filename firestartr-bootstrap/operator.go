@@ -46,31 +46,16 @@ func (m *FirestartrBootstrap) RunOperator(
 
 func (m *FirestartrBootstrap) InstallHelmAndExternalSecrets(
 	ctx context.Context,
-	dockerSocket *dagger.Socket,
-	kindSvc *dagger.Service,
+	kindContainer *dagger.Container,
 ) *dagger.Container {
 
-	kindContainer, err := GetKind(dockerSocket, kindSvc).
-		WithExec([]string{"apk", "add", "helm", "curl"}).
-		WithMountedDirectory("/charts",
-			dag.CurrentModule().
-				Source().
-				Directory("helm"),
-		).
-		WithEnvVariable("BUST_CACHE", time.Now().String()).
-		WithExec([]string{
-			"curl",
-			"https://prefapp.github.io/gitops-k8s/index.yaml",
-			"-o",
-			"/tmp/crds.yaml",
-		}).
-		WithExec([]string{"kubectl", "apply", "-f", "/tmp/crds.yaml"}).
+    kindContainerWithSecrets, err := kindContainer.
 		WithExec([]string{
 			"helm", "repo", "add",
 			"external-secrets", "https://charts.external-secrets.io",
 		}).
 		WithExec([]string{
-			"helm", "install", "external-secrets",
+			"helm", "upgrade", "--install", "external-secrets",
 			"external-secrets/external-secrets",
 			"-n", "external-secrets",
 			"--create-namespace",
@@ -81,7 +66,7 @@ func (m *FirestartrBootstrap) InstallHelmAndExternalSecrets(
 		panic(err)
 	}
 
-	return kindContainer
+	return kindContainerWithSecrets
 }
 
 func (m *FirestartrBootstrap) InstallInitialCRsAndBuildHelmValues(
@@ -102,9 +87,15 @@ func (m *FirestartrBootstrap) InstallInitialCRsAndBuildHelmValues(
 		panic(err)
 	}
 
+
 	return kindContainer.
-		WithDirectory("/resources/initial-crs", initialCrsDir).
-		WithExec([]string{
+	   WithDirectory("/resources/initial-crs", initialCrsDir).
+       WithMountedDirectory("/charts",
+                  dag.CurrentModule().
+                          Source().
+                          Directory("helm"),
+          ).
+        WithExec([]string{
 			"kubectl",
 			"apply",
 			"-f", "/resources/initial-crs",

@@ -7,7 +7,8 @@
         "type": "object",
         "properties": {
           "version": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^\\d+"
           }
         },
         "required": [
@@ -15,6 +16,29 @@
         ]
       },
       "org": {
+        "type": "string"
+      },
+      "customer":{
+      
+        "type": "string"
+      },
+      "defaultBranch": {
+      
+        "type": "string"
+      },
+      "defaultSystemName":{
+        "type": "string"
+      },
+      "defaultDomainName":{
+        "type": "string"
+      },
+      "defaultOrgPermissions":{
+        "type": "string"
+      },
+      "defaultBranchStrategy": {
+        "type": "string"
+      },
+      "defaultFirestartrGroup": {
         "type": "string"
       },
       "webhookUrl": {
@@ -144,6 +168,13 @@
       "firestartr",
       "org",
       "pushFiles",
-      "components"
+      "components",
+      "customer",
+      "defaultBranch",
+      "defaultSystemName",
+      "defaultDomainName",
+      "defaultOrgPermissions",
+      "defaultBranchStrategy",
+      "defaultFirestartrGroup"
     ]
   }

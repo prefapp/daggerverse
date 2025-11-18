@@ -58,9 +58,9 @@ providers:
       refreshInterval: 24h
       secrets:
       - secretName: "github-webhook-secret"
-        remoteRef: "/firestartr/{{ $.Org }}/github-webhook/secret"
+        remoteRef: "{{ $.WebhookSecretRef }}"
       - secretName: "prefapp-bot-pat"
-        remoteRef: "/firestartr/{{ $.Org }}/prefapp-bot-pat"
+        remoteRef: "{{ $.PrefappBotPatSecretRef }}"
       - secretName: "firestartr-cli-version"
         remoteRef: "/firestartr/{{ $.Org }}/firestartr-cli-version"
       - secretName: "fs-state-pem"

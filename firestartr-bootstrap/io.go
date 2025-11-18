@@ -110,6 +110,7 @@ func (m *FirestartrBootstrap) SplitRenderedCrsInFiles(
 }
 
 func loadCredsFile(ctx context.Context, creds *dagger.Secret) (*CredsFile, error) {
+
 	credsContent, err := creds.Plaintext(ctx)
 	if err != nil {
 		return nil, err
