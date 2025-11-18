@@ -5,3 +5,5 @@
 Credentials.yaml
 boot/
 /.env
+*.swp
+*.swo
