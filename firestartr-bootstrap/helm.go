@@ -18,8 +18,8 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 			Image: Image{
 				Name: "ghcr.io/prefapp/gitops-k8s",
 				Tag: fmt.Sprintf(
-					"v%s_full-%s",
-					m.Bootstrap.Firestartr.Version,
+					"%s_full-%s",
+					m.Bootstrap.Firestartr.OperatorVersion,
 					m.Creds.CloudProvider.Name,
 				),
 				PullPolicy: "Always",
@@ -67,6 +67,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 				"ORG":                              m.GhOrg,
 				"LOG_LEVEL":                        "debug",
 				"AVOID_PROVIDER_SECRET_ENCRYPTION": "1",
+                "CHECK_IN_BOOTSTRAP_PROCESS":       "IN_BOOTSTRAP",
 			},
 		},
 	}

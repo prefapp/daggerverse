@@ -35,7 +35,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 			Image: fmt.Sprintf("ghcr.io/prefapp/gitops-k8s:%s", fmt.Sprintf(
 
 				"%s_full-%s",
-				m.Bootstrap.Firestartr.Version,
+				m.Bootstrap.Firestartr.OperatorVersion,
 				m.Creds.CloudProvider.Name,
 
 			)),

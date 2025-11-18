@@ -63,7 +63,8 @@ type Providers struct {
 }
 
 type Firestartr struct {
-	Version string `yaml:"version"`
+	OperatorVersion string `yaml:"operator"`
+    CliVersion string   `yaml:"cli"`
 }
 
 type CredsFile struct {

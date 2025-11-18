@@ -183,6 +183,11 @@ func (m *FirestartrBootstrap) ValidateBootstrap(
 		return err
     }
 
+    err = m.ValidatePrefappBotPat(ctx)
+    if err != nil {
+		return err
+    }
+
     return nil
 
 }

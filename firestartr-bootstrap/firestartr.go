@@ -21,8 +21,8 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
 
 	fsCtr, err := dag.Container().From(
 		fmt.Sprintf(
-			"ghcr.io/prefapp/gitops-k8s:v%s_slim",
-			m.Bootstrap.Firestartr.Version,
+			"ghcr.io/prefapp/gitops-k8s:%s_slim",
+			m.Bootstrap.Firestartr.OperatorVersion,
 		),
 	).
 		WithDirectory("/claims", claimsDir).
