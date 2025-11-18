@@ -147,3 +147,24 @@ func (m *FirestartrBootstrap) CmdImportResources(
 
     return kindContainer
 }
+
+func (m *FirestartrBootstrap) CmdRollback(
+    ctx context.Context,
+	kubeconfig *dagger.Directory,
+	kindSvc	*dagger.Service,
+){
+
+    kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+
+	err := m.ProcessArtifactsByKind(
+
+		ctx,
+		kindContainer,
+	)
+
+	if err != nil {
+
+		panic(err)
+	}
+
+}
