@@ -103,7 +103,7 @@ func (m *FirestartrBootstrap) ProcessArtifactsByKind(
 				kindContainer,
 				kind,
 				namespace,
-				"firestartr.io/bootstrapped",
+				"firestartr.dev/bootstrapped",
 				"true",
 			)
 		}
