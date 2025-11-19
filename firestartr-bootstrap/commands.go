@@ -8,6 +8,17 @@ import (
     "fmt"
 )
 
+func (m *FirestartrBootstrap) CmdCreatePersistentVolume(
+    
+    ctx context.Context,
+    volumeName string,
+) *dagger.CacheVolume {
+
+    persistentVolume := dag.CacheVolume(volumeName) 
+
+    return persistentVolume
+}
+
 func (m *FirestartrBootstrap) CreateBridgeContainer(
 	ctx context.Context, 
 	kubeconfig *dagger.Directory,
@@ -118,6 +129,8 @@ func (m *FirestartrBootstrap) CmdImportResources(
     ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc	*dagger.Service,
+    cacheVolume *dagger.CacheVolume,
+
 ) *dagger.Container {
 
     kindContainer := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
@@ -141,11 +154,20 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}
 	}
 
+    fmt.Println(cacheVolume)
+
 	kindContainer = m.RunImporter(ctx, kindContainer, alreadyCreatedReposList)
 	kindContainer = m.RunOperator(ctx, kindContainer)
 	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
 
-    return kindContainer
+    return kindContainer.
+        WithMountedCache("/cache", cacheVolume).
+		WithExec([]string{
+			"cp", "-a", "/import", "/cache",
+		}).
+		WithExec([]string{
+			"cp", "-a", "/resources", "/cache",
+		})
 }
 
 func (m *FirestartrBootstrap) CmdRollback(

@@ -54,6 +54,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 					"githubmemberships",
 					"githubrepositories",
 					"githubrepositoryfeatures",
+                    "githubrepositorysecretssections",
 					"githuborgwebhooks",
 					"terraformworkspaces",
 					"terraformworkspaceplans",

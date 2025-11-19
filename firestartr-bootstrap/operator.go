@@ -5,7 +5,7 @@ import (
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
 	"time"
-
+    "strings"
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,6 +35,7 @@ func (m *FirestartrBootstrap) RunOperator(
 		[]string{
 			"FirestartrGithubGroup.*",
 			"FirestartrGithubRepository.*",
+            "FirestartrGithubRepositorySecretsSection.*",
 			"FirestartrGithubRepositoryFeature.*",
 			"FirestartrGithubOrgWebhook.*",
 		},
@@ -129,6 +130,21 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 		}
 	}
 
+    // let's patch the all group with the bootstrapped annotation
+    err := patchCR(
+        ctx,
+        kindContainer,
+        "githubgroup",
+        fmt.Sprintf("%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669", m.GhOrg),
+        "default",
+        "firestartr.dev/bootstrapped",
+        "true",
+    )
+
+    if err != nil {
+        panic(err)
+    }
+
 	return kindContainer
 }
 
@@ -182,6 +198,46 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 	return kindContainer
 }
 
+func patchCR(
+	ctx context.Context,
+	kindContainer *dagger.Container,
+	resourceKind string,
+	resourceName string,
+	namespace string,
+	annotationKey string,
+	annotationValue string,
+
+) error {
+
+	resourceRef := fmt.Sprintf("%s/%s", resourceKind, resourceName)
+
+	// The JSON string defines the patch: modify the 'metadata.annotations' map.
+	patchJSON := fmt.Sprintf(`{"metadata":{"annotations":{"%s":"%s"}}}`, annotationKey, annotationValue)
+
+	patchCommand := []string{
+		"kubectl", 
+		"patch", 
+		resourceRef, 
+		"-n", 
+		namespace,
+		"--type=merge", // Use strategic merge patch to safely update only the annotation field
+		"-p",           // The patch data flag
+		patchJSON,      // The JSON payload
+	}
+
+	_, err := kindContainer.
+        WithExec(patchCommand).
+        Stdout(ctx)
+        
+    if err != nil {
+        // Capture stderr for better debugging
+        errorOutput, _ := kindContainer.Stderr(ctx)
+        return fmt.Errorf("kubectl patch failed for %s. Error: %s", resourceRef, strings.TrimSpace(errorOutput))
+    }
+
+	return nil
+}
+
 func GetKind(
 
 	dockerSocket *dagger.Socket,
@@ -200,13 +256,14 @@ func GetKind(
 func getSingularByKind(kind string) string {
 
 	mapSingular := map[string]string{
-		"ExternalSecret":                    "",
-		"FirestartrGithubRepository":        "githubrepository",
-		"FirestartrGithubGroup":             "githubgroup",
-		"FirestartrTerraformWorkspace":      "terraformworkspace",
-		"FirestartrGithubMembership":        "githubmembership",
-		"FirestartrGithubRepositoryFeature": "githubrepositoryfeature",
-		"FirestartrGithubOrgWebhook":        "githuborgwebhook",
+		"ExternalSecret":                               "",
+		"FirestartrGithubRepository":                   "githubrepository",
+		"FirestartrGithubGroup":                        "githubgroup",
+		"FirestartrTerraformWorkspace":                 "terraformworkspace",
+		"FirestartrGithubMembership":                   "githubmembership",
+		"FirestartrGithubRepositoryFeature":            "githubrepositoryfeature",
+		"FirestartrGithubOrgWebhook":                   "githuborgwebhook",
+        "FirestartrGithubRepositorySecretsSection":     "githubrepositorysecretssections",
 	}
 
 	if singular, ok := mapSingular[kind]; ok {
