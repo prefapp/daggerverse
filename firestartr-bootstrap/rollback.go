@@ -108,19 +108,20 @@ func (m *FirestartrBootstrap) ProcessArtifactsByKind(
 			)
 		}
 
-		summary, err := m.DeleteArtifactsList(
-			ctx, 
-			kindContainer,
-			kind,
-			artifacts,
-			namespace,
-		)
+        fmt.Println("-%s",strings.Join(artifacts, "\n-"))
+	//	summary, err := m.DeleteArtifactsList(
+	//		ctx, 
+	//		kindContainer,
+	//		kind,
+	//		artifacts,
+	//		namespace,
+	//	)
 
-		if err != nil {
-			panic(err)
-		}
+	//	if err != nil {
+	//		panic(err)
+	//	}
 
-		fmt.Println(summary)
+	//	fmt.Println(summary)
 	}
 
 	return nil
