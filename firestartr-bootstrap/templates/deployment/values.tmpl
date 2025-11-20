@@ -42,7 +42,7 @@ controller:
     enabled: true
   datadog:
     enabled: true
-    service: "firestartr-controller-"
+    service: "firestartr-controller-{{ .Customer }}"
     extraTags:
       tenant: {{ .Customer }}
       datacenter: aws-eu-west-1
@@ -70,8 +70,8 @@ providerConfigs:
       {
         "owner": "{{ .Org }}",
         "app_auth": {
-          "id": "{{ .Provider.GithubAppId}}",
-          "installation_id": "{{ .Provider.GithubAppInstallationId}}",
+          "id": "${{"{{"}} secrets.GITHUB_APP_ID {{"}}"}}",
+          "installation_id": "${{"{{"}} secrets.GITHUB_APP_INSTALLATION_ID {{"}}"}}",
           "pem_file": "${{"{{"}} secrets.GITHUB_APP_PEM_FILE {{"}}"}}"
         }
       }
@@ -82,7 +82,7 @@ providerConfigs:
         secretStoreKeyRef: {{ .Provider.GithubAppPem }}
     GITHUB_APP_ID:
       secretRef:
-        key: github-app-pem-file
+        key: github-app-id
         secretStoreKeyRef: {{ .Provider.GithubAppId }}
     GITHUB_APP_INSTALLATION_ID:
       secretRef:
