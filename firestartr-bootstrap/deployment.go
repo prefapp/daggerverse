@@ -11,14 +11,30 @@ func (m *FirestartrBootstrap) CreateDeployment(
 	ctx context.Context,
 ) (*dagger.Directory, error){
 
-    deploymentRenderedDir, err = m.RenderDeployment(ctx)
+    deploymentRenderedDir, err := m.RenderDeployment(ctx)
 
     if err != nil {
 
         return nil, fmt.Errorf("Rendering firestartr-app deployment data: %s", err)
     }
 
-    
+	tokenSecret, err := m.GenerateGithubToken(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+    m.CreatePR(
+        ctx,
+        "app-firestartr",
+        fmt.Sprintf("firestartr-%s",),
+        deploymentRenderedDir,
+        fmt.Sprintf("automated-create-deplyoment-%s", m.Bootstrap.Customer),
+        fmt.Sprintf("feat: add deployment for %s [automated]", m.Bootstrap.Customer),
+        fmt.Sprintf("kubernetes/firestartr-%s/%s", m.Env, m.Bootstrap.Customer),
+        tokenSecret,
+    )
+
+    return deploymentRenderedDir, nil
 
 }
 

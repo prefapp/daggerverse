@@ -98,7 +98,6 @@ type GithubApp struct {
 	RawPem             string
 	GhAppId            string
 	InstallationId     string
-	BotPat             string
 }
 
 type SecretData struct {

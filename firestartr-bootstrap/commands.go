@@ -197,7 +197,7 @@ func (m *FirestartrBootstrap) CmdPushDeployment(
 
 ) *dagger.Container {
 
-    deploymentDir, err := m.RenderDeployment(ctx)
+    deploymentDir, err := m.CreateDeployment(ctx)
 
     if err != nil {
         panic(err)

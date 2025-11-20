@@ -10,6 +10,7 @@ import (
 )
 
 type FirestartrBootstrap struct {
+    Env                string
 	Bootstrap          *Bootstrap
 	BootstrapFile      *dagger.File
 	CredentialsSecret  *dagger.Secret
@@ -119,6 +120,7 @@ func New(
 	}
 
 	return &FirestartrBootstrap{
+        Env:                 "pre",
 		Bootstrap:          bootstrap,
 		BootstrapFile:      bootstrapFile,
 		CredentialsSecret:  credentialsSecret,

@@ -34,7 +34,7 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
 		WithEnvVariable("GITHUB_APP_ID", m.Creds.GithubApp.GhAppId).
 		WithEnvVariable("GITHUB_APP_INSTALLATION_ID", m.Creds.GithubApp.InstallationId).
 		WithEnvVariable("GITHUB_APP_PEM_FILE", m.Creds.GithubApp.Pem).
-		WithEnvVariable("PREFAPP_BOT_PAT", m.Creds.GithubApp.BotPat).
+		WithEnvVariable("PREFAPP_BOT_PAT", m.Creds.GithubApp.PrefappBotPat).
 		WithEnvVariable("ORG", m.GhOrg).
 		WithExec(
 			[]string{
