@@ -166,8 +166,34 @@ func (m *FirestartrBootstrap) CmdImportResources(
 			"cp", "-a", "/import", "/cache",
 		}).
 		WithExec([]string{
-			"cp", "-a", "/resources", "/cache",
+			"cp", "-a", "/resources/", "/cache",
 		})
+}
+
+func (m *FirestartrBootstrap) CmdPushResources(
+    ctx context.Context,
+	kubeconfig *dagger.Directory,
+	kindSvc	*dagger.Service,
+    cacheVolume *dagger.CacheVolume,
+
+) *dagger.Container {
+
+    kindContainer := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+
+    kindContainer = kindContainer.WithMountedCache(
+        "/mnt/", 
+        cacheVolume,
+    ).
+    WithExec([]string{
+        "cp", "-a", "/mnt/resources", "/",
+    })
+
+    m.PushCrsFiles(
+        ctx,
+        kindContainer,
+    )
+
+    return kindContainer
 }
 
 func (m *FirestartrBootstrap) CmdRollback(
@@ -190,3 +216,4 @@ func (m *FirestartrBootstrap) CmdRollback(
 	}
 
 }
+
