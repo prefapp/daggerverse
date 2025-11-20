@@ -272,7 +272,11 @@ func (m *FirestartrBootstrap) ValidateOperatorPat(
 	}
 }
 
-func (m *FirestartrBootstrap) GithubRepositoryExists(ctx context.Context, repo string, ghToken *dagger.Secret) (bool, error) {
+func (m *FirestartrBootstrap) GithubRepositoryExists(
+	ctx context.Context,
+	repo string,
+	ghToken *dagger.Secret,
+) (bool, error) {
 	ctr, err := m.GhContainer(ctx, ghToken).
 		WithExec([]string{
 			"gh",
