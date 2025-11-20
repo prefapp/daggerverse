@@ -208,10 +208,6 @@ func (m *FirestartrBootstrap) ValidateOperatorPat(
 		WithExec([]string{"apk", "add", "jq"}).
 		WithSecretVariable("GITHUB_PAT", tokenSecret)
 
-	// Execute the full script using /bin/sh -c and mount the secret.
-	// execContainer := base.WithSecretVariable("GITHUB_PAT", patSecret).
-	// 	WithExec([]string{"/bin/sh", "-c", shellScript})
-
 	// Add jq to extract the 'login' field
 	getUserCmd := "https://api.github.com/user | jq -r .login"
 
@@ -226,7 +222,10 @@ func (m *FirestartrBootstrap) ValidateOperatorPat(
 	username = strings.TrimSpace(username)
 
 	if username == "null" || username == "" {
-		return fmt.Errorf("authentication failed: the PAT is likely invalid, expired, or does not have sufficient read access to the 'user' endpoint")
+		return fmt.Errorf(
+			"authentication failed: the PAT is likely invalid, expired, " +
+				"or does not have sufficient read access to the 'user' endpoint",
+		)
 	}
 
 	// --- Step 2: Check the repository permission for that user ---
@@ -241,7 +240,9 @@ func (m *FirestartrBootstrap) ValidateOperatorPat(
 	getPermissionCmd := fmt.Sprintf("%s | jq -r .permission", permissionURL)
 
 	// Execute curl and pipe the JSON output to jq to extract the 'permission' level
-	getPermission, err := executeCurlCommand(ctx, base, tokenSecret, getPermissionCmd)
+	getPermission, err := executeCurlCommand(
+		ctx, base, tokenSecret, getPermissionCmd,
+	)
 	if err != nil {
 		return err
 	}
@@ -263,7 +264,9 @@ func (m *FirestartrBootstrap) ValidateOperatorPat(
 		)
 	default:
 		return fmt.Errorf(
-			"received an unexpected permission result: '%s'. Ensure the repository exists and the user is a collaborator (or owner)",
+			"received an unexpected permission result: '%s'. "+
+				"Ensure the repository exists and the user is a "+
+				"collaborator (or owner)",
 			permission,
 		)
 	}
