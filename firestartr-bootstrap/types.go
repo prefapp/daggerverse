@@ -165,3 +165,10 @@ type PushSecretElement  struct {
     ParameterName           string
     Value                   string
 }
+
+type ArgoCDConfig struct {
+	Name                    string
+	App						string
+	Repo					string
+	Namespace				string
+}
