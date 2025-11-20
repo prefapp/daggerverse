@@ -1,45 +1,45 @@
 package main
 
 import (
-    "context"
+	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
-    "strings"
-    "strconv"
-    "fmt"
+	"fmt"
+	"strconv"
+	"strings"
 )
 
 func (m *FirestartrBootstrap) CmdCreatePersistentVolume(
-    
-    ctx context.Context,
-    volumeName string,
+
+	ctx context.Context,
+	volumeName string,
 ) *dagger.CacheVolume {
 
-    persistentVolume := dag.CacheVolume(volumeName) 
+	persistentVolume := dag.CacheVolume(volumeName)
 
-    return persistentVolume
+	return persistentVolume
 }
 
 func (m *FirestartrBootstrap) CreateBridgeContainer(
-	ctx context.Context, 
+	ctx context.Context,
 	kubeconfig *dagger.Directory,
-	kindSvc	*dagger.Service,
+	kindSvc *dagger.Service,
 ) *dagger.Container {
 
-    clusterName := "kind"
+	clusterName := "kind"
 
-    ep, err := kindSvc.Endpoint(ctx)
-    if err != nil {
-        panic(err)
-    }
+	ep, err := kindSvc.Endpoint(ctx)
+	if err != nil {
+		panic(err)
+	}
 
-    port, err := strconv.Atoi(strings.Split(ep, ":")[1])
-    if err != nil {
-        panic(err)
-    }
+	port, err := strconv.Atoi(strings.Split(ep, ":")[1])
+	if err != nil {
+		panic(err)
+	}
 
-    ctn,err := dag.Container().
+	ctn, err := dag.Container().
 		From("alpine:latest").
-        WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl", "helm"}).
+		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl", "helm"}).
 		WithMountedDirectory("/root/.kube", kubeconfig).
 		WithWorkdir("/workspace").
 		WithServiceBinding("localhost", kindSvc).
@@ -54,19 +54,17 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 			"/tmp/crds.yaml",
 		}).
 		WithExec([]string{"kubectl", "apply", "-f", "/tmp/crds.yaml"}).
-        Sync(ctx)
+		Sync(ctx)
 
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
-    return ctn
+	return ctn
 }
 
-
-
 func (m *FirestartrBootstrap) CmdValidateBootstrap(
-    ctx context.Context,
+	ctx context.Context,
 ) error {
 
 	err := m.ValidateBootstrap(ctx)
@@ -74,78 +72,78 @@ func (m *FirestartrBootstrap) CmdValidateBootstrap(
 		panic(err)
 	}
 
-    return nil
+	return nil
 }
 
 func (m *FirestartrBootstrap) CmdInitSecretsMachinery(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
-	kindSvc	*dagger.Service,
+	kindSvc *dagger.Service,
 ) *dagger.Container {
 
-    kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
 
 	kindContainer = m.InstallHelmAndExternalSecrets(ctx, kindContainer)
-    kindContainerWithSecrets, err := m.CreateKubernetesSecrets(ctx, kindContainer)
+	kindContainerWithSecrets, err := m.CreateKubernetesSecrets(ctx, kindContainer)
 
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
-    return kindContainerWithSecrets
+	return kindContainerWithSecrets
 }
 
 func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
-    ctx context.Context,
+	ctx context.Context,
 	kubeconfig *dagger.Directory,
-	kindSvc	*dagger.Service,
+	kindSvc *dagger.Service,
 ) *dagger.Container {
 
-    kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
 
-    m.PopulateGithubAppCredsFromSecrets(ctx, kindContainer)
-    
-    tokenSecret, err := m.GenerateGithubToken(ctx)
-    if err != nil {
-    	panic(err)
-    }
-    
-    m.Bootstrap.BotName = m.Creds.GithubApp.BotName
-    m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
-    if err != nil {
-    	panic(err)
-    }
-    
-    err = m.CheckIfOrgAllGroupExists(ctx, tokenSecret)
-    if err != nil {
-    	panic(err)
-    }
+	m.PopulateGithubAppCredsFromSecrets(ctx, kindContainer)
 
-    return kindContainer
+	tokenSecret, err := m.GenerateGithubToken(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
+	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
+	if err != nil {
+		panic(err)
+	}
+
+	err = m.CheckIfOrgAllGroupExists(ctx, tokenSecret)
+	if err != nil {
+		panic(err)
+	}
+
+	return kindContainer
 }
 
 // calls CmdInitGithubAppsMachinery
 func (m *FirestartrBootstrap) CmdImportResources(
-    ctx context.Context,
+	ctx context.Context,
 	kubeconfig *dagger.Directory,
-	kindSvc	*dagger.Service,
-    cacheVolume *dagger.CacheVolume,
+	kindSvc *dagger.Service,
+	cacheVolume *dagger.CacheVolume,
 
 ) *dagger.Container {
 
-    kindContainer := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+	kindContainer := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
 
 	kindContainer = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
 
-    tokenSecret, err := m.GenerateGithubToken(ctx)
-    if err != nil {
-    	panic(err)
-    }
+	tokenSecret, err := m.GenerateGithubToken(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	alreadyCreatedReposList := []string{}
 	if m.PreviousCrsDir == nil {
 		// if any of the CRs already exist, we skip their creation
-        alreadyCreatedReposList, err = m.CheckAlreadyCreatedRepositories(
+		alreadyCreatedReposList, err = m.CheckAlreadyCreatedRepositories(
 			ctx,
 			tokenSecret,
 		)
@@ -154,14 +152,12 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}
 	}
 
-    fmt.Println(cacheVolume)
-
 	kindContainer = m.RunImporter(ctx, kindContainer, alreadyCreatedReposList)
 	kindContainer = m.RunOperator(ctx, kindContainer)
 	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
 
-    return kindContainer.
-        WithMountedCache("/cache", cacheVolume).
+	return kindContainer.
+		WithMountedCache("/cache", cacheVolume).
 		WithExec([]string{
 			"cp", "-a", "/import", "/cache",
 		}).
@@ -171,38 +167,38 @@ func (m *FirestartrBootstrap) CmdImportResources(
 }
 
 func (m *FirestartrBootstrap) CmdPushResources(
-    ctx context.Context,
+	ctx context.Context,
 	kubeconfig *dagger.Directory,
-	kindSvc	*dagger.Service,
-    cacheVolume *dagger.CacheVolume,
+	kindSvc *dagger.Service,
+	cacheVolume *dagger.CacheVolume,
 
 ) *dagger.Container {
 
-    kindContainer := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+	kindContainer := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
 
-    kindContainer = kindContainer.WithMountedCache(
-        "/mnt/", 
-        cacheVolume,
-    ).
-    WithExec([]string{
-        "cp", "-a", "/mnt/resources", "/",
-    })
+	kindContainer = kindContainer.WithMountedCache(
+		"/mnt/",
+		cacheVolume,
+	).
+		WithExec([]string{
+			"cp", "-a", "/mnt/resources", "/",
+		})
 
-    m.PushCrsFiles(
-        ctx,
-        kindContainer,
-    )
+	m.PushCrsFiles(
+		ctx,
+		kindContainer,
+	)
 
-    return kindContainer
+	return kindContainer
 }
 
 func (m *FirestartrBootstrap) CmdRollback(
-    ctx context.Context,
+	ctx context.Context,
 	kubeconfig *dagger.Directory,
-	kindSvc	*dagger.Service,
-){
+	kindSvc *dagger.Service,
+) {
 
-    kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
 
 	err := m.ProcessArtifactsByKind(
 
@@ -217,3 +213,34 @@ func (m *FirestartrBootstrap) CmdRollback(
 
 }
 
+func (m *FirestartrBootstrap) CmdCreatePr(
+	ctx context.Context,
+	kubeconfig *dagger.Directory,
+	kindSvc *dagger.Service,
+	repo string,
+	owner string,
+	dirToPush *dagger.Directory,
+	branch string,
+	prName string,
+	destinyPath string,
+) error {
+	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+
+	m.PopulateGithubAppCredsFromSecrets(ctx, kindContainer)
+
+	tokenSecret, err := m.GenerateGithubToken(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	return m.CreatePR(
+		ctx,
+		repo,
+		owner,
+		dirToPush,
+		branch,
+		prName,
+		destinyPath,
+		tokenSecret,
+	)
+}

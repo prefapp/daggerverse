@@ -4,8 +4,9 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
+	"strings"
 	"time"
-    "strings"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,7 +36,7 @@ func (m *FirestartrBootstrap) RunOperator(
 		[]string{
 			"FirestartrGithubGroup.*",
 			"FirestartrGithubRepository.*",
-            "FirestartrGithubRepositorySecretsSection.*",
+			"FirestartrGithubRepositorySecretsSection.*",
 			"FirestartrGithubRepositoryFeature.*",
 			"FirestartrGithubOrgWebhook.*",
 		},
@@ -50,7 +51,7 @@ func (m *FirestartrBootstrap) InstallHelmAndExternalSecrets(
 	kindContainer *dagger.Container,
 ) *dagger.Container {
 
-    kindContainerWithSecrets, err := kindContainer.
+	kindContainerWithSecrets, err := kindContainer.
 		WithExec([]string{
 			"helm", "repo", "add",
 			"external-secrets", "https://charts.external-secrets.io",
@@ -88,15 +89,14 @@ func (m *FirestartrBootstrap) InstallInitialCRsAndBuildHelmValues(
 		panic(err)
 	}
 
-
 	return kindContainer.
-	   WithDirectory("/resources/initial-crs", initialCrsDir).
-       WithMountedDirectory("/charts",
-                  dag.CurrentModule().
-                          Source().
-                          Directory("helm"),
-          ).
-        WithExec([]string{
+		WithDirectory("/resources/initial-crs", initialCrsDir).
+		WithMountedDirectory("/charts",
+			dag.CurrentModule().
+				Source().
+				Directory("helm"),
+		).
+		WithExec([]string{
 			"kubectl",
 			"apply",
 			"-f", "/resources/initial-crs",
@@ -130,20 +130,20 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 		}
 	}
 
-    // let's patch the all group with the bootstrapped annotation
-    err := patchCR(
-        ctx,
-        kindContainer,
-        "githubgroup",
-        fmt.Sprintf("%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669", m.GhOrg),
-        "default",
-        "firestartr.dev/bootstrapped",
-        "true",
-    )
+	// let's patch the all group with the bootstrapped annotation
+	err := patchCR(
+		ctx,
+		kindContainer,
+		"githubgroup",
+		fmt.Sprintf("%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669", m.GhOrg),
+		"default",
+		"firestartr.dev/bootstrapped",
+		"true",
+	)
 
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
 	return kindContainer
 }
@@ -215,10 +215,10 @@ func patchCR(
 	patchJSON := fmt.Sprintf(`{"metadata":{"annotations":{"%s":"%s"}}}`, annotationKey, annotationValue)
 
 	patchCommand := []string{
-		"kubectl", 
-		"patch", 
-		resourceRef, 
-		"-n", 
+		"kubectl",
+		"patch",
+		resourceRef,
+		"-n",
 		namespace,
 		"--type=merge", // Use strategic merge patch to safely update only the annotation field
 		"-p",           // The patch data flag
@@ -226,14 +226,14 @@ func patchCR(
 	}
 
 	_, err := kindContainer.
-        WithExec(patchCommand).
-        Stdout(ctx)
-        
-    if err != nil {
-        // Capture stderr for better debugging
-        errorOutput, _ := kindContainer.Stderr(ctx)
-        return fmt.Errorf("kubectl patch failed for %s. Error: %s", resourceRef, strings.TrimSpace(errorOutput))
-    }
+		WithExec(patchCommand).
+		Stdout(ctx)
+
+	if err != nil {
+		// Capture stderr for better debugging
+		errorOutput, _ := kindContainer.Stderr(ctx)
+		return fmt.Errorf("kubectl patch failed for %s. Error: %s", resourceRef, strings.TrimSpace(errorOutput))
+	}
 
 	return nil
 }
@@ -256,14 +256,14 @@ func GetKind(
 func getSingularByKind(kind string) string {
 
 	mapSingular := map[string]string{
-		"ExternalSecret":                               "",
-		"FirestartrGithubRepository":                   "githubrepository",
-		"FirestartrGithubGroup":                        "githubgroup",
-		"FirestartrTerraformWorkspace":                 "terraformworkspace",
-		"FirestartrGithubMembership":                   "githubmembership",
-		"FirestartrGithubRepositoryFeature":            "githubrepositoryfeature",
-		"FirestartrGithubOrgWebhook":                   "githuborgwebhook",
-        "FirestartrGithubRepositorySecretsSection":     "githubrepositorysecretssections",
+		"ExternalSecret":                           "",
+		"FirestartrGithubRepository":               "githubrepository",
+		"FirestartrGithubGroup":                    "githubgroup",
+		"FirestartrTerraformWorkspace":             "terraformworkspace",
+		"FirestartrGithubMembership":               "githubmembership",
+		"FirestartrGithubRepositoryFeature":        "githubrepositoryfeature",
+		"FirestartrGithubOrgWebhook":               "githuborgwebhook",
+		"FirestartrGithubRepositorySecretsSection": "githubrepositorysecretssections",
 	}
 
 	if singular, ok := mapSingular[kind]; ok {

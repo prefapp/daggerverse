@@ -9,27 +9,46 @@ import (
 	"time"
 )
 
-func (m *FirestartrBootstrap) PushDirToRepo(
+func (m *FirestartrBootstrap) IncludeChanges(
 	ctx context.Context,
 	dir *dagger.Directory,
-	repoName string,
+	owner string,
+	repo string,
+	destinyPath string,
 	ghToken *dagger.Secret,
-) error {
-	ghCtr, err := m.CloneRepo(ctx, repoName, ghToken)
+) (*dagger.Container, error) {
+	ghCtr, err := m.CloneRepo(ctx, owner, repo, ghToken)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	entries, err := dir.Glob(ctx, "**")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, entry := range entries {
 		if strings.HasSuffix(entry, "/") {
 			continue
 		}
-		ghCtr = ghCtr.WithFile(path.Join("/repo", entry), dir.File(entry))
+		ghCtr = ghCtr.WithFile(
+			path.Join("/repo", destinyPath, entry),
+			dir.File(entry),
+		)
+	}
+
+	return ghCtr, nil
+}
+
+func (m *FirestartrBootstrap) PushDirToRepo(
+	ctx context.Context,
+	dir *dagger.Directory,
+	repoName string,
+	ghToken *dagger.Secret,
+) error {
+	ghCtr, err := m.IncludeChanges(ctx, dir, m.GhOrg, repoName, "", ghToken)
+	if err != nil {
+		return err
 	}
 
 	_, err = ghCtr.
@@ -45,8 +64,44 @@ func (m *FirestartrBootstrap) PushDirToRepo(
 	return nil
 }
 
+func (m *FirestartrBootstrap) CreatePR(
+	ctx context.Context,
+	repo string,
+	owner string,
+	dirToPush *dagger.Directory,
+	branch string,
+	prName string,
+	destinyPath string,
+	ghToken *dagger.Secret,
+) error {
+	ghCtr, err := m.IncludeChanges(ctx, dirToPush, owner, repo, destinyPath, ghToken)
+	if err != nil {
+		return err
+	}
+
+	ghCtr, err = ghCtr.
+		WithWorkdir("/repo").
+		WithExec([]string{"git", "checkout", "-b", branch}).
+		WithExec([]string{"git", "add", "."}).
+		WithExec([]string{"git", "commit", "-m", "automated commit from firestartr-bootstrap"}).
+		WithExec([]string{"git", "push", "origin", branch}).
+		WithExec([]string{
+			"gh", "pr", "create",
+			"--title", prName,
+			"--body", "Automated PR created by firestartr-bootstrap",
+			"--head", branch,
+		}).
+		Sync(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m *FirestartrBootstrap) CloneRepo(
 	ctx context.Context,
+	owner string,
 	repoName string,
 	ghToken *dagger.Secret,
 ) (*dagger.Container, error) {
@@ -56,7 +111,7 @@ func (m *FirestartrBootstrap) CloneRepo(
 			"gh",
 			"repo",
 			"clone",
-			fmt.Sprintf("%s/%s", m.GhOrg, repoName),
+			fmt.Sprintf("%s/%s", owner, repoName),
 			"/repo",
 		}).
 		Sync(ctx)
@@ -74,7 +129,7 @@ func (m *FirestartrBootstrap) CreateLabelsInRepo(
 	labelList []string,
 	ghToken *dagger.Secret,
 ) error {
-	ghCtr, err := m.CloneRepo(ctx, repoName, ghToken)
+	ghCtr, err := m.CloneRepo(ctx, m.GhOrg, repoName, ghToken)
 	if err != nil {
 		return err
 	}
