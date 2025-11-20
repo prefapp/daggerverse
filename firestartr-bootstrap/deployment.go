@@ -7,9 +7,31 @@ import (
 	"dagger/firestartr-bootstrap/internal/dagger"
 )
 
+func (m *FirestartrBootstrap) CreateDeployment(
+	ctx context.Context,
+) (*dagger.Directory, error){
+
+    deploymentRenderedDir, err = m.RenderDeployment(ctx)
+
+    if err != nil {
+
+        return nil, fmt.Errorf("Rendering firestartr-app deployment data: %s", err)
+    }
+
+    
+
+}
+
 func (m *FirestartrBootstrap) RenderDeployment(
 	ctx context.Context,
 ) (*dagger.Directory, error) {
+
+    accountID, err := m.ValidateSTSCredentials(ctx)
+
+    if err != nil {
+        return nil, fmt.Errorf("Obtaining the accountID of aws: %s", err)
+    }
+
 
 	// let's populate the struct
 	deploymentData := DeploymentConfig{
@@ -25,9 +47,14 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 		ExternalSecrets: DeploymentExternalSecrets{
 
-			RoleARN:	"role-ref",
-			
+            RoleARN:	fmt.Sprintf("arn:aws:iam::%s:role/FirestartrExternalSecretsStore-%s", 
 
+                accountID,
+
+                m.Bootstrap.Customer,
+
+            ),
+			
 		},
 
 		Controller: DeploymentController{
@@ -40,16 +67,38 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 			)),
 
-			RoleARN:	"controller-role-ref",
+            RoleARN:	fmt.Sprintf("arn:aws:iam::%s:role/Firestartr-%s", 
 
-			GithubApp: 	DeploymentGithubApp{
+                accountID,
 
-				GithubAppId: 		"ref to id",
-				GithubAppPem: 	"ref to pem",
+                m.Bootstrap.Customer,
 
-			},
+            ),
 
+            GithubApp: 	DeploymentGithubApp{
 
+                GithubAppId: 	fmt.Sprintf(
+
+                    "/firestartr/%s/fs-%s-admin/app-id",
+
+                    m.Bootstrap.Customer,
+                    m.GhOrg,
+                ),
+                GithubAppInstallationId: fmt.Sprintf(
+
+                    "/firestartr/%s/fs-%s-admin/app-installation-id",
+
+                    m.Bootstrap.Customer,
+                    m.GhOrg,
+                ),
+                GithubAppPem: fmt.Sprintf(
+
+                    "/firestartr/%s/fs-%s-admin/pem",
+
+                    m.Bootstrap.Customer,
+                    m.GhOrg,
+                ),
+            },
 		},
 
 		Aws: 	DeploymentAws{
@@ -59,29 +108,67 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 		},
 
-		Provider:  DeploymentGithubApp{
+        Provider:  DeploymentGithubApp{
 
-			GithubAppId: 		"ref to id",
-			GithubAppPem: 	"ref to pem",
+            GithubAppId: 	fmt.Sprintf(
 
-		},
+                "/firestartr/%s/fs-%s-admin/app-id",
+
+                m.Bootstrap.Customer,
+                m.GhOrg,
+            ),
+            GithubAppInstallationId: fmt.Sprintf(
+
+                "/firestartr/%s/fs-%s-admin/app-installation-id",
+
+                m.Bootstrap.Customer,
+                m.GhOrg,
+            ),
+            GithubAppPem: fmt.Sprintf(
+
+                "/firestartr/%s/fs-%s-admin/pem",
+
+                m.Bootstrap.Customer,
+                m.GhOrg,
+            ),
+
+        },
 	}
 
 	deploymentTemplateFile := dag.CurrentModule().
 		Source().
 		File("templates/deployment/values.tmpl")
 
+	deploymentPreTemplateFile := dag.CurrentModule().
+		Source().
+		File("templates/deployment/pre.tmpl")
+
+    // deployment values
 	templateContent, err := deploymentTemplateFile.Contents(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	rendered, err := renderTmpl(templateContent, deploymentData)
+	renderedValues, err := renderTmpl(templateContent, deploymentData)
 	if err != nil {
 		return nil, err
 	}
 
-	return dag.Directory().WithNewFile("values.yaml", rendered), nil
+    // deployment master yaml file
+	templatePreContent, err := deploymentPreTemplateFile.Contents(ctx)
+	if err != nil {
+		return nil, err
+	}
 
+	renderedPre, err := renderTmpl(templatePreContent, deploymentData)
+	if err != nil {
+		return nil, err
+	}
+
+    deploymentDir := dag.Directory().
+        WithNewFile("pre.yaml", renderedPre).
+        WithNewFile("pre/values.yaml", renderedValues)
+
+    return deploymentDir, nil
 }
 

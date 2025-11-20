@@ -17,7 +17,7 @@ import (
 
 func (m *FirestartrBootstrap) ValidateSTSCredentials(
 	ctx context.Context, 
-) error {
+) (string, error) {
 	log.Println("Attempting to validate credentials via STS:GetCallerIdentity...")
 
     cfg := loginAWS(ctx, m.Creds)
@@ -26,15 +26,17 @@ func (m *FirestartrBootstrap) ValidateSTSCredentials(
 
 	output, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
 	if err != nil {
-		return fmt.Errorf("authentication failed for STS:GetCallerIdentity: %w", err)
+		return "", fmt.Errorf("authentication failed for STS:GetCallerIdentity: %w", err)
 	}
+
+    accountID := aws.ToString(output.Account)
 
     // 5. Success!
 	log.Printf("✅ Credentials validated successfully.")
 	log.Printf("   User ARN: %s", aws.ToString(output.Arn))
 	log.Printf("   Account ID: %s", aws.ToString(output.Account))
 	
-	return nil
+	return accountID, nil
 }
 
 func (m *FirestartrBootstrap) ValidateBucket(

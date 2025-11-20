@@ -192,6 +192,22 @@ func (m *FirestartrBootstrap) CmdPushResources(
 	return kindContainer
 }
 
+func (m *FirestartrBootstrap) CmdPushDeployment(
+    ctx context.Context,
+
+) *dagger.Container {
+
+    deploymentDir, err := m.RenderDeployment(ctx)
+
+    if err != nil {
+        panic(err)
+    }
+
+    return dag.Container().
+        From("busybox").
+        WithMountedDirectory("/deployment", deploymentDir)
+}
+
 func (m *FirestartrBootstrap) CmdRollback(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
