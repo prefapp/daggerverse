@@ -11,6 +11,13 @@ func (m *FirestartrBootstrap) RenderDeployment(
 	ctx context.Context,
 ) (*dagger.Directory, error) {
 
+    accountID, err := m.ValidateSTSCredentials(ctx)
+
+    if err != nil {
+        return nil, fmt.Errorf("Obtaining the accountID of aws: %s", err)
+    }
+
+
 	// let's populate the struct
 	deploymentData := DeploymentConfig{
 
@@ -25,9 +32,14 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 		ExternalSecrets: DeploymentExternalSecrets{
 
-			RoleARN:	"role-ref",
-			
+            RoleARN:	fmt.Sprintf("arn:aws:iam::%s:role/Firestartr-%s", 
 
+                accountID,
+
+                m.Bootstrap.Customer,
+
+            ),
+			
 		},
 
 		Controller: DeploymentController{
@@ -42,12 +54,12 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 			RoleARN:	"controller-role-ref",
 
-			GithubApp: 	DeploymentGithubApp{
+            GithubApp: 	DeploymentGithubApp{
 
-				GithubAppId: 		"ref to id",
-				GithubAppPem: 	"ref to pem",
+                GithubAppId: 	"ref to id",
+                GithubAppPem: 	"ref to pem",
 
-			},
+            },
 
 
 		},

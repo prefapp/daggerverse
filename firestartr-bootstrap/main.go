@@ -178,7 +178,7 @@ func (m *FirestartrBootstrap) ValidateBootstrap(
 		return err
     }
 
-    err = m.ValidateSTSCredentials(ctx)
+    _, err = m.ValidateSTSCredentials(ctx)
     if err != nil {
 		return err
     }
