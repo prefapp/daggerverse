@@ -243,34 +243,27 @@ func (m *FirestartrBootstrap) CmdRollback(
 
 }
 
-func (m *FirestartrBootstrap) CmdCreatePr(
+func (m *FirestartrBootstrap) CmdRunBootstrap(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
-	repo string,
-	owner string,
-	dirToPush *dagger.Directory,
-	branch string,
-	prName string,
-	destinyPath string,
-) error {
-	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+) {
 
-	m.PopulateGithubAppCredsFromSecrets(ctx, kindContainer)
+    persistentVolume := m.CmdCreatePersistentVolume(ctx, "firestartr-init")
 
-	tokenSecret, err := m.GenerateGithubToken(ctx)
-	if err != nil {
-		panic(err)
-	}
+    m.CmdValidateBootstrap(ctx)
 
-	return m.CreatePR(
-		ctx,
-		repo,
-		owner,
-		dirToPush,
-		branch,
-		prName,
-		destinyPath,
-		tokenSecret,
-	)
+    m.CmdInitSecretsMachinery(ctx, kubeconfig, kindSvc)
+
+    m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+
+    m.CmdImportResources(ctx, kubeconfig, kindSvc, persistentVolume)
+
+    m.CmdPushResources(ctx, kubeconfig, kindSvc, persistentVolume)
+
+    //m.CmdPushDeployment(ctx, kubeconfig, kindSvc)
+
+    //m.CmdPushArgo(ctx, kubeconfig, kindSvc)
+
 }
+
