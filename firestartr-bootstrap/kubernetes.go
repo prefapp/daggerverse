@@ -17,7 +17,6 @@ var CREDS_SECRET_LIST = map[string]string{
 	"GhAppId":        "ref:secretsclaim:bootstrap-secrets:fs-admin-appid",
 	"InstallationId": "ref:secretsclaim:bootstrap-secrets:fs-admin-installationid",
 	"Pem":            "ref:secretsclaim:bootstrap-secrets:fs-admin-pem",
-	"BotPat":         "ref:secretsclaim:bootstrap-secrets:prefapp-bot-pat",
 }
 
 func (m *FirestartrBootstrap) CreateKubernetesSecrets(
