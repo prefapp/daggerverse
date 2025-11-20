@@ -194,7 +194,6 @@ func (m *FirestartrBootstrap) CmdPushResources(
 
 func (m *FirestartrBootstrap) CmdPushDeployment(
     ctx context.Context,
-
 ) *dagger.Container {
 
     deploymentDir, err := m.CreateDeployment(ctx)

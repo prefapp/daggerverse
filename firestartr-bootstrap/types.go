@@ -94,6 +94,7 @@ type GithubApp struct {
 	Owner              string `yaml:"owner"`
 	BotName            string `yaml:"botName"`
     PrefappBotPat      string `yaml:"prefappBotPat"`
+    OperatorPat        string `yaml:"operatorPat"`
 	Pem                string
 	RawPem             string
 	GhAppId            string

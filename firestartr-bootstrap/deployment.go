@@ -18,21 +18,27 @@ func (m *FirestartrBootstrap) CreateDeployment(
         return nil, fmt.Errorf("Rendering firestartr-app deployment data: %s", err)
     }
 
-	tokenSecret, err := m.GenerateGithubToken(ctx)
-	if err != nil {
-		panic(err)
-	}
 
-    m.CreatePR(
+	tokenSecret := dag.SetSecret(
+		"token",
+		m.Creds.GithubApp.OperatorPat,
+	)
+
+    err = m.CreatePR(
         ctx,
         "app-firestartr",
-        fmt.Sprintf("firestartr-%s",),
+        fmt.Sprintf("firestartr-%s", m.Env),
         deploymentRenderedDir,
-        fmt.Sprintf("automated-create-deplyoment-%s", m.Bootstrap.Customer),
+        fmt.Sprintf("automated-create-deployment-%s", m.Bootstrap.Customer),
         fmt.Sprintf("feat: add deployment for %s [automated]", m.Bootstrap.Customer),
         fmt.Sprintf("kubernetes/firestartr-%s/%s", m.Env, m.Bootstrap.Customer),
         tokenSecret,
     )
+
+
+    if err != nil {
+        return nil, fmt.Errorf("Error generating PR for firestartr-app deployment: %s", err)
+    }
 
     return deploymentRenderedDir, nil
 
