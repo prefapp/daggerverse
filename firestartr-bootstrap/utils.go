@@ -94,3 +94,36 @@ func saveYamlDataToContainerFile(
 
 	return kindContainer.WithNewFile(path, string(updatedFileContents))
 }
+
+func executeCurlCommand(
+	ctx context.Context,
+	base *dagger.Container,
+	patSecret *dagger.Secret,
+	command string,
+) (*dagger.Container, error) {
+	// The pattern is:
+	// 1. Set the secret as an environment variable (still necessary for access).
+	// 2. Use /bin/sh -c and 'printf' to create a header file inside the container.
+	// 3. Execute the target command using the header file with 'curl -H @<file>'.
+
+	// The shell script must be a single string for /bin/sh -c
+	shellScript := fmt.Sprintf(`
+		# Create a temporary file with the Authorization header.
+		# This uses printf and the environment variable, which is more reliable than direct expansion
+		# in the main WithExec string argument.
+		printf "Authorization: Bearer $GITHUB_PAT" > auth_header.txt;
+
+		# Execute the main command, using the header file via curl's @ syntax.
+		# The 'command' string includes the API URL and jq filter.
+		curl -s -H @auth_header.txt %s;
+
+		# Clean up the temporary file.
+		rm auth_header.txt;
+	`, command)
+
+	// Execute the full script using /bin/sh -c and mount the secret.
+	execContainer := base.WithSecretVariable("GITHUB_PAT", patSecret).
+		WithExec([]string{"/bin/sh", "-c", shellScript})
+
+	return execContainer, nil
+}

@@ -197,7 +197,7 @@ func (m *FirestartrBootstrap) ValidateCliExistence(
 func (m *FirestartrBootstrap) ValidateOperatorPat(
 	ctx context.Context,
 ) error {
-	owner := fmt.Sprintf("firestartr-%s", m.Env)
+	owner := fmt.Sprintf("firestartr-%s", m.Bootstrap.Env)
 	repo := "app-firestartr"
 	tokenSecret := dag.SetSecret(
 		"token",
