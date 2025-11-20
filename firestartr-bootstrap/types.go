@@ -23,6 +23,7 @@ type Feature struct {
 }
 
 type Bootstrap struct {
+    Env                             string      `yaml:env`
 	Firestartr                      Firestartr  `yaml:"firestartr"`
 	PushFiles                       PushFiles   `yaml:"pushFiles"`
 	Org                             string      `yaml:"org"`

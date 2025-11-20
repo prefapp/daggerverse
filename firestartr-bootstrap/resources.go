@@ -3,7 +3,7 @@ package main
 import (
     "context"
 	"dagger/firestartr-bootstrap/internal/dagger"
-    //"fmt"
+    "fmt"
 )
 func (m *FirestartrBootstrap) PushCrsFiles(
     ctx context.Context,
@@ -16,34 +16,34 @@ func (m *FirestartrBootstrap) PushCrsFiles(
     	panic(err)
     }
 
-    //if m.Bootstrap.PushFiles.Claims.Push {
-    //	claimsDir := kindContainer.
-    //		Directory("/resources/claims").
-    //		WithoutFile(fmt.Sprintf("claims/groups/%s-all.yaml", m.GhOrg))
-    //
-    //	err := m.PushDirToRepo(
-    //		ctx,
-    //		claimsDir,
-    //		m.Bootstrap.PushFiles.Claims.Repo,
-    //		tokenSecret,
-    //	)
-    //	if err != nil {
-    //		panic(err)
-    //	}
-    //
-    //	dotConfig := dag.Directory().
-    //		WithDirectory(".config", m.ClaimsDotConfigDir)
-    //
-    //	err = m.PushDirToRepo(
-    //		ctx,
-    //		dotConfig,
-    //		m.Bootstrap.PushFiles.Claims.Repo,
-    //		tokenSecret,
-    //	)
-    //	if err != nil {
-    //		panic(err)
-    //	}
-    //}
+    if m.Bootstrap.PushFiles.Claims.Push {
+    	claimsDir := kindContainer.
+    		Directory("/resources/claims").
+    		WithoutFile(fmt.Sprintf("claims/groups/%s-all.yaml", m.GhOrg))
+    
+    	err := m.PushDirToRepo(
+    		ctx,
+    		claimsDir,
+    		m.Bootstrap.PushFiles.Claims.Repo,
+    		tokenSecret,
+    	)
+    	if err != nil {
+    		panic(err)
+    	}
+    
+    	dotConfig := dag.Directory().
+    		WithDirectory(".config", m.ClaimsDotConfigDir)
+    
+    	err = m.PushDirToRepo(
+    		ctx,
+    		dotConfig,
+    		m.Bootstrap.PushFiles.Claims.Repo,
+    		tokenSecret,
+    	)
+    	if err != nil {
+    		panic(err)
+    	}
+    }
 
     if m.Bootstrap.PushFiles.Crs.Providers.Github.Push {
     	crsDir := kindContainer.Directory("/resources/firestartr-crs/github")
