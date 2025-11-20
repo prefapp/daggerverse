@@ -65,133 +65,207 @@ func validateDocumentSchema(document string, schema string) error {
 }
 
 func (m *FirestartrBootstrap) ValidatePrefappBotPat(
-    ctx context.Context,
+	ctx context.Context,
 ) error {
 
-    patValue := m.Creds.GithubApp.PrefappBotPat
+	patValue := m.Creds.GithubApp.PrefappBotPat
 
-    authURL := fmt.Sprintf("https://%s@github.com/%s/%s.git", patValue, "prefapp", "features")
+	authURL := fmt.Sprintf("https://%s@github.com/%s/%s.git", patValue, "prefapp", "features")
 
-    gitArgs := []string{
-        "git",
-        "clone",
-        "--depth", "1",
-        "--single-branch", // Only clone one branch/tag
-        "--branch", "main",
-        authURL,
-        "/tmp/repo", // Clone into this temporary directory
-    }
+	gitArgs := []string{
+		"git",
+		"clone",
+		"--depth", "1",
+		"--single-branch", // Only clone one branch/tag
+		"--branch", "main",
+		authURL,
+		"/tmp/repo", // Clone into this temporary directory
+	}
 
-    gitContainer := dag.Container().
-        From("alpine/git:latest").
-        WithExec(gitArgs)
+	gitContainer := dag.Container().
+		From("alpine/git:latest").
+		WithExec(gitArgs)
 
-    _, err := gitContainer.Stdout(ctx)
-    if err != nil {
-        // If the command fails, it indicates an authentication or access issue.
-        errorOutput, _ := gitContainer.Stderr(ctx)
+	_, err := gitContainer.Stdout(ctx)
+	if err != nil {
+		// If the command fails, it indicates an authentication or access issue.
+		errorOutput, _ := gitContainer.Stderr(ctx)
 
-        // Clean up sensitive data from the output for security
-        safeOutput := strings.ReplaceAll(errorOutput, patValue, "[REDACTED_PAT]")
+		// Clean up sensitive data from the output for security
+		safeOutput := strings.ReplaceAll(errorOutput, patValue, "[REDACTED_PAT]")
 
-        return fmt.Errorf("access check failed. Cannot clone repository: %s", safeOutput)
-    }
+		return fmt.Errorf("access check failed. Cannot clone repository: %s", safeOutput)
+	}
 
-    clonedDir := gitContainer.Directory("/tmp/repo")
+	clonedDir := gitContainer.Directory("/tmp/repo")
 
-    // This final check ensures not only the clone command passed, but the are accessible.
-    _, err = clonedDir.Entries(ctx)
-    if err != nil {
-        return fmt.Errorf("clone succeeded but failed to read directory contents: %w", err)
-    }
+	// This final check ensures not only the clone command passed, but the are accessible.
+	_, err = clonedDir.Entries(ctx)
+	if err != nil {
+		return fmt.Errorf("clone succeeded but failed to read directory contents: %w", err)
+	}
 
-    return nil
+	return nil
 }
 
 func (m *FirestartrBootstrap) ValidateExistenceOfNeededImages(
-    ctx context.Context,
+	ctx context.Context,
 ) error {
-		
-    slimImage := fmt.Sprintf(
-			"ghcr.io/prefapp/gitops-k8s:%s_slim",
-			m.Bootstrap.Firestartr.OperatorVersion,
-    )
 
-    err := validateExistenceOfImage(ctx, slimImage)
-    if err != nil {
-        return err
-    }
+	slimImage := fmt.Sprintf(
+		"ghcr.io/prefapp/gitops-k8s:%s_slim",
+		m.Bootstrap.Firestartr.OperatorVersion,
+	)
+
+	err := validateExistenceOfImage(ctx, slimImage)
+	if err != nil {
+		return err
+	}
 
 	fullImage := fmt.Sprintf("ghcr.io/prefapp/gitops-k8s:%s", fmt.Sprintf(
 
 		"%s_full-%s",
 		m.Bootstrap.Firestartr.OperatorVersion,
 		m.Creds.CloudProvider.Name,
-
 	))
 
-    err = validateExistenceOfImage(ctx, fullImage)
-    if err != nil {
-        return err
-    }
+	err = validateExistenceOfImage(ctx, fullImage)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 
 }
 
 func validateExistenceOfImage(
-    ctx context.Context,
-    imageRef string,
+	ctx context.Context,
+	imageRef string,
 ) error {
 
-    // Use an image that has the 'crane' tool (from Google's container-registry tools)
-    craneContainer := dag.Container().
-        From("gcr.io/go-containerregistry/crane:latest")
+	// Use an image that has the 'crane' tool (from Google's container-registry tools)
+	craneContainer := dag.Container().
+		From("gcr.io/go-containerregistry/crane:latest")
 
-    craneArgs := []string{
-        "crane",
-        "manifest",
-        imageRef,
-    }
+	craneArgs := []string{
+		"crane",
+		"manifest",
+		imageRef,
+	}
 
-    _, err := craneContainer.
-        WithExec(craneArgs).
-        Stdout(ctx)
+	_, err := craneContainer.
+		WithExec(craneArgs).
+		Stdout(ctx)
 
-    if err != nil {
-        return fmt.Errorf("Image does not exist: %s", imageRef)
-    }
+	if err != nil {
+		return fmt.Errorf("Image does not exist: %s", imageRef)
+	}
 
-    return nil
+	return nil
 }
 
 func (m *FirestartrBootstrap) ValidateCliExistence(
-    ctx context.Context,
+	ctx context.Context,
 ) error {
 
-    moduleName := fmt.Sprintf("@firestartr/cli@%s", m.Bootstrap.Firestartr.CliVersion)
+	moduleName := fmt.Sprintf("@firestartr/cli@%s", m.Bootstrap.Firestartr.CliVersion)
 
-    npmContainer := dag.Container().
-        From("node:20-alpine")
+	npmContainer := dag.Container().
+		From("node:20-alpine")
 
-    // 'npm view' queries the metadata. We use '--json' for a faster, less verbose response.
-    npmArgs := []string{
-        "npm",
-        "view",
-        moduleName,
-        "--json",
-    }
+	// 'npm view' queries the metadata. We use '--json' for a faster, less verbose response.
+	npmArgs := []string{
+		"npm",
+		"view",
+		moduleName,
+		"--json",
+	}
 
-    _, err := npmContainer.
-        WithExec(npmArgs).
-        Stdout(ctx)
+	_, err := npmContainer.
+		WithExec(npmArgs).
+		Stdout(ctx)
 
-    if err != nil {
-        return fmt.Errorf("Cli version:  '%s' does not exist.\n", moduleName)
-    }
+	if err != nil {
+		return fmt.Errorf("Cli version:  '%s' does not exist.\n", moduleName)
+	}
 
-    return nil
+	return nil
 
+}
+
+func (m *FirestartrBootstrap) ValidateOperatorPat(
+	ctx context.Context,
+) error {
+	owner := fmt.Sprintf("firestartr-%s", m.Env)
+	repo := "app-firestartr"
+	tokenSecret := dag.SetSecret(
+		"token",
+		m.Creds.GithubApp.OperatorPat,
+	)
+
+	base := dag.Container().From("alpine/curl").
+		WithExec([]string{"apk", "add", "jq"}).
+		WithSecretVariable("GITHUB_PAT", tokenSecret)
+
+	// Execute the full script using /bin/sh -c and mount the secret.
+	// execContainer := base.WithSecretVariable("GITHUB_PAT", patSecret).
+	// 	WithExec([]string{"/bin/sh", "-c", shellScript})
+
+	// Add jq to extract the 'login' field
+	getUserCmd := "https://api.github.com/user | jq -r .login"
+
+	// Execute the command using the secure pattern
+	getLogin, err := executeCurlCommand(ctx, base, tokenSecret, getUserCmd)
+
+	username, err := getLogin.Stdout(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get authenticated username: %w", err)
+	}
+
+	username = strings.TrimSpace(username)
+
+	if username == "null" || username == "" {
+		return fmt.Errorf("authentication failed: the PAT is likely invalid, expired, or does not have sufficient read access to the 'user' endpoint")
+	}
+
+	// --- Step 2: Check the repository permission for that user ---
+
+	// API Endpoint: GET /repos/:owner/:repo/collaborators/:username/permission
+	permissionURL := fmt.Sprintf(
+		"https://api.github.com/repos/%s/%s/collaborators/%s/permission",
+		owner, repo, username,
+	)
+
+	// The command argument for executeCurlCommand is the API call + jq filter.
+	getPermissionCmd := fmt.Sprintf("%s | jq -r .permission", permissionURL)
+
+	// Execute curl and pipe the JSON output to jq to extract the 'permission' level
+	getPermission, err := executeCurlCommand(ctx, base, tokenSecret, getPermissionCmd)
+	if err != nil {
+		return err
+	}
+
+	permission, err := getPermission.Stdout(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to check repository permissions: %w", err)
+	}
+	permission = strings.TrimSpace(permission)
+
+	// Valid write access permissions are 'push', 'maintain', or 'admin'.
+	switch permission {
+	case "push", "maintain", "admin":
+		return nil
+	case "pull", "triage":
+		return fmt.Errorf(
+			"User doesn't have write access for repo %s/%s. Permissions are: %s",
+			owner, repo, permission,
+		)
+	default:
+		return fmt.Errorf(
+			"received an unexpected permission result: '%s'. Ensure the repository exists and the user is a collaborator (or owner)",
+			permission,
+		)
+	}
 }
 
 func (m *FirestartrBootstrap) GithubRepositoryExists(ctx context.Context, repo string, ghToken *dagger.Secret) (bool, error) {
