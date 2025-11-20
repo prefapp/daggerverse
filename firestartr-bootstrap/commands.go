@@ -267,8 +267,8 @@ func (m *FirestartrBootstrap) CmdRunBootstrap(
 
 	m.CmdPushResources(ctx, kubeconfig, kindSvc, persistentVolume)
 
-	// m.CmdPushDeployment(ctx)
+	m.CmdPushDeployment(ctx)
 
-	// m.CmdPushArgo(ctx)
+	m.CmdPushArgo(ctx)
 
 }
