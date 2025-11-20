@@ -155,15 +155,20 @@ func (m *FirestartrBootstrap) CmdImportResources(
 	kindContainer = m.RunImporter(ctx, kindContainer, alreadyCreatedReposList)
 	kindContainer = m.RunOperator(ctx, kindContainer)
 	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
-
-	return kindContainer.
+	kindContainer, err = kindContainer.
 		WithMountedCache("/cache", cacheVolume).
 		WithExec([]string{
 			"cp", "-a", "/import", "/cache",
 		}).
 		WithExec([]string{
 			"cp", "-a", "/resources/", "/cache",
-		})
+		}).
+		Sync(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	return kindContainer
 }
 
 func (m *FirestartrBootstrap) CmdPushResources(
@@ -193,45 +198,44 @@ func (m *FirestartrBootstrap) CmdPushResources(
 }
 
 func (m *FirestartrBootstrap) CmdPushDeployment(
-    ctx context.Context,
+	ctx context.Context,
 ) *dagger.Container {
 
-    deploymentDir, err := m.CreateDeployment(ctx)
+	deploymentDir, err := m.CreateDeployment(ctx)
 
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
-    return dag.Container().
-        From("busybox").
-        WithMountedDirectory("/deployment", deploymentDir)
+	return dag.Container().
+		From("busybox").
+		WithMountedDirectory("/deployment", deploymentDir)
 }
 
 func (m *FirestartrBootstrap) CmdPushArgo(
-    ctx context.Context,
+	ctx context.Context,
 ) *dagger.Container {
 
-    deploymentDir, err := m.CreateArgCDApplications(ctx)
+	deploymentDir, err := m.CreateArgCDApplications(ctx)
 
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
-    return dag.Container().
-        From("busybox").
-        WithMountedDirectory("/deployment", deploymentDir)
+	return dag.Container().
+		From("busybox").
+		WithMountedDirectory("/deployment", deploymentDir)
 }
 
 func (m *FirestartrBootstrap) CmdRollback(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
-) {
+) string {
 
 	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
 
-	err := m.ProcessArtifactsByKind(
-
+	output, err := m.ProcessArtifactsByKind(
 		ctx,
 		kindContainer,
 	)
@@ -241,6 +245,8 @@ func (m *FirestartrBootstrap) CmdRollback(
 		panic(err)
 	}
 
+	return output
+
 }
 
 func (m *FirestartrBootstrap) CmdRunBootstrap(
@@ -249,21 +255,20 @@ func (m *FirestartrBootstrap) CmdRunBootstrap(
 	kindSvc *dagger.Service,
 ) {
 
-    persistentVolume := m.CmdCreatePersistentVolume(ctx, "firestartr-init")
+	persistentVolume := m.CmdCreatePersistentVolume(ctx, "firestartr-init")
 
-    m.CmdValidateBootstrap(ctx)
+	m.CmdValidateBootstrap(ctx)
 
-    m.CmdInitSecretsMachinery(ctx, kubeconfig, kindSvc)
+	m.CmdInitSecretsMachinery(ctx, kubeconfig, kindSvc)
 
-    m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+	m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
 
-    m.CmdImportResources(ctx, kubeconfig, kindSvc, persistentVolume)
+	m.CmdImportResources(ctx, kubeconfig, kindSvc, persistentVolume)
 
-    m.CmdPushResources(ctx, kubeconfig, kindSvc, persistentVolume)
+	m.CmdPushResources(ctx, kubeconfig, kindSvc, persistentVolume)
 
-    //m.CmdPushDeployment(ctx, kubeconfig, kindSvc)
+	// m.CmdPushDeployment(ctx)
 
-    //m.CmdPushArgo(ctx, kubeconfig, kindSvc)
+	// m.CmdPushArgo(ctx)
 
 }
-
