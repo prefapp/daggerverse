@@ -60,7 +60,7 @@ func isOperatorUp(
 func (m *FirestartrBootstrap) ProcessArtifactsByKind(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-) error {
+) (string, error) {
 
 	namespace := "default"
 
@@ -71,7 +71,7 @@ func (m *FirestartrBootstrap) ProcessArtifactsByKind(
 	}
 
 	if running != true {
-		return fmt.Errorf("The operator is not up")
+		return "", fmt.Errorf("The operator is not up")
 	}
 
 	var targetKinds = []string{
@@ -81,6 +81,8 @@ func (m *FirestartrBootstrap) ProcessArtifactsByKind(
 		"githuborgwebhook",
 		"githubgroup",
 	}
+
+	fullSummary := ""
 
 	for _, kind := range targetKinds {
 
@@ -120,9 +122,10 @@ func (m *FirestartrBootstrap) ProcessArtifactsByKind(
 		}
 
 		fmt.Println(summary)
+		fullSummary += fmt.Sprintf("Kind: %s\n%s\n", kind, summary)
 	}
 
-	return nil
+	return fullSummary, nil
 }
 
 func (m *FirestartrBootstrap) DeleteArtifactsList(
