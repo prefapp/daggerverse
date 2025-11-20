@@ -63,7 +63,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 				"OPERATOR_IGNORE_LEASE":            "true",
 				"GITHUB_APP_ID":                    m.Creds.GithubApp.GhAppId,
 				"GITHUB_APP_INSTALLATION_ID":       m.Creds.GithubApp.InstallationId,
-				"PREFAPP_BOT_PAT":                  m.Creds.GithubApp.BotPat,
+				"PREFAPP_BOT_PAT":                  m.Creds.GithubApp.PrefappBotPat,
 				"NODE_TLS_REJECT_UNAUTHORIZED":     "0",
 				"ORG":                              m.GhOrg,
 				"LOG_LEVEL":                        "debug",
