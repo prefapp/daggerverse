@@ -4,27 +4,28 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
-    "log"
-    "strings"
+	"log"
+	"strings"
+
 	"gopkg.in/yaml.v3"
 )
 
 type FirestartrBootstrap struct {
-	Bootstrap          *Bootstrap
-	BootstrapFile      *dagger.File
-	CredentialsSecret  *dagger.Secret
-	GhOrg              string
-	Creds              *CredsFile
-	CredsFileContent   string
-	GeneratedGhToken   *dagger.Secret
-	RenderedCrs        []*Cr
-	ProvisionedCrs     []*Cr
-	FailedCrs          []*Cr
-	PreviousCrsDir     *dagger.Directory
-	ClaimsDotConfigDir *dagger.Directory
-	CrsDotConfigDir    *dagger.Directory
-	IncludeAllGroup    bool
-    ExpectedAWSParameters []string
+	Bootstrap             *Bootstrap
+	BootstrapFile         *dagger.File
+	CredentialsSecret     *dagger.Secret
+	GhOrg                 string
+	Creds                 *CredsFile
+	CredsFileContent      string
+	GeneratedGhToken      *dagger.Secret
+	RenderedCrs           []*Cr
+	ProvisionedCrs        []*Cr
+	FailedCrs             []*Cr
+	PreviousCrsDir        *dagger.Directory
+	ClaimsDotConfigDir    *dagger.Directory
+	CrsDotConfigDir       *dagger.Directory
+	IncludeAllGroup       bool
+	ExpectedAWSParameters []string
 }
 
 // baseTemplates holds the parameter paths with placeholders.
@@ -85,22 +86,21 @@ func New(
 		panic(err)
 	}
 
-    // ----------------------------------------------------
-    // Autocalculate values
-    // We need to calculate the webhook params
-    // ----------------------------------------------------
-    bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.firestartr.dev", bootstrap.Customer)
-    bootstrap.WebhookSecretRef = fmt.Sprintf("/firestartr/%s/github-webhook/secret", bootstrap.Customer)
+	// ----------------------------------------------------
+	// Autocalculate values
+	// We need to calculate the webhook params
+	// ----------------------------------------------------
+	bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.firestartr.dev", bootstrap.Customer)
+	bootstrap.WebhookSecretRef = fmt.Sprintf("/firestartr/%s/github-webhook/secret", bootstrap.Customer)
 
-    // We need to calculate the bucket (if necessary)
-    if creds.CloudProvider.Config.Bucket == nil {
-        calculatedBucket := fmt.Sprintf("tfstate-%s", bootstrap.Customer)
-        creds.CloudProvider.Config.Bucket = &calculatedBucket
-    }
+	// We need to calculate the bucket (if necessary)
+	if creds.CloudProvider.Config.Bucket == nil {
+		calculatedBucket := fmt.Sprintf("tfstate-%s", bootstrap.Customer)
+		creds.CloudProvider.Config.Bucket = &calculatedBucket
+	}
 
-    bootstrap.PrefappBotPatSecretRef = fmt.Sprintf("/firestartr/%s/prefapp-bot-pat", bootstrap.Customer)
-    bootstrap.FirestartrCliVersionSecretRef = fmt.Sprintf("/firestartr/%s/firestartr-cli-version", bootstrap.Customer)
-
+	bootstrap.PrefappBotPatSecretRef = fmt.Sprintf("/firestartr/%s/prefapp-bot-pat", bootstrap.Customer)
+	bootstrap.FirestartrCliVersionSecretRef = fmt.Sprintf("/firestartr/%s/firestartr-cli-version", bootstrap.Customer)
 
 	claimsDotConfigDir, err := getClaimsDotConfigDir(ctx, bootstrap)
 	if err != nil {
@@ -119,44 +119,43 @@ func New(
 	}
 
 	return &FirestartrBootstrap{
-		Bootstrap:          bootstrap,
-		BootstrapFile:      bootstrapFile,
-		CredentialsSecret:  credentialsSecret,
-		GhOrg:              creds.GithubApp.Owner,
-		Creds:              creds,
-		CredsFileContent:   credsFileContent,
-		PreviousCrsDir:     previousCrsDir,
-		ClaimsDotConfigDir: claimsDotConfigDir,
-		CrsDotConfigDir:    crsDotConfigDir,
-        ExpectedAWSParameters: calculateParameters(bootstrap.Customer, bootstrap.Org),
+		Bootstrap:             bootstrap,
+		BootstrapFile:         bootstrapFile,
+		CredentialsSecret:     credentialsSecret,
+		GhOrg:                 creds.GithubApp.Owner,
+		Creds:                 creds,
+		CredsFileContent:      credsFileContent,
+		PreviousCrsDir:        previousCrsDir,
+		ClaimsDotConfigDir:    claimsDotConfigDir,
+		CrsDotConfigDir:       crsDotConfigDir,
+		ExpectedAWSParameters: calculateParameters(bootstrap.Customer, bootstrap.Org),
 	}, nil
 }
 
-func calculateParameters(customer string, githuborg string) []string{
+func calculateParameters(customer string, githuborg string) []string {
 
-    results := make([]string, 0, len(baseTemplates))
+	results := make([]string, 0, len(baseTemplates))
 
+	clientPlaceholder := "<client>"
+	githubOrgPlaceholder := "<github_org>"
 
-    clientPlaceholder := "<client>"
-    githubOrgPlaceholder := "<github_org>"
+	for _, template := range baseTemplates {
 
-    for _, template := range baseTemplates {
+		path := strings.ReplaceAll(template, clientPlaceholder, customer)
 
-        path := strings.ReplaceAll(template, clientPlaceholder, customer)
+		path = strings.ReplaceAll(path, githubOrgPlaceholder, githuborg)
 
-        path = strings.ReplaceAll(path, githubOrgPlaceholder, githuborg)
+		results = append(results, path)
+	}
 
-        results = append(results, path)
-    }
-
-    return results
+	return results
 }
 
 func (m *FirestartrBootstrap) ValidateBootstrap(
 	ctx context.Context,
 ) error {
 
-    log.Println("Validating bootstrap parameters")
+	log.Println("Validating bootstrap parameters")
 
 	err := m.ValidateBootstrapFile(ctx, m.BootstrapFile)
 	if err != nil {
@@ -168,37 +167,42 @@ func (m *FirestartrBootstrap) ValidateBootstrap(
 		return err
 	}
 
-    err = m.ValidateCliExistence(ctx)
-    if err != nil {
+	err = m.ValidateCliExistence(ctx)
+	if err != nil {
 		return err
-    }
+	}
 
-    err = m.ValidateExistenceOfNeededImages(ctx)
-    if err != nil {
+	err = m.ValidateExistenceOfNeededImages(ctx)
+	if err != nil {
 		return err
-    }
+	}
 
-    _, err = m.ValidateSTSCredentials(ctx)
-    if err != nil {
+	_, err = m.ValidateSTSCredentials(ctx)
+	if err != nil {
 		return err
-    }
+	}
 
-    err = m.ValidateBucket(ctx)
-    if err != nil {
+	err = m.ValidateBucket(ctx)
+	if err != nil {
 		return err
-    }
+	}
 
-    err = m.ValidateParameters(ctx, fmt.Sprintf("/firestartr/%s", m.Bootstrap.Customer))
-    if err != nil {
+	err = m.ValidateParameters(ctx, fmt.Sprintf("/firestartr/%s", m.Bootstrap.Customer))
+	if err != nil {
 		return err
-    }
+	}
 
-    err = m.ValidatePrefappBotPat(ctx)
-    if err != nil {
+	err = m.ValidatePrefappBotPat(ctx)
+	if err != nil {
 		return err
-    }
+	}
 
-    return nil
+	err = m.ValidateOperatorPat(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 
 }
 
