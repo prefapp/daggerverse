@@ -75,22 +75,22 @@ providerConfigs:
           "pem_file": "${{"{{"}} secrets.GITHUB_APP_PEM_FILE {{"}}"}}"
         }
       }
-  secrets:
-    GITHUB_APP_PEM_FILE:
-      secretRef:
-        key: github-app-pem-file
-        secretStoreKeyRef: {{ .Provider.GithubAppPem }}
-    GITHUB_APP_ID:
-      secretRef:
-        key: github-app-id
-        secretStoreKeyRef: {{ .Provider.GithubAppId }}
-    GITHUB_APP_INSTALLATION_ID:
-      secretRef:
-        key: github-app-installation-id
-        secretStoreKeyRef: {{ .Provider.GithubAppInstallationId }}
-  type: github
-  source: integrations/github
-  version: "~> 6.0"
+    secrets:
+      GITHUB_APP_PEM_FILE:
+        secretRef:
+          key: github-app-pem-file
+          secretStoreKeyRef: {{ .Provider.GithubAppPem }}
+      GITHUB_APP_ID:
+        secretRef:
+          key: github-app-id
+          secretStoreKeyRef: {{ .Provider.GithubAppId }}
+      GITHUB_APP_INSTALLATION_ID:
+        secretRef:
+          key: github-app-installation-id
+          secretStoreKeyRef: {{ .Provider.GithubAppInstallationId }}
+    type: github
+    source: integrations/github
+    version: "~> 6.0"
 
 tfPlanner:
   enabled: true
