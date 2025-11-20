@@ -6,12 +6,23 @@
       "firestartr": {
         "type": "object",
         "properties": {
-          "version": {
+          "operator": {
+            "type": "string"
+          },
+          "cli":{
             "type": "string"
           }
         },
         "required": [
-          "version"
+          "operator",
+          "cli"
+        ]
+      },
+      "env": {
+        "type": "string",
+        "enum": [
+            "pre",
+            "pro"
         ]
       },
       "org": {
@@ -164,6 +175,7 @@
       }
     },
     "required": [
+      "env",
       "firestartr",
       "org",
       "pushFiles",

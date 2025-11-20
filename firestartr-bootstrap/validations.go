@@ -26,7 +26,8 @@ func (m *FirestartrBootstrap) ValidateBootstrapFile(ctx context.Context, bootstr
 		return err
 	}
 
-	if err := validateDocumentSchema(schema, string(json)); err != nil {
+    err = validateDocumentSchema(string(json), schema)
+    if err != nil {
 		return fmt.Errorf("failed to validate bootstrap file: %w", err)
 	}
 	return nil

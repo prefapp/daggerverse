@@ -27,7 +27,7 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
     err = m.CreatePR(
         ctx,
         "state-argocd",
-        fmt.Sprintf("firestartr-%s", m.Env),
+        fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
         argoCDRenderedDir,
         fmt.Sprintf("automated-create-applications-%s", m.Bootstrap.Org),
         fmt.Sprintf("feat: add applications for %s [automated]", m.Bootstrap.Org),
@@ -53,7 +53,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 
 		Name: fmt.Sprintf(
 			"app-firestartr-firestartr-%s-%s-%s-state-github",
-			m.Env,
+			m.Bootstrap.Env,
 			m.Bootstrap.Customer,
 			m.Bootstrap.Org,
 		),
@@ -67,7 +67,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 
 		Namespace: fmt.Sprintf("%s-firestartr-%s", 
 			m.Bootstrap.Customer,
-			m.Env,
+			m.Bootstrap.Env,
 		),
 	}
 
@@ -83,7 +83,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 	argoCDDataInfra := ArgoCDConfig {
 
 		Name: fmt.Sprintf("app-firestartr-firestartr-%s-%s-%s-state-infra",
-			m.Env,
+			m.Bootstrap.Env,
 			m.Bootstrap.Customer,
 			m.Bootstrap.Org,
 		),
@@ -96,7 +96,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 
 		Namespace: fmt.Sprintf("%s-firestartr-%s", 
 			m.Bootstrap.Customer,
-			m.Env,
+			m.Bootstrap.Env,
 		),
 	}
 

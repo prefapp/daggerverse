@@ -27,11 +27,11 @@ func (m *FirestartrBootstrap) CreateDeployment(
     err = m.CreatePR(
         ctx,
         "app-firestartr",
-        fmt.Sprintf("firestartr-%s", m.Env),
+        fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
         deploymentRenderedDir,
         fmt.Sprintf("automated-create-deployment-%s", m.Bootstrap.Customer),
         fmt.Sprintf("feat: add deployment for %s [automated]", m.Bootstrap.Customer),
-        fmt.Sprintf("kubernetes/firestartr-%s/%s", m.Env, m.Bootstrap.Customer),
+        fmt.Sprintf("kubernetes/firestartr-%s/%s", m.Bootstrap.Env, m.Bootstrap.Customer),
         tokenSecret,
     )
 
