@@ -140,19 +140,15 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		panic(err)
 	}
 
-	alreadyCreatedReposList := []string{}
 	if m.PreviousCrsDir == nil {
 		// if any of the CRs already exist, we skip their creation
-		alreadyCreatedReposList, err = m.CheckAlreadyCreatedRepositories(
-			ctx,
-			tokenSecret,
-		)
+		err = m.CheckAlreadyCreatedRepositories(ctx, tokenSecret)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	kindContainer = m.RunImporter(ctx, kindContainer, alreadyCreatedReposList)
+	kindContainer = m.RunImporter(ctx, kindContainer)
 	kindContainer = m.RunOperator(ctx, kindContainer)
 	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
 	kindContainer, err = kindContainer.
