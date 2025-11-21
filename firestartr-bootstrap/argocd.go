@@ -5,18 +5,19 @@ import (
 	"fmt"
 
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"gopkg.in/yaml.v3"
 )
 
 func (m *FirestartrBootstrap) CreateArgCDApplications(
 	ctx context.Context,
 ) (*dagger.Directory, error){
 
-    argoCDRenderedDir, err := m.RenderArgoCDApplications(ctx)
+    //argoCDRenderedDir, err := m.RenderArgoCDApplications(ctx)
 
-    if err != nil {
+    //if err != nil {
 
-        return nil, fmt.Errorf("Rendering argcd apps: %s", err)
-    }
+    //    return nil, fmt.Errorf("Rendering argcd apps: %s", err)
+    //}
 
 
 	tokenSecret := dag.SetSecret(
@@ -24,23 +25,51 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 		m.Creds.GithubApp.OperatorPat,
 	)
 
-    err = m.CreatePR(
-        ctx,
-        "state-argocd",
-        fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
-        argoCDRenderedDir,
-        fmt.Sprintf("automated-create-applications-%s", m.Bootstrap.Org),
-        fmt.Sprintf("feat: add applications for %s [automated]", m.Bootstrap.Org),
-        fmt.Sprintf("apps/firestartr/%s", m.Bootstrap.Customer),
-        tokenSecret,
-    )
+	argoCDRepo, err := m.CloneRepo(
+		
+		ctx,
+		fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
+		"state-argocd",
+		tokenSecret,
+	)
+
+	if err != nil {
+	
+		return nil, fmt.Errorf("Cloning argocd repo: %s", err)
+	} 
+
+	return argoCDRepo.Directory("/repo"),nil
+
+	//projectDir, err := addProjectDestination(
+
+	//	ctx,
+	//	argoCDRepo.Directory("/repo"),
+	//	"apps/argo-firestartr.Project.yaml",
+	//	fmt.Sprintf("%s-firestartr-%s", m.Bootstrap.Customer, m.Bootstrap.Env),
+	//	"https://kubernetes.default.svc",
+	//)
+
+	//if err != nil {
+	//	return nil, fmt.Errorf("Adding project destination to argcd: %s", err)
+	//}
+
+    ////err = m.CreatePR(
+    ////    ctx,
+    ////    "state-argocd",
+    ////    fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
+    ////    argoCDRenderedDir,
+    ////    fmt.Sprintf("automated-create-applications-%s", m.Bootstrap.Org),
+    ////    fmt.Sprintf("feat: add applications for %s [automated]", m.Bootstrap.Org),
+    ////    fmt.Sprintf("apps/firestartr/%s", m.Bootstrap.Customer),
+    ////    tokenSecret,
+    ////)
 
 
-    if err != nil {
-        return nil, fmt.Errorf("Error generating PR for firestartr-app deployment: %s", err)
-    }
+    ////if err != nil {
+    ////    return nil, fmt.Errorf("Error generating PR for firestartr-app deployment: %s", err)
+    ////}
 
-    return argoCDRenderedDir, nil
+    //return argoCDRenderedDir.WithFile("a.yaml", projectDir.File("apps/argocd-firestartr.Project.yaml")), nil
 
 }
 
@@ -144,7 +173,6 @@ func renderArgoCDApplication(
 		Source().
 		File("templates/argocd/application.tmpl")
 
-    // deployment values
 	templateContent, err := argoCDTemplate.Contents(ctx)
 	if err != nil {
 		return "", err
@@ -158,3 +186,53 @@ func renderArgoCDApplication(
     return renderedApplication, nil
 }
 
+func addProjectDestination(
+	ctx context.Context,
+	sourceDirectory *dagger.Directory,
+    fileName string,
+    newNamespace string,
+    targetServer string,
+) (*dagger.Directory, error) {
+
+    yamlContent, err := sourceDirectory.File(fileName).Contents(ctx)
+    if err != nil {
+        return nil, fmt.Errorf("failed to read file %s: %w", fileName, err)
+    }
+
+    var project AppProject
+    
+    if err := yaml.Unmarshal([]byte(yamlContent), &project); err != nil {
+        return nil, fmt.Errorf("failed to unmarshal YAML content: %w", err)
+    }
+
+    alreadyExists := false
+    
+    for _, dest := range project.Spec.Destinations {
+        if dest.Namespace == newNamespace {
+            alreadyExists = true
+            break
+        }
+    }
+    
+    if !alreadyExists {
+        
+        newDestination := Destination{
+            Namespace: newNamespace,
+            Server: targetServer,
+        }
+        project.Spec.Destinations = append(project.Spec.Destinations, newDestination)
+    } 
+
+    modifiedYAMLBytes, err := yaml.Marshal(&project)
+    if err != nil {
+        return nil, fmt.Errorf("failed to marshal modified object back to YAML: %w", err)
+    }
+
+    modifiedYAMLString := string(modifiedYAMLBytes)
+
+    // Create a new Directory and write the modified file into it
+    outputDirectory := dag.Directory().
+        WithNewFile(fileName, modifiedYAMLString)
+
+    return outputDirectory, nil
+}
