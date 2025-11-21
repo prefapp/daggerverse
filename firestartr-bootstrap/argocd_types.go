@@ -19,3 +19,12 @@ type AppProject struct {
     Spec AppProjectSpec `yaml:"spec"`
 }
 
+type ClientAccess struct {
+    GithubAppId           string `yaml:"githubAppId"`
+    GithubAppInstallationId string `yaml:"githubAppInstallationId"`
+    GithubAppPrivateKey   PrivateKeyReference `yaml:"githubAppPrivateKey"`
+}
+
+type PrivateKeyReference struct {
+    RemoteRef string `yaml:"remoteRef"` // e.g., /firestartr/rc-prefapp/fs-rc-prefapp-argocd/pem
+}
