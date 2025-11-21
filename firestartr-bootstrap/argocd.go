@@ -12,12 +12,12 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 	ctx context.Context,
 ) (*dagger.Directory, error){
 
-    //argoCDRenderedDir, err := m.RenderArgoCDApplications(ctx)
+    argoCDRenderedDir, err := m.RenderArgoCDApplications(ctx)
 
-    //if err != nil {
+    if err != nil {
 
-    //    return nil, fmt.Errorf("Rendering argcd apps: %s", err)
-    //}
+        return nil, fmt.Errorf("Rendering argcd apps: %s", err)
+    }
 
 
 	tokenSecret := dag.SetSecret(
@@ -38,39 +38,40 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 		return nil, fmt.Errorf("Cloning argocd repo: %s", err)
 	} 
 
-	return argoCDRepo.Directory("/repo"),nil
+	projectDir, err := addProjectDestination(
 
-	//projectDir, err := addProjectDestination(
+		ctx,
+		argoCDRepo.Directory("/repo"),
+        "apps/firestartr/argo-firestartr.Project.yaml",
+		fmt.Sprintf("%s-firestartr-%s", m.Bootstrap.Customer, m.Bootstrap.Env),
+		"https://kubernetes.default.svc",
+	)
 
-	//	ctx,
-	//	argoCDRepo.Directory("/repo"),
-	//	"apps/argo-firestartr.Project.yaml",
-	//	fmt.Sprintf("%s-firestartr-%s", m.Bootstrap.Customer, m.Bootstrap.Env),
-	//	"https://kubernetes.default.svc",
-	//)
+	if err != nil {
+		return nil, fmt.Errorf("Adding project destination to argcd: %s", err)
+	}
 
-	//if err != nil {
-	//	return nil, fmt.Errorf("Adding project destination to argcd: %s", err)
-	//}
+    argoCDRenderedDir = argoCDRenderedDir.WithFile(
+        "firestartr/argo-firestartr.Project.yaml",
+        projectDir.File("apps/firestartr/argo-firestartr.Project.yaml"),
+    )
 
-    ////err = m.CreatePR(
-    ////    ctx,
-    ////    "state-argocd",
-    ////    fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
-    ////    argoCDRenderedDir,
-    ////    fmt.Sprintf("automated-create-applications-%s", m.Bootstrap.Org),
-    ////    fmt.Sprintf("feat: add applications for %s [automated]", m.Bootstrap.Org),
-    ////    fmt.Sprintf("apps/firestartr/%s", m.Bootstrap.Customer),
-    ////    tokenSecret,
-    ////)
+    err = m.CreatePR(
+        ctx,
+        "state-argocd",
+        fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
+        argoCDRenderedDir,
+        fmt.Sprintf("automated-create-applications-%s", m.Bootstrap.Org),
+        fmt.Sprintf("feat: add applications for %s [automated]", m.Bootstrap.Org),
+        "apps",
+        tokenSecret,
+    )
 
+    if err != nil {
+        return nil, fmt.Errorf("Error generating PR for firestartr-app deployment: %s", err)
+    }
 
-    ////if err != nil {
-    ////    return nil, fmt.Errorf("Error generating PR for firestartr-app deployment: %s", err)
-    ////}
-
-    //return argoCDRenderedDir.WithFile("a.yaml", projectDir.File("apps/argocd-firestartr.Project.yaml")), nil
-
+    return argoCDRenderedDir, nil
 }
 
 
@@ -230,7 +231,6 @@ func addProjectDestination(
 
     modifiedYAMLString := string(modifiedYAMLBytes)
 
-    // Create a new Directory and write the modified file into it
     outputDirectory := dag.Directory().
         WithNewFile(fileName, modifiedYAMLString)
 
