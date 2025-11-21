@@ -19,11 +19,6 @@ providers:
     branchStrategy:
       name: none
       defaultBranch: {{ $claim.DefaultBranch }}
-    actions:
-      oidc:
-        useDefault: false
-        includeClaimKeys:
-          - repo
     {{- if $claim.Features}}
     features:
       {{- range $index, $feature := $claim.Features }}
