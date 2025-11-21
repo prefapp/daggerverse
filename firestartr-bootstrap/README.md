@@ -28,17 +28,26 @@ Using `docker ps`, note the port that kind is using to expose the Kubernetes API
 
 The following AWS Parameter Store parameters are required:
 
-- `/firestartr/<customer-name>/fs-<customer-name>-admin/pem`
-- `/firestartr/<customer-name>/fs-<customer-name>-admin/app-id`
-- `/firestartr/<customer-name>/fs-<customer-name>-admin/installation-id`
-- `/firestartr/<customer-name>/fs-<customer-name>-checks/pem`
-- `/firestartr/<customer-name>/fs-<customer-name>-checks/app-id`
-- `/firestartr/<customer-name>/fs-<customer-name>-state/pem`
-- `/firestartr/<customer-name>/fs-<customer-name>-state/app-id`
-- `/firestartr/<customer-name>/fs-<customer-name>-import/pem`
-- `/firestartr/<customer-name>/fs-<customer-name>-import/app-id`
-- `/firestartr/<customer-name>/prefapp-bot-pat`: Personal Access Token for the Prefapp Bot user
-- `/firestartr/<customer-name>/firestartr-cli-version`: Version of the Firestartr CLI to set as the default in the organization
+- `/firestartr/<customer>/fs-<customer>/pem`
+- `/firestartr/<customer>/fs-<customer>/app-id`
+- `/firestartr/<customer>/fs-<customer>/<org>/installation-id`
+- `/firestartr/<customer>/fs-<customer>-admin/pem`
+- `/firestartr/<customer>/fs-<customer>-admin/app-id`
+- `/firestartr/<customer>/fs-<customer>-admin/<org>/installation-id`
+- `/firestartr/<customer>/fs-<customer>-checks/pem`
+- `/firestartr/<customer>/fs-<customer>-checks/app-id`
+- `/firestartr/<customer>/fs-<customer>-checks/<org>/installation-id`
+- `/firestartr/<customer>/fs-<customer>-state/pem`
+- `/firestartr/<customer>/fs-<customer>-state/app-id`
+- `/firestartr/<customer>/fs-<customer>-state/<org>/installation-id`
+- `/firestartr/<customer>/fs-<customer>-import/pem`
+- `/firestartr/<customer>/fs-<customer>-import/app-id`
+- `/firestartr/<customer>/fs-<customer>-import/<org>/installation-id`
+- `/firestartr/<customer>/fs-<customer>-argocd/pem`
+- `/firestartr/<customer>/fs-<customer>-argocd/app-id`
+- `/firestartr/<customer>/fs-<customer>-argocd/<org>/installation-id`
+- `/firestartr/<customer>/prefapp-bot-pat`: Personal Access Token for the Prefapp Bot user
+- `/firestartr/<customer>/firestartr-cli-version`: Version of the Firestartr CLI to set as the default in the organization
 - `/firestartr/<customer-name>/github-webhook/secret`: Secret for the GitHub Webhook
 
 ### 2. Bootstrap File
