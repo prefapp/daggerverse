@@ -325,7 +325,7 @@ func (m *FirestartrBootstrap) GithubRepositoryExists(
 func (m *FirestartrBootstrap) CheckAlreadyCreatedRepositories(
 	ctx context.Context,
 	ghToken *dagger.Secret,
-) ([]string, error) {
+) error {
 	alreadyCreatedRepos := []string{}
 
 	for idx := range m.Bootstrap.Components {
@@ -337,15 +337,21 @@ func (m *FirestartrBootstrap) CheckAlreadyCreatedRepositories(
 			}
 			exists, err := m.GithubRepositoryExists(ctx, repoName, ghToken)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			if exists {
 				component.Skipped = true
-				m.Bootstrap.Components[idx] = component
 				alreadyCreatedRepos = append(alreadyCreatedRepos, repoName)
 			}
 		}
 	}
 
-	return alreadyCreatedRepos, nil
+	if len(alreadyCreatedRepos) > 0 {
+		return fmt.Errorf(
+			"the following repositories already exist and will be skipped: %s",
+			strings.Join(alreadyCreatedRepos, ", "),
+		)
+	}
+
+	return nil
 }

@@ -10,7 +10,6 @@ import (
 func (m *FirestartrBootstrap) RunImporter(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-	alreadyCreatedReposList []string,
 ) *dagger.Container {
 	claimsDir := dag.Directory().
 		WithNewDirectory("/claims")
@@ -51,21 +50,7 @@ func (m *FirestartrBootstrap) RunImporter(
 		"--claimsDefaults", "/claims_defaults",
 		"--filters", groupFilter,
 		"--filters", "gh-members,REGEXP=[A-Za-z0-9\\-]+",
-	}
-	if len(alreadyCreatedReposList) > 0 {
-		for _, repoName := range alreadyCreatedReposList {
-			importCommand = append(
-				importCommand,
-				"--filters",
-				fmt.Sprintf("gh-repo,NAME=%s", repoName),
-			)
-		}
-	} else {
-		importCommand = append(
-			importCommand,
-			"--filters",
-			"gh-repo,SKIP=SKIP",
-		)
+		"--filters", "gh-repo,SKIP=SKIP",
 	}
 
 	kindContainer = kindContainer.
