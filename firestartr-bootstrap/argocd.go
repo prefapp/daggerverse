@@ -11,7 +11,7 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 	ctx context.Context,
 ) (*dagger.Directory, error){
 
-    argoCDRenderedDir, err := m.RenderDeployment(ctx)
+    argoCDRenderedDir, err := m.RenderArgoCDApplications(ctx)
 
     if err != nil {
 
