@@ -167,7 +167,6 @@ Each component represents a repository that will be created in the organization.
 # Credentialsfile.yaml
 ---
 cloudProvider:
-  providerConfigName: <your-backend-provider-config-name>
   name: aws
   config:
     bucket: <your-bucket-name>
@@ -182,16 +181,13 @@ argoCD:
   githubAppId: "<id of the github app for argocd>"
   githubAppInstallationId: "<id of the github app for argocd installed on the org>"
 githubApp:
-  providerConfigName: <your-github-app-provider-config-name>
   owner: <org>
   botName: "fs-<org>[bot]"
   prefappBotPat: "<bot-pat>"  # Prefapp Bot's PAT
   operatorPat: "<operator-pat>"  # Operator's PAT, used to commit to the org firestartr-<env>
 ```
 
-All the parameters must be filled. When copy pasting this file, `<placeholders>` must be replaced:
-
-- `providerConfigName`: name of the provider config that will be created and used during the bootstrap process, for the `cloudProvider` and the `githubApp`. They should have the same name as the ones that will be used in the client's final cluster.
+All the parameters must be filled. When copy pasting this file, `<placeholders>` must be replaced
 
 The rest of the parameters of the `cloudProvider` section are the AWS S3 bucket credentials that will be used as the terraform backend for the `state-infra` repository.
 

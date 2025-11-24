@@ -107,11 +107,17 @@ func New(
 		panic(err)
 	}
 
+    // calculate providers
+    githubProviderConfigName := fmt.Sprintf("github-app-%s", bootstrap.Customer)
+    backendConfigName := fmt.Sprintf("tfstate-%s", bootstrap.Customer)
 	defaultsInterface := CrsDefaultsData{
-		GithubAppProviderConfigName:     creds.GithubApp.ProviderConfigName,
-        CloudProviderProviderConfigName: fmt.Sprintf("tfstate-%s", bootstrap.Customer),
+		GithubAppProviderConfigName:     githubProviderConfigName,
+        CloudProviderProviderConfigName: backendConfigName,
 		DefaultBranch:                   bootstrap.DefaultBranch,
 	}
+
+    creds.CloudProvider.ProviderConfigName = backendConfigName
+    creds.GithubApp.ProviderConfigName = githubProviderConfigName
 
 	crsDotConfigDir, err := getCrsDotConfigDir(ctx, bootstrap, defaultsInterface)
 	if err != nil {

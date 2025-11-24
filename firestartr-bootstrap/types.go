@@ -80,7 +80,7 @@ type ArgoCDCreds struct {
 }
 
 type CloudProvider struct {
-	ProviderConfigName string         `yaml:"providerConfigName"`
+	ProviderConfigName string        
 	Config             ConfigProvider `yaml:"config"`
 	Source             string         `yaml:"source"`
 	Type               string         `yaml:"type"`
@@ -97,7 +97,7 @@ type ConfigProvider struct {
 }
 
 type GithubApp struct {
-	ProviderConfigName string `yaml:"providerConfigName"`
+	ProviderConfigName string 
 	Owner              string `yaml:"owner"`
 	BotName            string `yaml:"botName"`
     PrefappBotPat      string `yaml:"prefappBotPat"`
