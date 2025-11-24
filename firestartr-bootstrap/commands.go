@@ -319,7 +319,7 @@ func (m *FirestartrBootstrap) CmdPushArgo(
 	ctx context.Context,
 ) *dagger.Container {
 
-    argocd, err := m.AddArgoCDSecrets(ctx)
+    _, err := m.AddArgoCDSecrets(ctx)
 
 	if err != nil {
 		panic(err)
