@@ -170,6 +170,21 @@ func (m *FirestartrBootstrap) CmdImportResources(
 
 	kindContainer = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
 
+    // bust cache volume
+	kindContainer, err = kindContainer.
+		WithMountedCache("/cache", cacheVolume).
+		WithExec([]string{
+			"rm", "-rf", "/cache/import",
+		}).
+		WithExec([]string{
+            "rm", "-rf", "/cache/resources",
+		}).
+		Sync(ctx)
+
+    if err != nil {
+        panic(fmt.Errorf("Error busting cache volume for resources: %s", err))
+    }
+
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
 		panic(err)
