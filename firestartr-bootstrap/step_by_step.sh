@@ -111,3 +111,63 @@ dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
         exit 1
         ;;
 esac
+
+ACTION=$(prompt_continue_skip_abort "Push organization state secrets (only for enterprise orgs)?")
+
+case "$ACTION" in
+    "continue")
+dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
+       --credentials-secret="file:${CREDENTIALS_FILE}" \
+       call cmd-push-state-secrets \
+       --kubeconfig="${HOME}/.kube" \
+       --kind-svc=tcp://localhost:${PORT} \
+       --cache-volume=${VOLUME_ID}
+        ;;
+    "skip")
+        echo "⏭️ Skipping the next section and moving to the end."
+        ;;
+    "abort")
+        echo "🛑 Aborting script execution now."
+        exit 1
+        ;;
+esac
+
+ACTION=$(prompt_continue_skip_abort "Push argocd - deployment to the system's repos?")
+
+case "$ACTION" in
+    "continue")
+dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
+       --credentials-secret="file:${CREDENTIALS_FILE}" \
+       call cmd-push-deployment \
+       --kubeconfig="${HOME}/.kube" \
+       --kind-svc=tcp://localhost:${PORT} \
+       --cache-volume=${VOLUME_ID}
+        ;;
+    "skip")
+        echo "⏭️ Skipping the next section and moving to the end."
+        ;;
+    "abort")
+        echo "🛑 Aborting script execution now."
+        exit 1
+        ;;
+esac
+
+ACTION=$(prompt_continue_skip_abort "Push argocd - permissions and secrets to the system's repos?")
+
+case "$ACTION" in
+    "continue")
+dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
+       --credentials-secret="file:${CREDENTIALS_FILE}" \
+       call cmd-push-argo \
+       --kubeconfig="${HOME}/.kube" \
+       --kind-svc=tcp://localhost:${PORT} \
+       --cache-volume=${VOLUME_ID}
+        ;;
+    "skip")
+        echo "⏭️ Skipping the next section and moving to the end."
+        ;;
+    "abort")
+        echo "🛑 Aborting script execution now."
+        exit 1
+        ;;
+esac
