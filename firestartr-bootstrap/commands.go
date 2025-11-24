@@ -171,7 +171,7 @@ func (m *FirestartrBootstrap) CmdImportResources(
 	kindContainer = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
 
     // bust cache volume
-	kindContainer, err = kindContainer.
+    kindContainer, err := kindContainer.
 		WithMountedCache("/cache", cacheVolume).
 		WithExec([]string{
 			"rm", "-rf", "/cache/import",
