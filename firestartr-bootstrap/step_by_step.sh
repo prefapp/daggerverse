@@ -138,10 +138,7 @@ case "$ACTION" in
     "continue")
 dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
        --credentials-secret="file:${CREDENTIALS_FILE}" \
-       call cmd-push-deployment \
-       --kubeconfig="${HOME}/.kube" \
-       --kind-svc=tcp://localhost:${PORT} \
-       --cache-volume=${VOLUME_ID}
+       call cmd-push-deployment
         ;;
     "skip")
         echo "⏭️ Skipping the next section and moving to the end."
@@ -158,10 +155,7 @@ case "$ACTION" in
     "continue")
 dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
        --credentials-secret="file:${CREDENTIALS_FILE}" \
-       call cmd-push-argo \
-       --kubeconfig="${HOME}/.kube" \
-       --kind-svc=tcp://localhost:${PORT} \
-       --cache-volume=${VOLUME_ID}
+       call cmd-push-argo
         ;;
     "skip")
         echo "⏭️ Skipping the next section and moving to the end."
