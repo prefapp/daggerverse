@@ -65,32 +65,57 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 
 func (m *FirestartrBootstrap) CmdValidateBootstrap(
 	ctx context.Context,
-) error {
+) string {
 
 	err := m.ValidateBootstrap(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	return nil
+	successMessage := `
+=====================================================
+🎉 ALL VALIDATION CHECKS PASSED 🎉
+=====================================================
+The pipeline executed without detecting any fatal errors.
+The environment, configuration, and state are considered valid.
+`
+
+	m.UpdateSummaryAndRun(ctx, successMessage)
+
+	return m.ShowSummaryReport(ctx)
 }
 
 func (m *FirestartrBootstrap) CmdInitSecretsMachinery(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
-) *dagger.Container {
+) string {
 
 	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
 
 	kindContainer = m.InstallHelmAndExternalSecrets(ctx, kindContainer)
-	kindContainerWithSecrets, err := m.CreateKubernetesSecrets(ctx, kindContainer)
+	_, err := m.CreateKubernetesSecrets(ctx, kindContainer)
+
+	successMessage := `
+=====================================================
+🔒 SECRETS MACHINERY INITIALIZED 🔒
+=====================================================
+Helm, External Secrets Operator, and all required 
+Kubernetes secrets have been successfully deployed.
+List of secrets:
+	- Bootstrap Secrets
+	- Aws Secrets
+List of push secrets:
+    - Webhook secret
+	- Prefapp bot secret
+`
 
 	if err != nil {
 		panic(err)
 	}
 
-	return kindContainerWithSecrets
+	return m.UpdateSummaryAndRun(ctx, successMessage)
+
 }
 
 func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
@@ -119,6 +144,16 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		panic(err)
 	}
 
+successMessage := `
+=====================================================
+🤖 GITHUB APPS MACHINERY VALIDATED 🤖
+=====================================================
+Access tokens generated, GitHub App credentials loaded, 
+and organization plans validated successfully.
+The system is ready to interact with GitHub.
+`
+	m.UpdateSummaryAndRun(ctx, successMessage)
+
 	return kindContainer
 }
 
@@ -129,7 +164,7 @@ func (m *FirestartrBootstrap) CmdImportResources(
 	kindSvc *dagger.Service,
 	cacheVolume *dagger.CacheVolume,
 
-) *dagger.Container {
+) string {
 
 	kindContainer := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
 
@@ -164,7 +199,7 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		panic(err)
 	}
 
-	return kindContainer
+	return m.UpdateSummaryAndRunForImportResourcesStep(ctx, kindContainer)
 }
 
 func (m *FirestartrBootstrap) CmdPushResources(
@@ -173,7 +208,7 @@ func (m *FirestartrBootstrap) CmdPushResources(
 	kindSvc *dagger.Service,
 	cacheVolume *dagger.CacheVolume,
 
-) *dagger.Container {
+) string {
 
 	kindContainer := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
 
@@ -190,7 +225,7 @@ func (m *FirestartrBootstrap) CmdPushResources(
 		kindContainer,
 	)
 
-	return kindContainer
+	return m.UpdateSummaryAndRunForPushResourcesStep(ctx, kindContainer)
 }
 
 func (m *FirestartrBootstrap) CmdPushDeployment(
@@ -206,6 +241,63 @@ func (m *FirestartrBootstrap) CmdPushDeployment(
 	return dag.Container().
 		From("busybox").
 		WithMountedDirectory("/deployment", deploymentDir)
+}
+
+func (m *FirestartrBootstrap) CmdPushStateSecrets(
+	ctx context.Context,
+	kubeconfig *dagger.Directory,
+	kindSvc *dagger.Service,
+	cacheVolume *dagger.CacheVolume,
+) string {
+
+	kindContainer := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+
+	tokenSecret, err := m.GenerateGithubToken(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
+	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
+	if err != nil {
+		panic(err)
+	}
+
+    if !m.Bootstrap.HasFreePlan {
+    	err = m.SetOrgVariables(ctx, tokenSecret, kindContainer)
+    	if err != nil {
+    		panic(err)
+    	}
+    
+    	err = m.SetOrgSecrets(ctx, tokenSecret, kindContainer)
+    	if err != nil {
+    		panic(err)
+    	}
+    } else {
+        panic(fmt.Errorf("%s org has a free plan,org secrets are not available", m.Bootstrap.Org))
+    }
+
+    for _, component := range m.Bootstrap.Components {
+    	if len(component.Labels) > 0 {
+    		err = m.CreateLabelsInRepo(ctx, component.Name, component.Labels, tokenSecret)
+    
+    		if err != nil {
+    			panic(err)
+    		}
+    	}
+    }
+
+
+    successMessage := `
+=====================================================
+            🔐⚙️ ORG STATE SECRETS PUSHED ⚙️🔐
+=====================================================
+GitHub access machinery initialized, organization plan
+validated, and required state secrets and variables
+have been successfully configured.
+`
+
+	return m.UpdateSummaryAndRun(ctx, successMessage)
 }
 
 func (m *FirestartrBootstrap) CmdPushArgo(
@@ -239,6 +331,8 @@ func (m *FirestartrBootstrap) CmdRollback(
 	kindSvc *dagger.Service,
 ) string {
 
+	m.CmdValidateBootstrap(ctx)
+
 	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
 
 	output, err := m.ProcessArtifactsByKind(
@@ -251,7 +345,7 @@ func (m *FirestartrBootstrap) CmdRollback(
 		panic(err)
 	}
 
-	return output
+	return m.UpdateSummaryAndRunForRollbackStep(ctx, output)
 
 }
 
@@ -273,8 +367,26 @@ func (m *FirestartrBootstrap) CmdRunBootstrap(
 
 	m.CmdPushResources(ctx, kubeconfig, kindSvc, persistentVolume)
 
-	m.CmdPushDeployment(ctx)
+    m.CmdPushStateSecrets(ctx, kubeconfig, kindSvc, persistentVolume)
 
-	m.CmdPushArgo(ctx)
+	//m.CmdPushDeployment(ctx)
+
+	//m.CmdPushArgo(ctx)
+
+}
+
+func (m *FirestartrBootstrap) Foo(
+	ctx context.Context,
+) string {
+
+	successMessage := `
+=====================================================
+🎉 ALL VALIDATION CHECKS PASSED 🎉
+=====================================================
+The pipeline executed without detecting any fatal errors.
+The environment, configuration, and state are considered valid.
+`
+
+	return m.UpdateSummaryAndRun(ctx, successMessage)
 
 }

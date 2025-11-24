@@ -237,7 +237,6 @@ func (m *FirestartrBootstrap) SetOrgVariables(
 ) error {
 
 	mappedVars := map[string]string{
-		"FIRESTARTR_CLI_VERSION": "ref:secretsclaim:firestartr-secrets:firestartr-cli-version",
 		"FS_STATE_APP_ID":        "ref:secretsclaim:firestartr-secrets:fs-state-appid",
 		"FS_CHECKS_APP_ID":       "ref:secretsclaim:firestartr-secrets:fs-checks-appid",
 	}
@@ -252,6 +251,8 @@ func (m *FirestartrBootstrap) SetOrgVariables(
 			return err
 		}
 	}
+
+    m.SetOrgVariable(ctx, "FIRESTARTR_CLI_VERSION", m.Bootstrap.Firestartr.CliVersion, ghToken)
 	return nil
 }
 

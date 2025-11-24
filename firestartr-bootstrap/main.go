@@ -109,7 +109,7 @@ func New(
 
 	defaultsInterface := CrsDefaultsData{
 		GithubAppProviderConfigName:     creds.GithubApp.ProviderConfigName,
-		CloudProviderProviderConfigName: creds.CloudProvider.ProviderConfigName,
+        CloudProviderProviderConfigName: fmt.Sprintf("tfstate-%s", bootstrap.Customer),
 		DefaultBranch:                   bootstrap.DefaultBranch,
 	}
 

@@ -28,6 +28,16 @@ func (m *FirestartrBootstrap) GeneratePushSecrets(
 
    }
 
+   prefappCliVersion := PushSecretElement{
+       Name: "prefapp-bot-pat-pushsecret",
+       KubernetesSecret: "prefapp-cli-version",
+       KubernetesSecretKey: "cli-version-key",
+       ParameterName: m.Bootstrap.FirestartrCliVersionSecretRef,
+       Value: m.Bootstrap.Firestartr.CliVersion,
+       SecretStore: "aws",
+
+   }
+
    rendered, err := renderPushSecret(ctx, &webHookPushSecret, "external_secrets/push_secret.tmpl")
 
    if err != nil {
@@ -53,7 +63,20 @@ func (m *FirestartrBootstrap) GeneratePushSecrets(
         return nil, err
    }
 
-   return dag.Directory().WithNewFile("push-secrets.yaml", rendered + renderedSecret + renderedGH + renderedSecretGH), nil
+   renderedCli, err := renderPushSecret(ctx, &prefappCliVersion, "external_secrets/push_secret.tmpl")
+
+   if err != nil {
+        return nil, err
+   }
+
+   renderedSecretCli, err := renderPushSecret(ctx, &prefappCliVersion, "external_secrets/secret.tmpl")
+
+   if err != nil {
+        return nil, err
+   }
+
+
+   return dag.Directory().WithNewFile("push-secrets.yaml", rendered + renderedSecret + renderedGH + renderedSecretGH + renderedCli + renderedSecretCli), nil
 }
 
 func renderPushSecret(

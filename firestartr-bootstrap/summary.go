@@ -1,0 +1,178 @@
+package main
+
+import (
+	"context"
+	"dagger/firestartr-bootstrap/internal/dagger"
+	"fmt"
+	"time"
+	"strings"
+
+)
+
+type ExecutionState struct {
+	CompletedSteps    int
+	LastStepName      string
+	LogID       	  string
+	Status            string
+}
+
+var updatedMarkdownContent string
+
+func (m *FirestartrBootstrap) UpdateSummaryAndRun(
+    ctx context.Context,
+    stepDescription string,
+) string {
+
+
+	var currentMarkdown string    
+
+	if updatedMarkdownContent == "" {
+
+    	currentMarkdown = fmt.Sprintf("# 🚀 BootstrapFile Execution Summary\n\n---\n")
+	}else {
+
+		currentMarkdown = updatedMarkdownContent
+	}
+
+    timestamp := time.Now().Format("2006-01-02 15:04:05")
+
+    newMarkdownEntry := fmt.Sprintf(
+        "\n### ✅ Step Completed: %s\n" +
+        "* **Time:** %s\n" +
+        "* **Status:** Success\n" +
+        "---\n",
+        stepDescription,
+        timestamp,
+    )
+
+    updatedMarkdownContent = currentMarkdown + newMarkdownEntry
+
+    return updatedMarkdownContent
+}
+
+func (m *FirestartrBootstrap) UpdateSummaryAndRunForImportResourcesStep(
+	ctx context.Context,
+	kindContainer *dagger.Container,
+) string {
+
+importedFiles, err := kindContainer.Directory("/import/crs").Entries(
+	ctx,
+)
+if err != nil {
+	panic(fmt.Errorf("Error creating the list of imported artifacts: %s", err))
+}
+
+createdResources, err := kindContainer.Directory("/resources/firestartr-crs/github").Entries(
+	ctx,
+)
+
+if err != nil {
+	panic(fmt.Errorf("Error creating the list of generated artifacts: %s", err))
+}
+
+successMessage := fmt.Sprintf(`
+=====================================================
+📥 GITHUB RESOURCES IMPORTED AND CREATED 📥
+=====================================================
+Initial CRs checked, missing resources created, and 
+all necessary configurations copied to the cache volume.
+The environment is fully provisioned.
+
+#### Imported resources:
+- %s
+
+#### Generated and created resources
+- %s
+
+#### Copied to the cache:
+- /import
+- /resources
+`,
+	strings.Join(importedFiles, "\n- "),
+	strings.Join(createdResources, "\n- "),
+)
+
+	return m.UpdateSummaryAndRun(ctx, successMessage)
+	
+}
+
+func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushResourcesStep(
+	ctx context.Context,
+	kindContainer *dagger.Container,
+) string {
+
+
+cmd := []string{"find", "/resources/claims", "-type", "f", "-name", "*.yaml"}
+
+output, err := kindContainer.
+        WithExec(cmd).
+        Stdout(ctx)
+
+if err != nil {
+	panic(fmt.Errorf("Error creating the list of pushed claims: %s", err))
+}
+
+pushedClaims := strings.Split(strings.TrimSpace(output), "\n")
+
+pushedCrs, err := kindContainer.Directory("/resources/firestartr-crs/github").Entries(
+	ctx,
+)
+
+if err != nil {
+	panic(fmt.Errorf("Error creating the list of pushed crs: %s", err))
+}
+
+successMessage := fmt.Sprintf(`
+=====================================================
+            ⤴️RESOURCE PUSH COMPLETE ⤴️
+=====================================================
+GitHub access machinery initialized, resources copied
+from cache, and all configuration files pushed to
+the destination environment.
+
+#### List of pushed Claims (%s/claims)
+- %s
+
+#### List of pushed CRs (%s/state-github)
+- %s
+`, 
+    m.Bootstrap.Org,
+    strings.Join(pushedClaims, "\n- "),
+    m.Bootstrap.Org,
+    strings.Join(pushedCrs, "\n- "),
+)
+	return m.UpdateSummaryAndRun(ctx, successMessage)
+	
+}
+
+func (m *FirestartrBootstrap) UpdateSummaryAndRunForRollbackStep(
+	ctx context.Context,
+	deletionSummary string,
+) string {
+
+successMessage := fmt.Sprintf(`
+=====================================================
+⏪ ROLLBACK OPERATION COMPLETE ⏪
+=====================================================
+Artifacts processed successfully. The system state 
+has been reverted to the previous stable configuration.
+
+#### List of deletions
+%s
+`, 
+	deletionSummary,
+
+)
+
+return m.UpdateSummaryAndRun(ctx, successMessage)
+
+}
+
+func (m *FirestartrBootstrap) ShowSummaryReport(
+    ctx context.Context,
+) string {
+
+    fmt.Print(updatedMarkdownContent)
+
+    return updatedMarkdownContent
+}
