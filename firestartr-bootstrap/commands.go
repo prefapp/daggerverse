@@ -325,19 +325,15 @@ func (m *FirestartrBootstrap) CmdPushArgo(
 		panic(err)
 	}
 
-    return dag.Container().
-        From("busybox").
-        WithMountedDirectory("/argocd", argocd)
+	deploymentDir, err := m.CreateArgCDApplications(ctx)
 
-	//deploymentDir, err := m.CreateArgCDApplications(ctx)
+	if err != nil {
+		panic(err)
+	}
 
-	//if err != nil {
-	//	panic(err)
-	//}
-
-	//return dag.Container().
-	//	From("busybox").
-	//	WithMountedDirectory("/deployment", deploymentDir)
+	return dag.Container().
+		From("busybox").
+		WithMountedDirectory("/deployment", deploymentDir)
 }
 
 func (m *FirestartrBootstrap) CmdRollback(
