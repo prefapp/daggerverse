@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-
+    "regexp"
 	"dagger/firestartr-bootstrap/internal/dagger"
 )
 
@@ -54,6 +54,8 @@ func (m *FirestartrBootstrap) RenderDeployment(
         return nil, fmt.Errorf("Obtaining the accountID of aws: %s", err)
     }
 
+    re := regexp.MustCompile("^https://")
+    WebhookUri := re.ReplaceAllString(m.Bootstrap.WebhookUrl, "")
 
 	// let's populate the struct
 	deploymentData := DeploymentConfig{
@@ -62,7 +64,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 		Customer:	m.Bootstrap.Customer,
 		Webhook:	DeploymentWebhook {
 
-			URL:		m.Bootstrap.WebhookUrl,
+			URL:		WebhookUri,
 			Secret: 	m.Bootstrap.WebhookSecretRef,
 
 		},
