@@ -150,15 +150,17 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 
 	pathAppStateGithub := fmt.Sprintf(
 
-		"argo-firestartr-%s.%s.Application.yaml",
+		"/firestartr/%s/argo-firestartr-%s.%s.Application.yaml",
 		"state-github",
+		m.Bootstrap.Org,
 		m.Bootstrap.Org,
 	)
 
 	pathAppStateInfra := fmt.Sprintf(
 
-		"argo-firestartr-%s.%s.Application.yaml",
+		"/firestartr/%s/argo-firestartr-%s.%s.Application.yaml",
 		"state-infra",
+		m.Bootstrap.Org,
 		m.Bootstrap.Org,
 	)
 
