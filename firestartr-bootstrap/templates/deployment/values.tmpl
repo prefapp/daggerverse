@@ -59,7 +59,7 @@ providerConfigs:
   tfstate-{{ .Customer }}:
     config: |
       {
-        "bucket": {{ .Aws.Bucket }}",
+        "bucket": "{{ .Aws.Bucket }}",
         "region": "{{ .Aws.Region }}"
       }
     type: aws

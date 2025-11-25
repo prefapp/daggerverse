@@ -245,17 +245,27 @@ func (m *FirestartrBootstrap) CmdPushResources(
 
 func (m *FirestartrBootstrap) CmdPushDeployment(
 	ctx context.Context,
-) *dagger.Container {
+) string {
 
-	deploymentDir, err := m.CreateDeployment(ctx)
+	_, err := m.CreateDeployment(ctx)
 
 	if err != nil {
 		panic(err)
 	}
 
-	return dag.Container().
-		From("busybox").
-		WithMountedDirectory("/deployment", deploymentDir)
+    return m.UpdateSummaryAndRunForPushDeploymentStep(
+        ctx,
+        fmt.Sprintf(
+            "https://github.com/firestartr-%s/app-firestartr",
+            m.Bootstrap.Env,
+        ),
+        fmt.Sprintf(
+            "firestartr-%s  /  %s  /   %s",
+            m.Bootstrap.Env,
+            m.Bootstrap.Customer,
+            m.Bootstrap.Env,
+        ),
+    )
 }
 
 func (m *FirestartrBootstrap) CmdPushStateSecrets(
@@ -386,18 +396,3 @@ func (m *FirestartrBootstrap) CmdRunBootstrap(
 
 }
 
-func (m *FirestartrBootstrap) Foo(
-	ctx context.Context,
-) string {
-
-	successMessage := `
-=====================================================
-🎉 ALL VALIDATION CHECKS PASSED 🎉
-=====================================================
-The pipeline executed without detecting any fatal errors.
-The environment, configuration, and state are considered valid.
-`
-
-	return m.UpdateSummaryAndRun(ctx, successMessage)
-
-}

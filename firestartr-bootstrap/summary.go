@@ -176,3 +176,30 @@ func (m *FirestartrBootstrap) ShowSummaryReport(
 
     return updatedMarkdownContent
 }
+
+func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushDeploymentStep(
+	ctx context.Context,
+    prURL string,
+    cardinality string,
+) string {
+
+successMessage := fmt.Sprintf(`
+=====================================================
+     🚀 DEPLOYMENT ARGOCD APPLICATIONS PUSHED 🚀
+=====================================================
+Deployment files created and successfully pushed to the argocd
+repo. The PR has been created:
+
+%s
+
+You need to review and merge it. 
+
+The run a deployment of the new applications machinery. 
+
+%s
+
+`)
+return m.UpdateSummaryAndRun(ctx, successMessage)
+
+}
+
