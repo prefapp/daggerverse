@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func (m *FirestartrBootstrap) CmdCreatePersistentVolume(
@@ -48,7 +47,6 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 			"kubectl", "config",
 			"set-cluster", fmt.Sprintf("kind-%s", clusterName), fmt.Sprintf("--server=https://localhost:%d", port)},
 		).
-		WithEnvVariable("BUST", time.Now().String()).
 		WithExec([]string{
 			"curl",
 			"https://prefapp.github.io/gitops-k8s/index.yaml",
