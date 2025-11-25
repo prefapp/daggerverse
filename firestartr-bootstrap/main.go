@@ -108,7 +108,7 @@ func New(
 	}
 
     // calculate providers
-    githubProviderConfigName := fmt.Sprintf("github-app-%s", bootstrap.Customer)
+    githubProviderConfigName := fmt.Sprintf("github-%s", bootstrap.Customer)
     backendConfigName := fmt.Sprintf("tfstate-%s", bootstrap.Customer)
 	defaultsInterface := CrsDefaultsData{
 		GithubAppProviderConfigName:     githubProviderConfigName,
