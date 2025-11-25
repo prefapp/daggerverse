@@ -185,20 +185,51 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushDeploymentStep(
 
 successMessage := fmt.Sprintf(`
 =====================================================
-     🚀 DEPLOYMENT ARGOCD APPLICATIONS PUSHED 🚀
+     🚀 DEPLOYMENT FIRESTARTR PUSHED 🚀
 =====================================================
-Deployment files created and successfully pushed to the argocd
-repo. The PR has been created:
+Deployment files created and successfully pushed to the app-firestartr
+repo. The PR has been created in the following repo:
 
 %s
 
 You need to review and merge it. 
 
-The run a deployment of the new applications machinery. 
+Run a deployment of the new applications machinery by invoking the [action](%s/actions), using this coordinates: 
 
 %s
 
-`)
+`, prURL, prURL, cardinality, 
+)
+return m.UpdateSummaryAndRun(ctx, successMessage)
+
+}
+
+
+func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushArgoCDStep(
+	ctx context.Context,
+    repoArgoCD string,
+    repoSysServices string,
+    cardinality string,
+) string {
+
+successMessage := fmt.Sprintf(`
+=====================================================
+     🚀 DEPLOYMENT ARGOCD APPLICATIONS PUSHED 🚀
+=====================================================
+Application and secret files created and successfully pushed to the argocd
+repo. The PRs has been created in the following repos:
+
+- %s
+- %s
+
+You need to review and merge it. 
+
+Run a deployment of the new secrets machinery by invoking the [action](%s/actions), using this coordinates: 
+
+%s
+
+`, repoArgoCD, repoSysServices, repoSysServices, cardinality, 
+)
 return m.UpdateSummaryAndRun(ctx, successMessage)
 
 }

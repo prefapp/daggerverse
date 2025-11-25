@@ -327,7 +327,7 @@ have been successfully configured.
 
 func (m *FirestartrBootstrap) CmdPushArgo(
 	ctx context.Context,
-) *dagger.Container {
+) string {
 
     _, err := m.AddArgoCDSecrets(ctx)
 
@@ -335,15 +335,28 @@ func (m *FirestartrBootstrap) CmdPushArgo(
 		panic(err)
 	}
 
-	deploymentDir, err := m.CreateArgCDApplications(ctx)
+	_, err = m.CreateArgCDApplications(ctx)
 
 	if err != nil {
 		panic(err)
 	}
 
-	return dag.Container().
-		From("busybox").
-		WithMountedDirectory("/deployment", deploymentDir)
+    return m.UpdateSummaryAndRunForPushArgoCDStep(
+        ctx,
+        fmt.Sprintf(
+            "https://github.com/firestartr-%s/state-argocd",
+            m.Bootstrap.Env,
+        ),
+        fmt.Sprintf(
+            "https://github.com/firestartr-%s/state-sys-services",
+            m.Bootstrap.Env,
+        ),
+        fmt.Sprintf(
+            "firestartr-%s  /  argo-configuration-secrets  ",
+            m.Bootstrap.Env,
+        ),
+
+    )
 }
 
 func (m *FirestartrBootstrap) CmdRollback(
