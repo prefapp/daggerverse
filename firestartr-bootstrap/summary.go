@@ -190,7 +190,7 @@ successMessage := fmt.Sprintf(`
 Deployment files created and successfully pushed to the app-firestartr
 repo. The PR has been created in the following repo:
 
-%s
+%s/pulls
 
 You need to review and merge it. 
 
