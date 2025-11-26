@@ -192,11 +192,16 @@ repo. The PR has been created in the following repo:
 
 %s/pulls
 
+
+⚠️⚠️⚠️⚠️⚠️ USER INTERVENTION REQUIRED 🛑
+
 You need to review and merge it. 
 
-Run a deployment of the new applications machinery by invoking the [action](%s/actions), using this coordinates: 
+Run a deployment of the new applications machinery by invoking the [action](%s/actions/workflows/generate-deployment-kubernetes.yml), using this coordinates: 
 
 %s
+
+And merge the resultant deployment PR
 
 `, prURL, prURL, cardinality, 
 )
