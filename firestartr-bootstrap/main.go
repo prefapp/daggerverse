@@ -119,6 +119,9 @@ func New(
     creds.CloudProvider.ProviderConfigName = backendConfigName
     creds.GithubApp.ProviderConfigName = githubProviderConfigName
 
+    // calculate store name
+    bootstrap.FinalSecretStoreName = fmt.Sprintf("%s-firestartr-secret-store", bootstrap.Customer)
+
 	crsDotConfigDir, err := getCrsDotConfigDir(ctx, bootstrap, defaultsInterface)
 	if err != nil {
 		panic(err)
