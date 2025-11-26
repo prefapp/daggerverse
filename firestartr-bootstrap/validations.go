@@ -263,7 +263,6 @@ func (m *FirestartrBootstrap) ValidateOperatorPat(
 			owner, repo, permission,
 		)
 	default:
-		panic(fmt.Sprintf("unexpected permission result: '%s'", permission))
 		return fmt.Errorf(
 			"received an unexpected permission result: '%s'. "+
 				"Ensure the repository exists and the user is a "+
