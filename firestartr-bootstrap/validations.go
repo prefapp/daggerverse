@@ -253,6 +253,8 @@ func (m *FirestartrBootstrap) ValidateOperatorPat(
 	}
 	permission = strings.TrimSpace(permission)
 
+	panic(permission)
+
 	// Valid write access permissions are 'push', 'maintain', or 'admin'.
 	switch permission {
 	case "push", "maintain", "admin":
