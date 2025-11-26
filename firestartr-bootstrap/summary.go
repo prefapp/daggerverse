@@ -224,14 +224,18 @@ successMessage := fmt.Sprintf(`
 Application and secret files created and successfully pushed to the argocd
 repo. The PRs has been created in the following repos:
 
-- %s
-- %s
+- %s/pulls
+- %s/pulls
 
-You need to review and merge it. 
+⚠️⚠️⚠️⚠️⚠️ USER INTERVENTION REQUIRED 🛑
 
-Run a deployment of the new secrets machinery by invoking the [action](%s/actions), using this coordinates: 
+You need to review and merge them. 
+
+Run a deployment of the new secrets machinery by invoking the [action](%s/actions/workflows/generate-deployment.yml), using this coordinates: 
 
 %s
+
+And merge the resultant deployment PR
 
 `, repoArgoCD, repoSysServices, repoSysServices, cardinality, 
 )
