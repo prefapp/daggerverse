@@ -33,7 +33,7 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 	secretRef := fmt.Sprintf(
 		"/firestartr/%s/fs-%s-argocd/pem",
 		m.Bootstrap.Customer,
-		m.Bootstrap.Org,
+		m.Bootstrap.Customer,
 	)
 
 	clientAccess := ClientAccess{
@@ -48,7 +48,7 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 		ctx,
 		argoCDRepo.Directory("/repo"),
 		"kubernetes-sys-services/firestartr-pre/argo-configuration-secrets/values.yaml",
-		m.Bootstrap.Customer,
+		m.Bootstrap.Org,
 		clientAccess,
 	)
 

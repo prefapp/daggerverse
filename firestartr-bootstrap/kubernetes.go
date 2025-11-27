@@ -76,7 +76,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 			"kubectl", "wait",
 			"--for=condition=Ready",
 			strings.Trim(firestartrPodName, "\n"),
-            "--timeout=0",
+            "--timeout=10h",
 			"-n", "external-secrets",
 		}).
 		WithFile("/secret_store/aws_secretstore.yaml", awsSecretStoreFile).
@@ -90,7 +90,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 			"kubectl",
 			"wait",
 			"--for=create",
-            "--timeout=0",
+            "--timeout=10h",
 			"secret/bootstrap-secrets",
 		}).
 		WithExec([]string{
@@ -100,14 +100,14 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 			"kubectl",
 			"wait",
 			"--for=condition=Ready=True",
-            "--timeout=0",
+            "--timeout=10h",
 			"pushsecret/webhook-pushsecret",
 		}).
 		WithExec([]string{
 			"kubectl",
 			"wait",
 			"--for=condition=Ready=True",
-            "--timeout=0",
+            "--timeout=10h",
 			"pushsecret/prefapp-bot-pat-pushsecret",
 		}).
 		Sync(ctx)

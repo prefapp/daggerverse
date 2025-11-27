@@ -106,7 +106,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
                     "/firestartr/%s/fs-%s-admin/app-id",
 
                     m.Bootstrap.Customer,
-                    m.GhOrg,
+                    m.Bootstrap.Customer,
                 ),
                 GithubAppInstallationId: fmt.Sprintf(
 
@@ -120,7 +120,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
                     "/firestartr/%s/fs-%s-admin/pem",
 
                     m.Bootstrap.Customer,
-                    m.GhOrg,
+                    m.Bootstrap.Customer,
                 ),
             },
 		},
@@ -139,7 +139,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
                 "/firestartr/%s/fs-%s-admin/app-id",
 
                 m.Bootstrap.Customer,
-                m.GhOrg,
+                m.Bootstrap.Customer,
             ),
             GithubAppInstallationId: fmt.Sprintf(
 
@@ -154,7 +154,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
                 "/firestartr/%s/fs-%s-admin/pem",
 
                 m.Bootstrap.Customer,
-                m.GhOrg,
+                m.Bootstrap.Customer,
             ),
 
         },
