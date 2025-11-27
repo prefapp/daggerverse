@@ -90,7 +90,11 @@ func New(
 	// Autocalculate values
 	// We need to calculate the webhook params
 	// ----------------------------------------------------
-	bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.firestartr.dev", bootstrap.Customer)
+    if bootstrap.Env == "pro" {
+	    bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.firestartr.dev", bootstrap.Customer)
+    }else{
+	    bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.%s.firestartr.dev", bootstrap.Customer, bootstrap.Env)
+    }
 	bootstrap.WebhookSecretRef = fmt.Sprintf("/firestartr/%s/github-webhook/secret", bootstrap.Customer)
 
 	// We need to calculate the bucket (if necessary)
