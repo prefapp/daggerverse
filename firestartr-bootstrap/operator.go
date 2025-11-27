@@ -183,7 +183,7 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 				"wait",
 				"--for=condition=PROVISIONED=True",
 				fmt.Sprintf("%s/%s", getSingularByKind(cr.Kind), cr.Metadata.Name),
-				"--timeout=180s",
+				"--timeout=10h",
 			})
 	}
 
