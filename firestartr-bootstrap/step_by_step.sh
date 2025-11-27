@@ -1,6 +1,6 @@
-PORT=<kind cluster port>
+PORT=45075
 CREDENTIALS_FILE="./boot/CredentialsFile.yaml"
-VOLUME_ID="<your volume cache id>"
+# VOLUME_ID="<your volume cache id>"
 
 function prompt_continue_skip_abort() {
     local PROMPT_MSG="$1"
@@ -42,7 +42,9 @@ case "$ACTION" in
     "continue")
 dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
        --credentials-secret="file:${CREDENTIALS_FILE}" \
-       call cmd-validate-bootstrap 
+        call cmd-validate-bootstrap \
+        --kubeconfig="${HOME}/.kube" \
+        --kind-svc=tcp://localhost:${PORT} 
         ;;
     "skip")
         echo "⏭️ Skipping the next section and moving to the end."
