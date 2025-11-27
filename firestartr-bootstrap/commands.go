@@ -65,9 +65,11 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 
 func (m *FirestartrBootstrap) CmdValidateBootstrap(
 	ctx context.Context,
+	kubeconfig *dagger.Directory,
+	kindSvc *dagger.Service,
 ) string {
 
-	err := m.ValidateBootstrap(ctx)
+	err := m.ValidateBootstrap(ctx, kubeconfig, kindSvc)
 	if err != nil {
 		panic(err)
 	}
@@ -365,7 +367,7 @@ func (m *FirestartrBootstrap) CmdRollback(
 	kindSvc *dagger.Service,
 ) string {
 
-	m.CmdValidateBootstrap(ctx)
+	m.CmdValidateBootstrap(ctx, kubeconfig, kindSvc)
 
 	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
 
@@ -391,7 +393,7 @@ func (m *FirestartrBootstrap) CmdRunBootstrap(
 
 	persistentVolume := m.CmdCreatePersistentVolume(ctx, "firestartr-init")
 
-	m.CmdValidateBootstrap(ctx)
+	m.CmdValidateBootstrap(ctx, kubeconfig, kindSvc)
 
 	m.CmdInitSecretsMachinery(ctx, kubeconfig, kindSvc)
 

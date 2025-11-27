@@ -162,6 +162,8 @@ func calculateParameters(customer string, githuborg string) []string {
 
 func (m *FirestartrBootstrap) ValidateBootstrap(
 	ctx context.Context,
+	kubeconfig *dagger.Directory,
+	kindSvc *dagger.Service,
 ) error {
 
 	log.Println("Validating bootstrap parameters")
@@ -210,6 +212,11 @@ func (m *FirestartrBootstrap) ValidateBootstrap(
 	if err != nil {
 		return err
 	}
+
+    err = m.ValidateKindKubernetesConnection(ctx, kubeconfig, kindSvc)
+    if err != nil {
+        return err
+    }
 
 	return nil
 

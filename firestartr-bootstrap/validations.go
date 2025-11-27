@@ -5,10 +5,48 @@ import (
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
 	"strings"
-
+	"strconv"
 	"github.com/xeipuuv/gojsonschema"
 	"sigs.k8s.io/yaml"
 )
+
+func (m *FirestartrBootstrap) ValidateKindKubernetesConnection(
+	ctx context.Context,
+	kubeconfig *dagger.Directory,
+	kindSvc *dagger.Service,
+) error {
+
+	clusterName := "kind"
+
+	ep, err := kindSvc.Endpoint(ctx)
+	if err != nil {
+        return fmt.Errorf("Obtaining the kind-cluster endpoint: %s", err)
+	}
+
+	port, err := strconv.Atoi(strings.Split(ep, ":")[1])
+	if err != nil {
+        return fmt.Errorf("Formating the kind-cluster port: %s", err)
+	}
+
+	_, err = dag.Container().
+		From("alpine:latest").
+		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl", "helm"}).
+		WithMountedDirectory("/root/.kube", kubeconfig).
+		WithWorkdir("/workspace").
+		WithServiceBinding("localhost", kindSvc).
+		WithExec([]string{
+			"kubectl", "config",
+			"set-cluster", fmt.Sprintf("kind-%s", clusterName), fmt.Sprintf("--server=https://localhost:%d", port)},
+		).
+		WithExec([]string{"kubectl", "cluster-info"}).
+		Sync(ctx)
+
+	if err != nil {
+        return fmt.Errorf("Connecting to the kind-cluster: %s", err)
+	}
+
+	return nil
+}
 
 func (m *FirestartrBootstrap) ValidateBootstrapFile(ctx context.Context, bootstrapFile *dagger.File) error {
 	schema, err := dag.CurrentModule().Source().File("schemas/bootstrap-file.json").Contents(ctx)
