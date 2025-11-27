@@ -67,11 +67,18 @@ func (m *FirestartrBootstrap) CmdValidateBootstrap(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
-) string {
+) (string, error) {
 
 	err := m.ValidateBootstrap(ctx, kubeconfig, kindSvc)
 	if err != nil {
-		panic(err)
+       errorMessage := PrepareAndPrintError(
+           ctx,
+           "CmdValidateBootstrap",
+           "An error ocurred validating the context and bootstrap conditions",
+           err,
+       )
+
+       return "", errorMessage
 	}
 
 	successMessage := `
@@ -84,14 +91,14 @@ The environment, configuration, and state are considered valid.
 
 	m.UpdateSummaryAndRun(ctx, successMessage)
 
-	return m.ShowSummaryReport(ctx)
+	return m.ShowSummaryReport(ctx), nil
 }
 
 func (m *FirestartrBootstrap) CmdInitSecretsMachinery(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
-) string {
+) (string, error) {
 
 	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
 
@@ -113,10 +120,17 @@ List of push secrets:
 `
 
 	if err != nil {
-		panic(err)
+        errorMessage := PrepareAndPrintError(
+            ctx,
+            "CmdInitSecretsMachinery",
+            "An error ocurred while preparing the external-secrets machinery and the push of secrets to the store",
+            err,
+        )
+
+        return "", errorMessage
 	}
 
-	return m.UpdateSummaryAndRun(ctx, successMessage)
+	return m.UpdateSummaryAndRun(ctx, successMessage),nil
 
 }
 
