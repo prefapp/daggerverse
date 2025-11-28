@@ -53,7 +53,7 @@ The following AWS Parameter Store parameters are required:
 ### 2. Bootstrap File
 
 ```yaml
-# Bootstrapfile.yaml
+# BootstrapFile.yaml
 ---
 org: <github-org>
 env: <env>  # either "pre" or "pro"
