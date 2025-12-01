@@ -326,7 +326,7 @@ dagger --bootstrap-file="./Bootstrapfile.yaml" \
        --cache-volume=<your-volume-id>
 ```
 
-Import existing org resources (groups, users) and create the ones needed by Firestartr (groups, repositories and webhooks).
+Import existing org resources (groups, users) and create the ones needed by Firestartr (groups, repositories and webhooks). These are saved to `--cache-volume` for later use.
 
 Push created resources:
 
@@ -339,7 +339,7 @@ dagger --bootstrap-file="./Bootstrapfile.yaml" \
       --cache-volume=<your-volume-id>
 ```
 
-Push the created claims and crs files to their respective repositories.
+Push the created claims and crs files stored in `--cache-volume` to their respective repositories.
 
 Create deployment PR:
 
