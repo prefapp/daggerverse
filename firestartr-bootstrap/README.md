@@ -46,6 +46,9 @@ The following AWS Parameter Store parameters are required:
 - `/firestartr/<customer>/fs-<customer>-argocd/pem`
 - `/firestartr/<customer>/fs-<customer>-argocd/app-id`
 - `/firestartr/<customer>/fs-<customer>-argocd/<org>/installation-id`
+
+The following AWS Parameter Store are going to be generated and/or uploaded ( pushed ) by the Bootstrap process
+
 - `/firestartr/<customer>/prefapp-bot-pat`: Personal Access Token for the Prefapp Bot user
 - `/firestartr/<customer>/firestartr-cli-version`: Version of the Firestartr CLI to set as the default in the organization
 - `/firestartr/<customer-name>/github-webhook/secret`: Secret for the GitHub Webhook
