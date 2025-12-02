@@ -2,45 +2,43 @@ package main
 
 import (
 	"context"
-	"fmt"
-    "regexp"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"fmt"
+	"regexp"
 )
 
 func (m *FirestartrBootstrap) CreateDeployment(
 	ctx context.Context,
-) (*dagger.Directory, error){
+) (*dagger.Directory, error) {
 
-    deploymentRenderedDir, err := m.RenderDeployment(ctx)
+	deploymentRenderedDir, err := m.RenderDeployment(ctx)
 
-    if err != nil {
+	if err != nil {
 
-        return nil, fmt.Errorf("Rendering firestartr-app deployment data: %s", err)
-    }
-
+		return nil, fmt.Errorf("Rendering firestartr-app deployment data: %s", err)
+	}
 
 	tokenSecret := dag.SetSecret(
 		"token",
 		m.Creds.GithubApp.OperatorPat,
 	)
 
-    err = m.CreatePR(
-        ctx,
-        "app-firestartr",
-        fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
-        deploymentRenderedDir,
-        fmt.Sprintf("automated-create-deployment-%s", m.Bootstrap.Customer),
-        fmt.Sprintf("feat: add deployment for %s [automated]", m.Bootstrap.Customer),
-        fmt.Sprintf("kubernetes/firestartr-%s/%s", m.Bootstrap.Env, m.Bootstrap.Customer),
-        tokenSecret,
-    )
+	err = m.CreatePR(
+		ctx,
+		"app-firestartr",
+		fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
+		deploymentRenderedDir,
+		fmt.Sprintf("automated-create-deployment-%s", m.Bootstrap.Customer),
+		fmt.Sprintf("feat: add deployment for %s [automated]", m.Bootstrap.Customer),
+		fmt.Sprintf("kubernetes/firestartr-%s/%s", m.Bootstrap.Env, m.Bootstrap.Customer),
+		tokenSecret,
+	)
 
+	if err != nil {
+		return nil, fmt.Errorf("Error generating PR for firestartr-app deployment: %s", err)
+	}
 
-    if err != nil {
-        return nil, fmt.Errorf("Error generating PR for firestartr-app deployment: %s", err)
-    }
-
-    return deploymentRenderedDir, nil
+	return deploymentRenderedDir, nil
 
 }
 
@@ -48,37 +46,34 @@ func (m *FirestartrBootstrap) RenderDeployment(
 	ctx context.Context,
 ) (*dagger.Directory, error) {
 
-    accountID, err := m.ValidateSTSCredentials(ctx)
+	accountID, err := m.ValidateSTSCredentials(ctx)
 
-    if err != nil {
-        return nil, fmt.Errorf("Obtaining the accountID of aws: %s", err)
-    }
+	if err != nil {
+		return nil, fmt.Errorf("Obtaining the accountID of aws: %s", err)
+	}
 
-    re := regexp.MustCompile("^https://")
-    WebhookUri := re.ReplaceAllString(m.Bootstrap.WebhookUrl, "")
+	re := regexp.MustCompile("^https://")
+	WebhookUri := re.ReplaceAllString(m.Bootstrap.WebhookUrl, "")
 
 	// let's populate the struct
 	deploymentData := DeploymentConfig{
 
-		Org:		m.Bootstrap.Org,
-		Customer:	m.Bootstrap.Customer,
-		Webhook:	DeploymentWebhook {
+		Org:      m.Bootstrap.Org,
+		Customer: m.Bootstrap.Customer,
+		Webhook: DeploymentWebhook{
 
-			URL:		WebhookUri,
-			Secret: 	m.Bootstrap.WebhookSecretRef,
-
+			URL:    WebhookUri,
+			Secret: m.Bootstrap.WebhookSecretRef,
 		},
 
 		ExternalSecrets: DeploymentExternalSecrets{
 
-            RoleARN:	fmt.Sprintf("arn:aws:iam::%s:role/FirestartrExternalSecretsStore-%s", 
+			RoleARN: fmt.Sprintf("arn:aws:iam::%s:role/FirestartrExternalSecretsStore-%s",
 
-                accountID,
+				accountID,
 
-                m.Bootstrap.Customer,
-
-            ),
-			
+				m.Bootstrap.Customer,
+			),
 		},
 
 		Controller: DeploymentController{
@@ -88,76 +83,72 @@ func (m *FirestartrBootstrap) RenderDeployment(
 				"%s_full-%s",
 				m.Bootstrap.Firestartr.OperatorVersion,
 				m.Creds.CloudProvider.Name,
-
 			)),
 
-            RoleARN:	fmt.Sprintf("arn:aws:iam::%s:role/Firestartr-%s", 
+			RoleARN: fmt.Sprintf("arn:aws:iam::%s:role/Firestartr-%s",
 
-                accountID,
+				accountID,
 
-                m.Bootstrap.Customer,
+				m.Bootstrap.Customer,
+			),
 
-            ),
+			GithubApp: DeploymentGithubApp{
 
-            GithubApp: 	DeploymentGithubApp{
+				GithubAppId: fmt.Sprintf(
 
-                GithubAppId: 	fmt.Sprintf(
+					"/firestartr/%s/fs-%s-admin/app-id",
 
-                    "/firestartr/%s/fs-%s-admin/app-id",
+					m.Bootstrap.Customer,
+					m.Bootstrap.Customer,
+				),
+				GithubAppInstallationId: fmt.Sprintf(
 
-                    m.Bootstrap.Customer,
-                    m.Bootstrap.Customer,
-                ),
-                GithubAppInstallationId: fmt.Sprintf(
+					"/firestartr/%s/fs-%s-admin/app-installation-id",
 
-                    "/firestartr/%s/fs-%s-admin/app-installation-id",
+					m.Bootstrap.Customer,
+					m.GhOrg,
+				),
+				GithubAppPem: fmt.Sprintf(
 
-                    m.Bootstrap.Customer,
-                    m.GhOrg,
-                ),
-                GithubAppPem: fmt.Sprintf(
+					"/firestartr/%s/fs-%s-admin/pem",
 
-                    "/firestartr/%s/fs-%s-admin/pem",
-
-                    m.Bootstrap.Customer,
-                    m.Bootstrap.Customer,
-                ),
-            },
+					m.Bootstrap.Customer,
+					m.Bootstrap.Customer,
+				),
+			},
 		},
 
-		Aws: 	DeploymentAws{
-	
-			Bucket:				*m.Creds.CloudProvider.Config.Bucket,
-			Region:				m.Creds.CloudProvider.Config.Region,
+		Aws: DeploymentAws{
 
+			Bucket: *m.Creds.CloudProvider.Config.Bucket,
+			Region: m.Creds.CloudProvider.Config.Region,
 		},
 
-        Provider:  DeploymentGithubApp{
+		Provider: DeploymentGithubApp{
 
-            GithubAppId: 	fmt.Sprintf(
+			GithubAppId: fmt.Sprintf(
 
-                "/firestartr/%s/fs-%s-admin/app-id",
+				"/firestartr/%s/fs-%s-admin/app-id",
 
-                m.Bootstrap.Customer,
-                m.Bootstrap.Customer,
-            ),
-            GithubAppInstallationId: fmt.Sprintf(
+				m.Bootstrap.Customer,
+				m.Bootstrap.Customer,
+			),
+			GithubAppInstallationId: fmt.Sprintf(
 
-                "/firestartr/%s/fs-%s-admin/%s/app-installation-id",
+				"/firestartr/%s/fs-%s-admin/%s/app-installation-id",
 
-                m.Bootstrap.Customer,
-                m.Bootstrap.Customer,
-                m.GhOrg,
-            ),
-            GithubAppPem: fmt.Sprintf(
+				m.Bootstrap.Customer,
+				m.Bootstrap.Customer,
+				m.GhOrg,
+			),
+			GithubAppPem: fmt.Sprintf(
 
-                "/firestartr/%s/fs-%s-admin/pem",
+				"/firestartr/%s/fs-%s-admin/pem",
 
-                m.Bootstrap.Customer,
-                m.Bootstrap.Customer,
-            ),
-
-        },
+				m.Bootstrap.Customer,
+				m.Bootstrap.Customer,
+			),
+		},
 	}
 
 	deploymentTemplateFile := dag.CurrentModule().
@@ -168,7 +159,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 		Source().
 		File("templates/deployment/pre.tmpl")
 
-    // deployment values
+		// deployment values
 	templateContent, err := deploymentTemplateFile.Contents(ctx)
 	if err != nil {
 		return nil, err
@@ -179,7 +170,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 		return nil, err
 	}
 
-    // deployment master yaml file
+	// deployment master yaml file
 	templatePreContent, err := deploymentPreTemplateFile.Contents(ctx)
 	if err != nil {
 		return nil, err
@@ -190,10 +181,9 @@ func (m *FirestartrBootstrap) RenderDeployment(
 		return nil, err
 	}
 
-    deploymentDir := dag.Directory().
-        WithNewFile("pre.yaml", renderedPre).
-        WithNewFile("pre/values.yaml", renderedValues)
+	deploymentDir := dag.Directory().
+		WithNewFile("pre.yaml", renderedPre).
+		WithNewFile("pre/values.yaml", renderedValues)
 
-    return deploymentDir, nil
+	return deploymentDir, nil
 }
-
