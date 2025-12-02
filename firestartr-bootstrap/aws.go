@@ -6,22 +6,25 @@ import (
 	"log"
 	"strings"
 
-    "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 
-    "github.com/aws/aws-sdk-go-v2/service/sts"
-    "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
 func (m *FirestartrBootstrap) ValidateSTSCredentials(
-	ctx context.Context, 
+	ctx context.Context,
 ) (string, error) {
 	log.Println("Attempting to validate credentials via STS:GetCallerIdentity...")
 
-    cfg := loginAWS(ctx, m.Creds)
-    
+	cfg, err := loginAWS(ctx, m.Creds)
+	if err != nil {
+		return "", err
+	}
+
 	stsClient := sts.NewFromConfig(cfg)
 
 	output, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
@@ -29,75 +32,81 @@ func (m *FirestartrBootstrap) ValidateSTSCredentials(
 		return "", fmt.Errorf("authentication failed for STS:GetCallerIdentity: %w", err)
 	}
 
-    accountID := aws.ToString(output.Account)
+	accountID := aws.ToString(output.Account)
 
-    // 5. Success!
+	// 5. Success!
 	log.Printf("✅ Credentials validated successfully.")
 	log.Printf("   User ARN: %s", aws.ToString(output.Arn))
 	log.Printf("   Account ID: %s", aws.ToString(output.Account))
-	
+
 	return accountID, nil
 }
 
 func (m *FirestartrBootstrap) ValidateBucket(
-    ctx context.Context,
+	ctx context.Context,
 ) error {
 
-    cfg := loginAWS(ctx, m.Creds)
-    
-    s3Client := s3.NewFromConfig(cfg)
+	cfg, err := loginAWS(ctx, m.Creds)
+	if err != nil {
+		return err
+	}
 
-    bucketName := *m.Creds.CloudProvider.Config.Bucket
+	s3Client := s3.NewFromConfig(cfg)
 
-    input := &s3.HeadBucketInput{
+	bucketName := *m.Creds.CloudProvider.Config.Bucket
+
+	input := &s3.HeadBucketInput{
 		Bucket: aws.String(bucketName),
-    }
+	}
 
-    _, err := s3Client.HeadBucket(ctx, input)
+	_, err = s3Client.HeadBucket(ctx, input)
 
-    if err == nil {
+	if err == nil {
 		log.Printf("✅ Bucket '%s' exists.", bucketName)
 		return nil
 	}
 
-    return fmt.Errorf("Bucket '%s' does no exist or insufficient permissions", bucketName)
+	return fmt.Errorf("Bucket '%s' does no exist or insufficient permissions", bucketName)
 
 }
 
 func (m *FirestartrBootstrap) ValidateParameters(
-    ctx context.Context,
-    path string,
+	ctx context.Context,
+	path string,
 
 ) error {
 
-    cfg := loginAWS(ctx, m.Creds)
+	cfg, err := loginAWS(ctx, m.Creds)
+	if err != nil {
+		return err
+	}
 
-    // Map the required keys for quick lookup
-    requiredMap := make(map[string]struct{})
-    for _, key := range m.ExpectedAWSParameters {
-        requiredMap[key] = struct{}{}
-    }
+	// Map the required keys for quick lookup
+	requiredMap := make(map[string]struct{})
+	for _, key := range m.ExpectedAWSParameters {
+		requiredMap[key] = struct{}{}
+	}
 
-    // Create a copy of the required map to track which ones are found
-    keysToFind := make(map[string]struct{})
-    for k, v := range requiredMap {
-        keysToFind[k] = v
-    }
+	// Create a copy of the required map to track which ones are found
+	keysToFind := make(map[string]struct{})
+	for k, v := range requiredMap {
+		keysToFind[k] = v
+	}
 
-    ssmClient := ssm.NewFromConfig(cfg)
+	ssmClient := ssm.NewFromConfig(cfg)
 
-    noDecrypt := false
+	noDecrypt := false
 
-    recursive := true
+	recursive := true
 
-    // Use pagination in case the number of keys exceeds 10 (the default limit)
-    paginator := ssm.NewGetParametersByPathPaginator(ssmClient, &ssm.GetParametersByPathInput{
-        Path:           &path,
-        Recursive:      &recursive,
-        WithDecryption: &noDecrypt, 
-    })
+	// Use pagination in case the number of keys exceeds 10 (the default limit)
+	paginator := ssm.NewGetParametersByPathPaginator(ssmClient, &ssm.GetParametersByPathInput{
+		Path:           &path,
+		Recursive:      &recursive,
+		WithDecryption: &noDecrypt,
+	})
 
-    for paginator.HasMorePages() {
+	for paginator.HasMorePages() {
 		output, err := paginator.NextPage(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to get parameters from path %s: %w", path, err)
@@ -112,7 +121,7 @@ func (m *FirestartrBootstrap) ValidateParameters(
 		}
 	}
 
-    // After iterating through all pages, check if any keys are still in keysToFind
+	// After iterating through all pages, check if any keys are still in keysToFind
 	if len(keysToFind) > 0 {
 		missingKeys := make([]string, 0, len(keysToFind))
 		for k := range keysToFind {
@@ -126,7 +135,7 @@ func (m *FirestartrBootstrap) ValidateParameters(
 
 }
 
-func loginAWS(ctx context.Context, creds *CredsFile) aws.Config {
+func loginAWS(ctx context.Context, creds *CredsFile) (aws.Config, error) {
 
 	staticProvider := credentials.NewStaticCredentialsProvider(
 		creds.CloudProvider.Config.AccessKey,
@@ -140,9 +149,8 @@ func loginAWS(ctx context.Context, creds *CredsFile) aws.Config {
 		config.WithCredentialsProvider(staticProvider), // <-- This overrides the default chain
 	)
 	if err != nil {
-		panic(fmt.Sprintf("unable to load SDK config: %v", err))
+		return aws.Config{}, fmt.Errorf("unable to load SDK config: %v", err)
 	}
 
-	return cfg
-} 
-
+	return cfg, nil
+}
