@@ -71,14 +71,14 @@ func (m *FirestartrBootstrap) CmdValidateBootstrap(
 
 	err := m.ValidateBootstrap(ctx, kubeconfig, kindSvc)
 	if err != nil {
-       errorMessage := PrepareAndPrintError(
-           ctx,
-           "CmdValidateBootstrap",
-           "An error ocurred validating the context and bootstrap conditions",
-           err,
-       )
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdValidateBootstrap",
+			"An error ocurred validating the context and bootstrap conditions",
+			err,
+		)
 
-       return "", errorMessage
+		return "", errorMessage
 	}
 
 	successMessage := `
@@ -109,7 +109,7 @@ func (m *FirestartrBootstrap) CmdInitSecretsMachinery(
 =====================================================
 🔒 SECRETS MACHINERY INITIALIZED 🔒
 =====================================================
-Helm, External Secrets Operator, and all required 
+Helm, External Secrets Operator, and all required
 Kubernetes secrets have been successfully deployed.
 List of secrets:
 	- Bootstrap Secrets
@@ -120,17 +120,17 @@ List of push secrets:
 `
 
 	if err != nil {
-        errorMessage := PrepareAndPrintError(
-            ctx,
-            "CmdInitSecretsMachinery",
-            "An error ocurred while preparing the external-secrets machinery and the push of secrets to the store",
-            err,
-        )
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitSecretsMachinery",
+			"An error ocurred while preparing the external-secrets machinery and the push of secrets to the store",
+			err,
+		)
 
-        return "", errorMessage
+		return "", errorMessage
 	}
 
-	return m.UpdateSummaryAndRun(ctx, successMessage),nil
+	return m.UpdateSummaryAndRun(ctx, successMessage), nil
 
 }
 
@@ -160,11 +160,11 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		panic(err)
 	}
 
-successMessage := `
+	successMessage := `
 =====================================================
 🤖 GITHUB APPS MACHINERY VALIDATED 🤖
 =====================================================
-Access tokens generated, GitHub App credentials loaded, 
+Access tokens generated, GitHub App credentials loaded,
 and organization plans validated successfully.
 The system is ready to interact with GitHub.
 `
@@ -186,20 +186,20 @@ func (m *FirestartrBootstrap) CmdImportResources(
 
 	kindContainer = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
 
-    // bust cache volume
-    kindContainer, err := kindContainer.
+	// bust cache volume
+	kindContainer, err := kindContainer.
 		WithMountedCache("/cache", cacheVolume).
 		WithExec([]string{
 			"rm", "-rf", "/cache/import",
 		}).
 		WithExec([]string{
-            "rm", "-rf", "/cache/resources",
+			"rm", "-rf", "/cache/resources",
 		}).
 		Sync(ctx)
 
-    if err != nil {
-        panic(fmt.Errorf("Error busting cache volume for resources: %s", err))
-    }
+	if err != nil {
+		panic(fmt.Errorf("Error busting cache volume for resources: %s", err))
+	}
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
@@ -269,19 +269,19 @@ func (m *FirestartrBootstrap) CmdPushDeployment(
 		panic(err)
 	}
 
-    return m.UpdateSummaryAndRunForPushDeploymentStep(
-        ctx,
-        fmt.Sprintf(
-            "https://github.com/firestartr-%s/app-firestartr",
-            m.Bootstrap.Env,
-        ),
-        fmt.Sprintf(
-            "firestartr-%s  /  %s  /   %s",
-            m.Bootstrap.Env,
-            m.Bootstrap.Customer,
-            m.Bootstrap.Env,
-        ),
-    )
+	return m.UpdateSummaryAndRunForPushDeploymentStep(
+		ctx,
+		fmt.Sprintf(
+			"https://github.com/firestartr-%s/app-firestartr",
+			m.Bootstrap.Env,
+		),
+		fmt.Sprintf(
+			"firestartr-%s  /  %s  /   %s",
+			m.Bootstrap.Env,
+			m.Bootstrap.Customer,
+			m.Bootstrap.Env,
+		),
+	)
 }
 
 func (m *FirestartrBootstrap) CmdPushStateSecrets(
@@ -304,32 +304,31 @@ func (m *FirestartrBootstrap) CmdPushStateSecrets(
 		panic(err)
 	}
 
-    if !m.Bootstrap.HasFreePlan {
-    	err = m.SetOrgVariables(ctx, tokenSecret, kindContainer)
-    	if err != nil {
-    		panic(err)
-    	}
-    
-    	err = m.SetOrgSecrets(ctx, tokenSecret, kindContainer)
-    	if err != nil {
-    		panic(err)
-    	}
-    } else {
-        panic(fmt.Errorf("%s org has a free plan,org secrets are not available", m.Bootstrap.Org))
-    }
+	if !m.Bootstrap.HasFreePlan {
+		err = m.SetOrgVariables(ctx, tokenSecret, kindContainer)
+		if err != nil {
+			panic(err)
+		}
 
-    for _, component := range m.Bootstrap.Components {
-    	if len(component.Labels) > 0 {
-    		err = m.CreateLabelsInRepo(ctx, component.Name, component.Labels, tokenSecret)
-    
-    		if err != nil {
-    			panic(err)
-    		}
-    	}
-    }
+		err = m.SetOrgSecrets(ctx, tokenSecret, kindContainer)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		panic(fmt.Errorf("%s org has a free plan,org secrets are not available", m.Bootstrap.Org))
+	}
 
+	for _, component := range m.Bootstrap.Components {
+		if len(component.Labels) > 0 {
+			err = m.CreateLabelsInRepo(ctx, component.Name, component.Labels, tokenSecret)
 
-    successMessage := `
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	successMessage := `
 =====================================================
             🔐⚙️ ORG STATE SECRETS PUSHED ⚙️🔐
 =====================================================
@@ -345,7 +344,7 @@ func (m *FirestartrBootstrap) CmdPushArgo(
 	ctx context.Context,
 ) string {
 
-    _, err := m.AddArgoCDSecrets(ctx)
+	_, err := m.AddArgoCDSecrets(ctx)
 
 	if err != nil {
 		panic(err)
@@ -357,22 +356,21 @@ func (m *FirestartrBootstrap) CmdPushArgo(
 		panic(err)
 	}
 
-    return m.UpdateSummaryAndRunForPushArgoCDStep(
-        ctx,
-        fmt.Sprintf(
-            "https://github.com/firestartr-%s/state-argocd",
-            m.Bootstrap.Env,
-        ),
-        fmt.Sprintf(
-            "https://github.com/firestartr-%s/state-sys-services",
-            m.Bootstrap.Env,
-        ),
-        fmt.Sprintf(
-            "firestartr-%s  /  argo-configuration-secrets  ",
-            m.Bootstrap.Env,
-        ),
-
-    )
+	return m.UpdateSummaryAndRunForPushArgoCDStep(
+		ctx,
+		fmt.Sprintf(
+			"https://github.com/firestartr-%s/state-argocd",
+			m.Bootstrap.Env,
+		),
+		fmt.Sprintf(
+			"https://github.com/firestartr-%s/state-sys-services",
+			m.Bootstrap.Env,
+		),
+		fmt.Sprintf(
+			"firestartr-%s  /  argo-configuration-secrets  ",
+			m.Bootstrap.Env,
+		),
+	)
 }
 
 func (m *FirestartrBootstrap) CmdRollback(
@@ -417,11 +415,10 @@ func (m *FirestartrBootstrap) CmdRunBootstrap(
 
 	m.CmdPushResources(ctx, kubeconfig, kindSvc, persistentVolume)
 
-    m.CmdPushStateSecrets(ctx, kubeconfig, kindSvc, persistentVolume)
+	m.CmdPushStateSecrets(ctx, kubeconfig, kindSvc, persistentVolume)
 
 	//m.CmdPushDeployment(ctx)
 
 	//m.CmdPushArgo(ctx)
 
 }
-

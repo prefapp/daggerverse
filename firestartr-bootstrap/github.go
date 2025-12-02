@@ -237,8 +237,8 @@ func (m *FirestartrBootstrap) SetOrgVariables(
 ) error {
 
 	mappedVars := map[string]string{
-		"FS_STATE_APP_ID":        "ref:secretsclaim:firestartr-secrets:fs-state-appid",
-		"FS_CHECKS_APP_ID":       "ref:secretsclaim:firestartr-secrets:fs-checks-appid",
+		"FS_STATE_APP_ID":  "ref:secretsclaim:firestartr-secrets:fs-state-appid",
+		"FS_CHECKS_APP_ID": "ref:secretsclaim:firestartr-secrets:fs-checks-appid",
 	}
 
 	for name, ref := range mappedVars {
@@ -252,7 +252,7 @@ func (m *FirestartrBootstrap) SetOrgVariables(
 		}
 	}
 
-    m.SetOrgVariable(ctx, "FIRESTARTR_CLI_VERSION", m.Bootstrap.Firestartr.CliVersion, ghToken)
+	m.SetOrgVariable(ctx, "FIRESTARTR_CLI_VERSION", m.Bootstrap.Firestartr.CliVersion, ghToken)
 	return nil
 }
 

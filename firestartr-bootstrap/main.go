@@ -90,11 +90,11 @@ func New(
 	// Autocalculate values
 	// We need to calculate the webhook params
 	// ----------------------------------------------------
-    if bootstrap.Env == "pro" {
-	    bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.firestartr.dev", bootstrap.Customer)
-    }else{
-	    bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.%s.firestartr.dev", bootstrap.Customer, bootstrap.Env)
-    }
+	if bootstrap.Env == "pro" {
+		bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.firestartr.dev", bootstrap.Customer)
+	} else {
+		bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.%s.firestartr.dev", bootstrap.Customer, bootstrap.Env)
+	}
 	bootstrap.WebhookSecretRef = fmt.Sprintf("/firestartr/%s/github-webhook/secret", bootstrap.Customer)
 
 	// We need to calculate the bucket (if necessary)
@@ -111,20 +111,20 @@ func New(
 		panic(err)
 	}
 
-    // calculate providers
-    githubProviderConfigName := fmt.Sprintf("github-%s", bootstrap.Customer)
-    backendConfigName := fmt.Sprintf("tfstate-%s", bootstrap.Customer)
+	// calculate providers
+	githubProviderConfigName := fmt.Sprintf("github-%s", bootstrap.Customer)
+	backendConfigName := fmt.Sprintf("tfstate-%s", bootstrap.Customer)
 	defaultsInterface := CrsDefaultsData{
 		GithubAppProviderConfigName:     githubProviderConfigName,
-        CloudProviderProviderConfigName: backendConfigName,
+		CloudProviderProviderConfigName: backendConfigName,
 		DefaultBranch:                   bootstrap.DefaultBranch,
 	}
 
-    creds.CloudProvider.ProviderConfigName = backendConfigName
-    creds.GithubApp.ProviderConfigName = githubProviderConfigName
+	creds.CloudProvider.ProviderConfigName = backendConfigName
+	creds.GithubApp.ProviderConfigName = githubProviderConfigName
 
-    // calculate store name
-    bootstrap.FinalSecretStoreName = fmt.Sprintf("%s-firestartr-secret-store", bootstrap.Customer)
+	// calculate store name
+	bootstrap.FinalSecretStoreName = fmt.Sprintf("%s-firestartr-secret-store", bootstrap.Customer)
 
 	crsDotConfigDir, err := getCrsDotConfigDir(ctx, bootstrap, defaultsInterface)
 	if err != nil {
@@ -217,10 +217,10 @@ func (m *FirestartrBootstrap) ValidateBootstrap(
 		return err
 	}
 
-    err = m.ValidateKindKubernetesConnection(ctx, kubeconfig, kindSvc)
-    if err != nil {
-        return err
-    }
+	err = m.ValidateKindKubernetesConnection(ctx, kubeconfig, kindSvc)
+	if err != nil {
+		return err
+	}
 
 	return nil
 

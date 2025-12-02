@@ -6,13 +6,13 @@ import (
 )
 
 func PrepareAndPrintError(
-    ctx context.Context,
-    command string,
-    description string,
-    errorCaused error,
+	ctx context.Context,
+	command string,
+	description string,
+	errorCaused error,
 ) error {
 
-errorM := fmt.Errorf(`
+	errorM := fmt.Errorf(`
 # Error
 ## 🛑 CRITICAL FAILURE: %s,
 
@@ -24,10 +24,9 @@ Error details:
 
 %s
 `,
-    command, description, errorCaused,
+		command, description, errorCaused,
+	)
 
-)
-
-    return errorM
+	return errorM
 
 }

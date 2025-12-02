@@ -54,7 +54,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 					"githubmemberships",
 					"githubrepositories",
 					"githubrepositoryfeatures",
-                    "githubrepositorysecretssections",
+					"githubrepositorysecretssections",
 					"githuborgwebhooks",
 					"terraformworkspaces",
 					"terraformworkspaceplans",
@@ -68,7 +68,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 				"ORG":                              m.GhOrg,
 				"LOG_LEVEL":                        "debug",
 				"AVOID_PROVIDER_SECRET_ENCRYPTION": "1",
-                "CHECK_IN_BOOTSTRAP_PROCESS":       "IN_BOOTSTRAP",
+				"CHECK_IN_BOOTSTRAP_PROCESS":       "IN_BOOTSTRAP",
 			},
 		},
 	}
