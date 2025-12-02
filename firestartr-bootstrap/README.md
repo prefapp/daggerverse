@@ -247,7 +247,7 @@ This will launch the whole bootstrapping process. It will:
 - Create a deployment PR in `firestartr-<env>/app-firestartr`
 - Create an application PR in `firestartr-<env>/state-argocd`
 
-All of these commands can be run separately, as described in step 5.
+All of these commands can be run separately, as described in step 6.
 
 ## 5. Step by step script
 
