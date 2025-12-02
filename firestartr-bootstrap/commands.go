@@ -269,7 +269,7 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}).
 		Sync(ctx)
 	if err != nil {
-		panic(err)
+		return err.Error()
 	}
 
 	return m.UpdateSummaryAndRunForImportResourcesStep(ctx, kindContainer)
@@ -311,7 +311,7 @@ func (m *FirestartrBootstrap) CmdPushDeployment(
 	_, err := m.CreateDeployment(ctx)
 
 	if err != nil {
-		panic(err)
+		return err.Error()
 	}
 
 	return m.UpdateSummaryAndRunForPushDeploymentStep(
@@ -395,13 +395,13 @@ func (m *FirestartrBootstrap) CmdPushArgo(
 	_, err := m.AddArgoCDSecrets(ctx)
 
 	if err != nil {
-		panic(err)
+		return err.Error()
 	}
 
 	_, err = m.CreateArgCDApplications(ctx)
 
 	if err != nil {
-		panic(err)
+		return err.Error()
 	}
 
 	return m.UpdateSummaryAndRunForPushArgoCDStep(
