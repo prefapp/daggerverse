@@ -390,6 +390,13 @@ dagger --bootstrap-file="./Bootstrapfile.yaml" \
 
 Creates an application PR in `firestartr-<env>/state-argocd`.
 
+## 7. Troubleshooting
 
-## 7. Flow chart
+The `kubectl apply` commands have a timeout of 10 hours. This is done to allow time for debugging and fixing the issue. If you see any `kubectl apply` command executing for two minutes or more without finishing, this probably indicates that an error happened. Without stopping Dagger, note the CR that's being applied and enter the cluster via `k9s`. Then:
+
+- Check the CR actually has an error status. Maybe the process is taking a while to finish.
+- If the CR has an error status, the actual error message won't appear in it (instead a generic error message will be shown). To see the actual error message, go to the `tfresults` CRD and select the record whose name matches the one in the error status of the CR you're debugging.
+- You can also check the logs of the pod running the controller. It will be in the namespace `default` and its name will be similar to `firestartr-init-firestartr-init-<random-string>`.
+
+## 8. Flow chart
 ![BootstrapDiagram drawio](https://github.com/user-attachments/assets/1c824119-b147-47bb-b8f8-8cc17db29c6a)
