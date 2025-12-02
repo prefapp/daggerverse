@@ -59,14 +59,14 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		return nil, err
 	}
 
-    pushSecretsDirectory, err := m.GeneratePushSecrets(ctx)
-    if err != nil {
-        return nil, err
-    }
+	pushSecretsDirectory, err := m.GeneratePushSecrets(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	kindContainer, err = kindContainer.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
-        WithDirectory("/push-secrets", pushSecretsDirectory).
+		WithDirectory("/push-secrets", pushSecretsDirectory).
 		WithNewFile(SECRETS_FILE_PATH, secretsCr).
 		WithNewFile(BOOTSTRAP_SECRETS_FILE_PATH, bootstrapSecretsCr).
 		WithExec([]string{
@@ -76,7 +76,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 			"kubectl", "wait",
 			"--for=condition=Ready",
 			strings.Trim(firestartrPodName, "\n"),
-            "--timeout=10h",
+			"--timeout=10h",
 			"-n", "external-secrets",
 		}).
 		WithFile("/secret_store/aws_secretstore.yaml", awsSecretStoreFile).
@@ -90,7 +90,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 			"kubectl",
 			"wait",
 			"--for=create",
-            "--timeout=10h",
+			"--timeout=10h",
 			"secret/bootstrap-secrets",
 		}).
 		WithExec([]string{
@@ -100,14 +100,14 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 			"kubectl",
 			"wait",
 			"--for=condition=Ready=True",
-            "--timeout=10h",
+			"--timeout=10h",
 			"pushsecret/webhook-pushsecret",
 		}).
 		WithExec([]string{
 			"kubectl",
 			"wait",
 			"--for=condition=Ready=True",
-            "--timeout=10h",
+			"--timeout=10h",
 			"pushsecret/prefapp-bot-pat-pushsecret",
 		}).
 		Sync(ctx)

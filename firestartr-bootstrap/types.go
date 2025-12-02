@@ -23,25 +23,25 @@ type Feature struct {
 }
 
 type Bootstrap struct {
-    Env                             string      `yaml:env`
-	Firestartr                      Firestartr  `yaml:"firestartr"`
-	PushFiles                       PushFiles   `yaml:"pushFiles"`
-	Org                             string      `yaml:"org"`
-    Customer                        string      `yaml:"customer"`
-	Components                      []Component `yaml:"components"`
-	DefaultSystemName               string      `yaml:"defaultSystemName"`
-	DefaultDomainName               string      `yaml:"defaultDomainName"`
-	DefaultFirestartrGroup          string      `yaml:"defaultFirestartrGroup"`
-	DefaultBranch                   string      `yaml:"defaultBranch"`
-	DefaultBranchStrategy           string      `yaml:"defaultBranchStrategy"`
-	DefaultOrgPermissions           string      `yaml:"defaultOrgPermissions"`
-	FinalSecretStoreName            string      `yaml:"finalSecretStoreName"`
-	WebhookUrl                      string      // Autocalculated
-	WebhookSecretRef                string      // Autocalculated
-    PrefappBotPatSecretRef          string      // Autocalculated 
-    FirestartrCliVersionSecretRef   string      // Autocalculated
-	HasFreePlan                     bool        // Autocalculated
-	BotName                         string      // Stored in Credentialsfile.yaml, but needed here for templating
+	Env                           string      `yaml:env`
+	Firestartr                    Firestartr  `yaml:"firestartr"`
+	PushFiles                     PushFiles   `yaml:"pushFiles"`
+	Org                           string      `yaml:"org"`
+	Customer                      string      `yaml:"customer"`
+	Components                    []Component `yaml:"components"`
+	DefaultSystemName             string      `yaml:"defaultSystemName"`
+	DefaultDomainName             string      `yaml:"defaultDomainName"`
+	DefaultFirestartrGroup        string      `yaml:"defaultFirestartrGroup"`
+	DefaultBranch                 string      `yaml:"defaultBranch"`
+	DefaultBranchStrategy         string      `yaml:"defaultBranchStrategy"`
+	DefaultOrgPermissions         string      `yaml:"defaultOrgPermissions"`
+	FinalSecretStoreName          string      `yaml:"finalSecretStoreName"`
+	WebhookUrl                    string      // Autocalculated
+	WebhookSecretRef              string      // Autocalculated
+	PrefappBotPatSecretRef        string      // Autocalculated
+	FirestartrCliVersionSecretRef string      // Autocalculated
+	HasFreePlan                   bool        // Autocalculated
+	BotName                       string      // Stored in Credentialsfile.yaml, but needed here for templating
 }
 
 type PushFiles struct {
@@ -65,22 +65,22 @@ type Providers struct {
 
 type Firestartr struct {
 	OperatorVersion string `yaml:"operator"`
-    CliVersion string   `yaml:"cli"`
+	CliVersion      string `yaml:"cli"`
 }
 
 type CredsFile struct {
 	CloudProvider CloudProvider `yaml:"cloudProvider"`
 	GithubApp     GithubApp     `yaml:"githubApp"`
-	ArgoCDCreds	  ArgoCDCreds	`yaml:"argoCD"` 				 
+	ArgoCDCreds   ArgoCDCreds   `yaml:"argoCD"`
 }
 
 type ArgoCDCreds struct {
-	GithubAppId					string `yaml:"githubAppId"`
-	GithubAppInstallationId		string `yaml:"githubAppInstallationId"`
+	GithubAppId             string `yaml:"githubAppId"`
+	GithubAppInstallationId string `yaml:"githubAppInstallationId"`
 }
 
 type CloudProvider struct {
-	ProviderConfigName string        
+	ProviderConfigName string
 	Config             ConfigProvider `yaml:"config"`
 	Source             string         `yaml:"source"`
 	Type               string         `yaml:"type"`
@@ -90,18 +90,18 @@ type CloudProvider struct {
 
 type ConfigProvider struct {
 	Bucket    *string `json:"bucket" yaml:"bucket"`
-	Region    string `json:"region" yaml:"region"`
-	AccessKey string `json:"access_key" yaml:"access_key"`
-	SecretKey string `json:"secret_key" yaml:"secret_key"`
-	Token     string `json:"token" yaml:"token"`
+	Region    string  `json:"region" yaml:"region"`
+	AccessKey string  `json:"access_key" yaml:"access_key"`
+	SecretKey string  `json:"secret_key" yaml:"secret_key"`
+	Token     string  `json:"token" yaml:"token"`
 }
 
 type GithubApp struct {
-	ProviderConfigName string 
+	ProviderConfigName string
 	Owner              string `yaml:"owner"`
 	BotName            string `yaml:"botName"`
-    PrefappBotPat      string `yaml:"prefappBotPat"`
-    OperatorPat        string `yaml:"operatorPat"`
+	PrefappBotPat      string `yaml:"prefappBotPat"`
+	OperatorPat        string `yaml:"operatorPat"`
 	Pem                string
 	RawPem             string
 	GhAppId            string
@@ -119,13 +119,11 @@ type CrsDefaultsData struct {
 	GithubAppProviderConfigName     string
 }
 
-
 // DeploymentWebhook representa el bloque de la URL y el Secreto del Webhook.
 type DeploymentWebhook struct {
 	URL    string
 	Secret string
 }
-
 
 // DeploymentExternalSecrets representa la referencia al ARN del rol para External Secrets.
 type DeploymentExternalSecrets struct {
@@ -134,9 +132,9 @@ type DeploymentExternalSecrets struct {
 
 // DeploymentController representa la información de la aplicación GitHub usada por el controller.
 type DeploymentController struct {
-	Image         string
-	RoleARN       string
-	GithubApp	  DeploymentGithubApp
+	Image     string
+	RoleARN   string
+	GithubApp DeploymentGithubApp
 }
 
 // DeploymentAws representa la configuración de AWS específica (Bucket y Region).
@@ -146,17 +144,15 @@ type DeploymentAws struct {
 }
 
 type DeploymentGithubApp struct {
-
-	GithubAppId   string
-	GithubAppPem  string
+	GithubAppId             string
+	GithubAppPem            string
 	GithubAppInstallationId string
 }
-
 
 // DeploymentConfig contiene solo los campos de nivel superior que son interpolables.
 type DeploymentConfig struct {
 	Customer        string
-	Org				string
+	Org             string
 	Webhook         DeploymentWebhook
 	ExternalSecrets DeploymentExternalSecrets
 	Controller      DeploymentController
@@ -164,18 +160,18 @@ type DeploymentConfig struct {
 	Provider        DeploymentGithubApp
 }
 
-type PushSecretElement  struct {
-    Name                    string
-    SecretStore             string
-    KubernetesSecret        string
-    KubernetesSecretKey     string
-    ParameterName           string
-    Value                   string
+type PushSecretElement struct {
+	Name                string
+	SecretStore         string
+	KubernetesSecret    string
+	KubernetesSecretKey string
+	ParameterName       string
+	Value               string
 }
 
 type ArgoCDConfig struct {
-	Name                    string
-	App						string
-	Repo					string
-	Namespace				string
+	Name      string
+	App       string
+	Repo      string
+	Namespace string
 }

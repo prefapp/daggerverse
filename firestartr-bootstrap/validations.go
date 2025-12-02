@@ -4,8 +4,9 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
-	"strings"
 	"strconv"
+	"strings"
+
 	"github.com/xeipuuv/gojsonschema"
 	"sigs.k8s.io/yaml"
 )
@@ -20,12 +21,12 @@ func (m *FirestartrBootstrap) ValidateKindKubernetesConnection(
 
 	ep, err := kindSvc.Endpoint(ctx)
 	if err != nil {
-        return fmt.Errorf("Obtaining the kind-cluster endpoint: %s", err)
+		return fmt.Errorf("Obtaining the kind-cluster endpoint: %s", err)
 	}
 
 	port, err := strconv.Atoi(strings.Split(ep, ":")[1])
 	if err != nil {
-        return fmt.Errorf("Formating the kind-cluster port: %s", err)
+		return fmt.Errorf("Formating the kind-cluster port: %s", err)
 	}
 
 	_, err = dag.Container().
@@ -42,7 +43,7 @@ func (m *FirestartrBootstrap) ValidateKindKubernetesConnection(
 		Sync(ctx)
 
 	if err != nil {
-        return fmt.Errorf("Connecting to the kind-cluster: %s", err)
+		return fmt.Errorf("Connecting to the kind-cluster: %s", err)
 	}
 
 	return nil
