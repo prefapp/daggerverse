@@ -249,6 +249,29 @@ This will launch the whole bootstrapping process. It will:
 
 All of these commands can be run separately, as described in step 5.
 
+## 5. Step by step script
+
+It is provided a ```step_by_step.sh``` script to help with the bootstrap process. 
+
+This script executes the provisioning pipeline in sequential stages, ensuring that prerequisite tasks are completed before moving to deployment steps. 
+At critical junctures, the pipeline will pause and require explicit user input to determine the next action, especially if a previous step failed.
+
+🛑 User Intervention Required
+When the script encounters a non-fatal error during a setup stage (e.g., resources already exist or a validation warning), 
+it will halt and prompt you to decide how to proceed.
+
+```sh
+# copy the script
+cp step_by_step.sh my-steps.sh
+
+# edit the file and fill the needed data at the top
+vim my-steps.sh
+
+# run the script
+bash my-steps.sh
+
+```
+
 
 Rollback command:
 
@@ -268,7 +291,7 @@ This will rollback the changes done by the bootstrap process. It will:
 
 Note that the rollback process may fail to delete a resource if it is in an error state. In that case, you will need to manually delete the resource. The process will output all changes done and failed deletions when it's finished.
 
-## 5. Individual commands
+## 6. Individual commands
 
 You can run the individual commands that compose the bootstrap process separately. This is useful for debugging or if you want to run only a part of the process. They are:
 
@@ -366,5 +389,5 @@ dagger --bootstrap-file="./Bootstrapfile.yaml" \
 Creates an application PR in `firestartr-<env>/state-argocd`.
 
 
-## 6. Flow chart
+## 7. Flow chart
 ![BootstrapDiagram drawio](https://github.com/user-attachments/assets/1c824119-b147-47bb-b8f8-8cc17db29c6a)
