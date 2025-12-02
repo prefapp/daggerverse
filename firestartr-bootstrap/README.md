@@ -251,13 +251,13 @@ All of these commands can be run separately, as described in step 5.
 
 ## 5. Step by step script
 
-It is provided a ```step_by_step.sh``` script to help with the bootstrap process. 
+It is provided a ```step_by_step.sh``` script to help with the bootstrap process.
 
-This script executes the provisioning pipeline in sequential stages, ensuring that prerequisite tasks are completed before moving to deployment steps. 
+This script executes the provisioning pipeline in sequential stages, ensuring that prerequisite tasks are completed before moving to deployment steps.
 At critical junctures, the pipeline will pause and require explicit user input to determine the next action, especially if a previous step failed.
 
 🛑 User Intervention Required
-When the script encounters a non-fatal error during a setup stage (e.g., resources already exist or a validation warning), 
+When the script encounters a non-fatal error during a setup stage (e.g., resources already exist or a validation warning),
 it will halt and prompt you to decide how to proceed.
 
 ```sh
@@ -288,6 +288,8 @@ This will rollback the changes done by the bootstrap process. It will:
 - Delete the repositories created, along with their features and secrets
 - Delete the groups created by the bootstrap process (not any that where imported)
 - Delete the GitHub org's webhook created by the bootstrap process
+
+⚠️  WARNING: This process will only delete the resources mentioned above. Any other resources created by the process, such as the deployment and ArgoCD applications PRs, the files created by merging them, or the Terraform state stored in the S3 bucket will not be deleted. Please make sure to manually delete those resources if needed.
 
 Note that the rollback process may fail to delete a resource if it is in an error state. In that case, you will need to manually delete the resource. The process will output all changes done and failed deletions when it's finished.
 
