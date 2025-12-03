@@ -11,7 +11,7 @@ import (
 func (m *FirestartrBootstrap) UpdateSecretStoreRef(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-) *dagger.Container {
+) (*dagger.Container, error) {
 	// Claim reference
 	secretClaim, err := getYamlDataFromContainerFile(
 		ctx,
@@ -19,23 +19,26 @@ func (m *FirestartrBootstrap) UpdateSecretStoreRef(
 		"/resources/claims/claims/secrets/firestartr-secrets.yaml",
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	secretClaim["providers"].(map[string]interface{})["external_secrets"].(map[string]interface{})["secretStore"].(map[string]interface{})["name"] = m.Bootstrap.FinalSecretStoreName
 
-	kindContainer = saveYamlDataToContainerFile(
+	kindContainer, err = saveYamlDataToContainerFile(
 		ctx,
 		kindContainer,
 		"/resources/claims/claims/secrets/firestartr-secrets.yaml",
 		secretClaim,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	// CR reference
 	infraDir := kindContainer.Directory("/resources/firestartr-crs/infra")
 	secretsCrNameList, err := infraDir.Glob(ctx, "ExternalSecret.*")
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	for _, secretName := range secretsCrNameList {
 		secretCr, err := getYamlDataFromContainerFile(
@@ -44,20 +47,23 @@ func (m *FirestartrBootstrap) UpdateSecretStoreRef(
 			fmt.Sprintf("/resources/firestartr-crs/infra/%s", secretName),
 		)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		secretCr["spec"].(map[string]interface{})["secretStoreRef"].(map[string]interface{})["name"] = m.Bootstrap.FinalSecretStoreName
 
-		kindContainer = saveYamlDataToContainerFile(
+		kindContainer, err = saveYamlDataToContainerFile(
 			ctx,
 			kindContainer,
 			fmt.Sprintf("/resources/firestartr-crs/infra/%s", secretName),
 			secretCr,
 		)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return kindContainer
+	return kindContainer, nil
 }
 
 func getYamlDataFromContainerFile(
@@ -86,13 +92,13 @@ func saveYamlDataToContainerFile(
 	kindContainer *dagger.Container,
 	path string,
 	data map[string]interface{},
-) *dagger.Container {
+) (*dagger.Container, error) {
 	updatedFileContents, err := yaml.Marshal(data)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return kindContainer.WithNewFile(path, string(updatedFileContents))
+	return kindContainer.WithNewFile(path, string(updatedFileContents)), nil
 }
 
 func executeCurlCommand(

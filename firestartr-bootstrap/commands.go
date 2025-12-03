@@ -279,7 +279,11 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		return err.Error()
 	}
 
-	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
+	kindContainer, err = m.UpdateSecretStoreRef(ctx, kindContainer)
+	if err != nil {
+		return err.Error()
+	}
+
 	kindContainer, err = kindContainer.
 		WithMountedCache("/cache", cacheVolume).
 		WithExec([]string{
