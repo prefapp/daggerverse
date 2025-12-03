@@ -392,7 +392,7 @@ func (m *FirestartrBootstrap) CheckAlreadyCreatedRepositories(
 
 	if len(alreadyCreatedRepos) > 0 {
 		return fmt.Errorf(
-			"the following repositories already exist and will be skipped: %s",
+			"the following repositories already exist: %s. Delete them or choose different names to proceed",
 			strings.Join(alreadyCreatedRepos, ", "),
 		)
 	}
