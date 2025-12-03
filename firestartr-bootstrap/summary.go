@@ -114,12 +114,15 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushResourcesStep(
 	pushedGithubCrs, err := kindContainer.Directory(
 		"/resources/firestartr-crs/github",
 	).Entries(ctx)
+	if err != nil {
+		panic(fmt.Errorf("Error creating the list of pushed github crs: %s", err))
+	}
+
 	pushedInfraCrs, err := kindContainer.Directory(
 		"/resources/firestartr-crs/infra",
 	).Entries(ctx)
-
 	if err != nil {
-		panic(fmt.Errorf("Error creating the list of pushed crs: %s", err))
+		panic(fmt.Errorf("Error creating the list of pushed infra crs: %s", err))
 	}
 
 	successMessage := fmt.Sprintf(`
