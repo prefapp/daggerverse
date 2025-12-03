@@ -51,21 +51,20 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRun(
 func (m *FirestartrBootstrap) UpdateSummaryAndRunForImportResourcesStep(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-) string {
+) (string, error) {
 
 	importedFiles, err := kindContainer.Directory("/import/crs").Entries(
 		ctx,
 	)
 	if err != nil {
-		panic(fmt.Errorf("Error creating the list of imported artifacts: %s", err))
+		return "", fmt.Errorf("Error creating the list of imported artifacts: %s", err)
 	}
 
 	createdResources, err := kindContainer.Directory("/resources/firestartr-crs/github").Entries(
 		ctx,
 	)
-
 	if err != nil {
-		panic(fmt.Errorf("Error creating the list of generated artifacts: %s", err))
+		return "", fmt.Errorf("Error creating the list of generated artifacts: %s", err)
 	}
 
 	successMessage := fmt.Sprintf(`
@@ -90,14 +89,14 @@ The environment is fully provisioned.
 		strings.Join(createdResources, "\n- "),
 	)
 
-	return m.UpdateSummaryAndRun(ctx, successMessage)
+	return m.UpdateSummaryAndRun(ctx, successMessage), nil
 
 }
 
 func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushResourcesStep(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-) string {
+) (string, error) {
 
 	cmd := []string{"find", "/resources/claims", "-type", "f", "-name", "*.yaml"}
 
@@ -106,7 +105,7 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushResourcesStep(
 		Stdout(ctx)
 
 	if err != nil {
-		panic(fmt.Errorf("Error creating the list of pushed claims: %s", err))
+		return "", fmt.Errorf("Error creating the list of pushed claims: %s", err)
 	}
 
 	pushedClaims := strings.Split(strings.TrimSpace(output), "\n")
@@ -114,12 +113,15 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushResourcesStep(
 	pushedGithubCrs, err := kindContainer.Directory(
 		"/resources/firestartr-crs/github",
 	).Entries(ctx)
+	if err != nil {
+		return "", fmt.Errorf("Error creating the list of pushed github crs: %s", err)
+	}
+
 	pushedInfraCrs, err := kindContainer.Directory(
 		"/resources/firestartr-crs/infra",
 	).Entries(ctx)
-
 	if err != nil {
-		panic(fmt.Errorf("Error creating the list of pushed crs: %s", err))
+		return "", fmt.Errorf("Error creating the list of pushed infra crs: %s", err)
 	}
 
 	successMessage := fmt.Sprintf(`
@@ -146,7 +148,7 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushResourcesStep(
 		m.Bootstrap.Org,
 		strings.Join(pushedInfraCrs, "\n- "),
 	)
-	return m.UpdateSummaryAndRun(ctx, successMessage)
+	return m.UpdateSummaryAndRun(ctx, successMessage), nil
 
 }
 

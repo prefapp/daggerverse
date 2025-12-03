@@ -47,7 +47,12 @@ func (m *FirestartrBootstrap) SplitRenderedClaimsInFiles(renderedContent string)
 
 		manifest = "---\n" + manifest
 
-		pathFile := fmt.Sprintf("claims/%s/%s", getPathByKind(claim.Kind), fileName)
+		path, err := getPathByKind(claim.Kind)
+		if err != nil {
+			return nil, err
+		}
+
+		pathFile := fmt.Sprintf("claims/%s/%s", path, fileName)
 
 		dir = dir.WithNewFile(pathFile, manifest)
 	}
@@ -55,7 +60,7 @@ func (m *FirestartrBootstrap) SplitRenderedClaimsInFiles(renderedContent string)
 	return dir, nil
 }
 
-func getPathByKind(kind string) string {
+func getPathByKind(kind string) (string, error) {
 	mapKindPath := map[string]string{
 		"ComponentClaim":  "components",
 		"GroupClaim":      "groups",
@@ -66,9 +71,9 @@ func getPathByKind(kind string) string {
 	}
 
 	if path, ok := mapKindPath[kind]; ok {
-		return path
+		return path, nil
 	} else {
-		panic(fmt.Sprintf("Unknown kind: %s", kind))
+		return "", fmt.Errorf("Unknown kind: %s", kind)
 	}
 }
 

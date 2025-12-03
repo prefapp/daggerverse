@@ -9,12 +9,11 @@ import (
 func (m *FirestartrBootstrap) PushCrsFiles(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-
 ) error {
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if m.Bootstrap.PushFiles.Claims.Push {
@@ -29,7 +28,7 @@ func (m *FirestartrBootstrap) PushCrsFiles(
 			tokenSecret,
 		)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		dotConfig := dag.Directory().
@@ -42,7 +41,7 @@ func (m *FirestartrBootstrap) PushCrsFiles(
 			tokenSecret,
 		)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -56,7 +55,7 @@ func (m *FirestartrBootstrap) PushCrsFiles(
 			tokenSecret,
 		)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		dotConfig := dag.Directory().
@@ -69,7 +68,7 @@ func (m *FirestartrBootstrap) PushCrsFiles(
 			tokenSecret,
 		)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -83,7 +82,7 @@ func (m *FirestartrBootstrap) PushCrsFiles(
 			tokenSecret,
 		)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 

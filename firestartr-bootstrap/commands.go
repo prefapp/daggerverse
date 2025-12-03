@@ -24,7 +24,6 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
 ) (*dagger.Container, error) {
-
 	clusterName := "kind"
 
 	ep, err := kindSvc.Endpoint(ctx)
@@ -105,14 +104,25 @@ func (m *FirestartrBootstrap) CmdInitSecretsMachinery(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitSecretsMachinery",
-			"An error ocurred while preparing the external-secrets machinery and the push of secrets to the store",
+			"An error ocurred while creating the bridge container",
 			err,
 		)
 
 		return "", errorMessage
 	}
 
-	kindContainer = m.InstallHelmAndExternalSecrets(ctx, kindContainer)
+	kindContainer, err = m.InstallHelmAndExternalSecrets(ctx, kindContainer)
+	if err != nil {
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitSecretsMachinery",
+			"An error ocurred while installing Helm and External Secrets",
+			err,
+		)
+
+		return "", errorMessage
+	}
+
 	_, err = m.CreateKubernetesSecrets(ctx, kindContainer)
 
 	successMessage := `
@@ -133,7 +143,7 @@ List of push secrets:
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitSecretsMachinery",
-			"An error ocurred while preparing the external-secrets machinery and the push of secrets to the store",
+			"An error ocurred while creating the Kubernetes secrets",
 			err,
 		)
 
@@ -155,7 +165,7 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitGithubAppsMachinery",
-			"An error ocurred while preparing the github apps machinery",
+			"An error ocurred while creating the bridge container",
 			err,
 		)
 
@@ -169,7 +179,7 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitGithubAppsMachinery",
-			"An error ocurred while preparing the github apps machinery",
+			"An error ocurred while generating the GitHub token",
 			err,
 		)
 
@@ -182,7 +192,7 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitGithubAppsMachinery",
-			"An error ocurred while preparing the github apps machinery",
+			"An error ocurred while getting the organization plan",
 			err,
 		)
 
@@ -194,7 +204,7 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitGithubAppsMachinery",
-			"An error ocurred while preparing the github apps machinery",
+			"An error ocurred while checking if the <org>-all group exists",
 			err,
 		)
 
@@ -226,7 +236,10 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		return err.Error()
 	}
 
-	kindContainer = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
+	kindContainer, err = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
+	if err != nil {
+		return err.Error()
+	}
 
 	// bust cache volume
 	kindContainer, err = kindContainer.
@@ -256,8 +269,16 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}
 	}
 
-	kindContainer = m.RunImporter(ctx, kindContainer)
-	kindContainer = m.RunOperator(ctx, kindContainer)
+	kindContainer, err = m.RunImporter(ctx, kindContainer)
+	if err != nil {
+		return err.Error()
+	}
+
+	kindContainer, err = m.RunOperator(ctx, kindContainer)
+	if err != nil {
+		return err.Error()
+	}
+
 	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
 	kindContainer, err = kindContainer.
 		WithMountedCache("/cache", cacheVolume).
@@ -272,7 +293,12 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		return err.Error()
 	}
 
-	return m.UpdateSummaryAndRunForImportResourcesStep(ctx, kindContainer)
+	summary, err := m.UpdateSummaryAndRunForImportResourcesStep(ctx, kindContainer)
+	if err != nil {
+		return err.Error()
+	}
+
+	return summary
 }
 
 func (m *FirestartrBootstrap) CmdPushResources(
@@ -296,12 +322,20 @@ func (m *FirestartrBootstrap) CmdPushResources(
 			"cp", "-a", "/mnt/resources", "/",
 		})
 
-	m.PushCrsFiles(
+	err = m.PushCrsFiles(
 		ctx,
 		kindContainer,
 	)
+	if err != nil {
+		return err.Error()
+	}
 
-	return m.UpdateSummaryAndRunForPushResourcesStep(ctx, kindContainer)
+	summary, err := m.UpdateSummaryAndRunForPushResourcesStep(ctx, kindContainer)
+	if err != nil {
+		return err.Error()
+	}
+
+	return summary
 }
 
 func (m *FirestartrBootstrap) CmdPushDeployment(

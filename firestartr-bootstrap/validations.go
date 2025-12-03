@@ -317,7 +317,12 @@ func (m *FirestartrBootstrap) GithubRepositoryExists(
 	repo string,
 	ghToken *dagger.Secret,
 ) (bool, error) {
-	ctr, err := m.GhContainer(ctx, ghToken).
+	ctr, err := m.GhContainer(ctx, ghToken)
+	if err != nil {
+		return false, err
+	}
+
+	ctr, err = ctr.
 		WithExec([]string{
 			"gh",
 			"repo",

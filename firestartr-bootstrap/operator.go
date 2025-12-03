@@ -13,23 +13,27 @@ import (
 func (m *FirestartrBootstrap) RunOperator(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-) *dagger.Container {
+) (*dagger.Container, error) {
 
 	renderedCrsDir, err := m.RenderCrs(ctx, kindContainer.Directory("/import"))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	kindContainer = kindContainer.
 		WithDirectory("/resources", renderedCrsDir)
 
-	kindContainer = m.ApplyFirestartrCrs(
+	kindContainer, err = m.ApplyFirestartrCrs(
 		ctx,
 		kindContainer,
 		"/resources/firestartr-crs/infra",
 		[]string{"ExternalSecret.*"},
 	)
-	kindContainer = m.ApplyFirestartrCrs(
+	if err != nil {
+		return nil, err
+	}
+
+	kindContainer, err = m.ApplyFirestartrCrs(
 		ctx,
 		kindContainer,
 		"/resources/firestartr-crs/github",
@@ -41,15 +45,18 @@ func (m *FirestartrBootstrap) RunOperator(
 			"FirestartrGithubOrgWebhook.*",
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
-	return kindContainer
+	return kindContainer, nil
 
 }
 
 func (m *FirestartrBootstrap) InstallHelmAndExternalSecrets(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-) *dagger.Container {
+) (*dagger.Container, error) {
 
 	kindContainerWithSecrets, err := kindContainer.
 		WithExec([]string{
@@ -65,31 +72,36 @@ func (m *FirestartrBootstrap) InstallHelmAndExternalSecrets(
 		Sync(ctx)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return kindContainerWithSecrets
+	return kindContainerWithSecrets, nil
 }
 
 func (m *FirestartrBootstrap) InstallInitialCRsAndBuildHelmValues(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-) *dagger.Container {
+) (*dagger.Container, error) {
 	initialCrsTemplate, err := m.RenderInitialCrs(ctx,
 		dag.CurrentModule().
 			Source().
 			File("templates/initial_crs.tmpl"),
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	initialCrsDir, err := m.SplitRenderedCrsInFiles(initialCrsTemplate)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return kindContainer.
+	helmValues, err := m.BuildHelmValues(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	kindContainer = kindContainer.
 		WithDirectory("/resources/initial-crs", initialCrsDir).
 		WithMountedDirectory("/charts",
 			dag.CurrentModule().
@@ -103,10 +115,12 @@ func (m *FirestartrBootstrap) InstallInitialCRsAndBuildHelmValues(
 		}).
 		WithNewFile(
 			"/charts/firestartr-init/values-file.yaml",
-			m.BuildHelmValues(ctx),
+			helmValues,
 		).
 		WithWorkdir("/charts/firestartr-init").
 		WithExec([]string{"helm", "upgrade", "--install", "firestartr-init", ".", "--values", "values-file.yaml"})
+
+	return kindContainer, nil
 }
 
 func (m *FirestartrBootstrap) ApplyFirestartrCrs(
@@ -114,19 +128,23 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 	kindContainer *dagger.Container,
 	crsDirectoryPath string,
 	crsToApplyList []string,
-) *dagger.Container {
+) (*dagger.Container, error) {
 
 	for _, kind := range crsToApplyList {
 		entries, err := kindContainer.Directory(crsDirectoryPath).Glob(ctx, kind)
 		if err != nil {
-			panic(fmt.Sprintf("Failed to get glob entries: %s", err))
+			return nil, fmt.Errorf("Failed to get glob entries: %s", err)
 		}
+
 		for _, entry := range entries {
-			kindContainer = m.ApplyCrAndWaitForProvisioned(
+			kindContainer, err = m.ApplyCrAndWaitForProvisioned(
 				ctx, kindContainer,
 				fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
 				kind != "ExternalSecret.*",
 			)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -140,12 +158,11 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 		"firestartr.dev/bootstrapped",
 		"true",
 	)
-
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return kindContainer
+	return kindContainer, nil
 }
 
 func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
@@ -153,19 +170,19 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 	kindContainer *dagger.Container,
 	entry string,
 	waitForProvisioned bool,
-) *dagger.Container {
+) (*dagger.Container, error) {
 
 	crFile := kindContainer.File(entry)
 
 	crContent, err := crFile.Contents(ctx)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to get file contents: %s", err))
+		return nil, fmt.Errorf("Failed to get file contents: %s", err)
 	}
 
 	cr := &Cr{}
 	err = yaml.Unmarshal([]byte(crContent), cr)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to unmarshal CR: %s", err))
+		return nil, fmt.Errorf("Failed to unmarshal CR: %s", err)
 	}
 
 	kindContainer = kindContainer.
@@ -177,12 +194,17 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 		})
 
 	if waitForProvisioned {
+		singularKind, err := getSingularByKind(cr.Kind)
+		if err != nil {
+			return nil, err
+		}
+
 		kindContainer = kindContainer.
 			WithExec([]string{
 				"kubectl",
 				"wait",
 				"--for=condition=PROVISIONED=True",
-				fmt.Sprintf("%s/%s", getSingularByKind(cr.Kind), cr.Metadata.Name),
+				fmt.Sprintf("%s/%s", singularKind, cr.Metadata.Name),
 				"--timeout=10h",
 			})
 	}
@@ -195,7 +217,7 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 		m.ProvisionedCrs = append(m.ProvisionedCrs, cr)
 	}
 
-	return kindContainer
+	return kindContainer, nil
 }
 
 func patchCR(
@@ -253,7 +275,7 @@ func GetKind(
 	).Container()
 }
 
-func getSingularByKind(kind string) string {
+func getSingularByKind(kind string) (string, error) {
 
 	mapSingular := map[string]string{
 		"ExternalSecret":                           "",
@@ -267,9 +289,9 @@ func getSingularByKind(kind string) string {
 	}
 
 	if singular, ok := mapSingular[kind]; ok {
-		return singular
+		return singular, nil
 	} else {
-		panic(fmt.Sprintf("No singular found for kind: %s", kind))
+		return "", fmt.Errorf("No singular found for kind: %s", kind)
 	}
 
 }

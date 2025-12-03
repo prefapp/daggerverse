@@ -71,19 +71,19 @@ func New(
 
 	creds, err := loadCredsFile(ctx, credentialsSecret)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// load bootstrap file
 	bootstrapContentFile, err := bootstrapFile.Contents(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	bootstrap := &Bootstrap{}
 	err = yaml.Unmarshal([]byte(bootstrapContentFile), bootstrap)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// ----------------------------------------------------
@@ -108,7 +108,7 @@ func New(
 
 	claimsDotConfigDir, err := getClaimsDotConfigDir(ctx, bootstrap)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// calculate providers
@@ -128,7 +128,7 @@ func New(
 
 	crsDotConfigDir, err := getCrsDotConfigDir(ctx, bootstrap, defaultsInterface)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &FirestartrBootstrap{

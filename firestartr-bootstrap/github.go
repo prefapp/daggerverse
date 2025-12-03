@@ -105,7 +105,12 @@ func (m *FirestartrBootstrap) CloneRepo(
 	repoName string,
 	ghToken *dagger.Secret,
 ) (*dagger.Container, error) {
-	alpCtr, err := m.GhContainer(ctx, ghToken).
+	ctr, err := m.GhContainer(ctx, ghToken)
+	if err != nil {
+		return nil, err
+	}
+
+	alpCtr, err := ctr.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"gh",
@@ -160,7 +165,12 @@ func (m *FirestartrBootstrap) SetOrgVariable(
 	value string,
 	ghToken *dagger.Secret,
 ) (*dagger.Container, error) {
-	alpCtr, err := m.GhContainer(ctx, ghToken).
+	ctr, err := m.GhContainer(ctx, ghToken)
+	if err != nil {
+		return nil, err
+	}
+
+	alpCtr, err := ctr.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"gh",
@@ -190,7 +200,12 @@ func (m *FirestartrBootstrap) SetRepoVariable(
 	value string,
 	ghToken *dagger.Secret,
 ) (*dagger.Container, error) {
-	alpCtr, err := m.GhContainer(ctx, ghToken).
+	ctr, err := m.GhContainer(ctx, ghToken)
+	if err != nil {
+		return nil, err
+	}
+
+	alpCtr, err := ctr.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"gh",
@@ -262,7 +277,12 @@ func (m *FirestartrBootstrap) SetOrgSecret(
 	value string,
 	ghToken *dagger.Secret,
 ) (*dagger.Container, error) {
-	alpCtr, err := m.GhContainer(ctx, ghToken).
+	ctr, err := m.GhContainer(ctx, ghToken)
+	if err != nil {
+		return nil, err
+	}
+
+	alpCtr, err := ctr.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"gh",
@@ -310,10 +330,13 @@ func (m *FirestartrBootstrap) SetOrgSecrets(
 	return nil
 }
 
-func (m *FirestartrBootstrap) GhContainer(ctx context.Context, ghToken *dagger.Secret) *dagger.Container {
+func (m *FirestartrBootstrap) GhContainer(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) (*dagger.Container, error) {
 	tokenRaw, err := ghToken.Plaintext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	gitConfig := fmt.Sprintf(
@@ -330,7 +353,7 @@ func (m *FirestartrBootstrap) GhContainer(ctx context.Context, ghToken *dagger.S
 		WithExec([]string{"git", "config", "--global", "user.email", "info@prefapp.es"}).
 		WithExec([]string{"gh", "auth", "login", "--with-token"}, dagger.ContainerWithExecOpts{
 			Stdin: tokenRaw,
-		})
+		}), nil
 }
 
 func (m *FirestartrBootstrap) GenerateGithubToken(ctx context.Context) (*dagger.Secret, error) {
@@ -368,8 +391,19 @@ func (m *FirestartrBootstrap) GenerateGithubToken(ctx context.Context) (*dagger.
 	return tokenSecret, nil
 }
 
-func (m *FirestartrBootstrap) WorkflowRun(ctx context.Context, jsonInput string, workflowFileName string, repo string, ghToken *dagger.Secret) error {
-	_, err := m.GhContainer(ctx, ghToken).
+func (m *FirestartrBootstrap) WorkflowRun(
+	ctx context.Context,
+	jsonInput string,
+	workflowFileName string,
+	repo string,
+	ghToken *dagger.Secret,
+) error {
+	ctr, err := m.GhContainer(ctx, ghToken)
+	if err != nil {
+		return err
+	}
+
+	_, err = ctr.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"gh",
@@ -394,7 +428,12 @@ func (m *FirestartrBootstrap) CheckIfOrgAllGroupExists(
 	ctx context.Context,
 	ghToken *dagger.Secret,
 ) error {
-	_, err := m.GhContainer(ctx, ghToken).
+	ctr, err := m.GhContainer(ctx, ghToken)
+	if err != nil {
+		return err
+	}
+
+	_, err = ctr.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"gh", "api", fmt.Sprintf("/orgs/%s/teams/%s-all", m.GhOrg, m.GhOrg),
@@ -421,7 +460,12 @@ func (m *FirestartrBootstrap) GetOrganizationPlanName(
 	ctx context.Context,
 	ghToken *dagger.Secret,
 ) (string, error) {
-	planName, err := m.GhContainer(ctx, ghToken).
+	ctr, err := m.GhContainer(ctx, ghToken)
+	if err != nil {
+		return "", err
+	}
+
+	planName, err := ctr.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"gh", "api", fmt.Sprintf("/orgs/%s", m.GhOrg), "--jq", ".plan.name",
