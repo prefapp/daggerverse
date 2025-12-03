@@ -60,17 +60,23 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForImportResourcesStep(
 		panic(fmt.Errorf("Error creating the list of imported artifacts: %s", err))
 	}
 
-	createdResources, err := kindContainer.Directory("/resources/firestartr-crs/github").Entries(
-		ctx,
-	)
-
+	createdGhResources, err := kindContainer.Directory(
+		"/resources/firestartr-crs/github",
+	).Entries(ctx)
 	if err != nil {
-		panic(fmt.Errorf("Error creating the list of generated artifacts: %s", err))
+		panic(fmt.Errorf("Error creating the list of generated GitHub artifacts: %s", err))
+	}
+
+	createdInfraResources, err := kindContainer.Directory(
+		"/resources/firestartr-crs/infra",
+	).Entries(ctx)
+	if err != nil {
+		panic(fmt.Errorf("Error creating the list of generated infra artifacts: %s", err))
 	}
 
 	successMessage := fmt.Sprintf(`
 =====================================================
-📥 GITHUB RESOURCES IMPORTED AND CREATED 📥
+📥 RESOURCES IMPORTED AND CREATED 📥
 =====================================================
 Initial CRs checked, missing resources created, and
 all necessary configurations copied to the cache volume.
@@ -79,7 +85,10 @@ The environment is fully provisioned.
 #### Imported resources:
 - %s
 
-#### Generated and created resources
+#### Generated and created resources (GitHub):
+- %s
+
+#### Generated and created resources (Infra):
 - %s
 
 #### Copied to the cache:
@@ -87,7 +96,8 @@ The environment is fully provisioned.
 - /resources
 `,
 		strings.Join(importedFiles, "\n- "),
-		strings.Join(createdResources, "\n- "),
+		strings.Join(createdGhResources, "\n- "),
+		strings.Join(createdInfraResources, "\n- "),
 	)
 
 	return m.UpdateSummaryAndRun(ctx, successMessage)
