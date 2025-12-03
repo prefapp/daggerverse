@@ -302,7 +302,6 @@ func (m *FirestartrBootstrap) ValidateOperatorPat(
 			owner, repo, permission,
 		)
 	default:
-		panic(fmt.Sprintf("unexpected permission result: '%s'", permission))
 		return fmt.Errorf(
 			"received an unexpected permission result: '%s'. "+
 				"Ensure the repository exists and the user is a "+
@@ -317,7 +316,12 @@ func (m *FirestartrBootstrap) GithubRepositoryExists(
 	repo string,
 	ghToken *dagger.Secret,
 ) (bool, error) {
-	ctr, err := m.GhContainer(ctx, ghToken).
+	ctr, err := m.GhContainer(ctx, ghToken)
+	if err != nil {
+		return false, err
+	}
+
+	ctr, err = ctr.
 		WithExec([]string{
 			"gh",
 			"repo",
@@ -388,7 +392,7 @@ func (m *FirestartrBootstrap) CheckAlreadyCreatedRepositories(
 
 	if len(alreadyCreatedRepos) > 0 {
 		return fmt.Errorf(
-			"the following repositories already exist and will be skipped: %s",
+			"the following repositories already exist: %s. Delete them or choose different names to proceed",
 			strings.Join(alreadyCreatedRepos, ", "),
 		)
 	}

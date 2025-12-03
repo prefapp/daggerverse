@@ -10,7 +10,7 @@ import (
 func (m *FirestartrBootstrap) RunImporter(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-) *dagger.Container {
+) (*dagger.Container, error) {
 	claimsDir := dag.Directory().
 		WithNewDirectory("/claims")
 
@@ -21,12 +21,12 @@ func (m *FirestartrBootstrap) RunImporter(
 			File("templates/initial_claims.tmpl"),
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	claimsDir, err = m.SplitRenderedClaimsInFiles(renderedClaims)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	crsDir := dag.Directory().
@@ -72,7 +72,7 @@ func (m *FirestartrBootstrap) RunImporter(
 		}).
 		WithExec(importCommand)
 
-	kindContainer = m.ApplyFirestartrCrs(
+	kindContainer, err = m.ApplyFirestartrCrs(
 		ctx,
 		kindContainer,
 		"/import/crs",
@@ -83,7 +83,10 @@ func (m *FirestartrBootstrap) RunImporter(
 			"FirestartrGithubRepositoryFeature.*",
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
-	return kindContainer
+	return kindContainer, nil
 
 }

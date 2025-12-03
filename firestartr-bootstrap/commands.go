@@ -9,11 +9,9 @@ import (
 )
 
 func (m *FirestartrBootstrap) CmdCreatePersistentVolume(
-
 	ctx context.Context,
 	volumeName string,
 ) *dagger.CacheVolume {
-
 	persistentVolume := dag.CacheVolume(volumeName)
 
 	return persistentVolume
@@ -23,18 +21,17 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
-) *dagger.Container {
-
+) (*dagger.Container, error) {
 	clusterName := "kind"
 
 	ep, err := kindSvc.Endpoint(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	port, err := strconv.Atoi(strings.Split(ep, ":")[1])
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	ctn, err := dag.Container().
@@ -57,10 +54,10 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 		Sync(ctx)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return ctn
+	return ctn, nil
 }
 
 func (m *FirestartrBootstrap) CmdValidateBootstrap(
@@ -68,7 +65,6 @@ func (m *FirestartrBootstrap) CmdValidateBootstrap(
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
 ) (string, error) {
-
 	err := m.ValidateBootstrap(ctx, kubeconfig, kindSvc)
 	if err != nil {
 		errorMessage := PrepareAndPrintError(
@@ -99,11 +95,31 @@ func (m *FirestartrBootstrap) CmdInitSecretsMachinery(
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
 ) (string, error) {
+	kindContainer, err := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+	if err != nil {
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitSecretsMachinery",
+			"An error ocurred while creating the bridge container",
+			err,
+		)
 
-	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+		return "", errorMessage
+	}
 
-	kindContainer = m.InstallHelmAndExternalSecrets(ctx, kindContainer)
-	_, err := m.CreateKubernetesSecrets(ctx, kindContainer)
+	kindContainer, err = m.InstallHelmAndExternalSecrets(ctx, kindContainer)
+	if err != nil {
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitSecretsMachinery",
+			"An error ocurred while installing Helm and External Secrets",
+			err,
+		)
+
+		return "", errorMessage
+	}
+
+	_, err = m.CreateKubernetesSecrets(ctx, kindContainer)
 
 	successMessage := `
 =====================================================
@@ -123,7 +139,7 @@ List of push secrets:
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitSecretsMachinery",
-			"An error ocurred while preparing the external-secrets machinery and the push of secrets to the store",
+			"An error ocurred while creating the Kubernetes secrets",
 			err,
 		)
 
@@ -131,33 +147,62 @@ List of push secrets:
 	}
 
 	return m.UpdateSummaryAndRun(ctx, successMessage), nil
-
 }
 
 func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
-) *dagger.Container {
+) (*dagger.Container, error) {
+	kindContainer, err := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+	if err != nil {
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitGithubAppsMachinery",
+			"An error ocurred while creating the bridge container",
+			err,
+		)
 
-	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+		return nil, errorMessage
+	}
 
 	m.PopulateGithubAppCredsFromSecrets(ctx, kindContainer)
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
-		panic(err)
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitGithubAppsMachinery",
+			"An error ocurred while generating the GitHub token",
+			err,
+		)
+
+		return nil, errorMessage
 	}
 
 	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
 	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
 	if err != nil {
-		panic(err)
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitGithubAppsMachinery",
+			"An error ocurred while getting the organization plan",
+			err,
+		)
+
+		return nil, errorMessage
 	}
 
 	err = m.CheckIfOrgAllGroupExists(ctx, tokenSecret)
 	if err != nil {
-		panic(err)
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitGithubAppsMachinery",
+			"An error ocurred while checking if the <org>-all group exists",
+			err,
+		)
+
+		return nil, errorMessage
 	}
 
 	successMessage := `
@@ -170,7 +215,7 @@ The system is ready to interact with GitHub.
 `
 	m.UpdateSummaryAndRun(ctx, successMessage)
 
-	return kindContainer
+	return kindContainer, nil
 }
 
 // calls CmdInitGithubAppsMachinery
@@ -179,15 +224,19 @@ func (m *FirestartrBootstrap) CmdImportResources(
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
 	cacheVolume *dagger.CacheVolume,
+) (string, error) {
+	kindContainer, err := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+	if err != nil {
+		return "", err
+	}
 
-) string {
-
-	kindContainer := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
-
-	kindContainer = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
+	kindContainer, err = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
+	if err != nil {
+		return "", err
+	}
 
 	// bust cache volume
-	kindContainer, err := kindContainer.
+	kindContainer, err = kindContainer.
 		WithMountedCache("/cache", cacheVolume).
 		WithExec([]string{
 			"rm", "-rf", "/cache/import",
@@ -198,25 +247,37 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		Sync(ctx)
 
 	if err != nil {
-		panic(fmt.Errorf("Error busting cache volume for resources: %s", err))
+		return "", err
 	}
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	if m.PreviousCrsDir == nil {
 		// if any of the CRs already exist, we skip their creation
 		err = m.CheckAlreadyCreatedRepositories(ctx, tokenSecret)
 		if err != nil {
-			panic(err)
+			return "", err
 		}
 	}
 
-	kindContainer = m.RunImporter(ctx, kindContainer)
-	kindContainer = m.RunOperator(ctx, kindContainer)
-	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
+	kindContainer, err = m.RunImporter(ctx, kindContainer)
+	if err != nil {
+		return "", err
+	}
+
+	kindContainer, err = m.RunOperator(ctx, kindContainer)
+	if err != nil {
+		return "", err
+	}
+
+	kindContainer, err = m.UpdateSecretStoreRef(ctx, kindContainer)
+	if err != nil {
+		return "", err
+	}
+
 	kindContainer, err = kindContainer.
 		WithMountedCache("/cache", cacheVolume).
 		WithExec([]string{
@@ -227,10 +288,15 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}).
 		Sync(ctx)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	return m.UpdateSummaryAndRunForImportResourcesStep(ctx, kindContainer)
+	summary, err := m.UpdateSummaryAndRunForImportResourcesStep(ctx, kindContainer)
+	if err != nil {
+		return "", err
+	}
+
+	return summary, nil
 }
 
 func (m *FirestartrBootstrap) CmdPushResources(
@@ -238,10 +304,11 @@ func (m *FirestartrBootstrap) CmdPushResources(
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
 	cacheVolume *dagger.CacheVolume,
-
-) string {
-
-	kindContainer := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+) (string, error) {
+	kindContainer, err := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+	if err != nil {
+		return "", err
+	}
 
 	kindContainer = kindContainer.WithMountedCache(
 		"/mnt/",
@@ -251,25 +318,32 @@ func (m *FirestartrBootstrap) CmdPushResources(
 			"cp", "-a", "/mnt/resources", "/",
 		})
 
-	m.PushCrsFiles(
+	err = m.PushCrsFiles(
 		ctx,
 		kindContainer,
 	)
+	if err != nil {
+		return "", err
+	}
 
-	return m.UpdateSummaryAndRunForPushResourcesStep(ctx, kindContainer)
+	summary, err := m.UpdateSummaryAndRunForPushResourcesStep(ctx, kindContainer)
+	if err != nil {
+		return "", err
+	}
+
+	return summary, nil
 }
 
 func (m *FirestartrBootstrap) CmdPushDeployment(
 	ctx context.Context,
-) string {
-
+) (string, error) {
 	_, err := m.CreateDeployment(ctx)
 
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	return m.UpdateSummaryAndRunForPushDeploymentStep(
+	summary := m.UpdateSummaryAndRunForPushDeploymentStep(
 		ctx,
 		fmt.Sprintf(
 			"https://github.com/firestartr-%s/app-firestartr",
@@ -282,6 +356,8 @@ func (m *FirestartrBootstrap) CmdPushDeployment(
 			m.Bootstrap.Env,
 		),
 	)
+
+	return summary, nil
 }
 
 func (m *FirestartrBootstrap) CmdPushStateSecrets(
@@ -289,33 +365,35 @@ func (m *FirestartrBootstrap) CmdPushStateSecrets(
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
 	cacheVolume *dagger.CacheVolume,
-) string {
-
-	kindContainer := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+) (string, error) {
+	kindContainer, err := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+	if err != nil {
+		return "", err
+	}
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
 	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	if !m.Bootstrap.HasFreePlan {
 		err = m.SetOrgVariables(ctx, tokenSecret, kindContainer)
 		if err != nil {
-			panic(err)
+			return "", err
 		}
 
 		err = m.SetOrgSecrets(ctx, tokenSecret, kindContainer)
 		if err != nil {
-			panic(err)
+			return "", err
 		}
 	} else {
-		panic(fmt.Errorf("%s org has a free plan,org secrets are not available", m.Bootstrap.Org))
+		return fmt.Sprintf("%s org has a free plan, org secrets are not available", m.Bootstrap.Org), nil
 	}
 
 	for _, component := range m.Bootstrap.Components {
@@ -323,7 +401,7 @@ func (m *FirestartrBootstrap) CmdPushStateSecrets(
 			err = m.CreateLabelsInRepo(ctx, component.Name, component.Labels, tokenSecret)
 
 			if err != nil {
-				panic(err)
+				return "", err
 			}
 		}
 	}
@@ -337,26 +415,23 @@ validated, and required state secrets and variables
 have been successfully configured.
 `
 
-	return m.UpdateSummaryAndRun(ctx, successMessage)
+	return m.UpdateSummaryAndRun(ctx, successMessage), nil
 }
 
 func (m *FirestartrBootstrap) CmdPushArgo(
 	ctx context.Context,
-) string {
-
+) (string, error) {
 	_, err := m.AddArgoCDSecrets(ctx)
-
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	_, err = m.CreateArgCDApplications(ctx)
-
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	return m.UpdateSummaryAndRunForPushArgoCDStep(
+	summary := m.UpdateSummaryAndRunForPushArgoCDStep(
 		ctx,
 		fmt.Sprintf(
 			"https://github.com/firestartr-%s/state-argocd",
@@ -371,30 +446,28 @@ func (m *FirestartrBootstrap) CmdPushArgo(
 			m.Bootstrap.Env,
 		),
 	)
+
+	return summary, nil
 }
 
 func (m *FirestartrBootstrap) CmdRollback(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
-) string {
-
+) (string, error) {
 	m.CmdValidateBootstrap(ctx, kubeconfig, kindSvc)
 
-	kindContainer := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
-
-	output, err := m.ProcessArtifactsByKind(
-		ctx,
-		kindContainer,
-	)
-
+	kindContainer, err := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
 	if err != nil {
-
-		panic(err)
+		return "", err
 	}
 
-	return m.UpdateSummaryAndRunForRollbackStep(ctx, output)
+	output, err := m.ProcessArtifactsByKind(ctx, kindContainer)
+	if err != nil {
+		return "", err
+	}
 
+	return m.UpdateSummaryAndRunForRollbackStep(ctx, output), nil
 }
 
 func (m *FirestartrBootstrap) CmdRunBootstrap(
@@ -402,7 +475,6 @@ func (m *FirestartrBootstrap) CmdRunBootstrap(
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
 ) {
-
 	persistentVolume := m.CmdCreatePersistentVolume(ctx, "firestartr-init")
 
 	m.CmdValidateBootstrap(ctx, kubeconfig, kindSvc)
@@ -420,5 +492,4 @@ func (m *FirestartrBootstrap) CmdRunBootstrap(
 	//m.CmdPushDeployment(ctx)
 
 	//m.CmdPushArgo(ctx)
-
 }

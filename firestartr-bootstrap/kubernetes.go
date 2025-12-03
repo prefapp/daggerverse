@@ -122,7 +122,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 func (m *FirestartrBootstrap) PopulateGithubAppCredsFromSecrets(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-) {
+) error {
 	// Get the GitHub App credentials struct
 	credsReflector := reflect.ValueOf(&m.Creds.GithubApp).Elem()
 
@@ -131,20 +131,20 @@ func (m *FirestartrBootstrap) PopulateGithubAppCredsFromSecrets(
 		// Fetch the secret value from Kubernetes
 		secretValue, err := m.GetKubernetesSecretValue(ctx, kindContainer, ref)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		// Check it exists and is settable within the struct
 		field := credsReflector.FieldByName(property)
 		if !field.IsValid() {
-			panic(fmt.Sprintf(
+			return fmt.Errorf(
 				"Field %q does not exist in GithubApp struct", property,
-			))
+			)
 		}
 		if !field.CanSet() {
-			panic(fmt.Sprintf(
+			return fmt.Errorf(
 				"Field %q in GithubApp struct is not settable", property,
-			))
+			)
 		}
 
 		// Set the field to the fetched secret value
@@ -155,6 +155,8 @@ func (m *FirestartrBootstrap) PopulateGithubAppCredsFromSecrets(
 	// for use in the ProviderConfig template
 	escaped := strings.ReplaceAll(m.Creds.GithubApp.Pem, "\n", "\\n")
 	m.Creds.GithubApp.RawPem = escaped
+
+	return nil
 }
 
 func (m *FirestartrBootstrap) GetKubernetesSecretValue(

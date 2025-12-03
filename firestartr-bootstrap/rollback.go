@@ -67,7 +67,7 @@ func (m *FirestartrBootstrap) ProcessArtifactsByKind(
 	running, err := isOperatorUp(ctx, kindContainer)
 
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	if running != true {
@@ -118,7 +118,7 @@ func (m *FirestartrBootstrap) ProcessArtifactsByKind(
 		)
 
 		if err != nil {
-			panic(err)
+			return "", err
 		}
 
 		fmt.Println(summary)

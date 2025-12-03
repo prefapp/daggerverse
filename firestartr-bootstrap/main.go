@@ -71,19 +71,19 @@ func New(
 
 	creds, err := loadCredsFile(ctx, credentialsSecret)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// load bootstrap file
 	bootstrapContentFile, err := bootstrapFile.Contents(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	bootstrap := &Bootstrap{}
 	err = yaml.Unmarshal([]byte(bootstrapContentFile), bootstrap)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// ----------------------------------------------------
@@ -108,7 +108,7 @@ func New(
 
 	claimsDotConfigDir, err := getClaimsDotConfigDir(ctx, bootstrap)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// calculate providers
@@ -128,7 +128,7 @@ func New(
 
 	crsDotConfigDir, err := getCrsDotConfigDir(ctx, bootstrap, defaultsInterface)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &FirestartrBootstrap{
@@ -169,57 +169,64 @@ func (m *FirestartrBootstrap) ValidateBootstrap(
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
 ) error {
-
 	log.Println("Validating bootstrap parameters")
+
+	errorMsgs := []string{}
 
 	err := m.ValidateBootstrapFile(ctx, m.BootstrapFile)
 	if err != nil {
-		return err
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
 	err = m.ValidateCredentialsFile(ctx, m.CredsFileContent)
 	if err != nil {
-		return err
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
 	err = m.ValidateCliExistence(ctx)
 	if err != nil {
-		return err
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
 	err = m.ValidateExistenceOfNeededImages(ctx)
 	if err != nil {
-		return err
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
 	_, err = m.ValidateSTSCredentials(ctx)
 	if err != nil {
-		return err
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
 	err = m.ValidateBucket(ctx)
 	if err != nil {
-		return err
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
 	err = m.ValidateParameters(ctx, fmt.Sprintf("/firestartr/%s", m.Bootstrap.Customer))
 	if err != nil {
-		return err
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
 	err = m.ValidatePrefappBotPat(ctx)
 	if err != nil {
-		return err
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
 	err = m.ValidateOperatorPat(ctx)
 	if err != nil {
-		return err
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
 	err = m.ValidateKindKubernetesConnection(ctx, kubeconfig, kindSvc)
 	if err != nil {
-		return err
+		errorMsgs = append(errorMsgs, err.Error())
+	}
+
+	if len(errorMsgs) > 0 {
+		return fmt.Errorf(
+			"validation errors:\n- %s", strings.Join(errorMsgs, "\n- "),
+		)
 	}
 
 	return nil

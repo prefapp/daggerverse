@@ -20,7 +20,10 @@ func (m *FirestartrBootstrap) ValidateSTSCredentials(
 ) (string, error) {
 	log.Println("Attempting to validate credentials via STS:GetCallerIdentity...")
 
-	cfg := loginAWS(ctx, m.Creds)
+	cfg, err := loginAWS(ctx, m.Creds)
+	if err != nil {
+		return "", err
+	}
 
 	stsClient := sts.NewFromConfig(cfg)
 
@@ -43,7 +46,10 @@ func (m *FirestartrBootstrap) ValidateBucket(
 	ctx context.Context,
 ) error {
 
-	cfg := loginAWS(ctx, m.Creds)
+	cfg, err := loginAWS(ctx, m.Creds)
+	if err != nil {
+		return err
+	}
 
 	s3Client := s3.NewFromConfig(cfg)
 
@@ -53,7 +59,7 @@ func (m *FirestartrBootstrap) ValidateBucket(
 		Bucket: aws.String(bucketName),
 	}
 
-	_, err := s3Client.HeadBucket(ctx, input)
+	_, err = s3Client.HeadBucket(ctx, input)
 
 	if err == nil {
 		log.Printf("✅ Bucket '%s' exists.", bucketName)
@@ -70,7 +76,10 @@ func (m *FirestartrBootstrap) ValidateParameters(
 
 ) error {
 
-	cfg := loginAWS(ctx, m.Creds)
+	cfg, err := loginAWS(ctx, m.Creds)
+	if err != nil {
+		return err
+	}
 
 	// Map the required keys for quick lookup
 	requiredMap := make(map[string]struct{})
@@ -126,7 +135,7 @@ func (m *FirestartrBootstrap) ValidateParameters(
 
 }
 
-func loginAWS(ctx context.Context, creds *CredsFile) aws.Config {
+func loginAWS(ctx context.Context, creds *CredsFile) (aws.Config, error) {
 
 	staticProvider := credentials.NewStaticCredentialsProvider(
 		creds.CloudProvider.Config.AccessKey,
@@ -140,8 +149,8 @@ func loginAWS(ctx context.Context, creds *CredsFile) aws.Config {
 		config.WithCredentialsProvider(staticProvider), // <-- This overrides the default chain
 	)
 	if err != nil {
-		panic(fmt.Sprintf("unable to load SDK config: %v", err))
+		return aws.Config{}, fmt.Errorf("unable to load SDK config: %v", err)
 	}
 
-	return cfg
+	return cfg, nil
 }

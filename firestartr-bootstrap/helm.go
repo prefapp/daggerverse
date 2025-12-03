@@ -9,7 +9,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
+func (m *FirestartrBootstrap) BuildHelmValues(
+	ctx context.Context,
+) (string, error) {
 
 	helmValues := &HelmValues{
 		Labels: Labels{},
@@ -77,23 +79,15 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 }
 
 func dumpValuesToYaml(
-
 	ctx context.Context,
-
 	values *HelmValues,
-
-) string {
-
+) (string, error) {
 	yamlContent, err := yaml.Marshal(values)
-
 	if err != nil {
-
-		panic(err)
-
+		return "", err
 	}
 
-	return string(yamlContent)
-
+	return string(yamlContent), nil
 }
 
 func encodeB64DaggerSecret(ctx context.Context, text string) string {
