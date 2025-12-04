@@ -103,8 +103,9 @@ func (m *FirestartrBootstrap) RenderDeployment(
 				),
 				GithubAppInstallationId: fmt.Sprintf(
 
-					"/firestartr/%s/fs-%s-admin/app-installation-id",
+					"/firestartr/%s/fs-%s-admin/%s/app-installation-id",
 
+					m.Bootstrap.Customer,
 					m.Bootstrap.Customer,
 					m.GhOrg,
 				),
