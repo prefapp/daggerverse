@@ -24,7 +24,11 @@ func (m *FirestartrBootstrap) ValidateKindKubernetesConnection(
 		return fmt.Errorf("obtaining the kind-cluster endpoint: %w", err)
 	}
 
-	port, err := strconv.Atoi(strings.Split(ep, ":")[1])
+	parts := strings.Split(ep, ":")
+	if len(parts) < 2 {
+		return fmt.Errorf("invalid endpoint format (expected host:port), got: %q", ep)
+	}
+	port, err := strconv.Atoi(parts[1])
 	if err != nil {
 		return fmt.Errorf("formatting the kind-cluster port: %w", err)
 	}
