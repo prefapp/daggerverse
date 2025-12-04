@@ -1,5 +1,6 @@
 PORT=45075
 CREDENTIALS_FILE="./boot/CredentialsFile.yaml"
+BOOTSTRAP_FILE="./boot/BootstrapFile.yaml"
 # VOLUME_ID="<your volume cache id>"
 
 function prompt_continue_skip_abort() {
@@ -40,11 +41,11 @@ ACTION=$(prompt_continue_skip_abort "⚠️ Validate bootstrap?")
 
 case "$ACTION" in
     "continue")
-dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
+dagger --bootstrap-file="${BOOTSTRAP_FILE}" \
        --credentials-secret="file:${CREDENTIALS_FILE}" \
         call cmd-validate-bootstrap \
         --kubeconfig="${HOME}/.kube" \
-        --kind-svc=tcp://localhost:${PORT} 
+        --kind-svc=tcp://localhost:${PORT}
         ;;
     "skip")
         echo "⏭️ Skipping the next section and moving to the end."
@@ -59,11 +60,11 @@ ACTION=$(prompt_continue_skip_abort "⚠️ Init secret machinery?")
 
 case "$ACTION" in
     "continue")
-dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
+dagger --bootstrap-file="${BOOTSTRAP_FILE}" \
        --credentials-secret="file:${CREDENTIALS_FILE}" \
        call cmd-init-secrets-machinery \
        --kubeconfig="${HOME}/.kube" \
-       --kind-svc=tcp://localhost:${PORT} 
+       --kind-svc=tcp://localhost:${PORT}
         ;;
     "skip")
         echo "⏭️ Skipping the next section and moving to the end."
@@ -78,7 +79,7 @@ ACTION=$(prompt_continue_skip_abort "⚠️ Import and create the basic CRs and 
 
 case "$ACTION" in
     "continue")
-dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
+dagger --bootstrap-file="${BOOTSTRAP_FILE}" \
        --credentials-secret="file:${CREDENTIALS_FILE}" \
        call cmd-import-resources \
        --kubeconfig="${HOME}/.kube" \
@@ -98,7 +99,7 @@ ACTION=$(prompt_continue_skip_abort "Push resources to the system's repos?")
 
 case "$ACTION" in
     "continue")
-dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
+dagger --bootstrap-file="${BOOTSTRAP_FILE}" \
        --credentials-secret="file:${CREDENTIALS_FILE}" \
        call cmd-push-resources \
        --kubeconfig="${HOME}/.kube" \
@@ -118,7 +119,7 @@ ACTION=$(prompt_continue_skip_abort "Push organization state secrets (only for e
 
 case "$ACTION" in
     "continue")
-dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
+dagger --bootstrap-file="${BOOTSTRAP_FILE}" \
        --credentials-secret="file:${CREDENTIALS_FILE}" \
        call cmd-push-state-secrets \
        --kubeconfig="${HOME}/.kube" \
@@ -138,7 +139,7 @@ ACTION=$(prompt_continue_skip_abort "Push argocd - deployment to the system's re
 
 case "$ACTION" in
     "continue")
-dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
+dagger --bootstrap-file="${BOOTSTRAP_FILE}" \
        --credentials-secret="file:${CREDENTIALS_FILE}" \
        call cmd-push-deployment
         ;;
@@ -155,7 +156,7 @@ ACTION=$(prompt_continue_skip_abort "Push argocd - permissions and secrets to th
 
 case "$ACTION" in
     "continue")
-dagger --bootstrap-file="./boot/BoostrapFile.yaml" \
+dagger --bootstrap-file="${BOOTSTRAP_FILE}" \
        --credentials-secret="file:${CREDENTIALS_FILE}" \
        call cmd-push-argo
         ;;
