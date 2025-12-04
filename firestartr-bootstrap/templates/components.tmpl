@@ -38,6 +38,8 @@ providers:
           value: "ref:secretsclaim:firestartr-secrets:fs-state-pem"
         - name: FS_CHECKS_PEM_FILE
           value: "ref:secretsclaim:firestartr-secrets:fs-checks-pem"
+        - name: PREFAPP_BOT_PAT
+          value: "ref:secretsclaim:firestartr-secrets:prefapp-bot-pat"
         {{- end }}
     {{- end }}
     {{- if or $.HasFreePlan $claim.Variables}}

@@ -376,6 +376,16 @@ func (m *FirestartrBootstrap) CmdPushStateSecrets(
 		return "", err
 	}
 
+	for _, component := range m.Bootstrap.Components {
+		if len(component.Labels) > 0 {
+			err = m.CreateLabelsInRepo(ctx, component.Name, component.Labels, tokenSecret)
+
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+
 	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
 	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
 	if err != nil {
@@ -394,16 +404,6 @@ func (m *FirestartrBootstrap) CmdPushStateSecrets(
 		}
 	} else {
 		return fmt.Sprintf("%s org has a free plan, org secrets are not available", m.Bootstrap.Org), nil
-	}
-
-	for _, component := range m.Bootstrap.Components {
-		if len(component.Labels) > 0 {
-			err = m.CreateLabelsInRepo(ctx, component.Name, component.Labels, tokenSecret)
-
-			if err != nil {
-				return "", err
-			}
-		}
 	}
 
 	successMessage := `

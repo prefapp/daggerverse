@@ -28,7 +28,7 @@ func (m *FirestartrBootstrap) GeneratePushSecrets(
 	}
 
 	prefappCliVersion := PushSecretElement{
-		Name:                "prefapp-bot-pat-pushsecret",
+		Name:                "prefapp-cli-version-pushsecret",
 		KubernetesSecret:    "prefapp-cli-version",
 		KubernetesSecretKey: "cli-version-key",
 		ParameterName:       m.Bootstrap.FirestartrCliVersionSecretRef,
