@@ -100,15 +100,6 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 		),
 	}
 
-	applicationStateGithub, err := renderArgoCDApplication(
-		ctx,
-		&argoCDData,
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("error creating ArgoCD app: %w", err)
-	}
-
 	argoCDDataInfra := ArgoCDConfig{
 
 		Name: fmt.Sprintf("app-firestartr-firestartr-%s-%s-%s-state-infra",
@@ -133,9 +124,8 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 		ctx,
 		&argoCDData,
 	)
-
 	if errGithub != nil {
-		return nil, fmt.Errorf("error creating ArgoCD app: %w", errGithub)
+		return nil, fmt.Errorf("error creating ArgoCD GitHub app: %w", errGithub)
 	}
 
 	applicationStateInfra, errInfra := renderArgoCDApplication(
@@ -143,7 +133,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 		&argoCDDataInfra,
 	)
 	if errInfra != nil {
-		return nil, fmt.Errorf("error creating ArgoCD app: %w", errInfra)
+		return nil, fmt.Errorf("error creating ArgoCD infra app: %w", errInfra)
 	}
 
 	pathAppStateGithub := fmt.Sprintf(
