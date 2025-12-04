@@ -384,7 +384,6 @@ func (m *FirestartrBootstrap) CheckAlreadyCreatedRepositories(
 				return err
 			}
 			if exists {
-				component.Skipped = true
 				alreadyCreatedRepos = append(alreadyCreatedRepos, repoName)
 			}
 		}
