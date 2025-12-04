@@ -17,7 +17,7 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 
 	if err != nil {
 
-		return nil, fmt.Errorf("Rendering argcd apps: %s", err)
+		return nil, fmt.Errorf("rendering ArgoCD apps: %w", err)
 	}
 
 	tokenSecret := dag.SetSecret(
@@ -35,7 +35,7 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 
 	if err != nil {
 
-		return nil, fmt.Errorf("Cloning argocd repo: %s", err)
+		return nil, fmt.Errorf("cloning ArgoCD repo: %w", err)
 	}
 
 	projectDir, err := addProjectDestination(
@@ -48,7 +48,7 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("Adding project destination to argcd: %s", err)
+		return nil, fmt.Errorf("adding project destination to ArgoCD: %w", err)
 	}
 
 	argoCDRenderedDir = argoCDRenderedDir.WithFile(
@@ -106,7 +106,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error creating argocd app: %s", err)
+		return nil, fmt.Errorf("error creating ArgoCD app: %w", err)
 	}
 
 	argoCDDataInfra := ArgoCDConfig{
@@ -135,7 +135,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 	)
 
 	if errGithub != nil {
-		return nil, fmt.Errorf("Error creating argocd app: %s", errGithub)
+		return nil, fmt.Errorf("error creating ArgoCD app: %w", errGithub)
 	}
 
 	applicationStateInfra, errInfra := renderArgoCDApplication(
@@ -143,7 +143,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 		&argoCDDataInfra,
 	)
 	if errInfra != nil {
-		return nil, fmt.Errorf("Error creating argocd app: %s", errInfra)
+		return nil, fmt.Errorf("error creating ArgoCD app: %w", errInfra)
 	}
 
 	pathAppStateGithub := fmt.Sprintf(

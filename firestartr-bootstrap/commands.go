@@ -70,7 +70,7 @@ func (m *FirestartrBootstrap) CmdValidateBootstrap(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdValidateBootstrap",
-			"An error ocurred validating the context and bootstrap conditions",
+			"An error occurred validating the context and bootstrap conditions",
 			err,
 		)
 
@@ -100,7 +100,7 @@ func (m *FirestartrBootstrap) CmdInitSecretsMachinery(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitSecretsMachinery",
-			"An error ocurred while creating the bridge container",
+			"An error occurred while creating the bridge container",
 			err,
 		)
 
@@ -112,7 +112,7 @@ func (m *FirestartrBootstrap) CmdInitSecretsMachinery(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitSecretsMachinery",
-			"An error ocurred while installing Helm and External Secrets",
+			"An error occurred while installing Helm and External Secrets",
 			err,
 		)
 
@@ -139,7 +139,7 @@ List of push secrets:
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitSecretsMachinery",
-			"An error ocurred while creating the Kubernetes secrets",
+			"An error occurred while creating the Kubernetes secrets",
 			err,
 		)
 
@@ -159,7 +159,7 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitGithubAppsMachinery",
-			"An error ocurred while creating the bridge container",
+			"An error occurred while creating the bridge container",
 			err,
 		)
 
@@ -173,7 +173,7 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitGithubAppsMachinery",
-			"An error ocurred while generating the GitHub token",
+			"An error occurred while generating the GitHub token",
 			err,
 		)
 
@@ -186,7 +186,7 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitGithubAppsMachinery",
-			"An error ocurred while getting the organization plan",
+			"An error occurred while getting the organization plan",
 			err,
 		)
 
@@ -198,7 +198,7 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitGithubAppsMachinery",
-			"An error ocurred while checking if the <org>-all group exists",
+			"An error occurred while checking if the <org>-all group exists",
 			err,
 		)
 

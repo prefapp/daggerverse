@@ -21,12 +21,12 @@ func (m *FirestartrBootstrap) ValidateKindKubernetesConnection(
 
 	ep, err := kindSvc.Endpoint(ctx)
 	if err != nil {
-		return fmt.Errorf("Obtaining the kind-cluster endpoint: %s", err)
+		return fmt.Errorf("obtaining the kind-cluster endpoint: %w", err)
 	}
 
 	port, err := strconv.Atoi(strings.Split(ep, ":")[1])
 	if err != nil {
-		return fmt.Errorf("Formating the kind-cluster port: %s", err)
+		return fmt.Errorf("formatting the kind-cluster port: %w", err)
 	}
 
 	_, err = dag.Container().
@@ -43,7 +43,7 @@ func (m *FirestartrBootstrap) ValidateKindKubernetesConnection(
 		Sync(ctx)
 
 	if err != nil {
-		return fmt.Errorf("Connecting to the kind-cluster: %s", err)
+		return fmt.Errorf("connecting to the kind-cluster: %w", err)
 	}
 
 	return nil
@@ -139,7 +139,7 @@ func (m *FirestartrBootstrap) ValidatePrefappBotPat(
 
 	clonedDir := gitContainer.Directory("/tmp/repo")
 
-	// This final check ensures not only the clone command passed, but the are accessible.
+	// This final check ensures not only the clone command passed, but the files are accessible.
 	_, err = clonedDir.Entries(ctx)
 	if err != nil {
 		return fmt.Errorf("clone succeeded but failed to read directory contents: %w", err)
@@ -198,7 +198,7 @@ func validateExistenceOfImage(
 		Stdout(ctx)
 
 	if err != nil {
-		return fmt.Errorf("Image does not exist: %s", imageRef)
+		return fmt.Errorf("image does not exist: %s", imageRef)
 	}
 
 	return nil
@@ -226,7 +226,7 @@ func (m *FirestartrBootstrap) ValidateCliExistence(
 		Stdout(ctx)
 
 	if err != nil {
-		return fmt.Errorf("Cli version:  '%s' does not exist.\n", moduleName)
+		return fmt.Errorf("cli version '%s' does not exist", moduleName)
 	}
 
 	return nil

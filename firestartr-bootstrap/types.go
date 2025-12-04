@@ -119,25 +119,25 @@ type CrsDefaultsData struct {
 	GithubAppProviderConfigName     string
 }
 
-// DeploymentWebhook representa el bloque de la URL y el Secreto del Webhook.
+// DeploymentWebhook represents the block containing the URL and Secret of the Webhook.
 type DeploymentWebhook struct {
 	URL    string
 	Secret string
 }
 
-// DeploymentExternalSecrets representa la referencia al ARN del rol para External Secrets.
+// DeploymentExternalSecrets represents the ARN reference of the role for External Secrets.
 type DeploymentExternalSecrets struct {
 	RoleARN string
 }
 
-// DeploymentController representa la información de la aplicación GitHub usada por el controller.
+// DeploymentController represents the GitHub application information used by the controller.
 type DeploymentController struct {
 	Image     string
 	RoleARN   string
 	GithubApp DeploymentGithubApp
 }
 
-// DeploymentAws representa la configuración de AWS específica (Bucket y Region).
+// DeploymentAws represents the specific AWS configuration (Bucket and Region).
 type DeploymentAws struct {
 	Bucket string
 	Region string
@@ -149,7 +149,7 @@ type DeploymentGithubApp struct {
 	GithubAppInstallationId string
 }
 
-// DeploymentConfig contiene solo los campos de nivel superior que son interpolables.
+// DeploymentConfig contains only the top-level fields that are interpolatable.
 type DeploymentConfig struct {
 	Customer        string
 	Org             string

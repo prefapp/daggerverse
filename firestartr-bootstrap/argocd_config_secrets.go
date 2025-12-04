@@ -28,7 +28,7 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 
 	if err != nil {
 
-		return nil, fmt.Errorf("Cloning state-sys-services repo: %s", err)
+		return nil, fmt.Errorf("cloning state-sys-services repo: %w", err)
 	}
 
 	secretRef := fmt.Sprintf(
@@ -55,7 +55,7 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 
 	if err != nil {
 
-		return nil, fmt.Errorf("Patching argocd secrets: %s", err)
+		return nil, fmt.Errorf("patching argocd secrets: %w", err)
 	}
 
 	err = m.CreatePR(
@@ -70,7 +70,7 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error generating PR for state-sys-services: %s", err)
+		return nil, fmt.Errorf("error generating PR for state-sys-services: %w", err)
 	}
 
 	return patchedDir, nil

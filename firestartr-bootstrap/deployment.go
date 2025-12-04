@@ -15,7 +15,7 @@ func (m *FirestartrBootstrap) CreateDeployment(
 
 	if err != nil {
 
-		return nil, fmt.Errorf("Rendering firestartr-app deployment data: %s", err)
+		return nil, fmt.Errorf("rendering firestartr-app deployment data: %w", err)
 	}
 
 	tokenSecret := dag.SetSecret(
@@ -35,7 +35,7 @@ func (m *FirestartrBootstrap) CreateDeployment(
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error generating PR for firestartr-app deployment: %s", err)
+		return nil, fmt.Errorf("error generating PR for firestartr-app deployment: %w", err)
 	}
 
 	return deploymentRenderedDir, nil
@@ -49,7 +49,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 	accountID, err := m.ValidateSTSCredentials(ctx)
 
 	if err != nil {
-		return nil, fmt.Errorf("Obtaining the accountID of aws: %s", err)
+		return nil, fmt.Errorf("obtaining the accountID of aws: %w", err)
 	}
 
 	re := regexp.MustCompile("^https://")

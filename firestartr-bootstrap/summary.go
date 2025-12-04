@@ -57,21 +57,21 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForImportResourcesStep(
 		ctx,
 	)
 	if err != nil {
-		return "", fmt.Errorf("Error creating the list of imported artifacts: %s", err)
+		return "", fmt.Errorf("error creating the list of imported artifacts: %w", err)
 	}
 
 	createdGhResources, err := kindContainer.Directory(
 		"/resources/firestartr-crs/github",
 	).Entries(ctx)
 	if err != nil {
-		return "", fmt.Errorf("Error creating the list of generated artifacts: %s", err)
+		return "", fmt.Errorf("error creating the list of generated artifacts: %w", err)
 	}
 
 	createdInfraResources, err := kindContainer.Directory(
 		"/resources/firestartr-crs/infra",
 	).Entries(ctx)
 	if err != nil {
-		return "", fmt.Errorf("Error creating the list of generated infra artifacts: %s", err)
+		return "", fmt.Errorf("error creating the list of generated infra artifacts: %w", err)
 	}
 
 	successMessage := fmt.Sprintf(`
@@ -116,7 +116,7 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushResourcesStep(
 		Stdout(ctx)
 
 	if err != nil {
-		return "", fmt.Errorf("Error creating the list of pushed claims: %s", err)
+		return "", fmt.Errorf("error creating the list of pushed claims: %w", err)
 	}
 
 	pushedClaims := strings.Split(strings.TrimSpace(output), "\n")
@@ -125,14 +125,14 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushResourcesStep(
 		"/resources/firestartr-crs/github",
 	).Entries(ctx)
 	if err != nil {
-		return "", fmt.Errorf("Error creating the list of pushed github crs: %s", err)
+		return "", fmt.Errorf("error creating the list of pushed GitHub CRs: %w", err)
 	}
 
 	pushedInfraCrs, err := kindContainer.Directory(
 		"/resources/firestartr-crs/infra",
 	).Entries(ctx)
 	if err != nil {
-		return "", fmt.Errorf("Error creating the list of pushed infra crs: %s", err)
+		return "", fmt.Errorf("error creating the list of pushed infra CRs: %w", err)
 	}
 
 	successMessage := fmt.Sprintf(`
