@@ -47,12 +47,6 @@ The following AWS Parameter Store parameters are required:
 - `/firestartr/<customer>/fs-<customer>-argocd/app-id`
 - `/firestartr/<customer>/fs-<customer>-argocd/<org>/installation-id`
 
-The following AWS Parameter Store are going to be generated and/or uploaded ( pushed ) by the Bootstrap process
-
-- `/firestartr/<customer>/prefapp-bot-pat`: Personal Access Token for the Prefapp Bot user
-- `/firestartr/<customer>/firestartr-cli-version`: Version of the Firestartr CLI to set as the default in the organization
-- `/firestartr/<customer>/github-webhook/secret`: Secret for the GitHub Webhook
-
 ### 2. Bootstrap File
 
 ```yaml
@@ -247,6 +241,33 @@ This will launch the whole bootstrapping process. It will:
 - Create a deployment PR in `firestartr-<env>/app-firestartr`
 - Create an application PR in `firestartr-<env>/state-argocd`
 
+Also, the following AWS Parameter Store are going to be generated and/or uploaded (pushed):
+
+- `/firestartr/<customer>/prefapp-bot-pat`: Personal Access Token for the Prefapp Bot user
+- `/firestartr/<customer>/firestartr-cli-version`: Version of the Firestartr CLI to set as the default in the organization
+- `/firestartr/<customer>/github-webhook/secret`: Secret for the GitHub Webhook
+
+
+Rollback command:
+
+```shell
+dagger --bootstrap-file="./Bootstrapfile.yaml" \
+       --credentials-secret="file:./Credentialsfile.yaml" \
+       call cmd-rollback \
+       --kubeconfig="${HOME}/.kube" \
+       --kind-svc=tcp://localhost:<your-kind-port>
+```
+
+This will rollback the changes done by the bootstrap process. It will:
+
+- Delete the repositories created, along with their features and secrets
+- Delete the groups created by the bootstrap process (not any that where imported)
+- Delete the GitHub org's webhook created by the bootstrap process
+
+⚠️  WARNING: This process will only delete the resources mentioned above. Any other resources created by the process, such as the deployment and ArgoCD applications PRs, the files created by merging them, or the Terraform state stored in the S3 bucket will not be deleted. Please make sure to manually delete those resources if needed.
+
+Note that the rollback process may fail to delete a resource if it is in an error state. In that case, you will need to manually delete the resource. The process will output all changes done and failed deletions when it's finished.
+
 All of these commands can be run separately, as described in step 6.
 
 ## 5. Step by step script
@@ -271,27 +292,6 @@ vim my-steps.sh
 bash my-steps.sh
 
 ```
-
-
-Rollback command:
-
-```shell
-dagger --bootstrap-file="./Bootstrapfile.yaml" \
-       --credentials-secret="file:./Credentialsfile.yaml" \
-       call cmd-run-bootstrap \
-       --kubeconfig="${HOME}/.kube" \
-       --kind-svc=tcp://localhost:<your-kind-port>
-```
-
-This will rollback the changes done by the bootstrap process. It will:
-
-- Delete the repositories created, along with their features and secrets
-- Delete the groups created by the bootstrap process (not any that where imported)
-- Delete the GitHub org's webhook created by the bootstrap process
-
-⚠️  WARNING: This process will only delete the resources mentioned above. Any other resources created by the process, such as the deployment and ArgoCD applications PRs, the files created by merging them, or the Terraform state stored in the S3 bucket will not be deleted. Please make sure to manually delete those resources if needed.
-
-Note that the rollback process may fail to delete a resource if it is in an error state. In that case, you will need to manually delete the resource. The process will output all changes done and failed deletions when it's finished.
 
 ## 6. Individual commands
 
