@@ -60,7 +60,7 @@ The following AWS Parameter Store are going to be generated and/or uploaded ( pu
 ---
 org: <github-org>
 env: <env>  # either "pre" or "pro"
-customer: <customer-name>  # name used for the org internally, within the parameter store
+customer: <customer>  # name used for the org internally, within the parameter store
 defaultBranch: main
 defaultSystemName: default-system
 defaultDomainName: default-domain
