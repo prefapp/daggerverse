@@ -51,7 +51,7 @@ The following AWS Parameter Store are going to be generated and/or uploaded ( pu
 
 - `/firestartr/<customer>/prefapp-bot-pat`: Personal Access Token for the Prefapp Bot user
 - `/firestartr/<customer>/firestartr-cli-version`: Version of the Firestartr CLI to set as the default in the organization
-- `/firestartr/<customer-name>/github-webhook/secret`: Secret for the GitHub Webhook
+- `/firestartr/<customer>/github-webhook/secret`: Secret for the GitHub Webhook
 
 ### 2. Bootstrap File
 
