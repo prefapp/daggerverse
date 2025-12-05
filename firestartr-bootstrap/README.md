@@ -329,7 +329,10 @@ dagger --bootstrap-file="./Bootstrapfile.yaml" \
        --kubeconfig="${HOME}/.kube" \
        --kind-svc=tcp://localhost:<your-kind-port>
 ```
-This will initialize the secrets machinery in the kind cluster, installing Helm and creating the secrets necesary for the bootstrap process.
+This will initialize the secrets machinery in the kind cluster, installing Helm and creating the secrets necesary for the bootstrap process. The following AWS Parameter Store parameters will also be created:
+- `/firestartr/<customer>/prefapp-bot-pat`: Personal Access Token for the Prefapp Bot user
+- `/firestartr/<customer>/firestartr-cli-version`: Version of the Firestartr CLI to set as the default in the organization
+- `/firestartr/<customer>/github-webhook/secret`: Secret for the GitHub Webhook
 
 Initialize GitHub Apps machinery:
 
