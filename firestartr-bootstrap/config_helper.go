@@ -42,7 +42,7 @@ func getClaimsDotConfigDir(
 func getCrsDotConfigDir(
 	ctx context.Context,
 	bootstrap interface{},
-	creds interface{},
+	defaultsInterface CrsDefaultsData,
 ) (*dagger.Directory, error) {
 	branchStrategies, err := RenderDotConfigFile(
 		ctx,
@@ -71,7 +71,7 @@ func getCrsDotConfigDir(
 		dag.CurrentModule().
 			Source().
 			File("templates/crs_config/resources/defaults_github_group.tmpl"),
-		creds,
+		defaultsInterface,
 	)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func getCrsDotConfigDir(
 		dag.CurrentModule().
 			Source().
 			File("templates/crs_config/resources/defaults_github_membership.tmpl"),
-		creds,
+		defaultsInterface,
 	)
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func getCrsDotConfigDir(
 		dag.CurrentModule().
 			Source().
 			File("templates/crs_config/resources/defaults_github_repository.tmpl"),
-		creds,
+		defaultsInterface,
 	)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func getCrsDotConfigDir(
 		dag.CurrentModule().
 			Source().
 			File("templates/crs_config/resources/defaults_github_orgwebhook.tmpl"),
-		creds,
+		defaultsInterface,
 	)
 	if err != nil {
 		return nil, err

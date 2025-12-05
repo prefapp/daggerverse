@@ -3,6 +3,8 @@
 kind: GroupClaim
 version: "1.0"
 name: {{ $.DefaultFirestartrGroup }}
+annotations:
+  firestartr.dev/bootstrapped: "true"
 description: "The default group for the firestartr application"
 type: business-unit
 profile:
@@ -58,27 +60,29 @@ providers:
       refreshInterval: 24h
       secrets:
       - secretName: "github-webhook-secret"
-        remoteRef: "/firestartr/{{ $.Org }}/github-webhook/secret"
+        remoteRef: "{{ $.WebhookSecretRef }}"
       - secretName: "prefapp-bot-pat"
-        remoteRef: "/firestartr/{{ $.Org }}/prefapp-bot-pat"
+        remoteRef: "{{ $.PrefappBotPatSecretRef }}"
       - secretName: "firestartr-cli-version"
-        remoteRef: "/firestartr/{{ $.Org }}/firestartr-cli-version"
+        remoteRef: "/firestartr/{{ $.Customer }}/firestartr-cli-version"
       - secretName: "fs-state-pem"
-        remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-state/pem"
+        remoteRef: "/firestartr/{{ $.Customer }}/fs-{{ $.Customer }}-state/pem"
       - secretName: "fs-checks-pem"
-        remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-checks/pem"
+        remoteRef: "/firestartr/{{ $.Customer }}/fs-{{ $.Customer }}-checks/pem"
       - secretName: "fs-import-pem"
-        remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-import/pem"
+        remoteRef: "/firestartr/{{ $.Customer }}/fs-{{ $.Customer }}-import/pem"
       - secretName: "fs-state-appid"
-        remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-state/app-id"
+        remoteRef: "/firestartr/{{ $.Customer }}/fs-{{ $.Customer }}-state/app-id"
       - secretName: "fs-checks-appid"
-        remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-checks/app-id"
+        remoteRef: "/firestartr/{{ $.Customer }}/fs-{{ $.Customer }}-checks/app-id"
       - secretName: "fs-import-appid"
-        remoteRef: "/firestartr/{{ $.Org }}/fs-{{ $.Org }}-import/app-id"
+        remoteRef: "/firestartr/{{ $.Customer }}/fs-{{ $.Customer }}-import/app-id"
 ---
 kind: OrgWebhookClaim
 version: "1.0"
 name: firestartr-webhook
+annotations:
+  firestartr.dev/bootstrapped: "true"
 providers:
   github:
     name: firestartr-webhook

@@ -4,4 +4,8 @@
 /internal/telemetry
 Credentials.yaml
 boot/
+my-steps.sh
 /.env
+*.swp
+*.swo
+*.swp

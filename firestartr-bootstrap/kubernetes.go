@@ -17,7 +17,6 @@ var CREDS_SECRET_LIST = map[string]string{
 	"GhAppId":        "ref:secretsclaim:bootstrap-secrets:fs-admin-appid",
 	"InstallationId": "ref:secretsclaim:bootstrap-secrets:fs-admin-installationid",
 	"Pem":            "ref:secretsclaim:bootstrap-secrets:fs-admin-pem",
-	"BotPat":         "ref:secretsclaim:bootstrap-secrets:prefapp-bot-pat",
 }
 
 func (m *FirestartrBootstrap) CreateKubernetesSecrets(
@@ -60,8 +59,14 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		return nil, err
 	}
 
+	pushSecretsDirectory, err := m.GeneratePushSecrets(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	kindContainer, err = kindContainer.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithDirectory("/push-secrets", pushSecretsDirectory).
 		WithNewFile(SECRETS_FILE_PATH, secretsCr).
 		WithNewFile(BOOTSTRAP_SECRETS_FILE_PATH, bootstrapSecretsCr).
 		WithExec([]string{
@@ -71,7 +76,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 			"kubectl", "wait",
 			"--for=condition=Ready",
 			strings.Trim(firestartrPodName, "\n"),
-			"--timeout=180s",
+			"--timeout=10h",
 			"-n", "external-secrets",
 		}).
 		WithFile("/secret_store/aws_secretstore.yaml", awsSecretStoreFile).
@@ -85,8 +90,25 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 			"kubectl",
 			"wait",
 			"--for=create",
+			"--timeout=10h",
 			"secret/bootstrap-secrets",
-			"--timeout=60s",
+		}).
+		WithExec([]string{
+			"kubectl", "apply", "-f", "/push-secrets/push-secrets.yaml",
+		}).
+		WithExec([]string{
+			"kubectl",
+			"wait",
+			"--for=condition=Ready=True",
+			"--timeout=10h",
+			"pushsecret/webhook-pushsecret",
+		}).
+		WithExec([]string{
+			"kubectl",
+			"wait",
+			"--for=condition=Ready=True",
+			"--timeout=10h",
+			"pushsecret/prefapp-bot-pat-pushsecret",
 		}).
 		Sync(ctx)
 
@@ -100,7 +122,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 func (m *FirestartrBootstrap) PopulateGithubAppCredsFromSecrets(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-) {
+) error {
 	// Get the GitHub App credentials struct
 	credsReflector := reflect.ValueOf(&m.Creds.GithubApp).Elem()
 
@@ -109,20 +131,20 @@ func (m *FirestartrBootstrap) PopulateGithubAppCredsFromSecrets(
 		// Fetch the secret value from Kubernetes
 		secretValue, err := m.GetKubernetesSecretValue(ctx, kindContainer, ref)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		// Check it exists and is settable within the struct
 		field := credsReflector.FieldByName(property)
 		if !field.IsValid() {
-			panic(fmt.Sprintf(
+			return fmt.Errorf(
 				"Field %q does not exist in GithubApp struct", property,
-			))
+			)
 		}
 		if !field.CanSet() {
-			panic(fmt.Sprintf(
+			return fmt.Errorf(
 				"Field %q in GithubApp struct is not settable", property,
-			))
+			)
 		}
 
 		// Set the field to the fetched secret value
@@ -133,6 +155,8 @@ func (m *FirestartrBootstrap) PopulateGithubAppCredsFromSecrets(
 	// for use in the ProviderConfig template
 	escaped := strings.ReplaceAll(m.Creds.GithubApp.Pem, "\n", "\\n")
 	m.Creds.GithubApp.RawPem = escaped
+
+	return nil
 }
 
 func (m *FirestartrBootstrap) GetKubernetesSecretValue(

@@ -4,26 +4,28 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
-    "strings"
+	"log"
+	"strings"
+
 	"gopkg.in/yaml.v3"
 )
 
 type FirestartrBootstrap struct {
-	Bootstrap          *Bootstrap
-	BootstrapFile      *dagger.File
-	CredentialsSecret  *dagger.Secret
-	GhOrg              string
-	Creds              *CredsFile
-	CredsFileContent   string
-	GeneratedGhToken   *dagger.Secret
-	RenderedCrs        []*Cr
-	ProvisionedCrs     []*Cr
-	FailedCrs          []*Cr
-	PreviousCrsDir     *dagger.Directory
-	ClaimsDotConfigDir *dagger.Directory
-	CrsDotConfigDir    *dagger.Directory
-	IncludeAllGroup    bool
-    ExpectedAWSParameters []string
+	Bootstrap             *Bootstrap
+	BootstrapFile         *dagger.File
+	CredentialsSecret     *dagger.Secret
+	GhOrg                 string
+	Creds                 *CredsFile
+	CredsFileContent      string
+	GeneratedGhToken      *dagger.Secret
+	RenderedCrs           []*Cr
+	ProvisionedCrs        []*Cr
+	FailedCrs             []*Cr
+	PreviousCrsDir        *dagger.Directory
+	ClaimsDotConfigDir    *dagger.Directory
+	CrsDotConfigDir       *dagger.Directory
+	IncludeAllGroup       bool
+	ExpectedAWSParameters []string
 }
 
 // baseTemplates holds the parameter paths with placeholders.
@@ -69,244 +71,164 @@ func New(
 
 	creds, err := loadCredsFile(ctx, credentialsSecret)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// load bootstrap file
 	bootstrapContentFile, err := bootstrapFile.Contents(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	bootstrap := &Bootstrap{}
 	err = yaml.Unmarshal([]byte(bootstrapContentFile), bootstrap)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+
+	// ----------------------------------------------------
+	// Autocalculate values
+	// We need to calculate the webhook params
+	// ----------------------------------------------------
+	if bootstrap.Env == "pro" {
+		bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.firestartr.dev", bootstrap.Customer)
+	} else {
+		bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.%s.firestartr.dev", bootstrap.Customer, bootstrap.Env)
+	}
+	bootstrap.WebhookSecretRef = fmt.Sprintf("/firestartr/%s/github-webhook/secret", bootstrap.Customer)
+
+	// We need to calculate the bucket (if necessary)
+	if creds.CloudProvider.Config.Bucket == nil {
+		calculatedBucket := fmt.Sprintf("tfstate-%s", bootstrap.Customer)
+		creds.CloudProvider.Config.Bucket = &calculatedBucket
+	}
+
+	bootstrap.PrefappBotPatSecretRef = fmt.Sprintf("/firestartr/%s/prefapp-bot-pat", bootstrap.Customer)
+	bootstrap.FirestartrCliVersionSecretRef = fmt.Sprintf("/firestartr/%s/firestartr-cli-version", bootstrap.Customer)
 
 	claimsDotConfigDir, err := getClaimsDotConfigDir(ctx, bootstrap)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
+	// calculate providers
+	githubProviderConfigName := fmt.Sprintf("github-%s", bootstrap.Customer)
+	backendConfigName := fmt.Sprintf("tfstate-%s", bootstrap.Customer)
 	defaultsInterface := CrsDefaultsData{
-		GithubAppProviderConfigName:     creds.GithubApp.ProviderConfigName,
-		CloudProviderProviderConfigName: creds.CloudProvider.ProviderConfigName,
+		GithubAppProviderConfigName:     githubProviderConfigName,
+		CloudProviderProviderConfigName: backendConfigName,
 		DefaultBranch:                   bootstrap.DefaultBranch,
 	}
 
+	creds.CloudProvider.ProviderConfigName = backendConfigName
+	creds.GithubApp.ProviderConfigName = githubProviderConfigName
+
+	// calculate store name
+	bootstrap.FinalSecretStoreName = fmt.Sprintf("%s-firestartr-secret-store", bootstrap.Customer)
+
 	crsDotConfigDir, err := getCrsDotConfigDir(ctx, bootstrap, defaultsInterface)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &FirestartrBootstrap{
-		Bootstrap:          bootstrap,
-		BootstrapFile:      bootstrapFile,
-		CredentialsSecret:  credentialsSecret,
-		GhOrg:              creds.GithubApp.Owner,
-		Creds:              creds,
-		CredsFileContent:   credsFileContent,
-		PreviousCrsDir:     previousCrsDir,
-		ClaimsDotConfigDir: claimsDotConfigDir,
-		CrsDotConfigDir:    crsDotConfigDir,
-        ExpectedAWSParameters: calculateParameters(bootstrap.Customer, bootstrap.Org),
+		Bootstrap:             bootstrap,
+		BootstrapFile:         bootstrapFile,
+		CredentialsSecret:     credentialsSecret,
+		GhOrg:                 creds.GithubApp.Owner,
+		Creds:                 creds,
+		CredsFileContent:      credsFileContent,
+		PreviousCrsDir:        previousCrsDir,
+		ClaimsDotConfigDir:    claimsDotConfigDir,
+		CrsDotConfigDir:       crsDotConfigDir,
+		ExpectedAWSParameters: calculateParameters(bootstrap.Customer, bootstrap.Org),
 	}, nil
 }
 
-func calculateParameters(customer string, githuborg string) []string{
+func calculateParameters(customer string, githuborg string) []string {
 
-    results := make([]string, 0, len(baseTemplates))
+	results := make([]string, 0, len(baseTemplates))
 
+	clientPlaceholder := "<client>"
+	githubOrgPlaceholder := "<github_org>"
 
-    clientPlaceholder := "<client>"
-    githubOrgPlaceholder := "<github_org>"
+	for _, template := range baseTemplates {
 
-    for _, template := range baseTemplates {
+		path := strings.ReplaceAll(template, clientPlaceholder, customer)
 
-        path := strings.ReplaceAll(template, clientPlaceholder, customer)
+		path = strings.ReplaceAll(path, githubOrgPlaceholder, githuborg)
 
-        path = strings.ReplaceAll(path, githubOrgPlaceholder, githuborg)
+		results = append(results, path)
+	}
 
-        results = append(results, path)
-    }
-
-    return results
+	return results
 }
 
 func (m *FirestartrBootstrap) ValidateBootstrap(
 	ctx context.Context,
+	kubeconfig *dagger.Directory,
+	kindSvc *dagger.Service,
 ) error {
+	log.Println("Validating bootstrap parameters")
+
+	errorMsgs := []string{}
 
 	err := m.ValidateBootstrapFile(ctx, m.BootstrapFile)
 	if err != nil {
-		panic(err)
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
 	err = m.ValidateCredentialsFile(ctx, m.CredsFileContent)
 	if err != nil {
-		panic(err)
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
-    err = m.ValidateBucket(ctx)
-    if err != nil {
-        panic(err)
-    }
-
-    err = m.ValidateParameters(ctx, fmt.Sprintf("/firestartr/%s", m.Bootstrap.Customer))
-    if err != nil {
-        panic(err)
-    }
-
-    return nil
-
-}
-
-func (m *FirestartrBootstrap) RunBootstrap(
-	ctx context.Context,
-	dockerSocket *dagger.Socket,
-	kindSvc *dagger.Service,
-) *dagger.Container {
-
-    err := m.ValidateBootstrap(ctx)
-    if err != nil {
-        panic(err)
-    }
-
-	kindContainer := m.InstallHelmAndExternalSecrets(ctx, dockerSocket, kindSvc)
-	kindContainer, err = m.CreateKubernetesSecrets(ctx, kindContainer)
-
+	err = m.ValidateCliExistence(ctx)
 	if err != nil {
-		panic(err)
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
-	m.PopulateGithubAppCredsFromSecrets(ctx, kindContainer)
-
-	tokenSecret, err := m.GenerateGithubToken(ctx)
+	err = m.ValidateExistenceOfNeededImages(ctx)
 	if err != nil {
-		panic(err)
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
-	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
-	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
+	_, err = m.ValidateSTSCredentials(ctx)
 	if err != nil {
-		panic(err)
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
-	err = m.CheckIfOrgAllGroupExists(ctx, tokenSecret)
+	err = m.ValidateBucket(ctx)
 	if err != nil {
-		panic(err)
+		errorMsgs = append(errorMsgs, err.Error())
 	}
 
-	kindContainer = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
+	err = m.ValidateParameters(ctx, fmt.Sprintf("/firestartr/%s", m.Bootstrap.Customer))
+	if err != nil {
+		errorMsgs = append(errorMsgs, err.Error())
+	}
 
-	alreadyCreatedReposList := []string{}
-	if m.PreviousCrsDir == nil {
-		// if any of the CRs already exist, we skip their creation
-		alreadyCreatedReposList, err = m.CheckAlreadyCreatedRepositories(
-			ctx,
-			tokenSecret,
+	err = m.ValidatePrefappBotPat(ctx)
+	if err != nil {
+		errorMsgs = append(errorMsgs, err.Error())
+	}
+
+	err = m.ValidateOperatorPat(ctx)
+	if err != nil {
+		errorMsgs = append(errorMsgs, err.Error())
+	}
+
+	err = m.ValidateKindKubernetesConnection(ctx, kubeconfig, kindSvc)
+	if err != nil {
+		errorMsgs = append(errorMsgs, err.Error())
+	}
+
+	if len(errorMsgs) > 0 {
+		return fmt.Errorf(
+			"validation errors:\n- %s", strings.Join(errorMsgs, "\n- "),
 		)
-		if err != nil {
-			panic(err)
-		}
 	}
 
-	kindContainer = m.RunImporter(ctx, kindContainer, alreadyCreatedReposList)
-	kindContainer = m.RunOperator(ctx, kindContainer)
-	kindContainer = m.UpdateSecretStoreRef(ctx, kindContainer)
+	return nil
 
-	if m.Bootstrap.PushFiles.Claims.Push {
-		claimsDir := kindContainer.
-			Directory("/resources/claims").
-			WithoutFile(fmt.Sprintf("claims/groups/%s-all.yaml", m.GhOrg))
-
-		err := m.PushDirToRepo(
-			ctx,
-			claimsDir,
-			m.Bootstrap.PushFiles.Claims.Repo,
-			tokenSecret,
-		)
-		if err != nil {
-			panic(err)
-		}
-
-		dotConfig := dag.Directory().
-			WithDirectory(".config", m.ClaimsDotConfigDir)
-
-		err = m.PushDirToRepo(
-			ctx,
-			dotConfig,
-			m.Bootstrap.PushFiles.Claims.Repo,
-			tokenSecret,
-		)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	if m.Bootstrap.PushFiles.Crs.Providers.Github.Push {
-		crsDir := kindContainer.Directory("/resources/firestartr-crs/github")
-
-		err := m.PushDirToRepo(
-			ctx,
-			crsDir,
-			m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
-			tokenSecret,
-		)
-		if err != nil {
-			panic(err)
-		}
-
-		dotConfig := dag.Directory().
-			WithDirectory(".config", m.CrsDotConfigDir)
-
-		err = m.PushDirToRepo(
-			ctx,
-			dotConfig,
-			m.Bootstrap.PushFiles.Crs.Providers.Github.Repo,
-			tokenSecret,
-		)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	if m.Bootstrap.PushFiles.Crs.Providers.Terraform.Push {
-		crsDir := kindContainer.Directory("/resources/firestartr-crs/infra")
-
-		err := m.PushDirToRepo(
-			ctx,
-			crsDir,
-			m.Bootstrap.PushFiles.Crs.Providers.Terraform.Repo,
-			tokenSecret,
-		)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	if !m.Bootstrap.HasFreePlan {
-		err = m.SetOrgVariables(ctx, tokenSecret, kindContainer)
-		if err != nil {
-			panic(err)
-		}
-
-		err = m.SetOrgSecrets(ctx, tokenSecret, kindContainer)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	for _, component := range m.Bootstrap.Components {
-		if len(component.Labels) > 0 {
-			err = m.CreateLabelsInRepo(ctx, component.Name, component.Labels, tokenSecret)
-
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-
-	return kindContainer
 }

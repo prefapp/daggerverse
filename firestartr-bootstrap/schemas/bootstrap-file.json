@@ -6,15 +6,49 @@
       "firestartr": {
         "type": "object",
         "properties": {
-          "version": {
+          "operator": {
+            "type": "string"
+          },
+          "cli":{
             "type": "string"
           }
         },
         "required": [
-          "version"
+          "operator",
+          "cli"
+        ]
+      },
+      "env": {
+        "type": "string",
+        "enum": [
+            "pre",
+            "pro"
         ]
       },
       "org": {
+        "type": "string"
+      },
+      "customer":{
+      
+        "type": "string"
+      },
+      "defaultBranch": {
+      
+        "type": "string"
+      },
+      "defaultSystemName":{
+        "type": "string"
+      },
+      "defaultDomainName":{
+        "type": "string"
+      },
+      "defaultOrgPermissions":{
+        "type": "string"
+      },
+      "defaultBranchStrategy": {
+        "type": "string"
+      },
+      "defaultFirestartrGroup": {
         "type": "string"
       },
       "webhookUrl": {
@@ -141,9 +175,17 @@
       }
     },
     "required": [
+      "env",
       "firestartr",
       "org",
       "pushFiles",
-      "components"
+      "components",
+      "customer",
+      "defaultBranch",
+      "defaultSystemName",
+      "defaultDomainName",
+      "defaultOrgPermissions",
+      "defaultBranchStrategy",
+      "defaultFirestartrGroup"
     ]
   }
