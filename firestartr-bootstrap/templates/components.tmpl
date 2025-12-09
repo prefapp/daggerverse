@@ -16,6 +16,9 @@ providers:
     name: {{ default $claim.Name $claim.RepoName }}
     org: {{ $.Org }}
     visibility: private
+    actions:
+      oidc:
+        useDefault: true
     branchStrategy:
       name: none
       defaultBranch: {{ $claim.DefaultBranch }}
