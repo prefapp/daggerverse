@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.0...firestartr-bootstrap-v1.2.1) (2025-12-09)
+
+
+### Bug Fixes
+
+* Missing actions.oidc section ([#359](https://github.com/prefapp/daggerverse/issues/359)) ([02c9bdc](https://github.com/prefapp/daggerverse/commit/02c9bdc25a400a5609ead6a405f369bfbc9860d4))
+
 ## [1.2.0](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.1.0...firestartr-bootstrap-v1.2.0) (2025-12-05)
 
 
