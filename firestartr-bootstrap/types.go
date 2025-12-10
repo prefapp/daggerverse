@@ -71,12 +71,6 @@ type Firestartr struct {
 type CredsFile struct {
 	CloudProvider CloudProvider `yaml:"cloudProvider"`
 	GithubApp     GithubApp     `yaml:"githubApp"`
-	ArgoCDCreds   ArgoCDCreds   `yaml:"argoCD"`
-}
-
-type ArgoCDCreds struct {
-	GithubAppId             string `yaml:"githubAppId"`
-	GithubAppInstallationId string `yaml:"githubAppInstallationId"`
 }
 
 type CloudProvider struct {
