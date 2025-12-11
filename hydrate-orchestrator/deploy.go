@@ -479,6 +479,46 @@ func (m *HydrateOrchestrator) ValidateChanges(
 		}
 	}
 
+	for _, tfDep := range deployments.TfWorkspaceDeployments {
+
+		renderedDeployment, err := dag.
+			HydrateTfworkspaces(
+				m.ValuesStateDir,
+				m.WetStateDir,
+				m.DotFirestartr,
+			).
+			Render(ctx, tfDep.ClaimName, m.App)
+
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = renderedDeployment[0].Sync(ctx)
+
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	for _, secDep := range deployments.SecretsDeployment {
+
+		renderedDeployment, err := dag.HydrateSecrets(
+			m.ValuesStateDir,
+			m.WetStateDir,
+			m.DotFirestartr,
+		).Render(ctx, m.App, secDep.Tenant, secDep.Environment)
+
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = renderedDeployment[0].Sync(ctx)
+
+		if err != nil {
+			panic(err)
+		}
+	}
+
 }
 
 // Function that returns a deployment object from a type, cluster, tenant and environment considering glob patterns
