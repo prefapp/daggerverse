@@ -20,8 +20,8 @@ type AppProject struct {
 }
 
 type ClientAccess struct {
-	GithubAppId             string              `yaml:"githubAppId"`
-	GithubAppInstallationId string              `yaml:"githubAppInstallationId"`
+	GithubAppId             PrivateKeyReference `yaml:"githubAppId"`
+	GithubAppInstallationId PrivateKeyReference `yaml:"githubAppInstallationId"`
 	GithubAppPrivateKey     PrivateKeyReference `yaml:"githubAppPrivateKey"`
 }
 

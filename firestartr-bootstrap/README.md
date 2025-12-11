@@ -174,9 +174,6 @@ cloudProvider:
   source: hashicorp/aws
   type: aws
   version: ~> 4.0
-argoCD:
-  githubAppId: "<id of the github app for argocd>"
-  githubAppInstallationId: "<id of the github app for argocd installed on the org>"
 githubApp:
   owner: <org>
   botName: "fs-<org>[bot]"

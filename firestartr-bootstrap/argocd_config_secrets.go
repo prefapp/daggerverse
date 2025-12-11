@@ -31,17 +31,32 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 		return nil, fmt.Errorf("cloning state-sys-services repo: %w", err)
 	}
 
-	secretRef := fmt.Sprintf(
+	appIdSecretRef := fmt.Sprintf(
+		"/firestartr/%s/fs-%s-argocd/app-id",
+		m.Bootstrap.Customer,
+		m.Bootstrap.Customer,
+	)
+	installationIdSecretRef := fmt.Sprintf(
+		"/firestartr/%s/fs-%s-argocd/%s/app-installation-id",
+		m.Bootstrap.Customer,
+		m.Bootstrap.Customer,
+		m.Bootstrap.Org,
+	)
+	pemSecretRef := fmt.Sprintf(
 		"/firestartr/%s/fs-%s-argocd/pem",
 		m.Bootstrap.Customer,
 		m.Bootstrap.Customer,
 	)
 
 	clientAccess := ClientAccess{
-		GithubAppId:             m.Creds.ArgoCDCreds.GithubAppId,
-		GithubAppInstallationId: m.Creds.ArgoCDCreds.GithubAppInstallationId,
+		GithubAppId: PrivateKeyReference{
+			RemoteRef: appIdSecretRef,
+		},
+		GithubAppInstallationId: PrivateKeyReference{
+			RemoteRef: installationIdSecretRef,
+		},
 		GithubAppPrivateKey: PrivateKeyReference{
-			RemoteRef: secretRef,
+			RemoteRef: pemSecretRef,
 		},
 	}
 
