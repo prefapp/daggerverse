@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.1...firestartr-bootstrap-v1.2.2) (2025-12-11)
+
+
+### Bug Fixes
+
+* Updated ArgoCD secrets to also be remoteRefs to secrets ([#364](https://github.com/prefapp/daggerverse/issues/364)) ([eb95e24](https://github.com/prefapp/daggerverse/commit/eb95e24a5a17c5322707b65fc21b30727357e5f9))
+
 ## [1.2.1](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.0...firestartr-bootstrap-v1.2.1) (2025-12-09)
 
 
