@@ -139,7 +139,7 @@ func (m *HydrateTfworkspaces) PatchClaimWithInferredProviders(
 
 	if foundClaim == nil || claimFileContents == "" {
 
-		return nil, fmt.Errorf("claim not found")
+		return nil, fmt.Errorf("claim %s not found", claimName)
 
 	}
 
