@@ -573,6 +573,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 		KubernetesDeployments:    []KubernetesAppDeployment{},
 		KubernetesSysDeployments: []KubernetesSysDeployment{},
 		SecretsDeployment:        []SecretsDeployment{},
+		TfWorkspaceDeployments:   []TfWorkspaceDeployment{},
 	}
 
 	for _, deployment := range deployments {
