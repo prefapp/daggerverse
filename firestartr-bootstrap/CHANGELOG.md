@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.2...firestartr-bootstrap-v1.2.3) (2025-12-15)
+
+
+### Bug Fixes
+
+* **firestartr-bootstrap:** updated CRDs URL in local-operator bash script ([#367](https://github.com/prefapp/daggerverse/issues/367)) ([0708df0](https://github.com/prefapp/daggerverse/commit/0708df094aca6b23c9c10b732e8e299cd36f2156))
+
 ## [1.2.2](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.1...firestartr-bootstrap-v1.2.2) (2025-12-11)
 
 
