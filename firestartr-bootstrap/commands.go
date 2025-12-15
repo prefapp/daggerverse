@@ -46,7 +46,7 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 		).
 		WithExec([]string{
 			"curl",
-			"https://prefapp.github.io/gitops-k8s/index.yaml",
+			"https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/crds/latest/index.yaml",
 			"-o",
 			"/tmp/crds.yaml",
 		}).
