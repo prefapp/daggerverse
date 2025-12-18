@@ -480,49 +480,22 @@ func (m *HydrateOrchestrator) ValidateChanges(
 
 	for _, tfDep := range deployments.TfWorkspaceDeployments {
 
-		tfDepFileList, err := m.ValuesStateDir.
-			Directory(tfDep.Deployment.DeploymentPath).
-			Glob(ctx, "*.yaml")
+		renderedDeployment, err := dag.
+			HydrateTfworkspaces(
+				m.ValuesStateDir,
+				m.WetStateDir,
+				m.DotFirestartr,
+			).
+			Render(ctx, tfDep.ClaimName, m.App)
+
 		if err != nil {
 			panic(err)
 		}
 
-		if len(tfDepFileList) == 0 {
-			panic(fmt.Sprintf("No tfworkspace claim file found in path: %s", tfDep.Deployment.DeploymentPath))
-		}
+		_, err = renderedDeployment[0].Sync(ctx)
 
-		for _, fileName := range tfDepFileList {
-			tfDepFileContents, err := m.ValuesStateDir.
-				Directory(tfDep.Deployment.DeploymentPath).
-				File(fileName).
-				Contents(ctx)
-			if err != nil {
-				panic(err)
-			}
-
-			claim := Claim{}
-			err = yaml.Unmarshal([]byte(tfDepFileContents), &claim)
-			if err != nil {
-				panic(err)
-			}
-
-			renderedDeployment, err := dag.
-				HydrateTfworkspaces(
-					m.ValuesStateDir,
-					m.WetStateDir,
-					m.DotFirestartr,
-				).
-				Render(ctx, claim.Name, m.App)
-
-			if err != nil {
-				panic(err)
-			}
-
-			_, err = renderedDeployment[0].Sync(ctx)
-
-			if err != nil {
-				panic(err)
-			}
+		if err != nil {
+			panic(err)
 		}
 	}
 
