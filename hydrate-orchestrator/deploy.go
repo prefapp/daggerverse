@@ -424,11 +424,10 @@ Created by @%s from %s within commit [%s](%s)
 func (m *HydrateOrchestrator) ValidateChanges(
 	ctx context.Context,
 	// Updated deployments in JSON format
-	// +required
-	globPattern string,
+	updatedDeployments string,
 ) {
 
-	deployments := m.processDeploymentGlob(ctx, m.ValuesStateDir, globPattern)
+	deployments := m.processUpdatedDeployments(ctx, updatedDeployments)
 
 	for _, kdep := range deployments.KubernetesDeployments {
 
