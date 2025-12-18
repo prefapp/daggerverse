@@ -369,8 +369,8 @@ func secretsDepFromStr(deployment string) *SecretsDeployment {
 
 	fmt.Printf("secretsDepFromStr dirs: %v\n", dirs)
 	fmt.Printf("secretsDepFromStr len(dirs): %d\n", len(dirs))
-	if len(dirs) == 4 {
-		fmt.Printf("secretsDepFromStr dirs are 4: %v\n", dirs)
+	if len(dirs) == 3 {
+		fmt.Printf("secretsDepFromStr dirs are 3: %v\n", dirs)
 		return &SecretsDeployment{
 			Deployment: Deployment{
 				DeploymentPath: strings.Join(dirs, string(os.PathSeparator)),
