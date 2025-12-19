@@ -425,12 +425,10 @@ func (m *HydrateOrchestrator) ValidateChanges(
 	ctx context.Context,
 	// Updated deployments in JSON format
 	updatedDeployments string,
-) {
-
+) error {
 	deployments := m.processUpdatedDeployments(ctx, updatedDeployments)
 
 	for _, kdep := range deployments.KubernetesDeployments {
-
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
@@ -442,21 +440,24 @@ func (m *HydrateOrchestrator) ValidateChanges(
 			Tenant: kdep.Tenant,
 			Env:    kdep.Environment,
 		})
-
 		if err != nil {
-			panic(err)
+			return err
+		}
+
+		if len(renderedDeployment) == 0 {
+			return fmt.Errorf(
+				"no rendered deployment found for kubernetes deployment: %s",
+				kdep.String(true),
+			)
 		}
 
 		_, err = renderedDeployment[0].Sync(ctx)
-
 		if err != nil {
-			panic(err)
+			return err
 		}
-
 	}
 
 	for _, kdep := range deployments.KubernetesSysDeployments {
-
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
@@ -466,20 +467,24 @@ func (m *HydrateOrchestrator) ValidateChanges(
 				RenderType:    "sys-services",
 			},
 		).Render(ctx, kdep.SysServiceName, kdep.Cluster)
-
 		if err != nil {
-			panic(err)
+			return err
+		}
+
+		if len(renderedDeployment) == 0 {
+			return fmt.Errorf(
+				"no rendered deployment found for kubernetes sys service deployment: %s",
+				kdep.String(true),
+			)
 		}
 
 		_, err = renderedDeployment[0].Sync(ctx)
-
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
 	for _, tfDep := range deployments.TfWorkspaceDeployments {
-
 		renderedDeployment, err := dag.
 			HydrateTfworkspaces(
 				m.ValuesStateDir,
@@ -487,37 +492,47 @@ func (m *HydrateOrchestrator) ValidateChanges(
 				m.DotFirestartr,
 			).
 			Render(ctx, tfDep.ClaimName, m.App)
-
 		if err != nil {
-			panic(err)
+			return err
+		}
+
+		if len(renderedDeployment) == 0 {
+			return fmt.Errorf(
+				"no rendered deployment found for TFWorkspace deployment: %s",
+				tfDep.String(true),
+			)
 		}
 
 		_, err = renderedDeployment[0].Sync(ctx)
-
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
 	for _, secDep := range deployments.SecretsDeployment {
-
 		renderedDeployment, err := dag.HydrateSecrets(
 			m.ValuesStateDir,
 			m.WetStateDir,
 			m.DotFirestartr,
 		).Render(ctx, m.App, secDep.Tenant, secDep.Environment)
-
 		if err != nil {
-			panic(err)
+			return err
+		}
+
+		if len(renderedDeployment) == 0 {
+			return fmt.Errorf(
+				"no rendered deployment found for secrets deployment: %s",
+				secDep.String(true),
+			)
 		}
 
 		_, err = renderedDeployment[0].Sync(ctx)
-
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
+	return nil
 }
 
 // Function that returns a deployment object from a type, cluster, tenant and environment considering glob patterns
