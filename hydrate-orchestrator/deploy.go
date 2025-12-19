@@ -633,8 +633,12 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 				if err != nil {
 					panic(err)
 				}
+
 				claim := &Claim{}
-				yaml.Unmarshal([]byte(content), claim)
+				err = yaml.Unmarshal([]byte(content), claim)
+				if err != nil {
+					panic(err)
+				}
 
 				if m.ArtifactRef != "" && claim.Name == m.ArtifactRef {
 					result.addDeployment(tfDep)
