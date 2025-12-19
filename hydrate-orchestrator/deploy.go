@@ -623,7 +623,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 
 				if m.ArtifactRef != "" && claim.Name == m.ArtifactRef {
 					result.addDeployment(tfDep)
-				} else {
+				} else if m.ArtifactRef == "" {
 					tfDep.ClaimName = claim.Name
 					result.addDeployment(tfDep)
 				}
