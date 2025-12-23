@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.3.9](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.8...hydrate-orchestrator-v6.3.9) (2025-12-23)
+
+
+### Bug Fixes
+
+* Added validations for tfworkspace and secrets deployments ([#366](https://github.com/prefapp/daggerverse/issues/366)) ([3e5f5f5](https://github.com/prefapp/daggerverse/commit/3e5f5f57cbfb27fb450b2328fe509137fc456f5e))
+
 ## [6.3.8](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.7...hydrate-orchestrator-v6.3.8) (2025-09-05)
 
 
