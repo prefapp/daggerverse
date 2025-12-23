@@ -107,6 +107,19 @@ func (m *FirestartrBootstrap) ProcessArtifactsByKind(
 				"firestartr.dev/bootstrapped",
 				"true",
 			)
+
+			if kind == "githubrepository" {
+				kindContainer, err = m.PatchArchiveOnDeletion(
+					ctx,
+					kindContainer,
+					namespace,
+					kind,
+					artifacts,
+				)
+				if err != nil {
+					return "", err
+				}
+			}
 		}
 
 		summary, err := m.DeleteArtifactsList(
@@ -129,7 +142,6 @@ func (m *FirestartrBootstrap) ProcessArtifactsByKind(
 }
 
 func (m *FirestartrBootstrap) DeleteArtifactsList(
-
 	ctx context.Context,
 	kindContainer *dagger.Container,
 	kind string,
@@ -291,4 +303,51 @@ func (m *FirestartrBootstrap) GetAnnotatedArtifactList(
 	artifactList := strings.Split(rawOutput, "\n")
 
 	return artifactList, nil
+}
+
+func (m *FirestartrBootstrap) PatchArchiveOnDeletion(
+	ctx context.Context,
+	kindContainer *dagger.Container,
+	namespace string,
+	repositoryKind string,
+	repositoryList []string,
+) (*dagger.Container, error) {
+	ctr := kindContainer
+	var err error
+
+	for _, repositoryName := range repositoryList {
+		patchCommand := []string{
+			"kubectl",
+			"patch",
+			repositoryKind,
+			repositoryName,
+			"-n",
+			namespace,
+			"--type=json",
+			"-p",
+			`[{"op": "replace", "path": "/spec/repo/archiveOnDestroy", "value": false}]`,
+		}
+
+		// We need to wait for the patch to be applied before
+		// actually deleting the resource
+		waitCommand := []string{
+			"kubectl",
+			"wait",
+			"--for=condition=PROVISIONED=True",
+			fmt.Sprintf("%s/%s", repositoryKind, repositoryName),
+			"--timeout=10h",
+			"-n",
+			namespace,
+		}
+
+		ctr, err = ctr.
+			WithExec(patchCommand).
+			WithExec(waitCommand).
+			Sync(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return ctr, nil
 }
