@@ -263,7 +263,10 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}
 	}
 
-	m.SetLatestFeatureVersionWhenNecessary(ctx, tokenSecret)
+	err = m.SetLatestFeatureVersionWhenNecessary(ctx, tokenSecret)
+	if err != nil {
+		return "", err
+	}
 
 	kindContainer, err = m.RunImporter(ctx, kindContainer)
 	if err != nil {
