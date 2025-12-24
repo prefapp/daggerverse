@@ -29,11 +29,11 @@
         "type": "string"
       },
       "customer":{
-      
+
         "type": "string"
       },
       "defaultBranch": {
-      
+
         "type": "string"
       },
       "defaultSystemName":{
@@ -141,8 +141,7 @@
                   }
                 },
                 "required": [
-                  "name",
-                  "version"
+                  "name"
                 ]
               }
             },

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
@@ -489,4 +490,33 @@ func (m *FirestartrBootstrap) OrgHasFreePlan(
 	}
 
 	return strings.EqualFold(planName, "free"), nil
+}
+
+func (m *FirestartrBootstrap) GetLatestFeatureVersionInfo(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) (map[string]string, error) {
+	latestVersionMap := make(map[string]string)
+
+	ctr, err := m.GhContainer(ctx, ghToken)
+	if err != nil {
+		return nil, err
+	}
+
+	featuresVersionJSON, err := ctr.
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithExec([]string{
+			"gh", "api", "repos/prefapp/features/contents/.release-please-manifest.json", "-H", "Accept: application/vnd.github.raw",
+		}).
+		Stdout(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal([]byte(featuresVersionJSON), &latestVersionMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return latestVersionMap, nil
 }
