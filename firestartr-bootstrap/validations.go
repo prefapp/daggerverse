@@ -112,6 +112,9 @@ func (m *FirestartrBootstrap) ValidatePrefappBotPat(ctx context.Context) error {
 	destinationPath := "/tmp/repo"
 
 	gitContainer, err := m.CloneFeaturesRepo(ctx, destinationPath)
+	if err != nil {
+		return err
+	}
 
 	clonedDir := gitContainer.Directory(destinationPath)
 
