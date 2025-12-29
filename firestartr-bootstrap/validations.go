@@ -108,40 +108,15 @@ func validateDocumentSchema(document string, schema string) error {
 	return nil
 }
 
-func (m *FirestartrBootstrap) ValidatePrefappBotPat(
-	ctx context.Context,
-) error {
+func (m *FirestartrBootstrap) ValidatePrefappBotPat(ctx context.Context) error {
+	destinationPath := "/tmp/repo"
 
-	patValue := m.Creds.GithubApp.PrefappBotPat
-
-	authURL := fmt.Sprintf("https://%s@github.com/%s/%s.git", patValue, "prefapp", "features")
-
-	gitArgs := []string{
-		"git",
-		"clone",
-		"--depth", "1",
-		"--single-branch", // Only clone one branch/tag
-		"--branch", "main",
-		authURL,
-		"/tmp/repo", // Clone into this temporary directory
-	}
-
-	gitContainer := dag.Container().
-		From("alpine/git:latest").
-		WithExec(gitArgs)
-
-	_, err := gitContainer.Stdout(ctx)
+	gitContainer, err := m.CloneFeaturesRepo(ctx, destinationPath)
 	if err != nil {
-		// If the command fails, it indicates an authentication or access issue.
-		errorOutput, _ := gitContainer.Stderr(ctx)
-
-		// Clean up sensitive data from the output for security
-		safeOutput := strings.ReplaceAll(errorOutput, patValue, "[REDACTED_PAT]")
-
-		return fmt.Errorf("access check failed. Cannot clone repository: %s", safeOutput)
+		return err
 	}
 
-	clonedDir := gitContainer.Directory("/tmp/repo")
+	clonedDir := gitContainer.Directory(destinationPath)
 
 	// This final check ensures not only the clone command passed, but the files are accessible.
 	_, err = clonedDir.Entries(ctx)

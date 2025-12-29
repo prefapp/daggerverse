@@ -130,3 +130,30 @@ func loadCredsFile(ctx context.Context, creds *dagger.Secret) (*CredsFile, error
 
 	return credsFile, nil
 }
+
+func (m *FirestartrBootstrap) SetLatestFeatureVersionWhenNecessary(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) error {
+	err := m.SetLatestFeatureVersionInfo(ctx, ghToken)
+	if err != nil {
+		return err
+	}
+
+	for i, component := range m.Bootstrap.Components {
+		for j, feature := range component.Features {
+			if featureNeedsVersionResolution(feature.Version) {
+				latestVersion, err := m.GetLatestFeatureVersion(
+					ctx, feature.Name,
+				)
+				if err != nil {
+					return err
+				}
+
+				m.Bootstrap.Components[i].Features[j].Version = latestVersion
+			}
+		}
+	}
+
+	return nil
+}

@@ -133,3 +133,9 @@ func executeCurlCommand(
 
 	return execContainer, nil
 }
+
+func featureNeedsVersionResolution(
+	featureVersion string,
+) bool {
+	return featureVersion == "latest" || featureVersion == ""
+}
