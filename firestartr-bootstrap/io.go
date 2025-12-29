@@ -135,22 +135,19 @@ func (m *FirestartrBootstrap) SetLatestFeatureVersionWhenNecessary(
 	ctx context.Context,
 	ghToken *dagger.Secret,
 ) error {
-	latestVersionMap, err := m.GetLatestFeatureVersionInfo(ctx, ghToken)
+	err := m.SetLatestFeatureVersionInfo(ctx, ghToken)
 	if err != nil {
 		return err
 	}
 
 	for i, component := range m.Bootstrap.Components {
 		for j, feature := range component.Features {
-			if feature.Version == "latest" || feature.Version == "" {
-				latestVersion, ok := latestVersionMap[fmt.Sprintf(
-					"packages/%s", feature.Name,
-				)]
-				if !ok {
-					return fmt.Errorf(
-						"could not find latest version for feature: %s",
-						feature.Name,
-					)
+			if featureNeedsVersionResolution(feature.Version) {
+				latestVersion, err := m.GetLatestFeatureVersion(
+					ctx, feature.Name,
+				)
+				if err != nil {
+					return err
 				}
 
 				m.Bootstrap.Components[i].Features[j].Version = latestVersion

@@ -492,31 +492,89 @@ func (m *FirestartrBootstrap) OrgHasFreePlan(
 	return strings.EqualFold(planName, "free"), nil
 }
 
-func (m *FirestartrBootstrap) GetLatestFeatureVersionInfo(
-	ctx context.Context,
-	ghToken *dagger.Secret,
-) (map[string]string, error) {
-	latestVersionMap := make(map[string]string)
+// Functions to set and get latest feature version info
+// Done like this because functions cannot return maps
+var latestVersionMap = make(map[string]string)
 
-	ctr, err := m.GhContainer(ctx, ghToken)
-	if err != nil {
-		return nil, err
+func (m *FirestartrBootstrap) CloneFeaturesRepo(
+	ctx context.Context,
+	destinationPath string,
+) (*dagger.Container, error) {
+	patValue := m.Creds.GithubApp.PrefappBotPat
+
+	authURL := fmt.Sprintf("https://%s@github.com/%s/%s.git", patValue, "prefapp", "features")
+
+	gitArgs := []string{
+		"git",
+		"clone",
+		"--depth", "1",
+		"--single-branch", // Only clone one branch/tag
+		"--branch", "main",
+		authURL,
+		destinationPath,
 	}
 
-	featuresVersionJSON, err := ctr.
-		WithEnvVariable("BUST_CACHE", time.Now().String()).
-		WithExec([]string{
-			"gh", "api", "repos/prefapp/features/contents/.release-please-manifest.json", "-H", "Accept: application/vnd.github.raw",
-		}).
-		Stdout(ctx)
+	ctr := dag.Container().
+		From("alpine/git:latest").
+		WithExec(gitArgs)
+
+	_, err := ctr.Stdout(ctx)
 	if err != nil {
-		return nil, err
+		// If the command fails, it indicates an authentication or access issue.
+		errorOutput, _ := ctr.Stderr(ctx)
+
+		// Clean up sensitive data from the output for security
+		safeOutput := strings.ReplaceAll(errorOutput, patValue, "[REDACTED_PAT]")
+
+		return nil, fmt.Errorf(
+			"access check failed. Cannot clone repository: %s", safeOutput,
+		)
+	}
+
+	return ctr, nil
+}
+
+func (m *FirestartrBootstrap) SetLatestFeatureVersionInfo(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) error {
+	destinationPath := "/tmp/features-repo"
+
+	ctr, err := m.CloneFeaturesRepo(ctx, destinationPath)
+	if err != nil {
+		return err
+	}
+
+	clonedDir := ctr.Directory(destinationPath)
+	featuresVersionJSON, err := clonedDir.
+		File(".release-please-manifest.json").
+		Contents(ctx)
+	if err != nil {
+		return err
 	}
 
 	err = json.Unmarshal([]byte(featuresVersionJSON), &latestVersionMap)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return latestVersionMap, nil
+	return nil
+}
+
+func (m *FirestartrBootstrap) GetLatestFeatureVersion(
+	ctx context.Context,
+	featureName string,
+) (string, error) {
+	// Inside the latestVersionMap, feature names are prefixed with "packages/"
+	latestVersion, ok := latestVersionMap[fmt.Sprintf(
+		"packages/%s", featureName,
+	)]
+	if !ok {
+		return "", fmt.Errorf(
+			"could not find latest version for feature: %s",
+			featureName,
+		)
+	}
+
+	return latestVersion, nil
 }
