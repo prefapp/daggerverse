@@ -29,11 +29,9 @@
         "type": "string"
       },
       "customer":{
-
         "type": "string"
       },
       "defaultBranch": {
-
         "type": "string"
       },
       "defaultSystemName":{
