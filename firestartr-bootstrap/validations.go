@@ -345,7 +345,7 @@ func (m *FirestartrBootstrap) GithubRepositoryExists(
 	return true, nil
 }
 
-func (m *FirestartrBootstrap) ValidateWebhookDoesntExist(
+func (m *FirestartrBootstrap) ValidateWebhookNotExists(
 	ctx context.Context,
 	ghToken *dagger.Secret,
 	webhookUrl string,

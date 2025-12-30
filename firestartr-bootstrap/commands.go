@@ -263,7 +263,7 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}
 	}
 
-	err = m.ValidateWebhookDoesntExist(ctx, tokenSecret, m.Bootstrap.WebhookUrl)
+	err = m.ValidateWebhookNotExists(ctx, tokenSecret, m.Bootstrap.WebhookUrl)
 	if err != nil {
 		return "", err
 	}
