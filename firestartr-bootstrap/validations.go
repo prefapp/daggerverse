@@ -348,7 +348,7 @@ func (m *FirestartrBootstrap) GithubRepositoryExists(
 func (m *FirestartrBootstrap) ValidateWebhookNotExists(
 	ctx context.Context,
 	ghToken *dagger.Secret,
-	webhookUrl string,
+	webhookURL string,
 ) error {
 	ctr, err := m.GhContainer(ctx, ghToken)
 	if err != nil {
@@ -358,7 +358,7 @@ func (m *FirestartrBootstrap) ValidateWebhookNotExists(
 	hooksOutput, err := ctr.
 		WithExec([]string{
 			"gh", "api", fmt.Sprintf("orgs/%s/hooks", m.Bootstrap.Org),
-			"--jq", fmt.Sprintf(".[] | select(.config.url == \"%s\") | .id", webhookUrl),
+			"--jq", fmt.Sprintf(".[] | select(.config.url == \"%s\") | .id", webhookURL),
 		}).
 		Stdout(ctx)
 
@@ -370,7 +370,7 @@ func (m *FirestartrBootstrap) ValidateWebhookNotExists(
 	if exists {
 		return fmt.Errorf(
 			"a webhook with the URL '%s' already exists in the organization '%s'",
-			webhookUrl, m.Bootstrap.Org,
+			webhookURL, m.Bootstrap.Org,
 		)
 	}
 
