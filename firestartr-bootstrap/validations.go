@@ -369,7 +369,7 @@ func (m *FirestartrBootstrap) ValidateWebhookNotExists(
 	exists := strings.TrimSpace(hooksOutput) != ""
 	if exists {
 		return fmt.Errorf(
-			"a webhook with the URL '%s' already exists in the organization '%s'",
+			"a webhook with the URL %q already exists in the organization %q",
 			webhookURL, m.Bootstrap.Org,
 		)
 	}
