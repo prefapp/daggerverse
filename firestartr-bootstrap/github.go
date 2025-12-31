@@ -599,9 +599,6 @@ func (m *FirestartrBootstrap) EnableActionsToCreateAndApprovePullRequestsInOrg(
 			"-F", "can_approve_pull_request_reviews=true",
 		}).
 		Sync(ctx)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
