@@ -248,7 +248,7 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		Sync(ctx)
 
 	if err != nil {
-		errMsg := extractErrorMessage(err, "Failed to create bridge container")
+		errMsg := extractErrorMessage(err, "Failed to clear cache volume")
 		return "", fmt.Errorf(errMsg)
 	}
 

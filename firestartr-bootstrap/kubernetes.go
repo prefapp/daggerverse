@@ -56,7 +56,8 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		}).
 		Stdout(ctx)
 	if err != nil {
-		return nil, err
+		errMsg := extractErrorMessage(err, "Failed to get external-secrets pod")
+		return nil, fmt.Errorf(errMsg)
 	}
 
 	pushSecretsDirectory, err := m.GeneratePushSecrets(ctx)
@@ -113,7 +114,8 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		Sync(ctx)
 
 	if err != nil {
-		return nil, err
+		errMsg := extractErrorMessage(err, "Failed to create Kubernetes secrets")
+		return nil, fmt.Errorf(errMsg)
 	}
 
 	return kindContainer, nil
@@ -174,7 +176,10 @@ func (m *FirestartrBootstrap) GetKubernetesSecretValue(
 			"-o", fmt.Sprintf("jsonpath=\"{.data.%s}\"", secretName),
 		}).Stdout(ctx)
 	if err != nil {
-		return "", err
+		errMsg := extractErrorMessage(
+			err, fmt.Sprintf("Failed to get Kubernetes secret %s/%s", secretCR, secretName),
+		)
+		return "", fmt.Errorf(errMsg)
 	}
 
 	return kindContainer.

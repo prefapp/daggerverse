@@ -313,7 +313,8 @@ func (m *FirestartrBootstrap) GithubRepositoryExists(
 		}).
 		Sync(ctx)
 	if err != nil {
-		return false, err
+		errMsg := extractErrorMessage(err, "Failed to check if repository exists")
+		return false, fmt.Errorf(errMsg)
 	}
 
 	stderr, err := ctr.File("/tmp/stderr").Contents(ctx)
@@ -363,7 +364,7 @@ func (m *FirestartrBootstrap) ValidateWebhookNotExists(
 		Stdout(ctx)
 
 	if err != nil {
-		return fmt.Errorf("failed to query organization webhooks from GitHub API for org %q: %w", m.Bootstrap.Org, err)
+		return fmt.Errorf("failed to query organization webhooks from GitHub API for org %q", m.Bootstrap.Org)
 	}
 
 	exists := strings.TrimSpace(hooksOutput) != ""
