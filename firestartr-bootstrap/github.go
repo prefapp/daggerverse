@@ -375,13 +375,14 @@ func (m *FirestartrBootstrap) GenerateGithubToken(ctx context.Context) (*dagger.
 		Sync(ctx)
 
 	if err != nil {
-		return nil, err
+		errMsg := extractErrorMessage(err, "Failed to create GitHub token")
+		return nil, fmt.Errorf(errMsg)
 	}
 
 	tokenRaw, err := ctr.File("/token").Contents(ctx)
-
 	if err != nil {
-		return nil, err
+		errMsg := extractErrorMessage(err, "Failed to read GitHub token")
+		return nil, fmt.Errorf(errMsg)
 	}
 
 	tokenSecret := dag.SetSecret(

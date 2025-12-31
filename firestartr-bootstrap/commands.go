@@ -54,7 +54,8 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 		Sync(ctx)
 
 	if err != nil {
-		return nil, err
+		errMsg := extractErrorMessage(err, "Failed to create bridge container")
+		return nil, fmt.Errorf(errMsg)
 	}
 
 	return ctn, nil
@@ -247,7 +248,8 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		Sync(ctx)
 
 	if err != nil {
-		return "", err
+		errMsg := extractErrorMessage(err, "Failed to create bridge container")
+		return "", fmt.Errorf(errMsg)
 	}
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
@@ -293,7 +295,8 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}).
 		Sync(ctx)
 	if err != nil {
-		return "", err
+		errMsg := extractErrorMessage(err, "Failed to update cache volume")
+		return "", fmt.Errorf(errMsg)
 	}
 
 	summary, err := m.UpdateSummaryAndRunForImportResourcesStep(ctx, kindContainer)
