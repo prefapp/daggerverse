@@ -263,6 +263,11 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}
 	}
 
+	err = m.EnableActionsToCreateAndApprovePullRequestsInOrg(ctx, tokenSecret)
+	if err != nil {
+		return "", err
+	}
+
 	err = m.SetLatestFeatureVersionWhenNecessary(ctx, tokenSecret)
 	if err != nil {
 		return "", err
