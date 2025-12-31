@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.4](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.3...firestartr-bootstrap-v1.2.4) (2025-12-31)
+
+
+### Bug Fixes
+
+* Allow downloading latest version of a feature by not setting a version or setting 'latest' ([#375](https://github.com/prefapp/daggerverse/issues/375)) ([4b81367](https://github.com/prefapp/daggerverse/commit/4b81367e692a53bb8ed3034114f90938de6563dd))
+* Check webhook doesn't exist before attempting the creation of resources ([#376](https://github.com/prefapp/daggerverse/issues/376)) ([de36ef8](https://github.com/prefapp/daggerverse/commit/de36ef854a5d0e3649a090d40faf65dd80e97063))
+* Delete repositories on rollback ([#372](https://github.com/prefapp/daggerverse/issues/372)) ([0f5f049](https://github.com/prefapp/daggerverse/commit/0f5f049caf4763ae7c894a332781b13c4b2009fd))
+* Enable PR creation and approving globally for org ([#378](https://github.com/prefapp/daggerverse/issues/378)) ([e5b65db](https://github.com/prefapp/daggerverse/commit/e5b65db7f66d7ce9d29ce1c1b786d0fa0580a6d9))
+
 ## [1.2.3](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.2...firestartr-bootstrap-v1.2.3) (2025-12-15)
 
 

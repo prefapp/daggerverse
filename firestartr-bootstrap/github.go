@@ -594,3 +594,27 @@ func (m *FirestartrBootstrap) GetLatestFeatureVersion(
 
 	return latestVersion, nil
 }
+
+func (m *FirestartrBootstrap) EnableActionsToCreateAndApprovePullRequestsInOrg(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) error {
+	ctr, err := m.GhContainer(ctx, ghToken)
+	if err != nil {
+		return err
+	}
+
+	_, err = ctr.
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithExec([]string{
+			"gh", "api",
+			"--method", "PUT",
+			"-H", "Accept: application/vnd.github+json",
+			fmt.Sprintf("/orgs/%s/actions/permissions/workflow", m.GhOrg),
+			"-f", "default_workflow_permissions=write",
+			"-F", "can_approve_pull_request_reviews=true",
+		}).
+		Sync(ctx)
+
+	return err
+}
