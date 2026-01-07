@@ -55,7 +55,7 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to create bridge container")
-		return nil, fmt.Errorf(errMsg)
+		return nil, fmt.Errorf("%s", errMsg)
 	}
 
 	return ctn, nil
@@ -249,7 +249,7 @@ func (m *FirestartrBootstrap) CmdImportResources(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to clear cache volume")
-		return "", fmt.Errorf(errMsg)
+		return "", fmt.Errorf("%s", errMsg)
 	}
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
@@ -265,11 +265,11 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}
 	}
 
-  	err = m.ValidateWebhookNotExists(ctx, tokenSecret, m.Bootstrap.WebhookUrl)
-  	if err != nil {
+	err = m.ValidateWebhookNotExists(ctx, tokenSecret, m.Bootstrap.WebhookUrl)
+	if err != nil {
 		return "", err
 	}
-  
+
 	err = m.EnableActionsToCreateAndApprovePullRequestsInOrg(ctx, tokenSecret)
 	if err != nil {
 		return "", err
@@ -306,7 +306,7 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		Sync(ctx)
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to update cache volume")
-		return "", fmt.Errorf(errMsg)
+		return "", fmt.Errorf("%s", errMsg)
 	}
 
 	summary, err := m.UpdateSummaryAndRunForImportResourcesStep(ctx, kindContainer)

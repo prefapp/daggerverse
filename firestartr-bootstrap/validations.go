@@ -314,7 +314,7 @@ func (m *FirestartrBootstrap) GithubRepositoryExists(
 		Sync(ctx)
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to check if repository exists")
-		return false, fmt.Errorf(errMsg)
+		return false, fmt.Errorf("%s", errMsg)
 	}
 
 	stderr, err := ctr.File("/tmp/stderr").Contents(ctx)

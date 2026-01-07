@@ -73,7 +73,7 @@ func (m *FirestartrBootstrap) InstallHelmAndExternalSecrets(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to install Helm chart for External Secrets")
-		return nil, fmt.Errorf(errMsg)
+		return nil, fmt.Errorf("%s", errMsg)
 	}
 
 	return kindContainerWithSecrets, nil

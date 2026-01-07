@@ -71,7 +71,7 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to render CRs")
-		return nil, fmt.Errorf(errMsg)
+		return nil, fmt.Errorf("%s", errMsg)
 	}
 
 	outputDir := fsCtr.Directory("/tmp/rendered_crs")

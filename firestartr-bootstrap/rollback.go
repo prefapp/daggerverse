@@ -346,7 +346,7 @@ func (m *FirestartrBootstrap) PatchArchiveOnDeletion(
 			Sync(ctx)
 		if err != nil {
 			errMsg := extractErrorMessage(err, "Failed to patch archiveOnDestroy field")
-			return nil, fmt.Errorf(errMsg)
+			return nil, fmt.Errorf("%s", errMsg)
 		}
 	}
 
