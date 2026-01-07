@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -346,7 +347,7 @@ func (m *FirestartrBootstrap) PatchArchiveOnDeletion(
 			Sync(ctx)
 		if err != nil {
 			errMsg := extractErrorMessage(err, "Failed to patch archiveOnDestroy field")
-			return nil, fmt.Errorf("%s", errMsg)
+			return nil, errors.New(errMsg)
 		}
 	}
 

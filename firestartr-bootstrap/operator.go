@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -73,7 +74,7 @@ func (m *FirestartrBootstrap) InstallHelmAndExternalSecrets(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to install Helm chart for External Secrets")
-		return nil, fmt.Errorf("%s", errMsg)
+		return nil, errors.New(errMsg)
 	}
 
 	return kindContainerWithSecrets, nil

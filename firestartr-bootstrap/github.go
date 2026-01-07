@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path"
 	"strings"
@@ -60,7 +61,7 @@ func (m *FirestartrBootstrap) PushDirToRepo(
 		Sync(ctx)
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to push changes to repository")
-		return fmt.Errorf("%s", errMsg)
+		return errors.New(errMsg)
 	}
 
 	return nil
@@ -96,7 +97,7 @@ func (m *FirestartrBootstrap) CreatePR(
 		Sync(ctx)
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to create pull request")
-		return fmt.Errorf("%s", errMsg)
+		return errors.New(errMsg)
 	}
 
 	return nil
@@ -126,7 +127,7 @@ func (m *FirestartrBootstrap) CloneRepo(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to clone repository")
-		return nil, fmt.Errorf("%s", errMsg)
+		return nil, errors.New(errMsg)
 	}
 
 	return alpCtr, nil
@@ -159,7 +160,7 @@ func (m *FirestartrBootstrap) CreateLabelsInRepo(
 			errMsg := extractErrorMessage(
 				err, fmt.Sprintf("Failed to create label in repo %s", repoName),
 			)
-			return fmt.Errorf("%s", errMsg)
+			return errors.New(errMsg)
 		}
 	}
 
@@ -195,7 +196,7 @@ func (m *FirestartrBootstrap) SetOrgVariable(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to set organization variable")
-		return nil, fmt.Errorf("%s", errMsg)
+		return nil, errors.New(errMsg)
 	}
 
 	return alpCtr, nil
@@ -230,7 +231,7 @@ func (m *FirestartrBootstrap) SetRepoVariable(
 		errMsg := extractErrorMessage(
 			err, fmt.Sprintf("Failed to set variable in repo %s", repoName),
 		)
-		return nil, fmt.Errorf("%s", errMsg)
+		return nil, errors.New(errMsg)
 	}
 	return alpCtr, nil
 }
@@ -271,7 +272,7 @@ func (m *FirestartrBootstrap) SetOrgVariables(
 		value, err := m.GetKubernetesSecretValue(ctx, kindContainer, ref)
 		if err != nil {
 			errMsg := extractErrorMessage(err, "Failed to get secret value from Kubernetes")
-			return fmt.Errorf("%s", errMsg)
+			return errors.New(errMsg)
 		}
 		_, err = m.SetOrgVariable(ctx, name, value, ghToken)
 		if err != nil {
@@ -312,7 +313,7 @@ func (m *FirestartrBootstrap) SetOrgSecret(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to set organization secret")
-		return nil, fmt.Errorf("%s", errMsg)
+		return nil, errors.New(errMsg)
 	}
 
 	return alpCtr, nil
@@ -333,7 +334,7 @@ func (m *FirestartrBootstrap) SetOrgSecrets(
 		value, err := m.GetKubernetesSecretValue(ctx, kindContainer, ref)
 		if err != nil {
 			errMsg := extractErrorMessage(err, "Failed to get secret value from Kubernetes")
-			return fmt.Errorf("%s", errMsg)
+			return errors.New(errMsg)
 		}
 
 		_, err = m.SetOrgSecret(ctx, name, value, ghToken)
@@ -389,13 +390,13 @@ func (m *FirestartrBootstrap) GenerateGithubToken(ctx context.Context) (*dagger.
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to create GitHub token")
-		return nil, fmt.Errorf("%s", errMsg)
+		return nil, errors.New(errMsg)
 	}
 
 	tokenRaw, err := ctr.File("/token").Contents(ctx)
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to read GitHub token")
-		return nil, fmt.Errorf("%s", errMsg)
+		return nil, errors.New(errMsg)
 	}
 
 	tokenSecret := dag.SetSecret(
@@ -434,7 +435,7 @@ func (m *FirestartrBootstrap) WorkflowRun(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to run workflow")
-		return fmt.Errorf("%s", errMsg)
+		return errors.New(errMsg)
 	}
 
 	return nil
@@ -490,7 +491,7 @@ func (m *FirestartrBootstrap) GetOrganizationPlanName(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to get organization plan name")
-		return "", fmt.Errorf("%s", errMsg)
+		return "", errors.New(errMsg)
 	}
 
 	return strings.Trim(planName, "\n"), nil

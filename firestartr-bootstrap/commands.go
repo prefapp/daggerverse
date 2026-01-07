@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -55,7 +56,7 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to create bridge container")
-		return nil, fmt.Errorf("%s", errMsg)
+		return nil, errors.New(errMsg)
 	}
 
 	return ctn, nil
@@ -249,7 +250,7 @@ func (m *FirestartrBootstrap) CmdImportResources(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to clear cache volume")
-		return "", fmt.Errorf("%s", errMsg)
+		return "", errors.New(errMsg)
 	}
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
@@ -306,7 +307,7 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		Sync(ctx)
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to update cache volume")
-		return "", fmt.Errorf("%s", errMsg)
+		return "", errors.New(errMsg)
 	}
 
 	summary, err := m.UpdateSummaryAndRunForImportResourcesStep(ctx, kindContainer)

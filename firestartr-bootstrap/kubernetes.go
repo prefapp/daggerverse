@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -57,7 +58,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		Stdout(ctx)
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to get external-secrets pod")
-		return nil, fmt.Errorf("%s", errMsg)
+		return nil, errors.New(errMsg)
 	}
 
 	pushSecretsDirectory, err := m.GeneratePushSecrets(ctx)
@@ -115,7 +116,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to create Kubernetes secrets")
-		return nil, fmt.Errorf("%s", errMsg)
+		return nil, errors.New(errMsg)
 	}
 
 	return kindContainer, nil
@@ -179,7 +180,7 @@ func (m *FirestartrBootstrap) GetKubernetesSecretValue(
 		errMsg := extractErrorMessage(
 			err, fmt.Sprintf("Failed to get Kubernetes secret %s/%s", secretCR, secretName),
 		)
-		return "", fmt.Errorf("%s", errMsg)
+		return "", errors.New(errMsg)
 	}
 
 	return kindContainer.
