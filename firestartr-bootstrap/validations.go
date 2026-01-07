@@ -365,7 +365,17 @@ func (m *FirestartrBootstrap) ValidateWebhookNotExists(
 		Stdout(ctx)
 
 	if err != nil {
-		return fmt.Errorf("failed to query organization webhooks from GitHub API for org %q", m.Bootstrap.Org)
+		return fmt.Errorf(
+			"failed to query organization webhooks from GitHub API for org %s: %s",
+			m.Bootstrap.Org,
+			extractErrorMessage(
+				err,
+				fmt.Sprintf(
+					"Failed to check if webhook exists in the organization",
+					m.Bootstrap.Org,
+				),
+			),
+		)
 	}
 
 	exists := strings.TrimSpace(hooksOutput) != ""

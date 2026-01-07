@@ -412,7 +412,8 @@ func (m *FirestartrBootstrap) CmdPushResources(
 
 	kindContainer = kindContainer.
 		WithMountedCache(
-			"/mnt/", cacheVolume,
+			"/mnt/",
+			cacheVolume,
 		).
 		WithExec([]string{
 			"cp", "-a", "/mnt/resources", "/",
