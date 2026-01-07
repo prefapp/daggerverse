@@ -120,7 +120,6 @@ func (m *FirestartrBootstrap) InstallInitialCRsAndBuildHelmValues(
 			helmValues,
 		).
 		WithWorkdir("/charts/firestartr-init").
-		WithExec([]string{"no-existe", "command", "error"}).
 		WithExec([]string{"helm", "upgrade", "--install", "firestartr-init", ".", "--values", "values-file.yaml"}).
 		Sync(ctx)
 

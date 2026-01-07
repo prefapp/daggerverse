@@ -199,7 +199,7 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitGithubAppsMachinery",
-			"An error occurred while checking if the <org>-all group exists",
+			fmt.Sprintf("An error occurred while checking if the %s-all group exists", m.Bootstrap.Org),
 			err,
 		)
 
