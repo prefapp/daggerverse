@@ -371,7 +371,7 @@ func (m *FirestartrBootstrap) ValidateWebhookNotExists(
 			extractErrorMessage(
 				err,
 				fmt.Sprintf(
-					"Failed to check if webhook exists in the organization",
+					"Failed to check if webhook exists in the organization %s",
 					m.Bootstrap.Org,
 				),
 			),
