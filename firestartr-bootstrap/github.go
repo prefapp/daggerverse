@@ -466,7 +466,13 @@ func (m *FirestartrBootstrap) CheckIfOrgAllGroupExists(
 			m.IncludeAllGroup = true
 			return nil
 		} else {
-			errMsg := extractErrorMessage(err, "Failed to run workflow")
+			errMsg := extractErrorMessage(
+				err,
+				fmt.Sprintf(
+					"Failed to check if %s-all group exists in the organization",
+					m.Bootstrap.Org,
+				),
+			)
 			return errors.New(errMsg)
 		}
 	default:
