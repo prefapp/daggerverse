@@ -529,7 +529,7 @@ func (m *FirestartrBootstrap) CmdPushStateSecrets(
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdPushStateSecrets",
-			"An error occurred while generating the GitHub token",
+			"An error occurred while checking if the organization has a free plan",
 			err,
 		)
 
