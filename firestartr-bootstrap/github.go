@@ -617,5 +617,13 @@ func (m *FirestartrBootstrap) EnableActionsToCreateAndApprovePullRequestsInOrg(
 		}).
 		Sync(ctx)
 
-	return err
+	if err != nil {
+		errorMsg := extractErrorMessage(
+			err,
+			"Failed to enable actions to create and approve pull requests in organization",
+		)
+		return errors.New(errorMsg)
+	}
+
+	return nil
 }

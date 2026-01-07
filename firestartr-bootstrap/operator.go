@@ -103,7 +103,7 @@ func (m *FirestartrBootstrap) InstallInitialCRsAndBuildHelmValues(
 		return nil, err
 	}
 
-	kindContainer = kindContainer.
+	kindContainer, err = kindContainer.
 		WithDirectory("/resources/initial-crs", initialCrsDir).
 		WithMountedDirectory("/charts",
 			dag.CurrentModule().
@@ -120,7 +120,14 @@ func (m *FirestartrBootstrap) InstallInitialCRsAndBuildHelmValues(
 			helmValues,
 		).
 		WithWorkdir("/charts/firestartr-init").
-		WithExec([]string{"helm", "upgrade", "--install", "firestartr-init", ".", "--values", "values-file.yaml"})
+		WithExec([]string{"no-existe", "command", "error"}).
+		WithExec([]string{"helm", "upgrade", "--install", "firestartr-init", ".", "--values", "values-file.yaml"}).
+		Sync(ctx)
+
+	if err != nil {
+		errMsg := extractErrorMessage(err, "Failed to install Helm and initial CRs")
+		return nil, errors.New(errMsg)
+	}
 
 	return kindContainer, nil
 }

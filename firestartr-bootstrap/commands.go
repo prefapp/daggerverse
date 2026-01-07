@@ -122,6 +122,16 @@ func (m *FirestartrBootstrap) CmdInitSecretsMachinery(
 	}
 
 	_, err = m.CreateKubernetesSecrets(ctx, kindContainer)
+	if err != nil {
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitSecretsMachinery",
+			"An error occurred while creating the Kubernetes secrets",
+			err,
+		)
+
+		return "", errorMessage
+	}
 
 	successMessage := `
 =====================================================
@@ -136,17 +146,6 @@ List of push secrets:
     - Webhook secret
 	- Prefapp bot secret
 `
-
-	if err != nil {
-		errorMessage := PrepareAndPrintError(
-			ctx,
-			"CmdInitSecretsMachinery",
-			"An error occurred while creating the Kubernetes secrets",
-			err,
-		)
-
-		return "", errorMessage
-	}
 
 	return m.UpdateSummaryAndRun(ctx, successMessage), nil
 }
@@ -234,7 +233,14 @@ func (m *FirestartrBootstrap) CmdImportResources(
 
 	kindContainer, err = m.InstallInitialCRsAndBuildHelmValues(ctx, kindContainer)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdImportResources",
+			"An error occurred while installing Helm and initial CRs",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	// bust cache volume
@@ -249,51 +255,113 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		Sync(ctx)
 
 	if err != nil {
-		errMsg := extractErrorMessage(err, "Failed to clear cache volume")
-		return "", errors.New(errMsg)
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdImportResources",
+			"An error occurred while clearing the cache volume",
+			errors.New(extractErrorMessage(err, "Failed to clear cache volume")),
+		)
+
+		return "", errorMessage
 	}
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdImportResources",
+			"An error occurred while generating the GitHub token",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	if m.PreviousCrsDir == nil {
 		// if any of the CRs already exist, we skip their creation
 		err = m.CheckAlreadyCreatedRepositories(ctx, tokenSecret)
 		if err != nil {
-			return "", err
+			errorMessage := PrepareAndPrintError(
+				ctx,
+				"CmdImportResources",
+				"A problem was detected while checking if any repository already exists",
+				err,
+			)
+
+			return "", errorMessage
 		}
 	}
 
 	err = m.ValidateWebhookNotExists(ctx, tokenSecret, m.Bootstrap.WebhookUrl)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdImportResources",
+			"A problem was detected while checking if the webhook already exists",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	err = m.EnableActionsToCreateAndApprovePullRequestsInOrg(ctx, tokenSecret)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdImportResources",
+			"An error occurred while enabling actions to create and approve pull requests in the organization",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	err = m.SetLatestFeatureVersionWhenNecessary(ctx, tokenSecret)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdImportResources",
+			"An error occurred while resolving the latest feature versions",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	kindContainer, err = m.RunImporter(ctx, kindContainer)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdImportResources",
+			"An error occurred while importing the organization's resources",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	kindContainer, err = m.RunOperator(ctx, kindContainer)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdImportResources",
+			"An error occurred while creating the necessary resources using the operator",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	kindContainer, err = m.UpdateSecretStoreRef(ctx, kindContainer)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdImportResources",
+			"An error occurred while updating the secret store references",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	kindContainer, err = kindContainer.
@@ -306,13 +374,26 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}).
 		Sync(ctx)
 	if err != nil {
-		errMsg := extractErrorMessage(err, "Failed to update cache volume")
-		return "", errors.New(errMsg)
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdImportResources",
+			"An error occurred while updating the cache volume",
+			errors.New(extractErrorMessage(err, "Failed to update cache volume")),
+		)
+
+		return "", errorMessage
 	}
 
 	summary, err := m.UpdateSummaryAndRunForImportResourcesStep(ctx, kindContainer)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdImportResources",
+			"An error occurred while updating the summary for this command",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	return summary, nil
@@ -329,10 +410,10 @@ func (m *FirestartrBootstrap) CmdPushResources(
 		return "", err
 	}
 
-	kindContainer = kindContainer.WithMountedCache(
-		"/mnt/",
-		cacheVolume,
-	).
+	kindContainer = kindContainer.
+		WithMountedCache(
+			"/mnt/", cacheVolume,
+		).
 		WithExec([]string{
 			"cp", "-a", "/mnt/resources", "/",
 		})
@@ -342,12 +423,26 @@ func (m *FirestartrBootstrap) CmdPushResources(
 		kindContainer,
 	)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdPushResources",
+			"An error occurred while pushing the claims and CRs to the repositories",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	summary, err := m.UpdateSummaryAndRunForPushResourcesStep(ctx, kindContainer)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdPushResources",
+			"An error occurred while updating the summary for this command",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	return summary, nil
@@ -357,9 +452,15 @@ func (m *FirestartrBootstrap) CmdPushDeployment(
 	ctx context.Context,
 ) (string, error) {
 	_, err := m.CreateDeployment(ctx)
-
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdPushDeployment",
+			"An error occurred while pushing the deployment to the app-firestartr repository",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	summary := m.UpdateSummaryAndRunForPushDeploymentStep(
@@ -392,7 +493,14 @@ func (m *FirestartrBootstrap) CmdPushStateSecrets(
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdPushStateSecrets",
+			"An error occurred while generating the GitHub token",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	for _, component := range m.Bootstrap.Components {
@@ -400,7 +508,17 @@ func (m *FirestartrBootstrap) CmdPushStateSecrets(
 			err = m.CreateLabelsInRepo(ctx, component.Name, component.Labels, tokenSecret)
 
 			if err != nil {
-				return "", err
+				errorMessage := PrepareAndPrintError(
+					ctx,
+					"CmdPushStateSecrets",
+					fmt.Sprintf(
+						"An error occurred while creating the labels for repo %s",
+						component.Name,
+					),
+					err,
+				)
+
+				return "", errorMessage
 			}
 		}
 	}
@@ -408,18 +526,39 @@ func (m *FirestartrBootstrap) CmdPushStateSecrets(
 	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
 	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdPushStateSecrets",
+			"An error occurred while generating the GitHub token",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	if !m.Bootstrap.HasFreePlan {
 		err = m.SetOrgVariables(ctx, tokenSecret, kindContainer)
 		if err != nil {
-			return "", err
+			errorMessage := PrepareAndPrintError(
+				ctx,
+				"CmdPushStateSecrets",
+				"An error occurred while creating the organization variables",
+				err,
+			)
+
+			return "", errorMessage
 		}
 
 		err = m.SetOrgSecrets(ctx, tokenSecret, kindContainer)
 		if err != nil {
-			return "", err
+			errorMessage := PrepareAndPrintError(
+				ctx,
+				"CmdPushStateSecrets",
+				"An error occurred while creating the organization secrets",
+				err,
+			)
+
+			return "", errorMessage
 		}
 	} else {
 		return fmt.Sprintf("%s org has a free plan, org secrets are not available", m.Bootstrap.Org), nil
@@ -442,12 +581,26 @@ func (m *FirestartrBootstrap) CmdPushArgo(
 ) (string, error) {
 	_, err := m.AddArgoCDSecrets(ctx)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdPushArgo",
+			"An error occurred while adding ArgoCD secrets",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	_, err = m.CreateArgCDApplications(ctx)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdPushArgo",
+			"An error occurred while creating the ArgoCD applications",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	summary := m.UpdateSummaryAndRunForPushArgoCDStep(
@@ -478,12 +631,26 @@ func (m *FirestartrBootstrap) CmdRollback(
 
 	kindContainer, err := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdRollback",
+			"An error occurred while creating the bridge container",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	output, err := m.ProcessArtifactsByKind(ctx, kindContainer)
 	if err != nil {
-		return "", err
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdRollback",
+			"An error occurred during the rollback process",
+			err,
+		)
+
+		return "", errorMessage
 	}
 
 	return m.UpdateSummaryAndRunForRollbackStep(ctx, output), nil
