@@ -21,7 +21,7 @@ func extractErrorMessage(err error, defaultMsg ...string) string {
 			return defaultMsg[0]
 		}
 
-		return "dagger error"
+		return "dagger execution failed without specific error details"
 	default:
 		return err.Error()
 	}
