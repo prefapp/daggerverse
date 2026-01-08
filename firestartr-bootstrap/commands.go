@@ -22,9 +22,8 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
+	kindClusterName string,
 ) (*dagger.Container, error) {
-	clusterName := "kind"
-
 	ep, err := kindSvc.Endpoint(ctx)
 	if err != nil {
 		return nil, err
@@ -43,7 +42,7 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 		WithServiceBinding("localhost", kindSvc).
 		WithExec([]string{
 			"kubectl", "config",
-			"set-cluster", fmt.Sprintf("kind-%s", clusterName), fmt.Sprintf("--server=https://localhost:%d", port)},
+			"set-cluster", fmt.Sprintf("kind-%s", kindClusterName), fmt.Sprintf("--server=https://localhost:%d", port)},
 		).
 		WithExec([]string{
 			"curl",
@@ -66,8 +65,9 @@ func (m *FirestartrBootstrap) CmdValidateBootstrap(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
+	kindClusterName string,
 ) (string, error) {
-	err := m.ValidateBootstrap(ctx, kubeconfig, kindSvc)
+	err := m.ValidateBootstrap(ctx, kubeconfig, kindSvc, kindClusterName)
 	if err != nil {
 		errorMessage := PrepareAndPrintError(
 			ctx,
@@ -96,8 +96,9 @@ func (m *FirestartrBootstrap) CmdInitSecretsMachinery(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
+	kindClusterName string,
 ) (string, error) {
-	kindContainer, err := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+	kindContainer, err := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc, kindClusterName)
 	if err != nil {
 		errorMessage := PrepareAndPrintError(
 			ctx,
@@ -154,8 +155,9 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
+	kindClusterName string,
 ) (*dagger.Container, error) {
-	kindContainer, err := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+	kindContainer, err := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc, kindClusterName)
 	if err != nil {
 		errorMessage := PrepareAndPrintError(
 			ctx,
@@ -224,9 +226,10 @@ func (m *FirestartrBootstrap) CmdImportResources(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
+	kindClusterName string,
 	cacheVolume *dagger.CacheVolume,
 ) (string, error) {
-	kindContainer, err := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+	kindContainer, err := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc, kindClusterName)
 	if err != nil {
 		return "", err
 	}
@@ -403,9 +406,10 @@ func (m *FirestartrBootstrap) CmdPushResources(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
+	kindClusterName string,
 	cacheVolume *dagger.CacheVolume,
 ) (string, error) {
-	kindContainer, err := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+	kindContainer, err := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc, kindClusterName)
 	if err != nil {
 		return "", err
 	}
@@ -485,9 +489,10 @@ func (m *FirestartrBootstrap) CmdPushStateSecrets(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
+	kindClusterName string,
 	cacheVolume *dagger.CacheVolume,
 ) (string, error) {
-	kindContainer, err := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+	kindContainer, err := m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc, kindClusterName)
 	if err != nil {
 		return "", err
 	}
@@ -627,10 +632,11 @@ func (m *FirestartrBootstrap) CmdRollback(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
+	kindClusterName string,
 ) (string, error) {
-	m.CmdValidateBootstrap(ctx, kubeconfig, kindSvc)
+	m.CmdValidateBootstrap(ctx, kubeconfig, kindSvc, kindClusterName)
 
-	kindContainer, err := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc)
+	kindContainer, err := m.CreateBridgeContainer(ctx, kubeconfig, kindSvc, kindClusterName)
 	if err != nil {
 		errorMessage := PrepareAndPrintError(
 			ctx,
@@ -661,20 +667,21 @@ func (m *FirestartrBootstrap) CmdRunBootstrap(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
+	kindClusterName string,
 ) {
 	persistentVolume := m.CmdCreatePersistentVolume(ctx, "firestartr-init")
 
-	m.CmdValidateBootstrap(ctx, kubeconfig, kindSvc)
+	m.CmdValidateBootstrap(ctx, kubeconfig, kindSvc, kindClusterName)
 
-	m.CmdInitSecretsMachinery(ctx, kubeconfig, kindSvc)
+	m.CmdInitSecretsMachinery(ctx, kubeconfig, kindSvc, kindClusterName)
 
-	m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc)
+	m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc, kindClusterName)
 
-	m.CmdImportResources(ctx, kubeconfig, kindSvc, persistentVolume)
+	m.CmdImportResources(ctx, kubeconfig, kindSvc, kindClusterName, persistentVolume)
 
-	m.CmdPushResources(ctx, kubeconfig, kindSvc, persistentVolume)
+	m.CmdPushResources(ctx, kubeconfig, kindSvc, kindClusterName, persistentVolume)
 
-	m.CmdPushStateSecrets(ctx, kubeconfig, kindSvc, persistentVolume)
+	m.CmdPushStateSecrets(ctx, kubeconfig, kindSvc, kindClusterName, persistentVolume)
 
 	//m.CmdPushDeployment(ctx)
 

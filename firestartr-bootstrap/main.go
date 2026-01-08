@@ -168,6 +168,7 @@ func (m *FirestartrBootstrap) ValidateBootstrap(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
+	kindClusterName string,
 ) error {
 	log.Println("Validating bootstrap parameters")
 
@@ -218,7 +219,7 @@ func (m *FirestartrBootstrap) ValidateBootstrap(
 		errorMsgs = append(errorMsgs, err.Error())
 	}
 
-	err = m.ValidateKindKubernetesConnection(ctx, kubeconfig, kindSvc)
+	err = m.ValidateKindKubernetesConnection(ctx, kubeconfig, kindSvc, kindClusterName)
 	if err != nil {
 		errorMsgs = append(errorMsgs, err.Error())
 	}
