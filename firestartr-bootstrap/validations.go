@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -313,7 +314,8 @@ func (m *FirestartrBootstrap) GithubRepositoryExists(
 		}).
 		Sync(ctx)
 	if err != nil {
-		return false, err
+		errMsg := extractErrorMessage(err, "Failed to check if repository exists")
+		return false, errors.New(errMsg)
 	}
 
 	stderr, err := ctr.File("/tmp/stderr").Contents(ctx)
@@ -363,7 +365,17 @@ func (m *FirestartrBootstrap) ValidateWebhookNotExists(
 		Stdout(ctx)
 
 	if err != nil {
-		return fmt.Errorf("failed to query organization webhooks from GitHub API for org %q: %w", m.Bootstrap.Org, err)
+		return fmt.Errorf(
+			"failed to query organization webhooks from GitHub API for org %s: %s",
+			m.Bootstrap.Org,
+			extractErrorMessage(
+				err,
+				fmt.Sprintf(
+					"Failed to check if webhook exists in the organization %s",
+					m.Bootstrap.Org,
+				),
+			),
+		)
 	}
 
 	exists := strings.TrimSpace(hooksOutput) != ""

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -72,7 +73,8 @@ func (m *FirestartrBootstrap) InstallHelmAndExternalSecrets(
 		Sync(ctx)
 
 	if err != nil {
-		return nil, err
+		errMsg := extractErrorMessage(err, "Failed to install Helm chart for External Secrets")
+		return nil, errors.New(errMsg)
 	}
 
 	return kindContainerWithSecrets, nil
@@ -101,7 +103,7 @@ func (m *FirestartrBootstrap) InstallInitialCRsAndBuildHelmValues(
 		return nil, err
 	}
 
-	kindContainer = kindContainer.
+	kindContainer, err = kindContainer.
 		WithDirectory("/resources/initial-crs", initialCrsDir).
 		WithMountedDirectory("/charts",
 			dag.CurrentModule().
@@ -118,7 +120,13 @@ func (m *FirestartrBootstrap) InstallInitialCRsAndBuildHelmValues(
 			helmValues,
 		).
 		WithWorkdir("/charts/firestartr-init").
-		WithExec([]string{"helm", "upgrade", "--install", "firestartr-init", ".", "--values", "values-file.yaml"})
+		WithExec([]string{"helm", "upgrade", "--install", "firestartr-init", ".", "--values", "values-file.yaml"}).
+		Sync(ctx)
+
+	if err != nil {
+		errMsg := extractErrorMessage(err, "Failed to install Helm and initial CRs")
+		return nil, errors.New(errMsg)
+	}
 
 	return kindContainer, nil
 }

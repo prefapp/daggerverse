@@ -8,6 +8,25 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func extractErrorMessage(err error, defaultMsg ...string) string {
+	switch e := err.(type) {
+	case *dagger.ExecError:
+		if e.Stderr != "" {
+			return e.Stderr
+		}
+		if e.Stdout != "" {
+			return e.Stdout
+		}
+		if len(defaultMsg) > 0 {
+			return defaultMsg[0]
+		}
+
+		return "dagger execution failed without specific error details"
+	default:
+		return err.Error()
+	}
+}
+
 func (m *FirestartrBootstrap) UpdateSecretStoreRef(
 	ctx context.Context,
 	kindContainer *dagger.Container,

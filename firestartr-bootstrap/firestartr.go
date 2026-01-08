@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -70,9 +71,8 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
 		).Sync(ctx)
 
 	if err != nil {
-
-		return nil, err
-
+		errMsg := extractErrorMessage(err, "Failed to render CRs")
+		return nil, errors.New(errMsg)
 	}
 
 	outputDir := fsCtr.Directory("/tmp/rendered_crs")
