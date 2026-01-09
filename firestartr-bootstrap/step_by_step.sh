@@ -92,19 +92,23 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ "$CLUSTER_NAME" == "" ]; then
+if [ "$CLUSTER_NAME" -eq "" ]; then
     RANDOM_SUFFIX=$(LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | head -c 8)
     CLUSTER_NAME="firestartr-kind-cluster-$RANDOM_SUFFIX"
     CREATE_CLUSTER=true
 else
     PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "6443/tcp") 0).HostPort}}' $CLUSTER_NAME-control-plane)
+    if [ $? -ne 0 ]; then
+        echo "❌ Could not find existing kind cluster named ${CLUSTER_NAME}. Please check the name and try again."
+        exit 1
+    fi
 fi
 
 
 
 # Create kind cluster if needed
-if [ "$CREATE_CLUSTER" == true ]; then
-    if [ "$AUTO" == true ]; then
+if [ "$CREATE_CLUSTER" -eq true ]; then
+    if [ "$AUTO" -eq true ]; then
         echo "🤖 Auto mode enabled. Creating kind cluster ${CLUSTER_NAME} in..."
         wait_for $COMMAND_WAIT_TIME
         echo "Creating kind cluster ${CLUSTER_NAME}"
@@ -118,8 +122,12 @@ if [ "$CREATE_CLUSTER" == true ]; then
             kind create cluster --name "${CLUSTER_NAME}"
             LAST_EXIT_CODE=$?
 
-            if [ "$LAST_EXIT_CODE" == 0 ]; then
+            if [ "$LAST_EXIT_CODE" -eq 0 ]; then
                 PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "6443/tcp") 0).HostPort}}' $CLUSTER_NAME-control-plane)
+                if [ $? -ne 0 ]; then
+                    echo "❌ An error happened getting the port for cluster ${CLUSTER_NAME}. Please relaunch the script."
+                    exit 1
+                fi
                 echo "✅ Kind cluster ${CLUSTER_NAME} created. Port: ${PORT}."
             fi
             ;;
@@ -137,11 +145,11 @@ fi
 
 
 # Validate bootstrap
-if [ "$AUTO" == true ]; then
-    if [ "$LAST_EXIT_CODE" != 0 ]; then
+if [ "$AUTO" -eq true ]; then
+    if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" == true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -179,11 +187,11 @@ esac
 
 
 # Init secrets machinery
-if [ "$AUTO" == true ]; then
-    if [ "$LAST_EXIT_CODE" != 0 ]; then
+if [ "$AUTO" -eq true ]; then
+    if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" == true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -221,11 +229,11 @@ esac
 
 
 # Import and create basic CRs and Claims
-if [ "$AUTO" == true ]; then
-    if [ "$LAST_EXIT_CODE" != 0 ]; then
+if [ "$AUTO" -eq true ]; then
+    if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" == true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -264,11 +272,11 @@ esac
 
 
 # Push resources to the system's repos
-if [ "$AUTO" == true ]; then
-    if [ "$LAST_EXIT_CODE" != 0 ]; then
+if [ "$AUTO" -eq true ]; then
+    if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" == true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -307,11 +315,11 @@ esac
 
 
 # Push state secrets
-if [ "$AUTO" == true ]; then
-    if [ "$LAST_EXIT_CODE" != 0 ]; then
+if [ "$AUTO" -eq true ]; then
+    if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" == true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -350,11 +358,11 @@ esac
 
 
 # Push argocd - deployment
-if [ "$AUTO" == true ]; then
-    if [ "$LAST_EXIT_CODE" != 0 ]; then
+if [ "$AUTO" -eq true ]; then
+    if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" == true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -389,11 +397,11 @@ esac
 
 
 # Push argocd - permissions and secrets
-if [ "$AUTO" == true ]; then
-    if [ "$LAST_EXIT_CODE" != 0 ]; then
+if [ "$AUTO" -eq true ]; then
+    if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" == true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -426,11 +434,11 @@ dagger --bootstrap-file="${BOOTSTRAP_FILE}" \
         ;;
 esac
 
-if [ "$AUTO" == true ]; then
-    if [ "$LAST_EXIT_CODE" != 0 ]; then
+if [ "$AUTO" -eq true ]; then
+    if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" == true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
