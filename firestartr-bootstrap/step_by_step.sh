@@ -243,7 +243,7 @@ fi
 
 case "$ACTION" in
     "continue")
-dagger -vvv --bootstrap-file="${BOOTSTRAP_FILE}" \
+dagger --bootstrap-file="${BOOTSTRAP_FILE}" \
        --credentials-secret="file:${CREDENTIALS_FILE}" \
        call cmd-import-resources \
        --kubeconfig="${HOME}/.kube" \
