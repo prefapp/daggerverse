@@ -443,7 +443,7 @@ if [ "$AUTO" == true ]; then
 
     ACTION="continue"
 else
-    ACTION=$(prompt_continue_skip_abort "Delete kind cluster ${CREATE_CLUSTER}?")
+    ACTION=$(prompt_continue_skip_abort "Delete kind cluster ${CLUSTER_NAME}?")
 fi
 
 case "$ACTION" in
