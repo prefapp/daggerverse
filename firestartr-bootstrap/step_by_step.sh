@@ -92,7 +92,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ "$CLUSTER_NAME" -eq "" ]; then
+if [ "$CLUSTER_NAME" = "" ]; then
     RANDOM_SUFFIX=$(LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | head -c 8)
     CLUSTER_NAME="firestartr-kind-cluster-$RANDOM_SUFFIX"
     CREATE_CLUSTER=true
@@ -107,8 +107,8 @@ fi
 
 
 # Create kind cluster if needed
-if [ "$CREATE_CLUSTER" -eq true ]; then
-    if [ "$AUTO" -eq true ]; then
+if [ "$CREATE_CLUSTER" = true ]; then
+    if [ "$AUTO" = true ]; then
         echo "🤖 Auto mode enabled. Creating kind cluster ${CLUSTER_NAME} in..."
         wait_for $COMMAND_WAIT_TIME
         echo "Creating kind cluster ${CLUSTER_NAME}"
@@ -145,11 +145,11 @@ fi
 
 
 # Validate bootstrap
-if [ "$AUTO" -eq true ]; then
+if [ "$AUTO" = true ]; then
     if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" = true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -187,11 +187,11 @@ esac
 
 
 # Init secrets machinery
-if [ "$AUTO" -eq true ]; then
+if [ "$AUTO" = true ]; then
     if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" = true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -229,11 +229,11 @@ esac
 
 
 # Import and create basic CRs and Claims
-if [ "$AUTO" -eq true ]; then
+if [ "$AUTO" = true ]; then
     if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" = true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -272,11 +272,11 @@ esac
 
 
 # Push resources to the system's repos
-if [ "$AUTO" -eq true ]; then
+if [ "$AUTO" = true ]; then
     if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" = true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -315,11 +315,11 @@ esac
 
 
 # Push state secrets
-if [ "$AUTO" -eq true ]; then
+if [ "$AUTO" = true ]; then
     if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" = true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -358,11 +358,11 @@ esac
 
 
 # Push argocd - deployment
-if [ "$AUTO" -eq true ]; then
+if [ "$AUTO" = true ]; then
     if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" = true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -397,11 +397,11 @@ esac
 
 
 # Push argocd - permissions and secrets
-if [ "$AUTO" -eq true ]; then
+if [ "$AUTO" = true ]; then
     if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" = true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
@@ -434,11 +434,11 @@ dagger --bootstrap-file="${BOOTSTRAP_FILE}" \
         ;;
 esac
 
-if [ "$AUTO" -eq true ]; then
+if [ "$AUTO" = true ]; then
     if [ "$LAST_EXIT_CODE" -ne 0 ]; then
         echo "❌ Previous command failed with exit code $LAST_EXIT_CODE. Aborting."
 
-        if [ "$DELETE_CLUSTER_ON_FAILURE" -eq true ]; then
+        if [ "$DELETE_CLUSTER_ON_FAILURE" = true ]; then
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
 
