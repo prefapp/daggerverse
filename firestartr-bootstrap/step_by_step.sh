@@ -72,7 +72,7 @@ while [[ $# -gt 0 ]]; do
       DELETE_CLUSTER_ON_FAILURE=true
       shift # Move to the next argument
       ;;
-    --auto | -a)
+    --auto-execute-script)
       AUTO=true
       shift # Move to the next argument
       ;;
@@ -81,7 +81,7 @@ while [[ $# -gt 0 ]]; do
       shift 2 # Move past the flag AND its value
       ;;
     --help | -h)
-      echo "Usage: $0 [--auto|-a] [--kind-cluster-name|-k <name>] [--wait-time|-w <seconds>] [--delete-cluster-on-failure|-d]"
+      echo "Usage: $0 [--kind-cluster-name|-k <name>] [--delete-cluster-on-failure|-d] [--auto-execute-script] [--wait-time|-w <seconds>]"
       exit 0
       ;;
     *)
@@ -125,7 +125,7 @@ if [ "$CREATE_CLUSTER" = true ]; then
             if [ "$LAST_EXIT_CODE" -eq 0 ]; then
                 PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "6443/tcp") 0).HostPort}}' $CLUSTER_NAME-control-plane)
                 if [ $? -ne 0 ]; then
-                    echo "❌ An error happened getting the port for cluster ${CLUSTER_NAME}. Please relaunch the script."
+                    echo "❌ An error happened getting the port for cluster ${CLUSTER_NAME}. Please relaunch the script (you can use the flag '--kind-cluster-name ${CLUSTER_NAME}' to avoid creating a new cluster)"
                     exit 1
                 fi
                 echo "✅ Kind cluster ${CLUSTER_NAME} created. Port: ${PORT}."
