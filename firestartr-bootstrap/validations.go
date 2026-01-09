@@ -16,10 +16,8 @@ func (m *FirestartrBootstrap) ValidateKindKubernetesConnection(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
 	kindSvc *dagger.Service,
+	kindClusterName string,
 ) error {
-
-	clusterName := "kind"
-
 	ep, err := kindSvc.Endpoint(ctx)
 	if err != nil {
 		return fmt.Errorf("obtaining the kind-cluster endpoint: %w", err)
@@ -42,7 +40,7 @@ func (m *FirestartrBootstrap) ValidateKindKubernetesConnection(
 		WithServiceBinding("localhost", kindSvc).
 		WithExec([]string{
 			"kubectl", "config",
-			"set-cluster", fmt.Sprintf("kind-%s", clusterName), fmt.Sprintf("--server=https://localhost:%d", port)},
+			"set-cluster", fmt.Sprintf("kind-%s", kindClusterName), fmt.Sprintf("--server=https://localhost:%d", port)},
 		).
 		WithExec([]string{"kubectl", "cluster-info"}).
 		Sync(ctx)
