@@ -92,7 +92,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ "$CLUSTER_NAME" = "" ]; then
+if [ -z "$CLUSTER_NAME" ]; then
     RANDOM_SUFFIX=$(LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | head -c 8)
     CLUSTER_NAME="firestartr-kind-cluster-$RANDOM_SUFFIX"
     CREATE_CLUSTER=true
