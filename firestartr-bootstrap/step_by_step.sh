@@ -400,9 +400,9 @@ if [ "$AUTO" == true ]; then
         exit $LAST_EXIT_CODE
     fi
 
-    echo "🤖 Auto mode enabled. Pushing argocd - permisions and secrets to the system's repos..."
+    echo "🤖 Auto mode enabled. Pushing argocd - permissions and secrets to the system's repos..."
     wait_for $COMMAND_WAIT_TIME
-    echo "Pushing argocd - permisions and secrets"
+    echo "Pushing argocd - permissions and secrets"
 
     ACTION="continue"
 else
