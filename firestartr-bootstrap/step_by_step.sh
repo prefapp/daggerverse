@@ -1,4 +1,4 @@
-PORT=0
+PORT=-1  # Populated later by the script
 CREDENTIALS_FILE="./boot/CredentialsFile.yaml"
 BOOTSTRAP_FILE="./boot/BootstrapFile.yaml"
 # VOLUME_ID="<your volume cache id>"
@@ -124,8 +124,8 @@ if [ "$CREATE_CLUSTER" == true ]; then
             fi
             ;;
         "skip")
-            CLUSTER_NAME="kind"
-            echo "⏭️ Skipping the next section and moving to the end."
+            echo "🛑 Skipping the cluster creation is not allowed. Please provide an existing cluster name via the --kind-cluster-name flag to skip this step"
+            exit 1
             ;;
         "abort")
             echo "🛑 Aborting script execution now."
