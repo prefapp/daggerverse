@@ -332,7 +332,7 @@ if [ "$AUTO" = true ]; then
 
     ACTION="continue"
 else
-    ACTION=$(prompt_continue_skip_abort "Push organization state secrets (only for enterprise orgs)?")
+    ACTION=$(prompt_continue_skip_abort "Push organization state secrets (only for non-free orgs)?")
 fi
 
 case "$ACTION" in
