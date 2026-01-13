@@ -290,6 +290,14 @@ bash my-steps.sh
 
 ```
 
+### 5.1 Step by step script flags
+
+- `-k` or `--kind-cluster-name`: the name of the kind cluster to use. If not provided, the script will prompt the user to create a new kind cluster.
+- `-d` or `--delete-cluster-on-failure`: if set, the kind cluster will be deleted if any step fails.
+- `--auto-execute-script`: if set, the script will not prompt the user for input and will automatically proceed to the next step. This option is not recommended unless the script is being executed in a testing environment.
+- `-w` or `--wait-time`: time in seconds to wait between steps when `--auto-execute-script` is set. Default is 5 seconds.
+- `-h` or `--help`: display a help message showing all the previous commands.
+
 ## 6. Individual commands
 
 You can run the individual commands that compose the bootstrap process separately. This is useful for debugging or if you want to run only a part of the process. They are:
