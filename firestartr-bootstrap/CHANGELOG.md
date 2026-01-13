@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.5](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.4...firestartr-bootstrap-v1.2.5) (2026-01-13)
+
+
+### Bug Fixes
+
+* Better handling of dagger.WithExec() errors ([#379](https://github.com/prefapp/daggerverse/issues/379)) ([f933d7c](https://github.com/prefapp/daggerverse/commit/f933d7c38a5447c4ec1420ae72473fa279caa12d))
+* Update documentation to include new script flags ([#384](https://github.com/prefapp/daggerverse/issues/384)) ([cf7d802](https://github.com/prefapp/daggerverse/commit/cf7d802b5406053ce3332c446909cf2d9f9c1039))
+* Update step_by_step.sh to not reuse clusters ([#382](https://github.com/prefapp/daggerverse/issues/382)) ([a22cf85](https://github.com/prefapp/daggerverse/commit/a22cf854cd32fefd31e42feb7373e4790d992bb6))
+* Wrong label on step_by_step.sh ([#383](https://github.com/prefapp/daggerverse/issues/383)) ([f2dfae5](https://github.com/prefapp/daggerverse/commit/f2dfae59d135baf2c239f804925f9d05a3c03563))
+
 ## [1.2.4](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.3...firestartr-bootstrap-v1.2.4) (2025-12-31)
 
 
