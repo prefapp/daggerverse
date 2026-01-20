@@ -205,8 +205,7 @@ if [ -z "$CLUSTER_NAME" ]; then
     CLUSTER_NAME="firestartr-kind-cluster-$RANDOM_SUFFIX"
     CREATE_CLUSTER=true
 else
-    PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "6443/tcp") 0).HostPort}}' "$CLUSTER_NAME"-control-plane)
-    if [ $? -ne 0 ]; then
+    if ! PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "6443/tcp") 0).HostPort}}' "$CLUSTER_NAME"-control-plane); then
         echo "❌ Could not find existing kind cluster named ${CLUSTER_NAME}. Please check the name and try again."
         exit 1
     fi
@@ -231,8 +230,7 @@ if [ "$CREATE_CLUSTER" = true ]; then
             LAST_EXIT_CODE=$?
 
             if [ "$LAST_EXIT_CODE" -eq 0 ]; then
-                PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "6443/tcp") 0).HostPort}}' "$CLUSTER_NAME"-control-plane)
-                if [ $? -ne 0 ]; then
+                if ! PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "6443/tcp") 0).HostPort}}' "$CLUSTER_NAME"-control-plane); then
                     echo "❌ An error happened getting the port for cluster ${CLUSTER_NAME}. Please relaunch the script (you can use the flag '--kind-cluster-name ${CLUSTER_NAME}' to avoid creating a new cluster)"
                     exit 1
                 fi
@@ -259,7 +257,7 @@ execute_step "$ACTION" dagger \
     --credentials-secret="file:${CREDENTIALS_FILE}" \
     call cmd-validate-bootstrap \
     --kubeconfig="${HOME}/.kube" \
-    --kind-svc=tcp://localhost:${PORT} \
+    --kind-svc="tcp://localhost:${PORT}" \
     --kind-cluster-name="${CLUSTER_NAME}"
 
 
@@ -270,7 +268,7 @@ execute_step "$ACTION" dagger \
     --credentials-secret="file:${CREDENTIALS_FILE}" \
     call cmd-init-secrets-machinery \
     --kubeconfig="${HOME}/.kube" \
-    --kind-svc=tcp://localhost:${PORT} \
+    --kind-svc="tcp://localhost:${PORT}" \
     --kind-cluster-name="${CLUSTER_NAME}"
 
 
@@ -281,9 +279,9 @@ execute_step "$ACTION" dagger \
     --credentials-secret="file:${CREDENTIALS_FILE}" \
     call cmd-import-resources \
     --kubeconfig="${HOME}/.kube" \
-    --kind-svc=tcp://localhost:${PORT} \
+    --kind-svc="tcp://localhost:${PORT}" \
     --kind-cluster-name="${CLUSTER_NAME}" \
-    --cache-volume=${VOLUME_ID}
+    --cache-volume="${VOLUME_ID}"
 
 
 # Push resources to the system's repos
@@ -293,9 +291,9 @@ execute_step "$ACTION" dagger \
     --credentials-secret="file:${CREDENTIALS_FILE}" \
     call cmd-push-resources \
     --kubeconfig="${HOME}/.kube" \
-    --kind-svc=tcp://localhost:${PORT} \
+    --kind-svc="tcp://localhost:${PORT}" \
     --kind-cluster-name="${CLUSTER_NAME}" \
-    --cache-volume=${VOLUME_ID}
+    --cache-volume="${VOLUME_ID}"
 
 
 # Push state secrets
@@ -305,9 +303,9 @@ execute_step "$ACTION" dagger \
     --credentials-secret="file:${CREDENTIALS_FILE}" \
     call cmd-push-state-secrets \
     --kubeconfig="${HOME}/.kube" \
-    --kind-svc=tcp://localhost:${PORT} \
+    --kind-svc="tcp://localhost:${PORT}" \
     --kind-cluster-name="${CLUSTER_NAME}" \
-    --cache-volume=${VOLUME_ID}
+    --cache-volume="${VOLUME_ID}"
 
 
 # Push argocd - deployment
