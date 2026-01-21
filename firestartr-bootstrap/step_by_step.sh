@@ -11,12 +11,18 @@ DELETE_CLUSTER_ON_FAILURE=false
 
 wait_for() {
     local WAIT_TIME=$1
-    local SECS=0
-    while [ $SECS -lt "$WAIT_TIME" ]; do
-        echo "$((WAIT_TIME - SECS))..."
+    for ((i=WAIT_TIME; i>0; i--)); do
+        printf "\r⏱️  Starting in %d seconds... \e[K" "$i"
         sleep 1
-        SECS=$((SECS + 1))
     done
+    printf "\r🚀 Starting now!\e[K\n"
+}
+
+wait_for_user() {
+    echo ""
+    echo "🛑 User intervention required. Please follow the instructions above."
+    read -r -p "Press Enter to continue..."
+    echo ""
 }
 
 prompt_continue_skip_abort() {
@@ -87,27 +93,22 @@ check_dagger_version() {
     local MINIMUM_PATCH
     MINIMUM_PATCH=$(echo "$MINIMUM_VERSION" | cut -d. -f3)
 
-    # Version comparison logic
+    # Version comparison logic (lexicographic: major, then minor, then patch)
     local VERSION_OK=false
-    if [ "$INSTALLED_MAJOR" -lt "$MINIMUM_MAJOR" ]; then
-        VERSION_OK=false
-    elif [ "$INSTALLED_MAJOR" -eq "$MINIMUM_MAJOR" ]; then
-        if [ "$INSTALLED_MINOR" -lt "$MINIMUM_MINOR" ]; then
-            VERSION_OK=false
-        elif [ "$INSTALLED_MINOR" -eq "$MINIMUM_MINOR" ]; then
-            if [ "$INSTALLED_PATCH" -lt "$MINIMUM_PATCH" ]; then
-                VERSION_OK=false
-            else
+
+    if [ "${INSTALLED_MAJOR}" -gt "${MINIMUM_MAJOR}" ]; then
+        VERSION_OK=true
+    elif [ "${INSTALLED_MAJOR}" -eq "${MINIMUM_MAJOR}" ]; then
+        if [ "${INSTALLED_MINOR}" -gt "${MINIMUM_MINOR}" ]; then
+            VERSION_OK=true
+        elif [ "${INSTALLED_MINOR}" -eq "${MINIMUM_MINOR}" ]; then
+            if [ "${INSTALLED_PATCH}" -ge "${MINIMUM_PATCH}" ]; then
                 VERSION_OK=true
             fi
-        else
-            VERSION_OK=true
         fi
-    else
-        VERSION_OK=true
     fi
 
-    if [ "$VERSION_OK" = false ]; then
+if [ "$VERSION_OK" = false ]; then
         echo "❌ Dagger version $INSTALLED_VERSION is installed, but version $MINIMUM_VERSION or greater is required."
         echo "   Please upgrade Dagger: https://docs.dagger.io/install"
         exit 1
@@ -135,11 +136,13 @@ handle_command_failure() {
 prompt_or_auto() {
     local PROMPT_MSG="$1"
     local ACTION_DESC="$2"
-    
+
     if [ "$AUTO" = true ]; then
-        echo "🤖 Auto mode enabled. ${ACTION_DESC} in..."
-        wait_for "$COMMAND_WAIT_TIME"
-        echo "${ACTION_DESC}"
+        {
+            echo "🤖 Auto: ${ACTION_DESC}"
+            wait_for "$COMMAND_WAIT_TIME"
+        } >&2
+
         echo "continue"
     else
         prompt_continue_skip_abort "$PROMPT_MSG"
@@ -154,7 +157,7 @@ execute_step() {
         "continue")
             "$@"
             LAST_EXIT_CODE=$?
-            handle_command_failure $LAST_EXIT_CODE
+            handle_command_failure "$LAST_EXIT_CODE"
             ;;
         "skip")
             echo "⏭️ Skipping the next section and moving to the end."
@@ -171,33 +174,33 @@ check_dagger_version
 
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --wait-time | -w)
-      COMMAND_WAIT_TIME="$2"
-      shift 2 # Move past the flag AND its value
-      ;;
-    --delete-cluster-on-failure | -d)
-      DELETE_CLUSTER_ON_FAILURE=true
-      shift # Move to the next argument
-      ;;
-    --auto-execute-script)
-      AUTO=true
-      shift # Move to the next argument
-      ;;
-    --kind-cluster-name | -k)
-      CLUSTER_NAME="$2"
-      shift 2 # Move past the flag AND its value
-      ;;
-    --help | -h)
-      echo "Usage: $0 [--kind-cluster-name|-k <name>] [--delete-cluster-on-failure|-d] [--auto-execute-script] [--wait-time|-w <seconds>]"
-      exit 0
-      ;;
-    *)
-      # This captures unknown flags or positional arguments
-      echo "Unknown option: $1"
-      exit 1
-      ;;
-  esac
+    case "$1" in
+        --wait-time | -w)
+            COMMAND_WAIT_TIME="$2"
+            shift 2 # Move past the flag AND its value
+            ;;
+        --delete-cluster-on-failure | -d)
+            DELETE_CLUSTER_ON_FAILURE=true
+            shift # Move to the next argument
+            ;;
+        --auto-execute-script)
+            AUTO=true
+            shift # Move to the next argument
+            ;;
+        --kind-cluster-name | -k)
+            CLUSTER_NAME="$2"
+            shift 2 # Move past the flag AND its value
+            ;;
+        --help | -h)
+            echo "Usage: $0 [--kind-cluster-name|-k <name>] [--delete-cluster-on-failure|-d] [--auto-execute-script] [--wait-time|-w <seconds>]"
+            exit 0
+            ;;
+        *)
+            # This captures unknown flags or positional arguments
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
 done
 
 if [ -z "$CLUSTER_NAME" ]; then
@@ -216,9 +219,8 @@ fi
 # Create kind cluster if needed
 if [ "$CREATE_CLUSTER" = true ]; then
     if [ "$AUTO" = true ]; then
-        echo "🤖 Auto mode enabled. Creating kind cluster ${CLUSTER_NAME} in..."
+        echo "🤖 Auto: Creating kind cluster ${CLUSTER_NAME}"
         wait_for "$COMMAND_WAIT_TIME"
-        echo "Creating kind cluster ${CLUSTER_NAME}"
         ACTION="continue"
     else
         ACTION=$(prompt_continue_skip_abort "⚠️ Create new kind cluster ${CLUSTER_NAME}?")
@@ -315,6 +317,10 @@ execute_step "$ACTION" dagger \
     --credentials-secret="file:${CREDENTIALS_FILE}" \
     call cmd-push-deployment
 
+if [ "$ACTION" = "continue" ]; then
+    wait_for_user
+fi
+
 
 # Push argocd - permissions and secrets
 ACTION=$(prompt_or_auto "Push argocd - permissions and secrets to the system's repos?" "Pushing argocd - permissions and secrets")
@@ -323,7 +329,13 @@ execute_step "$ACTION" dagger \
     --credentials-secret="file:${CREDENTIALS_FILE}" \
     call cmd-push-argo
 
+if [ "$ACTION" = "continue" ]; then
+    wait_for_user
+fi
+
 # Delete cluster after successful completion
 ACTION=$(prompt_or_auto "Delete kind cluster ${CLUSTER_NAME}?" "Deleting kind cluster ${CLUSTER_NAME} after the Bootstrap process has finished")
 execute_step "$ACTION" kind delete cluster --name "${CLUSTER_NAME}"
+
+echo "✨ Bootstrap process completed successfully! ✨"
 
