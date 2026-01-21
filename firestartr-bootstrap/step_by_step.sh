@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 PORT=-1  # Populated later by the script
 CREDENTIALS_FILE="./boot/CredentialsFile.yaml"
 BOOTSTRAP_FILE="./boot/BootstrapFile.yaml"
