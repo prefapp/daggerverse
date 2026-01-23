@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.6](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.5...firestartr-bootstrap-v1.2.6) (2026-01-23)
+
+
+### Bug Fixes
+
+* better handling errors ([#387](https://github.com/prefapp/daggerverse/issues/387)) ([ffba81e](https://github.com/prefapp/daggerverse/commit/ffba81e36b0686e27f9bfe054fa9fdd1c552edee))
+
 ## [1.2.5](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.4...firestartr-bootstrap-v1.2.5) (2026-01-13)
 
 
