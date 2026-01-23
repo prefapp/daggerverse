@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release-please:
     name: Release Please Manifest
@@ -14,12 +18,11 @@ jobs:
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          default-branch: main
-          command: manifest
+          target-branch: main
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: steps.release.outputs.releases_created == 'true'
 
       - name: Get major version num and update tag
