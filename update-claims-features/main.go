@@ -190,7 +190,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 	var returnedError error
 	if errorMsg != "" {
-		returnedError = fmt.Errorf(errorMsg)
+		returnedError = fmt.Errorf("%s", errorMsg)
 	}
 
 	return m.DeploymentSummaryToFile(ctx, summary), returnedError
