@@ -10,16 +10,15 @@ jobs:
     name: Release Please Manifest
     runs-on: ubuntu-24.04
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v4.4.0
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          default-branch: main
-          command: manifest
+          target-branch: main
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.1
         if: steps.release.outputs.releases_created == 'true'
 
       - name: Get major version num and update tag
