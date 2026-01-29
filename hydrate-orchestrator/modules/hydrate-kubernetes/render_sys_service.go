@@ -17,6 +17,7 @@ func (m *HydrateKubernetes) RenderSysService(
 
 	if m.RepositoriesFile == nil {
 
+
 		reposFile, err := m.BuildHelmRepositoriesFile(
 			ctx,
 			m.DotFirestartrDir,
