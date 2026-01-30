@@ -109,7 +109,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		return nil, err
 	}
 
-	var claimsMap map[string]*Claim = make(map[string]*Claim)
+	claimsMap := make(map[string]*Claim)
 	for _, entry := range claims {
 		fmt.Printf("Reading claim %s\n", entry)
 
