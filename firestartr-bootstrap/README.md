@@ -86,14 +86,14 @@ components:
     defaultBranch: main
     features: # features that will be provisioned
       - name: firestartr_repo
-        version: <feature-version>  # Check latest available at github.com/prefapp/features
+        version: <feature-version>  # Check available versions at github.com/prefapp/features
 
   - name: "claims"
     description: "Firestartr configuration folders and files"
     defaultBranch: main
     features:
       - name: claims_repo
-        version: <feature-version>  # Check latest available at github.com/prefapp/features
+        # version: <feature-version>  # You can omit this field to use the latest avaliable version
     secrets:
       - name: FS_IMPORT_PEM_FILE
         value: "ref:secretsclaim:firestartr-secrets:fs-import-pem"
@@ -106,21 +106,21 @@ components:
     defaultBranch: main
     features:
       - name: catalog_repo
-        version: <feature-version>  # Check latest available at github.com/prefapp/features
+        version: latest  # You can also explicitly set "latest" as the version for clarity
 
   - name: "state-github"
     description: "Firestartr Github wet repository"
     defaultBranch: main
     features:
       - name: state_github
-        version: <feature-version>  # Check latest available at github.com/prefapp/features
+        version: <feature-version>  # Check available versions at github.com/prefapp/features
 
   - name: "state-infra"
     description: "Firestartr Terraform workspaces wet repository"
     defaultBranch: main
     features:
       - name: state_infra
-        version: <feature-version>  # Check latest available at github.com/prefapp/features
+        version: <feature-version>  # Check available versions at github.com/prefapp/features
     labels:
       - plan
 ```
@@ -150,7 +150,7 @@ Each component represents a repository that will be created in the organization.
 - `description`: description of the repository.
 - `repoName`: name of the repository. If not specified, it will be the same as `name`.
 - `defaultBranch`: default branch name for the repository (usually `main` or `master`).
-- `features`: list of features that will be installed in the repository. Each feature must have a `name` and a `version`.The complete list of available features can be found in the [here](https://github.com/prefapp/features/blob/0e4e2ddac1b9afa83dc207a23d4abe8123e19ade/.release-please-manifest.json) (when setting a feature name from that list, omit the `packages/` prefix, i.e. `name: tech_docs` instead of `name: packages/tech_docs`).
+- `features`: list of features that will be installed in the repository. Each feature must have a `name` and, optionally, a `version`. If `version` is omitted or equals `latest`, the latest avaliable version for the feature will be used. The complete list of available features can be found in the [here](https://github.com/prefapp/features/blob/0e4e2ddac1b9afa83dc207a23d4abe8123e19ade/.release-please-manifest.json) (when setting a feature name from that list, omit the `packages/` prefix, i.e. `name: tech_docs` instead of `name: packages/tech_docs`).
 - `secrets`: (optional) list of secrets that will be created in the repository. Each secret must have a `name` and a `value`. `name` will be the name of the secret in the repository, and `value` should be a reference to a secret in the [`SecretsClaim`](https://github.com/prefapp/daggerverse/blob/main/firestartr-bootstrap/templates/initial_claims.tmpl#L60-L77) (the link provided goes to the `main` branch version of the template file. Please select the appropriate version if needed). The format for referencing a secret from that file is: `ref:secretsclaim:firestartr-secrets:<secretName>`
 - `variables`: (optional) list of variables that will be created in the repository. Each variable must have a `name` and a `value`. `name` will be the name of the variable in the repository, and `value` should be a reference to a secret in the [`SecretsClaim`](https://github.com/prefapp/daggerverse/blob/main/firestartr-bootstrap/templates/initial_claims.tmpl#L60-L77) (the link provided goes to the `main` branch version of the template file. Please select the appropriate version if needed). The format for referencing a secret from that file is: `ref:secretsclaim:firestartr-secrets:<secretName>`
 - `labels`: (optional) list of labels that will be created in the repository. In this case, used to create the `plan` label needed for the workflows of the `state_infra` feature to work.
