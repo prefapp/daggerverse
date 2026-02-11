@@ -156,18 +156,42 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 		}
 	}
 
-	// let's patch the all group with the bootstrapped annotation
-	err := patchCR(
-		ctx,
-		kindContainer,
-		"githubgroup",
-		fmt.Sprintf("%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669", m.GhOrg),
-		"default",
-		"firestartr.dev/bootstrapped",
-		"true",
-	)
+	kindContainer, err := kindContainer.
+		WithExec([]string{
+			"kubectl",
+			"get",
+			"githubgroup",
+			fmt.Sprintf("%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669", m.GhOrg),
+		}, dagger.ContainerWithExecOpts{
+			RedirectStdout: "/tmp/stdout",
+			RedirectStderr: "/tmp/stderr",
+			Expect:         "ANY",
+		}).
+		Sync(ctx)
+
 	if err != nil {
 		return nil, err
+	}
+
+	manuallyCreatedAllGroupExists, err := kindContainer.ExitCode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if manuallyCreatedAllGroupExists == 0 {
+		// let's patch the all group with the bootstrapped annotation
+		err := patchCR(
+			ctx,
+			kindContainer,
+			"githubgroup",
+			fmt.Sprintf("%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669", m.GhOrg),
+			"default",
+			"firestartr.dev/bootstrapped",
+			"true",
+		)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return kindContainer, nil
