@@ -156,18 +156,22 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 		}
 	}
 
-	// let's patch the all group with the bootstrapped annotation
-	err := patchCR(
-		ctx,
-		kindContainer,
-		"githubgroup",
-		fmt.Sprintf("%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669", m.GhOrg),
-		"default",
-		"firestartr.dev/bootstrapped",
-		"true",
-	)
-	if err != nil {
-		return nil, err
+	// let's patch the all group with the bootstrapped annotation if the group doesn't already exist
+	if m.IncludeAllGroup  {
+		err := patchCR(
+			ctx,
+			kindContainer,
+			"githubgroup",
+			fmt.Sprintf("%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669", m.GhOrg),
+			"default",
+			"firestartr.dev/bootstrapped",
+			"true",
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	return kindContainer, nil
