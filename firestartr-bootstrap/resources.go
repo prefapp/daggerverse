@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func (m *FirestartrBootstrap) PushCrsFiles(
+func (m *FirestartrBootstrap) PushBootstrapFiles(
 	ctx context.Context,
 	kindContainer *dagger.Container,
 ) error {
