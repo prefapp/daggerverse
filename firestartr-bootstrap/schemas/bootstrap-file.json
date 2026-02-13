@@ -102,22 +102,22 @@
             "required": [
               "providers"
             ]
-          }
-        },
-        "dotFirestartr": {
-          "type": "object",
-          "properties": {
-            "push": {
-              "type": "boolean"
-            },
-            "repo": {
-              "type": "string"
-            }
           },
-          "required": [
-            "push",
-            "repo"
-          ]
+          "dotFirestartr": {
+            "type": "object",
+            "properties": {
+              "push": {
+                "type": "boolean"
+              },
+              "repo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "push",
+              "repo"
+            ]
+          }
         },
         "required": [
           "claims",
