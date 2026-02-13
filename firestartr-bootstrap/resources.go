@@ -86,6 +86,20 @@ func (m *FirestartrBootstrap) PushCrsFiles(
 		}
 	}
 
+	if m.Bootstrap.PushFiles.DotFirestartr.Push {
+		dotFirestartrDir := dag.CurrentModule().Source().Directory("./dot-firestartr")
+
+		err := m.PushDirToRepo(
+			ctx,
+			dotFirestartrDir,
+			m.Bootstrap.PushFiles.DotFirestartr.Repo,
+			tokenSecret,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 
 }

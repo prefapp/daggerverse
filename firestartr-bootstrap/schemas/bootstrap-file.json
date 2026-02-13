@@ -104,9 +104,25 @@
             ]
           }
         },
+        "dotFirestartr": {
+          "type": "object",
+          "properties": {
+            "push": {
+              "type": "boolean"
+            },
+            "repo": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "push",
+            "repo"
+          ]
+        },
         "required": [
           "claims",
-          "crs"
+          "crs",
+          "dotFirestartr"
         ]
       },
       "components": {
