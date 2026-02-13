@@ -156,7 +156,7 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 		}
 	}
 
-	kindContainer, err := kindContainer.
+	allGroupGetExitCode, err := kindContainer.
 		WithExec([]string{
 			"kubectl",
 			"get",
@@ -167,18 +167,13 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 			RedirectStderr: "/tmp/stderr",
 			Expect:         "ANY",
 		}).
-		Sync(ctx)
+		ExitCode(ctx)
 
 	if err != nil {
 		return nil, err
 	}
 
-	manuallyCreatedAllGroupExists, err := kindContainer.ExitCode(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if manuallyCreatedAllGroupExists == 0 {
+	if allGroupGetExitCode == 0 {
 		// let's patch the all group with the bootstrapped annotation
 		err := patchCR(
 			ctx,
