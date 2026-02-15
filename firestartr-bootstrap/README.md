@@ -176,9 +176,7 @@ cloudProvider:
   source: hashicorp/aws
   type: aws
   version: ~> 4.0
-githubApp:
-  owner: <org>
-  botName: "fs-<org>[bot]"
+github:
   prefappBotPat: "<bot-pat>"  # Prefapp Bot's PAT
   operatorPat: "<operator-pat>"  # Operator's PAT, used to commit to the org firestartr-<env>
 ```
@@ -187,8 +185,6 @@ All the parameters must be filled. When copy pasting this file, `<placeholders>`
 
 The rest of the parameters of the `cloudProvider` section are the AWS S3 bucket credentials that will be used as the terraform backend for the `state-infra` repository.
 
-- `githubApp.owner`: name of the GitHub organization where Firestartr will be installed.
-- `githubApp.botName`: name of the GitHub App bot user.
 - `githubApp.prefappBotPat`: Personal Access Token for the Prefapp Bot user, used to download the features from the features repository.
 - `githubApp.operatorPat`: Personal Access Token for the Operator user, used to commit the deployment and ArgoCD application PRs to the `firestartr-<env>` organization.
 
@@ -210,10 +206,8 @@ cloudProvider:
   source: hashicorp/aws
   type: aws
   version: ~> 4.0
-githubApp:
+github:
   providerConfigName: github-app-provider-config-name
-  owner: "firestartr-test"
-  botName: "firestartr-local-development-app[bot]"
 ```
 
 ### 4. How to launch the bootstrap
