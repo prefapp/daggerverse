@@ -183,7 +183,6 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		return nil, errorMessage
 	}
 
-	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
 	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
 	if err != nil {
 		errorMessage := PrepareAndPrintError(
@@ -529,7 +528,6 @@ func (m *FirestartrBootstrap) CmdPushStateSecrets(
 		}
 	}
 
-	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
 	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
 	if err != nil {
 		errorMessage := PrepareAndPrintError(

@@ -123,6 +123,7 @@ func New(
 
 	creds.CloudProvider.ProviderConfigName = backendConfigName
 	creds.GithubApp.ProviderConfigName = githubProviderConfigName
+    creds.GithubApp.Owner = bootstrap.Org
 
 	// calculate store name
 	bootstrap.FinalSecretStoreName = fmt.Sprintf("%s-firestartr-secret-store", bootstrap.Customer)
@@ -132,13 +133,13 @@ func New(
 		return nil, err
 	}
 
-    ghOrgLowerCase := strings.ToLower(creds.GithubApp.Owner)
+    ghOrgLowerCase := strings.ToLower(bootstrap.Org)
 
 	return &FirestartrBootstrap{
 		Bootstrap:             bootstrap,
 		BootstrapFile:         bootstrapFile,
 		CredentialsSecret:     credentialsSecret,
-		GhOrg:                 creds.GithubApp.Owner,
+		GhOrg:                 bootstrap.Org,
         GhOrgLowerCase:        ghOrgLowerCase,
 		Creds:                 creds,
 		CredsFileContent:      credsFileContent,

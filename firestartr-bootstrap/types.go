@@ -42,7 +42,6 @@ type Bootstrap struct {
 	PrefappBotPatSecretRef        string      // Autocalculated
 	FirestartrCliVersionSecretRef string      // Autocalculated
 	HasFreePlan                   bool        // Autocalculated
-	BotName                       string      // Stored in Credentialsfile.yaml, but needed here for templating
 }
 
 type PushFiles struct {
@@ -71,7 +70,7 @@ type Firestartr struct {
 
 type CredsFile struct {
 	CloudProvider       CloudProvider `yaml:"cloudProvider"`
-	GithubApp           GithubApp     `yaml:"githubApp"`
+	GithubApp           GithubApp     `yaml:"github"`
     GithubAppOperator   GithubApp     //Autocalculated
 }
 
@@ -94,8 +93,7 @@ type ConfigProvider struct {
 
 type GithubApp struct {
 	ProviderConfigName string
-	Owner              string `yaml:"owner"`
-	BotName            string `yaml:"botName"`
+	Owner              string // Populated
 	PrefappBotPat      string `yaml:"prefappBotPat"`
 	OperatorPat        string `yaml:"operatorPat"`
 	Pem                string
