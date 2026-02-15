@@ -156,7 +156,7 @@ func (m *FirestartrBootstrap) PopulateGithubAppCredsFromSecrets(
 ) error {
 	// Get the GitHub App credentials struct
 	credsReflector          := reflect.ValueOf(&m.Creds.GithubApp).Elem()
-    credsReflectorOperator  := reflect.ValueOf(&m.Creds.GithubAppOperator).Elem()
+	credsReflectorOperator  := reflect.ValueOf(&m.Creds.GithubAppOperator).Elem()
 
 	// For each known secret property
 	for property, ref := range CREDS_SECRET_LIST {
