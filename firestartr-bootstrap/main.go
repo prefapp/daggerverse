@@ -15,6 +15,7 @@ type FirestartrBootstrap struct {
 	BootstrapFile         *dagger.File
 	CredentialsSecret     *dagger.Secret
 	GhOrg                 string
+    GhOrgLowerCase        string
 	Creds                 *CredsFile
 	CredsFileContent      string
 	GeneratedGhToken      *dagger.Secret
@@ -131,17 +132,20 @@ func New(
 		return nil, err
 	}
 
+    ghOrgLowerCase := strings.ToLower(creds.GithubApp.Owner)
+
 	return &FirestartrBootstrap{
 		Bootstrap:             bootstrap,
 		BootstrapFile:         bootstrapFile,
 		CredentialsSecret:     credentialsSecret,
 		GhOrg:                 creds.GithubApp.Owner,
+        GhOrgLowerCase:        ghOrgLowerCase,
 		Creds:                 creds,
 		CredsFileContent:      credsFileContent,
 		PreviousCrsDir:        previousCrsDir,
 		ClaimsDotConfigDir:    claimsDotConfigDir,
 		CrsDotConfigDir:       crsDotConfigDir,
-		ExpectedAWSParameters: calculateParameters(bootstrap.Customer, bootstrap.Org),
+		ExpectedAWSParameters: calculateParameters(bootstrap.Customer, ghOrgLowerCase),
 	}, nil
 }
 
