@@ -35,6 +35,7 @@ type Bootstrap struct {
 	DefaultBranch                 string      `yaml:"defaultBranch"`
 	DefaultBranchStrategy         string      `yaml:"defaultBranchStrategy"`
 	DefaultOrgPermissions         string      `yaml:"defaultOrgPermissions"`
+	DefaultGroup                  string      `yaml:"defaultGroup"`
 	FinalSecretStoreName          string      `yaml:"finalSecretStoreName"`
 	WebhookUrl                    string      // Autocalculated
 	WebhookSecretRef              string      // Autocalculated
