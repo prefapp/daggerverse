@@ -46,7 +46,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		File("external_secrets/bootstrap_secrets.tmpl").
 		Contents(ctx)
 
-	bootstrapSecretsCr, err := renderTmpl(bootstrapSecretsTmpl, m.Bootstrap)
+	bootstrapSecretsCr, err := renderTmpl(bootstrapSecretsTmpl, m)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		File("external_secrets/operator_secrets.tmpl").
 		Contents(ctx)
 
-	operatorSecretsCr, err := renderTmpl(operatorSecretsTmpl, m.Bootstrap)
+	operatorSecretsCr, err := renderTmpl(operatorSecretsTmpl, m)
 	if err != nil {
 		return nil, err
 	}
