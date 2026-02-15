@@ -69,8 +69,9 @@ type Firestartr struct {
 }
 
 type CredsFile struct {
-	CloudProvider CloudProvider `yaml:"cloudProvider"`
-	GithubApp     GithubApp     `yaml:"githubApp"`
+	CloudProvider       CloudProvider `yaml:"cloudProvider"`
+	GithubApp           GithubApp     `yaml:"githubApp"`
+    GithubAppOperator   GithubApp     //Autocalculated
 }
 
 type CloudProvider struct {
