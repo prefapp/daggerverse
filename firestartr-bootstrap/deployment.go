@@ -107,7 +107,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 					m.Bootstrap.Customer,
 					m.Bootstrap.Customer,
-					m.GhOrg,
+					m.GhOrgLowerCase,
 				),
 				GithubAppPem: fmt.Sprintf(
 
@@ -140,7 +140,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 				m.Bootstrap.Customer,
 				m.Bootstrap.Customer,
-				m.GhOrg,
+				m.GhOrgLowerCase,
 			),
 			GithubAppPem: fmt.Sprintf(
 
