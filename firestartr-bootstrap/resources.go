@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func (m *FirestartrBootstrap) PushCrsFiles(
+func (m *FirestartrBootstrap) PushBootstrapFiles(
 	ctx context.Context,
 	kindContainer *dagger.Container,
 ) error {
@@ -79,6 +79,20 @@ func (m *FirestartrBootstrap) PushCrsFiles(
 			ctx,
 			crsDir,
 			m.Bootstrap.PushFiles.Crs.Providers.Terraform.Repo,
+			tokenSecret,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	if m.Bootstrap.PushFiles.DotFirestartr.Push {
+		dotFirestartrDir := dag.CurrentModule().Source().Directory("./dot-firestartr")
+
+		err := m.PushDirToRepo(
+			ctx,
+			dotFirestartrDir,
+			m.Bootstrap.PushFiles.DotFirestartr.Repo,
 			tokenSecret,
 		)
 		if err != nil {
