@@ -183,8 +183,8 @@ func (m *FirestartrBootstrap) RenderDeployment(
 	}
 
 	deploymentDir := dag.Directory().
-		WithNewFile("pre.yaml", renderedPre).
-		WithNewFile("pre/values.yaml", renderedValues)
+		WithNewFile("pro.yaml", renderedPre).
+		WithNewFile("pro/values.yaml", renderedValues)
 
 	return deploymentDir, nil
 }
