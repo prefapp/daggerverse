@@ -45,6 +45,9 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		Source().
 		File("external_secrets/bootstrap_secrets.tmpl").
 		Contents(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	bootstrapSecretsCr, err := renderTmpl(bootstrapSecretsTmpl, m)
 	if err != nil {
@@ -55,6 +58,9 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		Source().
 		File("external_secrets/operator_secrets.tmpl").
 		Contents(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	operatorSecretsCr, err := renderTmpl(operatorSecretsTmpl, m)
 	if err != nil {
@@ -155,8 +161,8 @@ func (m *FirestartrBootstrap) PopulateGithubAppCredsFromSecrets(
 	kindContainer *dagger.Container,
 ) error {
 	// Get the GitHub App credentials struct
-	credsReflector          := reflect.ValueOf(&m.Creds.GithubApp).Elem()
-	credsReflectorOperator  := reflect.ValueOf(&m.Creds.GithubAppOperator).Elem()
+	credsReflector := reflect.ValueOf(&m.Creds.GithubApp).Elem()
+	credsReflectorOperator := reflect.ValueOf(&m.Creds.GithubAppOperator).Elem()
 
 	// For each known secret property
 	for property, ref := range CREDS_SECRET_LIST {
