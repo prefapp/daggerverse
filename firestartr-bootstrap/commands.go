@@ -422,7 +422,7 @@ func (m *FirestartrBootstrap) CmdPushResources(
 			"cp", "-a", "/mnt/resources", "/",
 		})
 
-	err = m.PushCrsFiles(
+	err = m.PushBootstrapFiles(
 		ctx,
 		kindContainer,
 	)

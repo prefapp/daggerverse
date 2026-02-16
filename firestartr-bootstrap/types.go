@@ -45,8 +45,9 @@ type Bootstrap struct {
 }
 
 type PushFiles struct {
-	Claims PushFilesRepo `yaml:"claims"`
-	Crs    Crs           `yaml:"crs"`
+	Claims        PushFilesRepo `yaml:"claims"`
+	Crs           Crs           `yaml:"crs"`
+	DotFirestartr PushFilesRepo `yaml:"dotFirestartr"`
 }
 
 type Crs struct {

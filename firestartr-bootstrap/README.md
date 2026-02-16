@@ -79,6 +79,9 @@ pushFiles:
       terraform:
         push: true # When the process finishes, the generated crs will be pushed to the crs repository.
         repo: "state-infra" # Normally, the state-infra repository will be called "state-infra", but it is possible to change the name.
+  dotFirestartr:
+    push: true # When the process finishes, the default rego validation policies will be pushed to the .firestartr repository.
+    repo: ".firestartr" # Normally, the .firestartr repository will be called ".firestartr", but it is possible to change the name.
 
 components:
   - name: "dot-firestartr" # claim name
