@@ -207,6 +207,18 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		return nil, errorMessage
 	}
 
+	err = m.CheckIfDefaultGroupExists(ctx, tokenSecret)
+	if err != nil {
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitGithubAppsMachinery",
+			fmt.Sprintf("An error occurred while checking if the %s group exists", m.Bootstrap.DefaultGroup),
+			err,
+		)
+
+		return nil, errorMessage
+	}
+
 	successMessage := `
 =====================================================
 🤖 GITHUB APPS MACHINERY VALIDATED 🤖
