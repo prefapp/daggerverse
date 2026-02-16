@@ -15,7 +15,7 @@ type FirestartrBootstrap struct {
 	BootstrapFile         *dagger.File
 	CredentialsSecret     *dagger.Secret
 	GhOrg                 string
-    GhOrgLowerCase        string
+	GhOrgLowerCase        string
 	Creds                 *CredsFile
 	CredsFileContent      string
 	GeneratedGhToken      *dagger.Secret
@@ -123,7 +123,7 @@ func New(
 
 	creds.CloudProvider.ProviderConfigName = backendConfigName
 	creds.GithubApp.ProviderConfigName = githubProviderConfigName
-    creds.GithubApp.Owner = bootstrap.Org
+	creds.GithubApp.Owner = bootstrap.Org
 
 	// calculate store name
 	bootstrap.FinalSecretStoreName = fmt.Sprintf("%s-firestartr-secret-store", bootstrap.Customer)
@@ -133,14 +133,14 @@ func New(
 		return nil, err
 	}
 
-    ghOrgLowerCase := strings.ToLower(bootstrap.Org)
+	ghOrgLowerCase := strings.ToLower(bootstrap.Org)
 
 	return &FirestartrBootstrap{
 		Bootstrap:             bootstrap,
 		BootstrapFile:         bootstrapFile,
 		CredentialsSecret:     credentialsSecret,
 		GhOrg:                 bootstrap.Org,
-        GhOrgLowerCase:        ghOrgLowerCase,
+		GhOrgLowerCase:        ghOrgLowerCase,
 		Creds:                 creds,
 		CredsFileContent:      credsFileContent,
 		PreviousCrsDir:        previousCrsDir,
