@@ -107,7 +107,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 					m.Bootstrap.Customer,
 					m.Bootstrap.Customer,
-					m.GhOrg,
+					m.GhOrgLowerCase,
 				),
 				GithubAppPem: fmt.Sprintf(
 
@@ -140,7 +140,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 				m.Bootstrap.Customer,
 				m.Bootstrap.Customer,
-				m.GhOrg,
+				m.GhOrgLowerCase,
 			),
 			GithubAppPem: fmt.Sprintf(
 
@@ -183,8 +183,8 @@ func (m *FirestartrBootstrap) RenderDeployment(
 	}
 
 	deploymentDir := dag.Directory().
-		WithNewFile("pro.yaml", renderedPre).
-		WithNewFile("pro/values.yaml", renderedValues)
+		WithNewFile(fmt.Sprintf("%s.yaml", m.Bootstrap.Env), renderedPre).
+		WithNewFile(fmt.Sprintf("%s/values.yaml", m.Bootstrap.Env), renderedValues)
 
 	return deploymentDir, nil
 }

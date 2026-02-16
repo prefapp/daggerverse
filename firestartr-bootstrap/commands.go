@@ -169,7 +169,17 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		return nil, errorMessage
 	}
 
-	m.PopulateGithubAppCredsFromSecrets(ctx, kindContainer)
+	err = m.PopulateGithubAppCredsFromSecrets(ctx, kindContainer)
+	if err != nil {
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitGithubAppsMachinery",
+			"An error occurred while populating the GitHub App credentials from the Kubernetes secrets",
+			err,
+		)
+
+		return nil, errorMessage
+	}
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {
@@ -183,7 +193,6 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		return nil, errorMessage
 	}
 
-	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
 	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
 	if err != nil {
 		errorMessage := PrepareAndPrintError(
@@ -202,6 +211,18 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 			ctx,
 			"CmdInitGithubAppsMachinery",
 			fmt.Sprintf("An error occurred while checking if the %s-all group exists", m.Bootstrap.Org),
+			err,
+		)
+
+		return nil, errorMessage
+	}
+
+	err = m.CheckIfDefaultGroupExists(ctx, tokenSecret)
+	if err != nil {
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitGithubAppsMachinery",
+			fmt.Sprintf("An error occurred while checking if the %s group exists", m.Bootstrap.DefaultGroup),
 			err,
 		)
 
@@ -529,7 +550,6 @@ func (m *FirestartrBootstrap) CmdPushStateSecrets(
 		}
 	}
 
-	m.Bootstrap.BotName = m.Creds.GithubApp.BotName
 	m.Bootstrap.HasFreePlan, err = m.OrgHasFreePlan(ctx, tokenSecret)
 	if err != nil {
 		errorMessage := PrepareAndPrintError(

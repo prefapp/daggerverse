@@ -46,6 +46,9 @@
       "defaultBranchStrategy": {
         "type": "string"
       },
+      "defaultGroup": {
+        "type": "string"
+      },
       "defaultFirestartrGroup": {
         "type": "string"
       },
@@ -199,6 +202,7 @@
       "defaultDomainName",
       "defaultOrgPermissions",
       "defaultBranchStrategy",
-      "defaultFirestartrGroup"
+      "defaultFirestartrGroup",
+      "defaultGroup"
     ]
   }
