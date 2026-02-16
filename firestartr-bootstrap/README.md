@@ -185,8 +185,8 @@ All the parameters must be filled. When copy pasting this file, `<placeholders>`
 
 The rest of the parameters of the `cloudProvider` section are the AWS S3 bucket credentials that will be used as the terraform backend for the `state-infra` repository.
 
-- `githubApp.prefappBotPat`: Personal Access Token for the Prefapp Bot user, used to download the features from the features repository.
-- `githubApp.operatorPat`: Personal Access Token for the Operator user, used to commit the deployment and ArgoCD application PRs to the `firestartr-<env>` organization.
+- `github.prefappBotPat`: Personal Access Token for the Prefapp Bot user, used to download the features from the features repository.
+- `github.operatorPat`: Personal Access Token for the Operator user, used to commit the deployment and ArgoCD application PRs to the `firestartr-<env>` organization.
 
 #### 3.2 Azure terraform backend provider configuration (currently not supported)
 
