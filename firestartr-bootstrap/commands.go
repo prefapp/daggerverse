@@ -169,7 +169,17 @@ func (m *FirestartrBootstrap) CmdInitGithubAppsMachinery(
 		return nil, errorMessage
 	}
 
-	m.PopulateGithubAppCredsFromSecrets(ctx, kindContainer)
+	err = m.PopulateGithubAppCredsFromSecrets(ctx, kindContainer)
+	if err != nil {
+		errorMessage := PrepareAndPrintError(
+			ctx,
+			"CmdInitGithubAppsMachinery",
+			"An error occurred while populating the GitHub App credentials from the Kubernetes secrets",
+			err,
+		)
+
+		return nil, errorMessage
+	}
 
 	tokenSecret, err := m.GenerateGithubToken(ctx)
 	if err != nil {

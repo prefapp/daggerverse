@@ -61,7 +61,7 @@ defaultDomainName: default-domain
 defaultOrgPermissions: view
 defaultBranchStrategy: none
 defaultFirestartrGroup: firestartr
-defaultGroup: 'my group' # must be an existing group/team or one of the created by the bootstrap process
+defaultGroup: my-group # must be an existing group/team slug or one of the created by the bootstrap process
 
 firestartr:
   # Check latest available release at github.com/prefapp/gitops-k8s
@@ -140,7 +140,7 @@ All the parameters must be filled. When copy pasting this file, `<placeholders>`
 - `defaultOrgPermissions`: default permissions for the organization members. Can be: `none`, `view` or `contribute`.
 - `defaultBranchStrategy`: default branch strategy for the organization repositories. These are defined in the `branch_strategies.yaml` and `expander_branch_strategies.yaml` files. Currently, the bootstrap creates only a definition for `gitflow`, though more can be added after bootstrapping if needed. Allowed values: `none`, `gitflow` or `custom`.
 - `defaultFirestartrGroup`: name of the group that will be used by Firestartr by default. It can be an already existing group, which will be imported and used in the bootstrapping process, or a new group that will be created by it.
-- `defaultGroup`: name of the group that will be used by Firestartr by default. It can be an already existing group, which will be imported and used as the owner of the system and domain created by the bootstrap process.
+- `defaultGroup`: slug of the group that will be used by Firestartr by default. It can be an already existing group, which will be imported and used as the owner of the system and domain created by the bootstrap process.
 - `firestartr.operator`: Firestartr version to be used by the operator. Must be the name of an image tag, without the flavor (i.e., `v1.53.0` instead of `v1.53.0_full-aws` or `v1.53.0_slim`). You can check the latest available image version [here](https://github.com/prefapp/gitops-k8s/pkgs/container/gitops-k8s).
 - `firestartr.cli`: Firestartr CLI version to be used in the importation process. You can check the latest available CLI version [here](https://github.com/prefapp/gitops-k8s/blob/main/.release-please-manifest.json#L2). Note that this CLI version **won't** be the version set as the `FIRESTARTR_CLI_VERSION` organization variable, which is set from the parameter store instead (`/firestartr/<customer-name>/firestartr-cli-version`).
 - `pushFiles`: whether or not to push the files create to their respective repositories once the bootstrap process finishes. Each section has two parameters: `push`, which if `true` will push those files to `repo`, whose value should be the name of the repository where those files will be pushed to.
