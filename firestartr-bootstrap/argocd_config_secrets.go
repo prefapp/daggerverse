@@ -64,7 +64,7 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 		ctx,
 		argoCDRepo.Directory("/repo"),
 		fmt.Sprintf("kubernetes-sys-services/firestartr-%s/argo-configuration-secrets/values.yaml", m.Bootstrap.Env),
-		m.Bootstrap.Org,
+		m.GhOrgLowerCase,
 		clientAccess,
 	)
 
