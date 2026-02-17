@@ -53,7 +53,7 @@ func (m *FirestartrBootstrap) RunImporter(
 		"--filters", "gh-repo,SKIP=SKIP",
 	}
 
-	kindContainer = kindContainer.
+	kindContainer, err = kindContainer.
 		WithDirectory("/import", claimsDir).
 		WithDirectory("/import", crsDir).
 		WithDirectory("/config", m.CrsDotConfigDir).
@@ -70,7 +70,22 @@ func (m *FirestartrBootstrap) RunImporter(
 			"npm", "install", "-g",
 			fmt.Sprintf("@firestartr/cli@%s", m.Bootstrap.Firestartr.CliVersion),
 		}).
-		WithExec(importCommand)
+		WithExec(importCommand).
+        Sync(ctx)
+
+
+
+    // we copy even it there was an error
+    kindContainer, _ = kindContainer.
+        WithExec([]string{
+            "cp", "-a", "/import", "/cache",
+        }).
+        Sync(ctx)
+
+    if err != nil {
+
+        return nil, fmt.Errorf("Error importing: %w", err)
+    }
 
 	kindContainer, err = m.ApplyFirestartrCrs(
 		ctx,
@@ -83,8 +98,16 @@ func (m *FirestartrBootstrap) RunImporter(
 			"FirestartrGithubRepositoryFeature.*",
 		},
 	)
+
+    // we copy even it there was an error
+    kindContainer, _ = kindContainer.
+        WithExec([]string{
+            "cp", "-a", "/import", "/cache",
+        }).
+        Sync(ctx)
+
 	if err != nil {
-		return nil, err
+        return nil, fmt.Errorf("Error rendering and applyig the imported crs: %w", err)
 	}
 
 	return kindContainer, nil
