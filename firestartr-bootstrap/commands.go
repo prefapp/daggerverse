@@ -685,3 +685,15 @@ func (m *FirestartrBootstrap) CmdRunBootstrap(
 
 	//m.CmdPushArgo(ctx)
 }
+
+
+func (m *FirestartrBootstrap) CmdDebugBootstrap(
+	ctx context.Context,
+	cacheVolume *dagger.CacheVolume,
+) *dagger.Container {
+
+
+    return dag.Container().
+        From("alpine:3.21.3").
+        WithMountedCache("/debug", cacheVolume)
+}
