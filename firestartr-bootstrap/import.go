@@ -72,12 +72,6 @@ func (m *FirestartrBootstrap) RunImporter(
 		}).
 		WithExec(importCommand)
 
-    // for debugging purposes
-    kindContainer = kindContainer.
-        WithExec([]string{"rm", "-rf", "/debug"}).
-        WithExec([]string{"mkdir", "-p","/debug/import"}).
-        WithExec([]string{"cp","-a", "/import", "/debug/import"})
-
 	kindContainer, err = m.ApplyFirestartrCrs(
 		ctx,
 		kindContainer,

@@ -716,5 +716,5 @@ func (m *FirestartrBootstrap) CmdDebugBootstrap(
 
     return dag.Container().
         From("alpine:3.21.3").
-        WithMountedCache("/debug", cacheVolume)
+        WithMountedCache("/cache", cacheVolume)
 }
