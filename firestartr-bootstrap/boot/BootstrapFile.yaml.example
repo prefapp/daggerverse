@@ -1,0 +1,70 @@
+defaultSystemName: # ask customer for a default system name to be used in the claims, for example "mysystem"
+defaultGroup: # ask customer for the owner of the default system and domain
+defaultFirestartrGroup: firestartr # default group for firestartr users and related components (claims, state-github, state-infra...)
+
+firestartr:
+  # Check latest available release at github.com/prefapp/gitops-k8s
+  operator: v1.56.1
+  cli: v1.56.1
+pushFiles:
+  claims:
+    push: true # When the process finishes, the generated claims will be pushed to the claims repository.
+    repo: "claims" # Normally, the claims repository will be called "claims", but it is possible to change the name.
+  dotFirestartr:
+    push: true
+    repo: ".firestartr"
+  crs:
+    providers:
+      github:
+        push: true # When the process finishes, the generated crs will be pushed to the crs repository.
+        repo: "state-github" # Normally, the state-github repository will be called "state-github", but it is possible to change the name.
+      terraform:
+        push: true # When the process finishes, the generated crs will be pushed to the crs repository.
+        repo: "state-infra" # Normally, the state-infra repository will be called "state-infra", but it is possible to change the name.
+
+components:
+  - name: "dot-firestartr" # claim name
+    description: "Firestartr configuration repository, containing the base configuration for the platform in the organization"
+    repoName: ".firestartr" # repository name
+    defaultBranch: main
+    features: # features that will be provisioned
+      - name: firestartr_repo
+        version: latest  # Check available versions at github.com/prefapp/features
+
+  - name: "claims"
+    description: "Firestartr configuration folders and files"
+    defaultBranch: main
+    features:
+      - name: claims_repo
+        version: latest  # You can omit this field to use the latest avaliable version
+    secrets:
+      - name: FS_IMPORT_PEM_FILE
+        value: "ref:secretsclaim:firestartr-secrets:fs-import-pem"
+    variables:
+      - name: "FS_IMPORT_APP_ID"
+        value: "ref:secretsclaim:firestartr-secrets:fs-import-appid"
+    labels:
+      - automerge
+
+  - name: "catalog"
+    description: "Firestartr configuration folders and files"
+    defaultBranch: main
+    features:
+      - name: catalog_repo
+        version: latest  # You can also explicitly set "latest" as the version for clarity
+
+  - name: "state-github"
+    description: "Firestartr Github wet repository"
+    defaultBranch: main
+    features:
+      - name: state_github
+        version: latest  # Check available versions at github.com/prefapp/features
+
+  - name: "state-infra"
+    description: "Firestartr Terraform workspaces wet repository"
+    defaultBranch: main
+    features:
+      - name: state_infra
+        version: latest  # Check available versions at github.com/prefapp/features
+    labels:
+      - plan
