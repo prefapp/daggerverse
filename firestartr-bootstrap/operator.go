@@ -151,8 +151,9 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 
 		for _, entry := range entries {
 			entry := entry
+			err := err
 			g.Go(func() error {
-				_, err = m.applyCrAndWaitForProvisioned(
+				err = m.applyCrAndWaitForProvisioned(
 					egCtx, kindContainer,
 					fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
 					kind != "ExternalSecret.*",
@@ -211,18 +212,18 @@ func (m *FirestartrBootstrap) applyCrAndWaitForProvisioned(
 	entry string,
 	waitForProvisioned bool,
 	mu *sync.Mutex,
-) (*dagger.Container, error) {
+) error {
 	crFile := kindContainer.File(entry)
 
 	crContent, err := crFile.Contents(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get file contents: %s", err)
+		return fmt.Errorf("Failed to get file contents: %s", err)
 	}
 
 	cr := &Cr{}
 	err = yaml.Unmarshal([]byte(crContent), cr)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to unmarshal CR: %s", err)
+		return fmt.Errorf("Failed to unmarshal CR: %s", err)
 	}
 
 	kindContainer = kindContainer.
@@ -236,7 +237,7 @@ func (m *FirestartrBootstrap) applyCrAndWaitForProvisioned(
 	if waitForProvisioned {
 		singularKind, err := getSingularByKind(cr.Kind)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		kindContainer = kindContainer.
@@ -259,7 +260,7 @@ func (m *FirestartrBootstrap) applyCrAndWaitForProvisioned(
 	}
 	mu.Unlock()
 
-	return kindContainer, nil
+	return nil
 }
 
 func patchCR(
