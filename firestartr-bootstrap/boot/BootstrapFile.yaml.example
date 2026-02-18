@@ -43,8 +43,6 @@ components:
     variables:
       - name: "FS_IMPORT_APP_ID"
         value: "ref:secretsclaim:firestartr-secrets:fs-import-appid"
-    labels:
-      - automerge
 
   - name: "catalog"
     description: "Firestartr configuration folders and files"
