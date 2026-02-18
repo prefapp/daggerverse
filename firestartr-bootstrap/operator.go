@@ -149,8 +149,9 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 		}
 
 		for _, entry := range entries {
+			entry := entry
 			g.Go(func() error {
-				kindContainer, err = m.ApplyCrAndWaitForProvisioned(
+				_, err = m.ApplyCrAndWaitForProvisioned(
 					egCtx, kindContainer,
 					fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
 					kind != "ExternalSecret.*",
