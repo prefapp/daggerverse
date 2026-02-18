@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -207,6 +208,7 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 	entry string,
 	waitForProvisioned bool,
 ) (*dagger.Container, error) {
+	var mu sync.Mutex
 
 	crFile := kindContainer.File(entry)
 
@@ -247,11 +249,13 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 
 	kindContainer, err = kindContainer.Sync(ctx)
 
+	mu.Lock()
 	if err != nil {
 		m.FailedCrs = append(m.FailedCrs, cr)
 	} else {
 		m.ProvisionedCrs = append(m.ProvisionedCrs, cr)
 	}
+	mu.Unlock()
 
 	return kindContainer, nil
 }
