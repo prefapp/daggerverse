@@ -1,7 +1,7 @@
 # BootstrapFile.yaml
 ---
 org: # github org name
-customer: # customer name used for Firestartr internally, for exampel to find secrets within the parameter store
+customer: # customer name used for Firestartr internally, for example to find secrets within the parameter store
 env: # set either "pre" for firestartr-pre or "pro" for firestartr-pro
 defaultOrgPermissions: view # default permissions for the <org>-all group, can be none, view or contribute
 defaultBranch: main
