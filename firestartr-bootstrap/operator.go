@@ -152,7 +152,7 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 		for _, entry := range entries {
 			entry := entry
 			g.Go(func() error {
-				_, err = m.ApplyCrAndWaitForProvisioned(
+				_, err = m.applyCrAndWaitForProvisioned(
 					egCtx, kindContainer,
 					fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
 					kind != "ExternalSecret.*",
@@ -205,7 +205,7 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 	return kindContainer, nil
 }
 
-func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
+func (m *FirestartrBootstrap) applyCrAndWaitForProvisioned(
 	ctx context.Context,
 	kindContainer *dagger.Container,
 	entry string,
