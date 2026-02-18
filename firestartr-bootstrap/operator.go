@@ -139,6 +139,7 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 	crsDirectoryPath string,
 	crsToApplyList []string,
 ) (*dagger.Container, error) {
+	var mu sync.Mutex
 
 	for _, kind := range crsToApplyList {
 		g, egCtx := errgroup.WithContext(ctx)
@@ -155,6 +156,7 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 					egCtx, kindContainer,
 					fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
 					kind != "ExternalSecret.*",
+					&mu,
 				)
 
 				return err
@@ -208,9 +210,8 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 	kindContainer *dagger.Container,
 	entry string,
 	waitForProvisioned bool,
+	mu *sync.Mutex,
 ) (*dagger.Container, error) {
-	var mu sync.Mutex
-
 	crFile := kindContainer.File(entry)
 
 	crContent, err := crFile.Contents(ctx)
