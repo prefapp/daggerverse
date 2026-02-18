@@ -3,6 +3,7 @@
 /internal/querybuilder
 /internal/telemetry
 my-steps.sh
+boot/
 /.env
 *.swp
 *.swo
