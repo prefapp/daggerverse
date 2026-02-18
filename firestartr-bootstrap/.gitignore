@@ -2,8 +2,6 @@
 /internal/dagger
 /internal/querybuilder
 /internal/telemetry
-Credentials.yaml
-boot/
 my-steps.sh
 /.env
 *.swp
