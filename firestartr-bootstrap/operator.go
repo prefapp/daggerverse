@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -137,22 +139,29 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 	crsDirectoryPath string,
 	crsToApplyList []string,
 ) (*dagger.Container, error) {
-
 	for _, kind := range crsToApplyList {
+		g, ctx := errgroup.WithContext(ctx)
+
 		entries, err := kindContainer.Directory(crsDirectoryPath).Glob(ctx, kind)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to get glob entries: %s", err)
 		}
 
 		for _, entry := range entries {
-			kindContainer, err = m.ApplyCrAndWaitForProvisioned(
-				ctx, kindContainer,
-				fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
-				kind != "ExternalSecret.*",
-			)
-			if err != nil {
-				return nil, err
-			}
+			g.Go(func() error {
+				kindContainer, err = m.ApplyCrAndWaitForProvisioned(
+					ctx, kindContainer,
+					fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
+					kind != "ExternalSecret.*",
+				)
+
+				return err
+			})
+		}
+
+		err = g.Wait()
+		if err != nil {
+			return nil, fmt.Errorf("Failed to apply CRs of kind %s: %w", kind, err)
 		}
 	}
 
