@@ -65,8 +65,8 @@ defaultFirestartrGroup: firestartr # default group for firestartr users and rela
 
 firestartr:
   # Check latest available release at github.com/prefapp/gitops-k8s
-  operator: v1.56.1
-  cli: v1.56.1
+  operator: <operator_version> # Ex. v1.56.1
+  cli: <cli_version> # Ex. v1.56.1
 
 pushFiles:
   claims:
@@ -174,7 +174,7 @@ Each component represents a repository that will be created in the organization.
 cloudProvider:
   name: aws
   config:
-    bucket: tfstate-<customer name>
+    bucket: tfstate-<customer_name>
     region: "eu-west-1"
     # You need to generate a temporary access key and secret key for the AWS credentials, using for example AWS CLI or AWS Console, and provide them in the fields below
     # from the AWS CLI, you can generate the temporary credentials
