@@ -141,9 +141,9 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 ) (*dagger.Container, error) {
 
 	for _, kind := range crsToApplyList {
-		g, ctx := errgroup.WithContext(ctx)
+		g, egCtx := errgroup.WithContext(ctx)
 
-		entries, err := kindContainer.Directory(crsDirectoryPath).Glob(ctx, kind)
+		entries, err := kindContainer.Directory(crsDirectoryPath).Glob(egCtx, kind)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to get glob entries: %s", err)
 		}
@@ -151,7 +151,7 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 		for _, entry := range entries {
 			g.Go(func() error {
 				kindContainer, err = m.ApplyCrAndWaitForProvisioned(
-					ctx, kindContainer,
+					egCtx, kindContainer,
 					fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
 					kind != "ExternalSecret.*",
 				)
