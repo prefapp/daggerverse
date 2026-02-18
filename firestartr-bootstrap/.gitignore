@@ -3,7 +3,8 @@
 /internal/querybuilder
 /internal/telemetry
 my-steps.sh
-boot/
+boot/*.yaml
+boot/*.yml
 /.env
 *.swp
 *.swo

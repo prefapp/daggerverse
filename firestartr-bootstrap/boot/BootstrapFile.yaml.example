@@ -1,12 +1,3 @@
-# BootstrapFile.yaml
----
-org: # github org name
-customer: # customer name used for Firestartr internally, for example to find secrets within the parameter store
-env: # set either "pre" for firestartr-pre or "pro" for firestartr-pro
-defaultOrgPermissions: view # default permissions for the <org>-all group, can be none, view or contribute
-defaultBranch: main
-defaultBranchStrategy: none
-defaultDomainName: # ask customer for a default domain name to be used in the claims, for example "myproduct"
 defaultSystemName: # ask customer for a default system name to be used in the claims, for example "mysystem"
 defaultGroup: # ask customer for the owner of the default system and domain
 defaultFirestartrGroup: firestartr # default group for firestartr users and related components (claims, state-github, state-infra...)
