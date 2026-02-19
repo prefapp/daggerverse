@@ -158,7 +158,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 	deploymentPreTemplateFile := dag.CurrentModule().
 		Source().
-		File("templates/deployment/pre.tmpl")
+		File("templates/deployment/tenant.tmpl")
 
 		// deployment values
 	templateContent, err := deploymentTemplateFile.Contents(ctx)
