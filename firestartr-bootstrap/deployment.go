@@ -96,14 +96,14 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 				GithubAppId: fmt.Sprintf(
 
-					"/firestartr/%s/fs-%s-admin/app-id",
+					"/firestartr/%s/fs-%s/app-id",
 
 					m.Bootstrap.Customer,
 					m.Bootstrap.Customer,
 				),
 				GithubAppInstallationId: fmt.Sprintf(
 
-					"/firestartr/%s/fs-%s-admin/%s/app-installation-id",
+					"/firestartr/%s/fs-%s/%s/app-installation-id",
 
 					m.Bootstrap.Customer,
 					m.Bootstrap.Customer,
@@ -111,7 +111,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 				),
 				GithubAppPem: fmt.Sprintf(
 
-					"/firestartr/%s/fs-%s-admin/pem",
+					"/firestartr/%s/fs-%s/pem",
 
 					m.Bootstrap.Customer,
 					m.Bootstrap.Customer,
@@ -158,7 +158,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 	deploymentPreTemplateFile := dag.CurrentModule().
 		Source().
-		File("templates/deployment/pre.tmpl")
+		File("templates/deployment/tenant.tmpl")
 
 		// deployment values
 	templateContent, err := deploymentTemplateFile.Contents(ctx)
