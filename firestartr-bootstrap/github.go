@@ -553,13 +553,14 @@ func (m *FirestartrBootstrap) OrgHasFreePlan(
 // Done like this because functions cannot return maps
 var latestVersionMap = make(map[string]string)
 
-func (m *FirestartrBootstrap) CloneFeaturesRepo(
+func clonePrefappRepo(
 	ctx context.Context,
 	destinationPath string,
+	repoName string,
+	patValue string,
 ) (*dagger.Container, error) {
-	patValue := m.Creds.GithubApp.PrefappBotPat
 
-	authURL := fmt.Sprintf("https://%s@github.com/%s/%s.git", patValue, "prefapp", "features")
+	authURL := fmt.Sprintf("https://%s@github.com/%s/%s.git", patValue, "prefapp", repoName)
 
 	gitArgs := []string{
 		"git",
@@ -596,8 +597,9 @@ func (m *FirestartrBootstrap) SetLatestFeatureVersionInfo(
 	ghToken *dagger.Secret,
 ) error {
 	destinationPath := "/tmp/features-repo"
+	patValue := m.Creds.GithubApp.PrefappBotPat
 
-	ctr, err := m.CloneFeaturesRepo(ctx, destinationPath)
+	ctr, err := clonePrefappRepo(ctx, destinationPath, "features", patValue)
 	if err != nil {
 		return err
 	}
@@ -634,6 +636,69 @@ func (m *FirestartrBootstrap) GetLatestFeatureVersion(
 	}
 
 	return latestVersion, nil
+}
+
+func getLatestOperatorVersion(
+	ctx context.Context,
+	pat string,
+) (string, error) {
+	destinationPath := "/tmp/gitopsk8s-repo"
+	operatorVersionMap := make(map[string]string)
+
+	ctr, err := clonePrefappRepo(ctx, destinationPath, "gitops-k8s", pat)
+	if err != nil {
+		return "", err
+	}
+
+	clonedDir := ctr.Directory(destinationPath)
+	operatorVersionJSON, err := clonedDir.
+		File(".release-please-manifest.json").
+		Contents(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	err = json.Unmarshal([]byte(operatorVersionJSON), &operatorVersionMap)
+	if err != nil {
+		return "", err
+	}
+
+	latestVersion, ok := operatorVersionMap["."]
+	if !ok {
+		return "", fmt.Errorf("could not find latest version for operator")
+	}
+
+	return latestVersion, nil
+}
+
+func getLatestCliVersion(
+	ctx context.Context,
+) (string, error) {
+	versionsOutput, err := dag.Container().
+		From("node:20-alpine").
+		WithExec([]string{
+			"npm",
+			"view",
+			"@firestartr/cli",
+			"versions",
+		}).
+		Stdout(ctx)
+
+	if err != nil {
+		return "", fmt.Errorf("Error getting the latest CLI version: %w", err)
+	}
+
+	var versions []string
+	versionsJson := strings.ReplaceAll(versionsOutput, "'", "\"")
+	err = json.Unmarshal([]byte(versionsJson), &versions)
+	if err != nil {
+		return "", fmt.Errorf("Error parsing the CLI version list: %w", err)
+	}
+
+	filteredVersions, err := filterStringSlice(versions, `.+snapshot.+`)
+
+	// Return the last version in the list, which is the latest stable version
+	return filteredVersions[len(filteredVersions)-1], nil
 }
 
 func (m *FirestartrBootstrap) EnableActionsToCreateAndApprovePullRequestsInOrg(

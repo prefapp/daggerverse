@@ -5,6 +5,7 @@ import (
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -34,6 +35,13 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 		return nil, err
 	}
 
+	crdsVersion := m.Bootstrap.Firestartr.OperatorVersion
+
+	shaRegex := regexp.MustCompile(`^[0-9a-f]{7}$`)
+	if shaRegex.MatchString(crdsVersion) {
+		crdsVersion = "latest"
+	}
+
 	ctn, err := dag.Container().
 		From("alpine:latest").
 		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl", "helm"}).
@@ -46,7 +54,10 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 		).
 		WithExec([]string{
 			"curl",
-			"https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/crds/latest/index.yaml",
+			fmt.Sprintf(
+				"https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/crds/%s/index.yaml",
+				crdsVersion,
+			),
 			"-o",
 			"/tmp/crds.yaml",
 		}).
@@ -681,29 +692,4 @@ func (m *FirestartrBootstrap) CmdRollback(
 	}
 
 	return m.UpdateSummaryAndRunForRollbackStep(ctx, output), nil
-}
-
-func (m *FirestartrBootstrap) CmdRunBootstrap(
-	ctx context.Context,
-	kubeconfig *dagger.Directory,
-	kindSvc *dagger.Service,
-	kindClusterName string,
-) {
-	persistentVolume := m.CmdCreatePersistentVolume(ctx, "firestartr-init")
-
-	m.CmdValidateBootstrap(ctx, kubeconfig, kindSvc, kindClusterName)
-
-	m.CmdInitSecretsMachinery(ctx, kubeconfig, kindSvc, kindClusterName)
-
-	m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc, kindClusterName)
-
-	m.CmdImportResources(ctx, kubeconfig, kindSvc, kindClusterName, persistentVolume)
-
-	m.CmdPushResources(ctx, kubeconfig, kindSvc, kindClusterName, persistentVolume)
-
-	m.CmdPushStateSecrets(ctx, kubeconfig, kindSvc, kindClusterName, persistentVolume)
-
-	//m.CmdPushDeployment(ctx)
-
-	//m.CmdPushArgo(ctx)
 }
