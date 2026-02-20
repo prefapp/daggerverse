@@ -699,6 +699,9 @@ func getLatestCliVersion(
 	if err != nil {
 		return "", fmt.Errorf("error filtering the CLI version list: %w", err)
 	}
+	if len(filteredVersions) == 0 {
+		return "", fmt.Errorf("No CLI versions remaining after filtering snapshots")
+	}
 
 	// Return the last version in the list, which is the latest stable version
 	return filteredVersions[len(filteredVersions)-1], nil
