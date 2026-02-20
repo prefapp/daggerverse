@@ -674,13 +674,14 @@ func getLatestOperatorVersion(
 func getLatestCliVersion(
 	ctx context.Context,
 ) (string, error) {
-	versionsOutput, err := dag.Container().
+	versionsJson, err := dag.Container().
 		From("node:20-alpine").
 		WithExec([]string{
 			"npm",
 			"view",
 			"@firestartr/cli",
 			"versions",
+			"--json",
 		}).
 		Stdout(ctx)
 
@@ -689,7 +690,6 @@ func getLatestCliVersion(
 	}
 
 	var versions []string
-	versionsJson := strings.ReplaceAll(versionsOutput, "'", "\"")
 	err = json.Unmarshal([]byte(versionsJson), &versions)
 	if err != nil {
 		return "", fmt.Errorf("error parsing the CLI version list: %w", err)
