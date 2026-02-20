@@ -37,8 +37,8 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 
 	crdsVersion := m.Bootstrap.Firestartr.OperatorVersion
 
-	shaRegex := regexp.MustCompile(`^[0-9a-f]{7}$`)
-	if shaRegex.MatchString(crdsVersion) {
+	shortShaRegex := regexp.MustCompile(`^[0-9a-f]{7}$`)
+	if shortShaRegex.MatchString(crdsVersion) {
 		crdsVersion = "latest"
 	}
 
