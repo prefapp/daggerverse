@@ -685,14 +685,14 @@ func getLatestCliVersion(
 		Stdout(ctx)
 
 	if err != nil {
-		return "", fmt.Errorf("Error getting the latest CLI version: %w", err)
+		return "", fmt.Errorf("error getting the latest CLI version: %w", err)
 	}
 
 	var versions []string
 	versionsJson := strings.ReplaceAll(versionsOutput, "'", "\"")
 	err = json.Unmarshal([]byte(versionsJson), &versions)
 	if err != nil {
-		return "", fmt.Errorf("Error parsing the CLI version list: %w", err)
+		return "", fmt.Errorf("error parsing the CLI version list: %w", err)
 	}
 
 	filteredVersions, err := filterStringSlice(versions, `.+snapshot.+`)
