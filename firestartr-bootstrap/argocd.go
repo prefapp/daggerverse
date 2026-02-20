@@ -26,7 +26,6 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 	)
 
 	argoCDRepo, err := m.CloneRepo(
-
 		ctx,
 		fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
 		"state-argocd",
@@ -137,14 +136,14 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 	}
 
 	pathAppStateGithub := fmt.Sprintf(
-        "/apps/firestartr/%s/argo-firestartr-%s.%s.Application.yaml",
+		"/apps/firestartr/%s/argo-firestartr-%s.%s.Application.yaml",
 		m.Bootstrap.Customer,
 		"state-github",
 		m.Bootstrap.Org,
 	)
 
 	pathAppStateInfra := fmt.Sprintf(
-        "/apps/firestartr/%s/argo-firestartr-%s.%s.Application.yaml",
+		"/apps/firestartr/%s/argo-firestartr-%s.%s.Application.yaml",
 		m.Bootstrap.Customer,
 		"state-infra",
 		m.Bootstrap.Org,

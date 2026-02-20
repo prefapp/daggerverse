@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
+	"regexp"
 
 	"gopkg.in/yaml.v3"
 )
@@ -157,4 +158,23 @@ func featureNeedsVersionResolution(
 	featureVersion string,
 ) bool {
 	return featureVersion == "latest" || featureVersion == ""
+}
+
+func filterStringSlice(
+	slice []string,
+	regexPattern string,
+) ([]string, error) {
+	re, err := regexp.Compile(regexPattern)
+	if err != nil {
+		return nil, err
+	}
+
+	var filtered []string
+	for _, str := range slice {
+		if !re.MatchString(str) {
+			filtered = append(filtered, str)
+		}
+	}
+
+	return filtered, nil
 }
