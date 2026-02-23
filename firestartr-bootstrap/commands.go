@@ -34,46 +34,33 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 		return nil, err
 	}
 
-	// Even if <version>/index.yaml doesn't exist, curl will not return a
-	// non-zero exit code, so we have to check the content of the file to see
-	// if it contains a 404 error. If it does, we try to download the
-	// latest version of the CRDs.
-	ctn, err := dag.Container().
+	ctn := dag.Container().
 		From("alpine:latest").
 		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl", "helm"}).
 		WithExec([]string{
-			"curl",
-			fmt.Sprintf(
+			"curl", fmt.Sprintf(
 				"https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/crds/%s/index.yaml",
 				m.Bootstrap.Firestartr.OperatorVersion,
 			),
-			"-o",
-			"/tmp/crds.yaml",
-		}).
-		Sync(ctx)
+			"-w", "%{http_code}",
+			"-o", "/tmp/crds.yaml",
+			"-s",
+		})
 
+	stdOut, err := ctn.Stdout(ctx)
 	if err != nil {
-		errMsg := extractErrorMessage(err, "Failed to get CRDs for the specified operator version")
+		errMsg := extractErrorMessage(err, "Failed to create bridge container")
 		return nil, errors.New(errMsg)
 	}
 
-	fileContent, err := ctn.
-		Directory("/tmp").
-		File("crds.yaml").
-		Contents(ctx)
-
-	if err != nil {
-		errMsg := extractErrorMessage(err, "Failed to read curl output")
-		return nil, errors.New(errMsg)
-	}
-
-	if strings.Contains(fileContent, "404") {
+	if stdOut == "404" {
 		ctn, err = ctn.
 			WithExec([]string{
 				"curl",
 				"https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/crds/latest/index.yaml",
 				"-o",
 				"/tmp/crds.yaml",
+				"--fail",
 			}).
 			Sync(ctx)
 
@@ -84,6 +71,15 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 			)
 			return nil, errors.New(errMsg)
 		}
+	} else if stdOut != "200" {
+		errMsg := extractErrorMessage(
+			err,
+			fmt.Sprintf(
+				"Failed to get CRDs",
+				m.Bootstrap.Org,
+			),
+		)
+		return nil, errors.New(errMsg)
 	}
 
 	ctn, err = ctn.
