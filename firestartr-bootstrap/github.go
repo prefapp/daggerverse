@@ -697,7 +697,10 @@ func getLatestCliVersion(
 		return "", fmt.Errorf("error parsing the CLI version list: %w", err)
 	}
 
-	filteredVersions, err := filterStringSlice(versions, `.+snapshot.+`)
+	filteredVersions, err := excludeElementsFromSliceByPattern(
+		versions,
+		`.+snapshot.+`,
+	)
 	if err != nil {
 		return "", fmt.Errorf("error filtering the CLI version list: %w", err)
 	}

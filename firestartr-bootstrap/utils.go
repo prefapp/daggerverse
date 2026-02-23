@@ -160,7 +160,7 @@ func featureNeedsVersionResolution(
 	return featureVersion == "latest" || featureVersion == ""
 }
 
-func filterStringSlice(
+func excludeElementsFromSliceByPattern(
 	slice []string,
 	regexPattern string,
 ) ([]string, error) {
