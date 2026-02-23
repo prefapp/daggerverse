@@ -75,7 +75,7 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 		}
 	} else if statusCode != "200" {
 		return nil, fmt.Errorf(
-			"Error downloading CRDs: received non-success HTTP status code %s",
+			"error downloading CRDs: received non-success HTTP status code %s",
 			statusCode,
 		)
 	}
