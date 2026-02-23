@@ -74,10 +74,7 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 	} else if stdOut != "200" {
 		errMsg := extractErrorMessage(
 			err,
-			fmt.Sprintf(
-				"Failed to get CRDs",
-				m.Bootstrap.Org,
-			),
+			fmt.Sprintf("Failed to get CRDs"),
 		)
 		return nil, errors.New(errMsg)
 	}
