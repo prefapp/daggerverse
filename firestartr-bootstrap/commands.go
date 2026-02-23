@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (m *FirestartrBootstrap) CmdCreatePersistentVolume(
@@ -37,6 +38,7 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 	ctn := dag.Container().
 		From("alpine:latest").
 		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl", "helm"}).
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"curl", fmt.Sprintf(
 				"https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/crds/%s/index.yaml",

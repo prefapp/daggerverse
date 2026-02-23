@@ -574,6 +574,7 @@ func clonePrefappRepo(
 
 	ctr := dag.Container().
 		From("alpine/git:latest").
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec(gitArgs)
 
 	_, err := ctr.Stdout(ctx)
@@ -676,6 +677,7 @@ func getLatestCliVersion(
 ) (string, error) {
 	versionsJson, err := dag.Container().
 		From("node:20-alpine").
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"npm",
 			"view",
