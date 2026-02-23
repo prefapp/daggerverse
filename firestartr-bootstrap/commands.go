@@ -5,7 +5,6 @@ import (
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -35,32 +34,67 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 		return nil, err
 	}
 
-	crdsVersion := m.Bootstrap.Firestartr.OperatorVersion
-
-	shortShaRegex := regexp.MustCompile(`^[0-9a-f]{7}$`)
-	if shortShaRegex.MatchString(crdsVersion) {
-		crdsVersion = "latest"
-	}
-
+	// Even if <version>/index.yaml doesn't exist, curl will not return a
+	// non-zero exit code, so we have to check the content of the file to see
+	// if it contains a 404 error. If it does, we try to download the
+	// latest version of the CRDs.
 	ctn, err := dag.Container().
 		From("alpine:latest").
 		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl", "helm"}).
-		WithMountedDirectory("/root/.kube", kubeconfig).
-		WithWorkdir("/workspace").
-		WithServiceBinding("localhost", kindSvc).
-		WithExec([]string{
-			"kubectl", "config",
-			"set-cluster", fmt.Sprintf("kind-%s", kindClusterName), fmt.Sprintf("--server=https://localhost:%d", port)},
-		).
 		WithExec([]string{
 			"curl",
 			fmt.Sprintf(
 				"https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/crds/%s/index.yaml",
-				crdsVersion,
+				m.Bootstrap.Firestartr.OperatorVersion,
 			),
 			"-o",
 			"/tmp/crds.yaml",
 		}).
+		Sync(ctx)
+
+	if err != nil {
+		errMsg := extractErrorMessage(err, "Failed to get CRDs for the specified operator version")
+		return nil, errors.New(errMsg)
+	}
+
+	fileContent, err := ctn.
+		Directory("/tmp").
+		File("crds.yaml").
+		Contents(ctx)
+
+	if err != nil {
+		errMsg := extractErrorMessage(err, "Failed to read curl output")
+		return nil, errors.New(errMsg)
+	}
+
+	if strings.Contains(fileContent, "404") {
+		ctn, err = ctn.
+			WithExec([]string{
+				"curl",
+				"https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/crds/latest/index.yaml",
+				"-o",
+				"/tmp/crds.yaml",
+			}).
+			Sync(ctx)
+
+		if err != nil {
+			errMsg := extractErrorMessage(
+				err,
+				"Failed to download the CRDs manifest for the latest version",
+			)
+			return nil, errors.New(errMsg)
+		}
+	}
+
+	ctn, err = ctn.
+		WithMountedDirectory("/root/.kube", kubeconfig).
+		WithWorkdir("/workspace").
+		WithServiceBinding("localhost", kindSvc).
+		WithExec([]string{
+			"kubectl", "config", "set-cluster",
+			fmt.Sprintf("kind-%s", kindClusterName),
+			fmt.Sprintf("--server=https://localhost:%d", port)},
+		).
 		WithExec([]string{"kubectl", "apply", "-f", "/tmp/crds.yaml"}).
 		Sync(ctx)
 
