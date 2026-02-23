@@ -47,13 +47,13 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 			"-s",
 		})
 
-	stdOut, err := ctn.Stdout(ctx)
+	statusCode, err := ctn.Stdout(ctx)
 	if err != nil {
 		errMsg := extractErrorMessage(err, "Failed to create bridge container")
 		return nil, errors.New(errMsg)
 	}
 
-	if stdOut == "404" {
+	if statusCode == "404" {
 		ctn, err = ctn.
 			WithExec([]string{
 				"curl",
@@ -71,12 +71,11 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 			)
 			return nil, errors.New(errMsg)
 		}
-	} else if stdOut != "200" {
-		errMsg := extractErrorMessage(
-			err,
-			fmt.Sprintf("Failed to get CRDs"),
+	} else if statusCode != "200" {
+		return nil, fmt.Errorf(
+			"Error downloading CRDs: received non-success HTTP status code %s",
+			statusCode,
 		)
-		return nil, errors.New(errMsg)
 	}
 
 	ctn, err = ctn.
