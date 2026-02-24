@@ -441,6 +441,39 @@ func (m *FirestartrBootstrap) WorkflowRun(
 	return nil
 }
 
+func (m *FirestartrBootstrap) CheckIfDefaultGroupExists(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) error {
+	ctr, err := m.GhContainer(ctx, ghToken)
+	if err != nil {
+		return err
+	}
+
+	_, err = ctr.
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithExec([]string{
+			"gh", "api", fmt.Sprintf("/orgs/%s/teams/%s", m.GhOrg, m.Bootstrap.DefaultGroup),
+		}).
+		Sync(ctx)
+
+	switch err := err.(type) {
+	case nil:
+		return nil
+	case *dagger.ExecError:
+		errMsg := extractErrorMessage(
+			err,
+			fmt.Sprintf(
+				"Failed to check if %s group exists in the organization",
+				m.Bootstrap.DefaultGroup,
+			),
+		)
+		return errors.New(errMsg)
+	default:
+		return err
+	}
+}
+
 func (m *FirestartrBootstrap) CheckIfOrgAllGroupExists(
 	ctx context.Context,
 	ghToken *dagger.Secret,

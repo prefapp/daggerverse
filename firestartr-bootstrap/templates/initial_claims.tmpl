@@ -35,7 +35,7 @@ kind: SystemClaim
 version: "1.0"
 name: {{ $.DefaultSystemName }}
 domain: domain:{{ $.DefaultDomainName }}
-owner: group:{{ $.Org }}-all
+owner: group:{{ $.DefaultGroup }}
 description: "The default system of {{ $.Org }}"
 ---
 # The default domain for the organization
@@ -43,7 +43,7 @@ kind: DomainClaim
 version: "1.0"
 name: {{ $.DefaultDomainName }}
 description: "The default domain of {{ $.Org }}"
-owner: group:{{ $.Org }}-all
+owner: group:{{ $.DefaultGroup }}
 ---
 kind: SecretsClaim
 lifecycle: production

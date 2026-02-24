@@ -2,9 +2,9 @@
 PORT=-1  # Populated later by the script
 CREDENTIALS_FILE="./boot/CredentialsFile.yaml"
 BOOTSTRAP_FILE="./boot/BootstrapFile.yaml"
-# VOLUME_ID="<your volume cache id>"
+VOLUME_ID="${VOLUME_ID:-}"
+CLUSTER_NAME="${CLUSTER_NAME:-}"
 CREATE_CLUSTER=false
-CLUSTER_NAME=""
 AUTO=false
 LAST_EXIT_CODE=0
 COMMAND_WAIT_TIME=5
@@ -339,4 +339,3 @@ ACTION=$(prompt_or_auto "Delete kind cluster ${CLUSTER_NAME}?" "Deleting kind cl
 execute_step "$ACTION" kind delete cluster --name "${CLUSTER_NAME}"
 
 echo "✨ Bootstrap process completed successfully! ✨"
-

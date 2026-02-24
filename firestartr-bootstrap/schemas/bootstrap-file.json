@@ -46,6 +46,9 @@
       "defaultBranchStrategy": {
         "type": "string"
       },
+      "defaultGroup": {
+        "type": "string"
+      },
       "defaultFirestartrGroup": {
         "type": "string"
       },
@@ -102,11 +105,27 @@
             "required": [
               "providers"
             ]
+          },
+          "dotFirestartr": {
+            "type": "object",
+            "properties": {
+              "push": {
+                "type": "boolean"
+              },
+              "repo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "push",
+              "repo"
+            ]
           }
         },
         "required": [
           "claims",
-          "crs"
+          "crs",
+          "dotFirestartr"
         ]
       },
       "components": {
@@ -183,6 +202,7 @@
       "defaultDomainName",
       "defaultOrgPermissions",
       "defaultBranchStrategy",
-      "defaultFirestartrGroup"
+      "defaultFirestartrGroup",
+      "defaultGroup"
     ]
   }

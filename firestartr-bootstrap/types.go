@@ -35,18 +35,19 @@ type Bootstrap struct {
 	DefaultBranch                 string      `yaml:"defaultBranch"`
 	DefaultBranchStrategy         string      `yaml:"defaultBranchStrategy"`
 	DefaultOrgPermissions         string      `yaml:"defaultOrgPermissions"`
+	DefaultGroup                  string      `yaml:"defaultGroup"`
 	FinalSecretStoreName          string      `yaml:"finalSecretStoreName"`
 	WebhookUrl                    string      // Autocalculated
 	WebhookSecretRef              string      // Autocalculated
 	PrefappBotPatSecretRef        string      // Autocalculated
 	FirestartrCliVersionSecretRef string      // Autocalculated
 	HasFreePlan                   bool        // Autocalculated
-	BotName                       string      // Stored in Credentialsfile.yaml, but needed here for templating
 }
 
 type PushFiles struct {
-	Claims PushFilesRepo `yaml:"claims"`
-	Crs    Crs           `yaml:"crs"`
+	Claims        PushFilesRepo `yaml:"claims"`
+	Crs           Crs           `yaml:"crs"`
+	DotFirestartr PushFilesRepo `yaml:"dotFirestartr"`
 }
 
 type Crs struct {
@@ -69,8 +70,9 @@ type Firestartr struct {
 }
 
 type CredsFile struct {
-	CloudProvider CloudProvider `yaml:"cloudProvider"`
-	GithubApp     GithubApp     `yaml:"githubApp"`
+	CloudProvider     CloudProvider `yaml:"cloudProvider"`
+	GithubApp         GithubApp     `yaml:"github"`
+	GithubAppOperator GithubApp     //Autocalculated
 }
 
 type CloudProvider struct {
@@ -92,8 +94,7 @@ type ConfigProvider struct {
 
 type GithubApp struct {
 	ProviderConfigName string
-	Owner              string `yaml:"owner"`
-	BotName            string `yaml:"botName"`
+	Owner              string // Populated
 	PrefappBotPat      string `yaml:"prefappBotPat"`
 	OperatorPat        string `yaml:"operatorPat"`
 	Pem                string

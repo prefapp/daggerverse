@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
+	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v3"
 )
 
@@ -137,60 +139,91 @@ func (m *FirestartrBootstrap) ApplyFirestartrCrs(
 	crsDirectoryPath string,
 	crsToApplyList []string,
 ) (*dagger.Container, error) {
+	var mu sync.Mutex
 
 	for _, kind := range crsToApplyList {
-		entries, err := kindContainer.Directory(crsDirectoryPath).Glob(ctx, kind)
+		g, egCtx := errgroup.WithContext(ctx)
+
+		entries, err := kindContainer.Directory(crsDirectoryPath).Glob(egCtx, kind)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to get glob entries: %s", err)
 		}
 
 		for _, entry := range entries {
-			kindContainer, err = m.ApplyCrAndWaitForProvisioned(
-				ctx, kindContainer,
-				fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
-				kind != "ExternalSecret.*",
-			)
-			if err != nil {
-				return nil, err
-			}
+			entry := entry
+			err := err
+			g.Go(func() error {
+				err = m.applyCrAndWaitForProvisioned(
+					egCtx, kindContainer,
+					fmt.Sprintf("%s/%s", crsDirectoryPath, entry),
+					kind != "ExternalSecret.*",
+					&mu,
+				)
+
+				return err
+			})
+		}
+
+		err = g.Wait()
+		if err != nil {
+			return nil, fmt.Errorf("Failed to apply CRs of kind %s: %w", kind, err)
 		}
 	}
 
-	// let's patch the all group with the bootstrapped annotation
-	err := patchCR(
-		ctx,
-		kindContainer,
-		"githubgroup",
-		fmt.Sprintf("%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669", m.GhOrg),
-		"default",
-		"firestartr.dev/bootstrapped",
-		"true",
-	)
+	allGroupGetExitCode, err := kindContainer.
+		WithExec([]string{
+			"kubectl",
+			"get",
+			"githubgroup",
+			fmt.Sprintf("%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669", m.GhOrg),
+		}, dagger.ContainerWithExecOpts{
+			RedirectStdout: "/tmp/stdout",
+			RedirectStderr: "/tmp/stderr",
+			Expect:         "ANY",
+		}).
+		ExitCode(ctx)
+
 	if err != nil {
 		return nil, err
+	}
+
+	if allGroupGetExitCode == 0 {
+		// let's patch the all group with the bootstrapped annotation
+		err := patchCR(
+			ctx,
+			kindContainer,
+			"githubgroup",
+			fmt.Sprintf("%s-all-c8bc0fd3-78e1-42e0-8f5c-6b0bb13bb669", m.GhOrg),
+			"default",
+			"firestartr.dev/bootstrapped",
+			"true",
+		)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return kindContainer, nil
 }
 
-func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
+func (m *FirestartrBootstrap) applyCrAndWaitForProvisioned(
 	ctx context.Context,
 	kindContainer *dagger.Container,
 	entry string,
 	waitForProvisioned bool,
-) (*dagger.Container, error) {
-
+	mu *sync.Mutex,
+) error {
 	crFile := kindContainer.File(entry)
 
 	crContent, err := crFile.Contents(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get file contents: %s", err)
+		return fmt.Errorf("Failed to get file contents: %s", err)
 	}
 
 	cr := &Cr{}
 	err = yaml.Unmarshal([]byte(crContent), cr)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to unmarshal CR: %s", err)
+		return fmt.Errorf("Failed to unmarshal CR: %s", err)
 	}
 
 	kindContainer = kindContainer.
@@ -204,7 +237,7 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 	if waitForProvisioned {
 		singularKind, err := getSingularByKind(cr.Kind)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		kindContainer = kindContainer.
@@ -219,13 +252,15 @@ func (m *FirestartrBootstrap) ApplyCrAndWaitForProvisioned(
 
 	kindContainer, err = kindContainer.Sync(ctx)
 
+	mu.Lock()
 	if err != nil {
 		m.FailedCrs = append(m.FailedCrs, cr)
 	} else {
 		m.ProvisionedCrs = append(m.ProvisionedCrs, cr)
 	}
+	mu.Unlock()
 
-	return kindContainer, nil
+	return nil
 }
 
 func patchCR(

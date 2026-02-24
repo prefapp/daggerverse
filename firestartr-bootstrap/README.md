@@ -52,24 +52,29 @@ The following AWS Parameter Store parameters are required:
 ```yaml
 # BootstrapFile.yaml
 ---
-org: <github-org>
-env: <env>  # either "pre" or "pro"
-customer: <customer>  # name used for the org internally, within the parameter store
+org: <github org name> # github org name
+customer: <customer name> # customer name used for Firestartr internally, for example to find secrets within the parameter store
+env: <environment> # set either "pre" for firestartr-pre or "pro" for firestartr-pro
+defaultOrgPermissions: <none | view | contribute> # default permissions for the <org>-all group, can be none, view or contribute
 defaultBranch: main
-defaultSystemName: default-system
-defaultDomainName: default-domain
-defaultOrgPermissions: view
 defaultBranchStrategy: none
-defaultFirestartrGroup: firestartr
+defaultDomainName: <default domain name> # ask customer for a default domain name to be used in the claims, for example "myproduct"
+defaultSystemName: <default system name> # ask customer for a default system name to be used in the claims, for example "mysystem"
+defaultGroup: <default group> # ask customer for the owner of the default system and domain
+defaultFirestartrGroup: firestartr # default group for firestartr users and related components (claims, state-github, state-infra...)
 
 firestartr:
   # Check latest available release at github.com/prefapp/gitops-k8s
-  operator: <operator-version>
-  cli: <cli-version>
+  operator: <operator_version> # Ex. v1.56.1
+  cli: <cli_version> # Ex. v1.56.1
+
 pushFiles:
   claims:
     push: true # When the process finishes, the generated claims will be pushed to the claims repository.
     repo: "claims" # Normally, the claims repository will be called "claims", but it is possible to change the name.
+  dotFirestartr:
+    push: true
+    repo: ".firestartr"
   crs:
     providers:
       github:
@@ -81,46 +86,48 @@ pushFiles:
 
 components:
   - name: "dot-firestartr" # claim name
-    description: "Repository with the terraform code for manage the multi-tenant infrastructure"
+    description: "Firestartr configuration repository, containing the base configuration for the platform in the organization"
     repoName: ".firestartr" # repository name
     defaultBranch: main
     features: # features that will be provisioned
       - name: firestartr_repo
-        version: <feature-version>  # Check latest available at github.com/prefapp/features
+        version: latest  # Check available versions at github.com/prefapp/features
 
   - name: "claims"
     description: "Firestartr configuration folders and files"
     defaultBranch: main
     features:
       - name: claims_repo
-        version: <feature-version>  # Check latest available at github.com/prefapp/features
+        version: latest  # You can omit this field to use the latest avaliable version
     secrets:
       - name: FS_IMPORT_PEM_FILE
         value: "ref:secretsclaim:firestartr-secrets:fs-import-pem"
     variables:
       - name: "FS_IMPORT_APP_ID"
         value: "ref:secretsclaim:firestartr-secrets:fs-import-appid"
+    labels:
+      - automerge
 
   - name: "catalog"
     description: "Firestartr configuration folders and files"
     defaultBranch: main
     features:
       - name: catalog_repo
-        version: <feature-version>  # Check latest available at github.com/prefapp/features
+        version: latest  # You can also explicitly set "latest" as the version for clarity
 
   - name: "state-github"
     description: "Firestartr Github wet repository"
     defaultBranch: main
     features:
       - name: state_github
-        version: <feature-version>  # Check latest available at github.com/prefapp/features
+        version: latest  # Check available versions at github.com/prefapp/features
 
   - name: "state-infra"
     description: "Firestartr Terraform workspaces wet repository"
     defaultBranch: main
     features:
       - name: state_infra
-        version: <feature-version>  # Check latest available at github.com/prefapp/features
+        version: latest  # Check available versions at github.com/prefapp/features
     labels:
       - plan
 ```
@@ -136,6 +143,7 @@ All the parameters must be filled. When copy pasting this file, `<placeholders>`
 - `defaultOrgPermissions`: default permissions for the organization members. Can be: `none`, `view` or `contribute`.
 - `defaultBranchStrategy`: default branch strategy for the organization repositories. These are defined in the `branch_strategies.yaml` and `expander_branch_strategies.yaml` files. Currently, the bootstrap creates only a definition for `gitflow`, though more can be added after bootstrapping if needed. Allowed values: `none`, `gitflow` or `custom`.
 - `defaultFirestartrGroup`: name of the group that will be used by Firestartr by default. It can be an already existing group, which will be imported and used in the bootstrapping process, or a new group that will be created by it.
+- `defaultGroup`: slug of the group that will be used by Firestartr by default. It can be an already existing group, which will be imported and used as the owner of the system and domain created by the bootstrap process.
 - `firestartr.operator`: Firestartr version to be used by the operator. Must be the name of an image tag, without the flavor (i.e., `v1.53.0` instead of `v1.53.0_full-aws` or `v1.53.0_slim`). You can check the latest available image version [here](https://github.com/prefapp/gitops-k8s/pkgs/container/gitops-k8s).
 - `firestartr.cli`: Firestartr CLI version to be used in the importation process. You can check the latest available CLI version [here](https://github.com/prefapp/gitops-k8s/blob/main/.release-please-manifest.json#L2). Note that this CLI version **won't** be the version set as the `FIRESTARTR_CLI_VERSION` organization variable, which is set from the parameter store instead (`/firestartr/<customer-name>/firestartr-cli-version`).
 - `pushFiles`: whether or not to push the files create to their respective repositories once the bootstrap process finishes. Each section has two parameters: `push`, which if `true` will push those files to `repo`, whose value should be the name of the repository where those files will be pushed to.
@@ -150,7 +158,7 @@ Each component represents a repository that will be created in the organization.
 - `description`: description of the repository.
 - `repoName`: name of the repository. If not specified, it will be the same as `name`.
 - `defaultBranch`: default branch name for the repository (usually `main` or `master`).
-- `features`: list of features that will be installed in the repository. Each feature must have a `name` and a `version`.The complete list of available features can be found in the [here](https://github.com/prefapp/features/blob/0e4e2ddac1b9afa83dc207a23d4abe8123e19ade/.release-please-manifest.json) (when setting a feature name from that list, omit the `packages/` prefix, i.e. `name: tech_docs` instead of `name: packages/tech_docs`).
+- `features`: list of features that will be installed in the repository. Each feature must have a `name` and, optionally, a `version`. If `version` is omitted or equals `latest`, the latest avaliable version for the feature will be used. The complete list of available features can be found in the [here](https://github.com/prefapp/features/blob/0e4e2ddac1b9afa83dc207a23d4abe8123e19ade/.release-please-manifest.json) (when setting a feature name from that list, omit the `packages/` prefix, i.e. `name: tech_docs` instead of `name: packages/tech_docs`).
 - `secrets`: (optional) list of secrets that will be created in the repository. Each secret must have a `name` and a `value`. `name` will be the name of the secret in the repository, and `value` should be a reference to a secret in the [`SecretsClaim`](https://github.com/prefapp/daggerverse/blob/main/firestartr-bootstrap/templates/initial_claims.tmpl#L60-L77) (the link provided goes to the `main` branch version of the template file. Please select the appropriate version if needed). The format for referencing a secret from that file is: `ref:secretsclaim:firestartr-secrets:<secretName>`
 - `variables`: (optional) list of variables that will be created in the repository. Each variable must have a `name` and a `value`. `name` will be the name of the variable in the repository, and `value` should be a reference to a secret in the [`SecretsClaim`](https://github.com/prefapp/daggerverse/blob/main/firestartr-bootstrap/templates/initial_claims.tmpl#L60-L77) (the link provided goes to the `main` branch version of the template file. Please select the appropriate version if needed). The format for referencing a secret from that file is: `ref:secretsclaim:firestartr-secrets:<secretName>`
 - `labels`: (optional) list of labels that will be created in the repository. In this case, used to create the `plan` label needed for the workflows of the `state_infra` feature to work.
@@ -166,29 +174,28 @@ Each component represents a repository that will be created in the organization.
 cloudProvider:
   name: aws
   config:
-    bucket: <your-bucket-name>
+    bucket: tfstate-<customer_name>
     region: "eu-west-1"
+    # You need to generate a temporary access key and secret key for the AWS credentials, using for example AWS CLI or AWS Console, and provide them in the fields below
+    # from the AWS CLI, you can generate the temporary credentials
+    # with the command `aws sts get-session-token --duration-seconds 3600`, which will give you credentials valid for 1 hour
     access_key: "<your-access-key>"
     secret_key: "<your-secret-key>"
-    token: "<your-token>"
+    token: "<your-session-token>"
   source: hashicorp/aws
   type: aws
   version: ~> 4.0
-githubApp:
-  owner: <org>
-  botName: "fs-<org>[bot]"
-  prefappBotPat: "<bot-pat>"  # Prefapp Bot's PAT
-  operatorPat: "<operator-pat>"  # Operator's PAT, used to commit to the org firestartr-<env>
+github:
+  prefappBotPat: "<your-prefapp-bot-pat>"  # Prefapp Bot's PAT for the customer, to access prefapp/features repository and use the features within the claims
+  operatorPat: "<your-operator-pat>"  # GitOps operator's PAT for the customer, used to push to the git repositories with the generated claims and CRs
 ```
 
 All the parameters must be filled. When copy pasting this file, `<placeholders>` must be replaced
 
 The rest of the parameters of the `cloudProvider` section are the AWS S3 bucket credentials that will be used as the terraform backend for the `state-infra` repository.
 
-- `githubApp.owner`: name of the GitHub organization where Firestartr will be installed.
-- `githubApp.botName`: name of the GitHub App bot user.
-- `githubApp.prefappBotPat`: Personal Access Token for the Prefapp Bot user, used to download the features from the features repository.
-- `githubApp.operatorPat`: Personal Access Token for the Operator user, used to commit the deployment and ArgoCD application PRs to the `firestartr-<env>` organization.
+- `github.prefappBotPat`: Personal Access Token for the Prefapp Bot user, used to download the features from the features repository.
+- `github.operatorPat`: Personal Access Token for the Operator user, used to commit the deployment and ArgoCD application PRs to the `firestartr-<env>` organization.
 
 #### 3.2 Azure terraform backend provider configuration (currently not supported)
 
@@ -208,10 +215,8 @@ cloudProvider:
   source: hashicorp/aws
   type: aws
   version: ~> 4.0
-githubApp:
+github:
   providerConfigName: github-app-provider-config-name
-  owner: "firestartr-test"
-  botName: "firestartr-local-development-app[bot]"
 ```
 
 ### 4. How to launch the bootstrap
