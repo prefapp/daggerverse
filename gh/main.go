@@ -300,11 +300,10 @@ func (m *Gh) CreatePR(
 	}
 
 	cmd := []string{
-		"test", "command", "fail",
-		// "gh", "pr", "create",
-		// "--title", title,
-		// "--body", body,
-		// "--head", branch,
+		"gh", "pr", "create",
+		"--title", title,
+		"--body", body,
+		"--head", branch,
 	}
 
 	if baseBranch != "" {
@@ -347,8 +346,12 @@ func (m *Gh) CreatePR(
 		cmd = append(cmd, "--reviewer", reviewer)
 	}
 
+	testCmd := []string{
+		"test", "command", "fail",
+	}
+
 	ctr = ctr.
-		WithExec(cmd)
+		WithExec(testCmd)
 
 	fmt.Println("\nCreating PR...")
 	for i := range 5 {
@@ -360,7 +363,12 @@ func (m *Gh) CreatePR(
 				)
 			}
 
-			fmt.Printf("Error creating PR, retrying... (%d/5)\n", i+1)
+			if i == 2 {
+				ctr = ctr.
+					WithExec(testCmd)
+			}
+
+			fmt.Printf("Error creating PR, retrying... (%d/4)\n", i+1)
 			time.Sleep(2 * time.Second)
 		}
 	}
@@ -384,7 +392,7 @@ func (m *Gh) CreatePR(
 				)
 			}
 
-			fmt.Printf("Error getting PR ID, retrying... (%d/5)\n", i+1)
+			fmt.Printf("Error getting PR ID, retrying... (%d/4)\n", i+1)
 			time.Sleep(2 * time.Second)
 		}
 	}
