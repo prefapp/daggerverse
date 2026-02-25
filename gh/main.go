@@ -346,12 +346,8 @@ func (m *Gh) CreatePR(
 		cmd = append(cmd, "--reviewer", reviewer)
 	}
 
-	testCmd := []string{
-		"test", "command", "fail",
-	}
-
 	ctr = ctr.
-		WithExec(testCmd)
+		WithExec(cmd)
 
 	fmt.Println("\nCreating PR...")
 	for i := range 5 {
@@ -361,11 +357,6 @@ func (m *Gh) CreatePR(
 				return "", errors.New(
 					extractErrorMessage(err),
 				)
-			}
-
-			if i == 2 {
-				ctr = ctr.
-					WithExec(testCmd)
 			}
 
 			fmt.Printf("Error creating PR, retrying... (%d/4)\n", i+1)
