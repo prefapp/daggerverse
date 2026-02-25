@@ -55,6 +55,7 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 		return nil, errors.New(errMsg)
 	}
 
+	statusCode = strings.TrimSpace(statusCode)
 	if statusCode == "404" {
 		ctn, err = ctn.
 			WithExec([]string{
