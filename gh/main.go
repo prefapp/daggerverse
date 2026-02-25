@@ -349,6 +349,7 @@ func (m *Gh) CreatePR(
 	ctr = ctr.
 		WithExec(cmd)
 
+	fmt.Println("Creating PR...")
 	for i := range 5 {
 		_, err = ctr.Sync(ctx)
 		if err != nil {
@@ -357,10 +358,11 @@ func (m *Gh) CreatePR(
 					extractErrorMessage(err),
 				)
 			}
+
+			fmt.Printf("Error creating PR, retrying... (%d/5)\n", i+1)
+			time.Sleep(2 * time.Second)
 		}
 	}
-
-	// time.Sleep(5 * time.Second)
 
 	var prId string
 	for i := range 5 {
@@ -379,10 +381,11 @@ func (m *Gh) CreatePR(
 					extractErrorMessage(err),
 				)
 			}
+
+			fmt.Printf("Error creating PR, retrying... (%d/5)\n", i+1)
+			time.Sleep(2 * time.Second)
 		}
 	}
-
-	// time.Sleep(5 * time.Second)
 
 	prLink, err := ctr.
 		WithExec([]string{
