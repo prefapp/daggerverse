@@ -365,6 +365,7 @@ func (m *Gh) CreatePR(
 	}
 
 	var prId string
+	fmt.Println("Getting PR ID...")
 	for i := range 5 {
 		prId, err = ctr.
 			WithExec([]string{
@@ -382,7 +383,7 @@ func (m *Gh) CreatePR(
 				)
 			}
 
-			fmt.Printf("Error creating PR, retrying... (%d/5)\n", i+1)
+			fmt.Printf("Error getting PR ID, retrying... (%d/5)\n", i+1)
 			time.Sleep(2 * time.Second)
 		}
 	}
