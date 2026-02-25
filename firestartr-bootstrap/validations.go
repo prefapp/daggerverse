@@ -110,7 +110,12 @@ func validateDocumentSchema(document string, schema string) error {
 func (m *FirestartrBootstrap) ValidatePrefappBotPat(ctx context.Context) error {
 	destinationPath := "/tmp/repo"
 
-	gitContainer, err := m.CloneFeaturesRepo(ctx, destinationPath)
+	gitContainer, err := clonePrefappRepo(
+		ctx,
+		destinationPath,
+		"features",
+		m.Creds.GithubApp.PrefappBotPat,
+	)
 	if err != nil {
 		return err
 	}
@@ -185,7 +190,6 @@ func validateExistenceOfImage(
 func (m *FirestartrBootstrap) ValidateCliExistence(
 	ctx context.Context,
 ) error {
-
 	moduleName := fmt.Sprintf("@firestartr/cli@%s", m.Bootstrap.Firestartr.CliVersion)
 
 	npmContainer := dag.Container().
