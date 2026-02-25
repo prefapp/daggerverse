@@ -366,7 +366,14 @@ func (m *Gh) CreatePR(
 		}
 
 		fmt.Printf("Error creating PR, retrying... (%d/%d)\n", i+1, MaxRetries-1)
-		time.Sleep(WaitTimeBetweenRetries)
+
+		timer := time.NewTimer(WaitTimeBetweenRetries)
+		select {
+		case <-timer.C:
+		case <-ctx.Done():
+			timer.Stop()
+			return "", ctx.Err()
+		}
 	}
 
 	var prId string
@@ -392,7 +399,14 @@ func (m *Gh) CreatePR(
 		}
 
 		fmt.Printf("Error getting PR ID, retrying... (%d/%d)\n", i+1, MaxRetries-1)
-		time.Sleep(WaitTimeBetweenRetries)
+
+		timer := time.NewTimer(WaitTimeBetweenRetries)
+		select {
+		case <-timer.C:
+		case <-ctx.Done():
+			timer.Stop()
+			return "", ctx.Err()
+		}
 	}
 
 	prLink, err := ctr.
