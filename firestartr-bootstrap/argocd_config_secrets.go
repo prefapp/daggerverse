@@ -19,7 +19,6 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 	)
 
 	argoCDRepo, err := m.CloneRepo(
-
 		ctx,
 		fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
 		"state-sys-services",

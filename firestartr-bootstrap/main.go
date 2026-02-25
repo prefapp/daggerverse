@@ -133,6 +133,24 @@ func New(
 		return nil, err
 	}
 
+	// calculate operator and CLI versions if necessary (when equal to "latest")
+	if bootstrap.Firestartr.OperatorVersion == "latest" {
+		opVer, err := getLatestOperatorVersion(ctx, creds.GithubApp.PrefappBotPat)
+		if err != nil {
+			return nil, err
+		}
+
+		bootstrap.Firestartr.OperatorVersion = fmt.Sprintf("v%s", opVer)
+	}
+	if bootstrap.Firestartr.CliVersion == "latest" {
+		cliVer, err := getLatestCliVersion(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		bootstrap.Firestartr.CliVersion = cliVer
+	}
+
 	ghOrgLowerCase := strings.ToLower(bootstrap.Org)
 
 	return &FirestartrBootstrap{
