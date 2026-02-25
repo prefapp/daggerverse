@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -388,7 +389,10 @@ func (m *Gh) CreatePR(
 			}).
 			Stdout(ctx)
 
-		if err == nil && prId != "" {
+		// Check if the prId is a valid integer (which means we got the PR ID successfully). If not, we retry.
+		_, convErr := strconv.Atoi(strings.TrimSpace(prId))
+
+		if err == nil && convErr == nil {
 			break
 		}
 
