@@ -300,10 +300,11 @@ func (m *Gh) CreatePR(
 	}
 
 	cmd := []string{
-		"gh", "pr", "create",
-		"--title", title,
-		"--body", body,
-		"--head", branch,
+		"test", "command", "fail",
+		// "gh", "pr", "create",
+		// "--title", title,
+		// "--body", body,
+		// "--head", branch,
 	}
 
 	if baseBranch != "" {
@@ -349,7 +350,7 @@ func (m *Gh) CreatePR(
 	ctr = ctr.
 		WithExec(cmd)
 
-	fmt.Println("Creating PR...")
+	fmt.Println("\nCreating PR...")
 	for i := range 5 {
 		_, err = ctr.Sync(ctx)
 		if err != nil {
