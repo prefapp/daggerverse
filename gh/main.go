@@ -25,6 +25,8 @@ type Gh struct {
 }
 
 var ErrorNoNewCommits error = errors.New("no new commits created")
+var MaxRetries int = 5
+var WaitTimeBetweenRetries time.Duration = 2 * time.Second
 
 // Exit code 10 is used to indicate the 'no new commits' scenario.
 // This value is chosen to distinguish it from standard exit codes (e.g., 0 for success, 1 for general errors).
@@ -350,26 +352,26 @@ func (m *Gh) CreatePR(
 		WithExec(cmd)
 
 	fmt.Println("\nCreating PR...")
-	for i := range 5 {
+	for i := range MaxRetries {
 		_, err = ctr.Sync(ctx)
 
 		if err == nil {
 			break
 		}
 
-		if i == 4 {
+		if i == MaxRetries-1 {
 			return "", errors.New(
 				extractErrorMessage(err),
 			)
 		}
 
-		fmt.Printf("Error creating PR, retrying... (%d/4)\n", i+1)
-		time.Sleep(2 * time.Second)
+		fmt.Printf("Error creating PR, retrying... (%d/%d)\n", i+1, MaxRetries-1)
+		time.Sleep(WaitTimeBetweenRetries)
 	}
 
 	var prId string
 	fmt.Println("Getting PR ID...")
-	for i := range 5 {
+	for i := range MaxRetries {
 		prId, err = ctr.
 			WithExec([]string{
 				"gh", "pr", "list",
@@ -383,14 +385,14 @@ func (m *Gh) CreatePR(
 			break
 		}
 
-		if i == 4 {
+		if i == MaxRetries-1 {
 			return "", errors.New(
 				extractErrorMessage(err),
 			)
 		}
 
-		fmt.Printf("Error getting PR ID, retrying... (%d/4)\n", i+1)
-		time.Sleep(2 * time.Second)
+		fmt.Printf("Error getting PR ID, retrying... (%d/%d)\n", i+1, MaxRetries-1)
+		time.Sleep(WaitTimeBetweenRetries)
 	}
 
 	prLink, err := ctr.
