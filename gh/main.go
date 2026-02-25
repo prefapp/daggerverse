@@ -604,8 +604,6 @@ func (m *Gh) CommitAndCreatePR(
 
 	}
 
-	time.Sleep(5 * time.Second)
-
 	return m.CreatePR(
 		ctx, prTitle, prBody, branchName, repoDir, baseBranch,
 		labels, labelColors, labelDescriptions, reviewers,
