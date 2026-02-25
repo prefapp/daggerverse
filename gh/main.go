@@ -349,31 +349,40 @@ func (m *Gh) CreatePR(
 	ctr = ctr.
 		WithExec(cmd)
 
-	_, err = ctr.Sync(ctx)
-	if err != nil {
-		return "", errors.New(
-			extractErrorMessage(err),
-		)
+	for i := range 5 {
+		_, err = ctr.Sync(ctx)
+		if err != nil {
+			if i == 4 {
+				return "", errors.New(
+					extractErrorMessage(err),
+				)
+			}
+		}
 	}
 
-	time.Sleep(5 * time.Second)
+	// time.Sleep(5 * time.Second)
 
-	prId, err := ctr.
-		WithExec([]string{
-			"gh", "pr", "list",
-			"--head", branch,
-			"--json", "number",
-			"--jq", ".[0].number",
-		}).
-		Stdout(ctx)
+	var prId string
+	for i := range 5 {
+		prId, err = ctr.
+			WithExec([]string{
+				"gh", "pr", "list",
+				"--head", branch,
+				"--json", "number",
+				"--jq", ".[0].number",
+			}).
+			Stdout(ctx)
 
-	if err != nil {
-		return "", errors.New(
-			extractErrorMessage(err),
-		)
+		if err != nil {
+			if i == 4 {
+				return "", errors.New(
+					extractErrorMessage(err),
+				)
+			}
+		}
 	}
 
-	time.Sleep(5 * time.Second)
+	// time.Sleep(5 * time.Second)
 
 	prLink, err := ctr.
 		WithExec([]string{
