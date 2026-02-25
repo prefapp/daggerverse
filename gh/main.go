@@ -356,6 +356,8 @@ func (m *Gh) CreatePR(
 		)
 	}
 
+	time.Sleep(5 * time.Second)
+
 	prId, err := ctr.
 		WithExec([]string{
 			"gh", "pr", "list",
@@ -370,6 +372,8 @@ func (m *Gh) CreatePR(
 			extractErrorMessage(err),
 		)
 	}
+
+	time.Sleep(5 * time.Second)
 
 	prLink, err := ctr.
 		WithExec([]string{
@@ -586,6 +590,8 @@ func (m *Gh) CommitAndCreatePR(
 		)
 
 	}
+
+	time.Sleep(5 * time.Second)
 
 	return m.CreatePR(
 		ctx, prTitle, prBody, branchName, repoDir, baseBranch,
