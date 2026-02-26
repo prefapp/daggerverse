@@ -394,10 +394,12 @@ func (m *Gh) CreatePR(
 			break
 		}
 
+		errToExtract := lo.Ternary(err != nil, err, convErr)
+
 		retryErr := retry(
 			ctx,
 			i == MaxRetries-1,
-			errors.New(extractErrorMessage(err)),
+			errors.New(extractErrorMessage(errToExtract)),
 			fmt.Sprintf("Error getting PR ID, retrying... (%d/%d)", i+1, MaxRetries-1),
 		)
 
