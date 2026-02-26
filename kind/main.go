@@ -84,7 +84,7 @@ func New(
 	}
 
 	if kind == "" {
-		kind = "v0.29.0"
+		kind = "v0.31.0"
 	}
 
 	container := dag.Container().
