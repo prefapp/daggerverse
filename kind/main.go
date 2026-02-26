@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/kind/internal/dagger"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +19,17 @@ type Kind struct {
 	Container    *dagger.Container
 	ClusterName  string
 	ConfigFile   *dagger.File
+}
+
+func supportedK8sVersions() []string {
+	versions := make([]string, 0, len(K8sVersions))
+	for v := range K8sVersions {
+		versions = append(versions, string(v))
+	}
+
+	sort.Strings(versions)
+
+	return versions
 }
 
 func New(
@@ -124,7 +136,16 @@ func New(
 	if kindSha != "" {
 		createCluster = append(createCluster, "--image", kindSha)
 	} else if version != "" {
-		createCluster = append(createCluster, "--image", K8sVersions[version])
+		image, ok := K8sVersions[version]
+		if !ok {
+			panic(fmt.Sprintf(
+				"Invalid Kubernetes version %q. Supported versions: %s",
+				version,
+				strings.Join(supportedK8sVersions(), ", "),
+			))
+		}
+
+		createCluster = append(createCluster, "--image", image)
 	}
 
 	container, err = container.
