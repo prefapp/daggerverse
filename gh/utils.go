@@ -43,6 +43,7 @@ func retry(
 	timer := time.NewTimer(WaitTimeBetweenRetries)
 	select {
 	case <-timer.C:
+		timer.Stop()
 	case <-ctx.Done():
 		timer.Stop()
 		return ctx.Err()
