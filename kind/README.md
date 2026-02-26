@@ -30,7 +30,7 @@ kind := dag.Kind(
 
 - **dockerSocket** (required): A Dagger socket for Docker (e.g., `/var/run/docker.sock`).
 - **kindSvc** (required): A Dagger service with a TCP endpoint (e.g., `tcp://127.0.0.1:3000`) for the Kind cluster's API server.
-- **version** (optional): The Kubernetes version as a `Version` enum value (e.g., `v1_31`). Must match one of the module's supported Kind images. Defaults to Kind's default image if not specified.
+- **version** (optional): The Kubernetes version as a `Version` enum value (e.g., `v1_31`). Must match one of the module's supported Kind images. Older string formats (e.g., `v1.30` / `vx.y`) are no longer supported. Defaults to Kind's default image if not specified.
 - **clusterName** (optional): The name of the Kind cluster. Defaults to `dagger-kubernetes-cluster`.
 
 ### Methods
