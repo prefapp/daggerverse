@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gh/internal/dagger"
+	"log"
 	"strings"
 	"time"
 )
@@ -38,7 +39,7 @@ func retry(
 		return errorToReturn
 	}
 
-	fmt.Println(msg)
+	log.Println(msg)
 
 	timer := time.NewTimer(WaitTimeBetweenRetries)
 	select {

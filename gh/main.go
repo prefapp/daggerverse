@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -149,8 +150,8 @@ func (m *Gh) Container(
 		)
 
 		if currentVersion != version {
-			fmt.Printf(
-				"WARNING: local gh binary version and specified version differ. Local gh version: %s, specified version: %s",
+			log.Printf(
+				"WARNING: local gh binary version and specified version differ. Local gh version: %s, specified version: %s\n",
 				currentVersion, version,
 			)
 		}
@@ -351,7 +352,7 @@ func (m *Gh) CreatePR(
 	ctr = ctr.
 		WithExec(cmd)
 
-	fmt.Println("\nCreating PR...")
+	log.Println("Creating PR...")
 	for i := range MaxRetries {
 		_, err = ctr.Sync(ctx)
 
@@ -372,7 +373,7 @@ func (m *Gh) CreatePR(
 	}
 
 	var prId string
-	fmt.Println("Getting PR ID...")
+	log.Println("Getting PR ID...")
 	for i := range MaxRetries {
 		prId, err = ctr.
 			WithExec([]string{
