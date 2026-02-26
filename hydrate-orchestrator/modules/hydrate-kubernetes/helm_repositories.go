@@ -66,6 +66,14 @@ func (m *HydrateKubernetes) BuildHelmRepositoriesFile(
 
 	var hRepo HelmRepo
 
+	// Set OCI disabled by default
+	ociEnabled := false
+	if envYamlStruct.Oci != nil {
+
+		ociEnabled = *envYamlStruct.Oci
+
+	}
+
 	if envYamlStruct.Registry != "" {
 
 		hRepo = HelmRepo{
@@ -73,6 +81,8 @@ func (m *HydrateKubernetes) BuildHelmRepositoriesFile(
 			Name: repositoryName,
 
 			Url: envYamlStruct.Registry,
+
+			Oci: ociEnabled,
 		}
 
 		helmRepos = append(helmRepos, hRepo)
