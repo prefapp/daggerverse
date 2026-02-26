@@ -27,7 +27,6 @@ type Gh struct {
 
 var ErrorNoNewCommits error = errors.New("no new commits created")
 var MaxRetries int = 5
-var WaitTimeBetweenRetries time.Duration = 2 * time.Second
 
 // Exit code 10 is used to indicate the 'no new commits' scenario.
 // This value is chosen to distinguish it from standard exit codes (e.g., 0 for success, 1 for general errors).
@@ -360,20 +359,15 @@ func (m *Gh) CreatePR(
 			break
 		}
 
-		if i == MaxRetries-1 {
-			return "", errors.New(
-				extractErrorMessage(err),
-			)
-		}
+		err = retry(
+			ctx,
+			i == MaxRetries-1,
+			errors.New(extractErrorMessage(err)),
+			fmt.Sprintf("Error creating PR, retrying... (%d/%d)\n", i+1, MaxRetries-1),
+		)
 
-		fmt.Printf("Error creating PR, retrying... (%d/%d)\n", i+1, MaxRetries-1)
-
-		timer := time.NewTimer(WaitTimeBetweenRetries)
-		select {
-		case <-timer.C:
-		case <-ctx.Done():
-			timer.Stop()
-			return "", ctx.Err()
+		if err != nil {
+			return "", err
 		}
 	}
 
@@ -396,20 +390,15 @@ func (m *Gh) CreatePR(
 			break
 		}
 
-		if i == MaxRetries-1 {
-			return "", errors.New(
-				extractErrorMessage(err),
-			)
-		}
+		err = retry(
+			ctx,
+			i == MaxRetries-1,
+			errors.New(extractErrorMessage(err)),
+			fmt.Sprintf("Error getting PR ID, retrying... (%d/%d)", i+1, MaxRetries-1),
+		)
 
-		fmt.Printf("Error getting PR ID, retrying... (%d/%d)\n", i+1, MaxRetries-1)
-
-		timer := time.NewTimer(WaitTimeBetweenRetries)
-		select {
-		case <-timer.C:
-		case <-ctx.Done():
-			timer.Stop()
-			return "", ctx.Err()
+		if err != nil {
+			return "", err
 		}
 	}
 
