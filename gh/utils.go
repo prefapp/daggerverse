@@ -42,8 +42,6 @@ func retry(
 	timer := time.NewTimer(waitTime)
 	select {
 	case <-timer.C:
-		timer.Stop()
-		WaitTimeBetweenRetries *= 2
 		return nil
 	case <-ctx.Done():
 		timer.Stop()

@@ -373,6 +373,8 @@ func (m *Gh) CreatePR(
 		if retryErr != nil {
 			return "", retryErr
 		}
+
+		waitTimeBetweenRetries *= 2
 	}
 
 	var prId string
@@ -412,6 +414,8 @@ func (m *Gh) CreatePR(
 
 			return "", retryErr
 		}
+
+		waitTimeBetweenRetries *= 2
 	}
 
 	prLink, err := ctr.
