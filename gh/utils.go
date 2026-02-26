@@ -31,6 +31,7 @@ func retry(
 	returnError bool,
 	errorToReturn error,
 	msg string,
+	waitTime time.Duration,
 ) error {
 	if returnError {
 		return errorToReturn
@@ -38,7 +39,7 @@ func retry(
 
 	fmt.Println(msg)
 
-	timer := time.NewTimer(WaitTimeBetweenRetries)
+	timer := time.NewTimer(waitTime)
 	select {
 	case <-timer.C:
 		timer.Stop()
