@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-var WaitTimeBetweenRetries time.Duration = 2 * time.Second
-
 func extractErrorMessage(err error) string {
 	switch e := err.(type) {
 	case *dagger.ExecError:
@@ -44,10 +42,10 @@ func retry(
 	select {
 	case <-timer.C:
 		timer.Stop()
+		WaitTimeBetweenRetries *= 2
+		return nil
 	case <-ctx.Done():
 		timer.Stop()
 		return ctx.Err()
 	}
-
-	return nil
 }

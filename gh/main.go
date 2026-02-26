@@ -27,6 +27,8 @@ type Gh struct {
 
 var ErrorNoNewCommits error = errors.New("no new commits created")
 var MaxRetries int = 5
+var BaseWaitTimeBetweenRetries time.Duration = 2 * time.Second
+var WaitTimeBetweenRetries time.Duration = BaseWaitTimeBetweenRetries
 
 // Exit code 10 is used to indicate the 'no new commits' scenario.
 // This value is chosen to distinguish it from standard exit codes (e.g., 0 for success, 1 for general errors).
@@ -356,6 +358,7 @@ func (m *Gh) CreatePR(
 		_, err = ctr.Sync(ctx)
 
 		if err == nil {
+			WaitTimeBetweenRetries = BaseWaitTimeBetweenRetries
 			break
 		}
 
@@ -387,6 +390,7 @@ func (m *Gh) CreatePR(
 		_, convErr := strconv.Atoi(strings.TrimSpace(prId))
 
 		if err == nil && convErr == nil {
+			WaitTimeBetweenRetries = BaseWaitTimeBetweenRetries
 			break
 		}
 
