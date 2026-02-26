@@ -366,7 +366,7 @@ func (m *Gh) CreatePR(
 			ctx,
 			i == MaxRetries-1,
 			errors.New(extractErrorMessage(err)),
-			fmt.Sprintf("Error creating PR, retrying... (%d/%d)\n", i+1, MaxRetries-1),
+			fmt.Sprintf("Error creating PR, retrying... (%d/%d)", i+1, MaxRetries-1),
 			waitTimeBetweenRetries,
 		)
 
