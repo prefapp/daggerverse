@@ -408,10 +408,6 @@ func (m *Gh) CreatePR(
 		)
 
 		if retryErr != nil {
-			if convErr != nil {
-				return "", errors.New(extractErrorMessage(convErr))
-			}
-
 			return "", retryErr
 		}
 
