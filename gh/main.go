@@ -359,15 +359,15 @@ func (m *Gh) CreatePR(
 			break
 		}
 
-		err = retry(
+		retryErr := retry(
 			ctx,
 			i == MaxRetries-1,
 			errors.New(extractErrorMessage(err)),
 			fmt.Sprintf("Error creating PR, retrying... (%d/%d)\n", i+1, MaxRetries-1),
 		)
 
-		if err != nil {
-			return "", err
+		if retryErr != nil {
+			return "", retryErr
 		}
 	}
 
@@ -390,15 +390,19 @@ func (m *Gh) CreatePR(
 			break
 		}
 
-		err = retry(
+		retryErr := retry(
 			ctx,
 			i == MaxRetries-1,
 			errors.New(extractErrorMessage(err)),
 			fmt.Sprintf("Error getting PR ID, retrying... (%d/%d)", i+1, MaxRetries-1),
 		)
 
-		if err != nil {
-			return "", err
+		if retryErr != nil {
+			if convErr != nil {
+				return "", errors.New(extractErrorMessage(convErr))
+			}
+
+			return "", retryErr
 		}
 	}
 
