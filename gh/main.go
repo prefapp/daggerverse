@@ -350,6 +350,7 @@ func (m *Gh) CreatePR(
 	}
 
 	ctr = ctr.
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec(cmd)
 
 	waitTimeBetweenRetries := BaseWaitTimeBetweenRetries
@@ -381,6 +382,7 @@ func (m *Gh) CreatePR(
 	fmt.Println("Getting PR ID...")
 	for i := range MaxRetries {
 		prId, err = ctr.
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 			WithExec([]string{
 				"gh", "pr", "list",
 				"--head", branch,
