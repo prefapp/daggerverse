@@ -36,7 +36,7 @@ func New(
 
 	// The Kind version you want to use.
 	// check https://github.com/kubernetes-sigs/kind/releases
-	// E.g.: "v0.25.0"
+	// E.g.: "v0.31.0"
 	// +optional
 	kind string,
 
@@ -49,8 +49,8 @@ func New(
 	kindSha string,
 
 	// The Kubernetes version you want to use inside the cluster.
-	// Must be one of the available versions of the current Kind version used (which default is v0.25.0).
-	// It has to be indicated like "vx.y", being 'x' the major and 'y' the minor versions.
+	// Must be one of this module's supported Version values (default Kind version is v0.31.0).
+	// It has to be indicated like "v1_31" (major and minor versions separated by an underscore).
 	// check https://github.com/kubernetes-sigs/kind/releases
 	// +optional
 	version Version,

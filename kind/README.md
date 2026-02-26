@@ -6,7 +6,7 @@ The `Kind` Dagger module simplifies the creation and management of a local Kuber
 
 ## Features
 
-- **Kind Cluster Creation**: Sets up a local Kubernetes cluster using Kind (v0.25.0) in a Docker container.
+- **Kind Cluster Creation**: Sets up a local Kubernetes cluster using Kind (v0.31.0) in a Docker container.
 - **Customizable Configuration**: Supports specifying the Kubernetes version and cluster name.
 - **Container Image Loading**: Loads container images into the Kind cluster with proper annotations for Kubernetes compatibility.
 - **Interactive Debugging**: Provides a `k9s` terminal for exploring the cluster.
@@ -30,7 +30,7 @@ kind := dag.Kind(
 
 - **dockerSocket** (required): A Dagger socket for Docker (e.g., `/var/run/docker.sock`).
 - **kindSvc** (required): A Dagger service with a TCP endpoint (e.g., `tcp://127.0.0.1:3000`) for the Kind cluster's API server.
-- **version** (optional): The Kubernetes version in `vx.y` format (e.g., `v1.25`). Must match an available Kind image for Kind v0.25.0. Defaults to Kind's default version if not specified.
+- **version** (optional): The Kubernetes version as a `Version` enum value (e.g., `v1_31`). Must match one of the module's supported Kind images. Defaults to Kind's default image if not specified.
 - **clusterName** (optional): The name of the Kind cluster. Defaults to `dagger-kubernetes-cluster`.
 
 ### Methods
@@ -75,7 +75,7 @@ A placeholder method for testing purposes.
 ### Configuration Details
 
 - **Kind Cluster Setup**:
-  - Uses Kind v0.25.0.
+  - Uses Kind v0.31.0.
   - Creates a cluster with a YAML configuration specifying the API server port.
   - Installs `docker`, `kubectl`, `k9s`, and `curl` in an Alpine-based container.
   - Deletes any existing cluster with the same name before creating a new one.
@@ -106,6 +106,6 @@ By executing the following command, you get in return a container with kind inst
 ## Limitations
 
 - Requires a valid Docker socket and a properly configured `kindSvc` endpoint.
-- Only supports Kubernetes versions compatible with Kind v0.25.0.
+- Only supports Kubernetes versions included in this module's `Version` enum mapping.
 - The `Test` method is incomplete and may not function as expected.
 - Assumes the host environment has `/etc/hosts` configured correctly.
