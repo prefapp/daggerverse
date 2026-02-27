@@ -10,9 +10,9 @@ type Metadata struct {
 }
 
 type Annotations struct {
-	MicroService string `yaml:"firestartr.dev/microservice"`
-
-	Image string `yaml:"firestartr.dev/image"`
+	MicroService  string `yaml:"firestartr.dev/microservice"`
+	Image         string `yaml:"firestartr.dev/image"`
+	PreviousImage string `yaml:"firestartr.dev/previous-image"`
 }
 
 type ImageMatrix struct {
