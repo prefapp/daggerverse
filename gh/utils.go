@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"gh/internal/dagger"
 	"strings"
+	"time"
 )
 
 func extractErrorMessage(err error) string {
@@ -21,5 +23,28 @@ func extractErrorMessage(err error) string {
 		return errorMsg
 	default:
 		return fmt.Sprintf("::error::%s", strings.ReplaceAll(err.Error(), "::error::", ""))
+	}
+}
+
+func retry(
+	ctx context.Context,
+	returnError bool,
+	errorToReturn error,
+	msg string,
+	waitTime time.Duration,
+) error {
+	if returnError {
+		return errorToReturn
+	}
+
+	fmt.Println(msg)
+
+	timer := time.NewTimer(waitTime)
+	select {
+	case <-timer.C:
+		return nil
+	case <-ctx.Done():
+		timer.Stop()
+		return ctx.Err()
 	}
 }
