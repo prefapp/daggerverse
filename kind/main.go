@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/kind/internal/dagger"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +19,17 @@ type Kind struct {
 	Container    *dagger.Container
 	ClusterName  string
 	ConfigFile   *dagger.File
+}
+
+func supportedK8sVersions() []string {
+	versions := make([]string, 0, len(K8sVersions))
+	for v := range K8sVersions {
+		versions = append(versions, string(v))
+	}
+
+	sort.Strings(versions)
+
+	return versions
 }
 
 func New(
@@ -36,7 +48,7 @@ func New(
 
 	// The Kind version you want to use.
 	// check https://github.com/kubernetes-sigs/kind/releases
-	// E.g.: "v0.25.0"
+	// E.g.: "v0.31.0"
 	// +optional
 	kind string,
 
@@ -49,8 +61,8 @@ func New(
 	kindSha string,
 
 	// The Kubernetes version you want to use inside the cluster.
-	// Must be one of the available versions of the current Kind version used (which default is v0.25.0).
-	// It has to be indicated like "vx.y", being 'x' the major and 'y' the minor versions.
+	// Must be one of this module's supported Version values (default Kind version is v0.31.0).
+	// It has to be indicated like "v1_31" (major and minor versions separated by an underscore).
 	// check https://github.com/kubernetes-sigs/kind/releases
 	// +optional
 	version Version,
@@ -84,7 +96,7 @@ func New(
 	}
 
 	if kind == "" {
-		kind = "v0.29.0"
+		kind = "v0.31.0"
 	}
 
 	container := dag.Container().
@@ -124,7 +136,16 @@ func New(
 	if kindSha != "" {
 		createCluster = append(createCluster, "--image", kindSha)
 	} else if version != "" {
-		createCluster = append(createCluster, "--image", K8sVersions[version])
+		image, ok := K8sVersions[version]
+		if !ok {
+			panic(fmt.Sprintf(
+				"Invalid Kubernetes version %q. Supported versions: %s",
+				version,
+				strings.Join(supportedK8sVersions(), ", "),
+			))
+		}
+
+		createCluster = append(createCluster, "--image", image)
 	}
 
 	container, err = container.
