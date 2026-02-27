@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (m *FirestartrBootstrap) CmdCreatePersistentVolume(
@@ -34,22 +35,61 @@ func (m *FirestartrBootstrap) CreateBridgeContainer(
 		return nil, err
 	}
 
-	ctn, err := dag.Container().
+	ctn := dag.Container().
 		From("alpine:latest").
 		WithExec([]string{"apk", "add", "docker", "kubectl", "k9s", "curl", "helm"}).
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithExec([]string{
+			"curl", fmt.Sprintf(
+				"https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/crds/%s/index.yaml",
+				m.Bootstrap.Firestartr.OperatorVersion,
+			),
+			"-w", "%{http_code}",
+			"-o", "/tmp/crds.yaml",
+			"-s",
+		})
+
+	statusCode, err := ctn.Stdout(ctx)
+	if err != nil {
+		errMsg := extractErrorMessage(err, "Failed to create bridge container")
+		return nil, errors.New(errMsg)
+	}
+
+	statusCode = strings.TrimSpace(statusCode)
+	if statusCode == "404" {
+		ctn, err = ctn.
+			WithExec([]string{
+				"curl",
+				"https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/crds/latest/index.yaml",
+				"-o",
+				"/tmp/crds.yaml",
+				"--fail",
+			}).
+			Sync(ctx)
+
+		if err != nil {
+			errMsg := extractErrorMessage(
+				err,
+				"Failed to download the CRDs manifest for the latest version",
+			)
+			return nil, errors.New(errMsg)
+		}
+	} else if statusCode != "200" {
+		return nil, fmt.Errorf(
+			"error downloading CRDs: received non-success HTTP status code %s",
+			statusCode,
+		)
+	}
+
+	ctn, err = ctn.
 		WithMountedDirectory("/root/.kube", kubeconfig).
 		WithWorkdir("/workspace").
 		WithServiceBinding("localhost", kindSvc).
 		WithExec([]string{
-			"kubectl", "config",
-			"set-cluster", fmt.Sprintf("kind-%s", kindClusterName), fmt.Sprintf("--server=https://localhost:%d", port)},
+			"kubectl", "config", "set-cluster",
+			fmt.Sprintf("kind-%s", kindClusterName),
+			fmt.Sprintf("--server=https://localhost:%d", port)},
 		).
-		WithExec([]string{
-			"curl",
-			"https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/crds/latest/index.yaml",
-			"-o",
-			"/tmp/crds.yaml",
-		}).
 		WithExec([]string{"kubectl", "apply", "-f", "/tmp/crds.yaml"}).
 		Sync(ctx)
 
@@ -681,29 +721,4 @@ func (m *FirestartrBootstrap) CmdRollback(
 	}
 
 	return m.UpdateSummaryAndRunForRollbackStep(ctx, output), nil
-}
-
-func (m *FirestartrBootstrap) CmdRunBootstrap(
-	ctx context.Context,
-	kubeconfig *dagger.Directory,
-	kindSvc *dagger.Service,
-	kindClusterName string,
-) {
-	persistentVolume := m.CmdCreatePersistentVolume(ctx, "firestartr-init")
-
-	m.CmdValidateBootstrap(ctx, kubeconfig, kindSvc, kindClusterName)
-
-	m.CmdInitSecretsMachinery(ctx, kubeconfig, kindSvc, kindClusterName)
-
-	m.CmdInitGithubAppsMachinery(ctx, kubeconfig, kindSvc, kindClusterName)
-
-	m.CmdImportResources(ctx, kubeconfig, kindSvc, kindClusterName, persistentVolume)
-
-	m.CmdPushResources(ctx, kubeconfig, kindSvc, kindClusterName, persistentVolume)
-
-	m.CmdPushStateSecrets(ctx, kubeconfig, kindSvc, kindClusterName, persistentVolume)
-
-	//m.CmdPushDeployment(ctx)
-
-	//m.CmdPushArgo(ctx)
 }
