@@ -107,7 +107,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 			m.Bootstrap.Org,
 		),
 
-		App: "state-github",
+		App: "state-infra",
 
 		Repo: fmt.Sprintf("https://github.com/%s/state-infra",
 			m.Bootstrap.Org,
