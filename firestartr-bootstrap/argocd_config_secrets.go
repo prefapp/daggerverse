@@ -78,7 +78,7 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 		fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
 		patchedDir,
 		fmt.Sprintf("automated-add-argocd-secrets-for-%s", m.Bootstrap.Org),
-		fmt.Sprintf("feat: add argocd secrets for %s [automated]", m.Bootstrap.Org),
+		fmt.Sprintf("ci: add argocd secrets for %s [automated]", m.Bootstrap.Org),
 		"",
 		tokenSecret,
 	)

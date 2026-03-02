@@ -184,7 +184,7 @@ func (m *NotifyAndHydrateState) UpsertPr(
 		WithWorkdir("/repo").
 		WithExec([]string{"git", "checkout", "-b", prBranch}).
 		WithExec([]string{"git", "add", fileName}).
-		WithExec([]string{"git", "commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
+		WithExec([]string{"git", "commit", "-m", "ci: Automated commit for CR " + cr.Metadata.Name}).
 		WithExec([]string{"git", "push", "origin", prBranch, "--force"}).
 		Sync(ctx)
 
@@ -229,7 +229,7 @@ func (m *NotifyAndHydrateState) UpsertPr(
 		WithWorkdir("/repo").
 		WithExec([]string{"git", "checkout", prBranch}).
 		WithExec([]string{"git", "add", fileName}).
-		WithExec([]string{"git", "commit", "-m", "Automated commit for CR " + cr.Metadata.Name}).
+		WithExec([]string{"git", "commit", "-m", "ci: Automated commit for CR " + cr.Metadata.Name}).
 		WithExec([]string{"git", "push", "origin", prBranch, "--force"}).
 		Stdout(ctx)
 
