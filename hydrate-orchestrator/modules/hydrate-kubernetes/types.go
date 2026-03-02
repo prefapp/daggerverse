@@ -52,4 +52,5 @@ type EnvYaml struct {
 		Filename string `yaml:"filename"`
 		URL      string `yaml:"url"`
 	} `yaml:"remoteArtifacts,omitempty"`
+	Oci *bool `yaml:"oci,omitempty"`
 }
