@@ -57,7 +57,7 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 		fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
 		argoCDRenderedDir,
 		fmt.Sprintf("automated-create-applications-%s", m.Bootstrap.Org),
-		fmt.Sprintf("feat: add applications for %s [automated]", m.Bootstrap.Org),
+		fmt.Sprintf("ci: add applications for %s [automated]", m.Bootstrap.Org),
 		"",
 		tokenSecret,
 	)

@@ -36,7 +36,7 @@ validateCrds := dag.ValidateCrds(
 - **kindSvc**: A Dagger service for the Kind cluster, required by `prefapp/daggerverse/kind`.
 - **crdsDir**: A directory containing CRD manifest files (YAML/JSON).
 - **crsDir**: A directory containing CR manifest files, which can include nested directories.
-- **version** (optional): Specifies the Kubernetes version for the Kind cluster (e.g., `v1.30`). Defaults to the Kind module's default version if not provided.
+- **version** (optional): Specifies the Kubernetes version for the Kind cluster as a Kind `Version` enum value (e.g., `v1_31`). Older string formats (e.g., `v1.30` / `vx.y`) are no longer supported. Defaults to the Kind module's default version if not provided.
 
 ### Methods
 
