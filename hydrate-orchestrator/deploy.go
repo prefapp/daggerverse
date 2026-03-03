@@ -302,7 +302,7 @@ Created by @%s from %s within commit [%s](%s)
 		_, err = dag.Gh().Commit(
 			updatedDir,
 			branchName,
-			"Update deployments",
+			"ci: Update deployments",
 			m.GhToken,
 			dagger.GhCommitOpts{
 				BaseBranch:     DEPLOYMENT_BRANCH_NAME,

@@ -56,7 +56,7 @@ func (m *FirestartrBootstrap) PushDirToRepo(
 	_, err = ghCtr.
 		WithWorkdir("/repo").
 		WithExec([]string{"git", "add", "."}).
-		WithExec([]string{"git", "commit", "-m", "automated commit from firestartr-bootstrap"}).
+		WithExec([]string{"git", "commit", "-m", "ci: automated commit from firestartr-bootstrap"}).
 		WithExec([]string{"git", "push"}).
 		Sync(ctx)
 	if err != nil {
@@ -86,7 +86,7 @@ func (m *FirestartrBootstrap) CreatePR(
 		WithWorkdir("/repo").
 		WithExec([]string{"git", "checkout", "-b", branch}).
 		WithExec([]string{"git", "add", "."}).
-		WithExec([]string{"git", "commit", "-m", "automated commit from firestartr-bootstrap"}).
+		WithExec([]string{"git", "commit", "-m", "ci: automated commit from firestartr-bootstrap"}).
 		WithExec([]string{"git", "push", "origin", branch}).
 		WithExec([]string{
 			"gh", "pr", "create",

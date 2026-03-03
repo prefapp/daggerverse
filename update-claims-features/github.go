@@ -35,7 +35,7 @@ func (m *UpdateClaimsFeatures) upsertPR(
 		ctx,
 		contents,
 		newBranchName,
-		"Update claims' features",
+		"ci: Update claims' features",
 		title,
 		body,
 		dagger.GhCommitAndCreatePrOpts{

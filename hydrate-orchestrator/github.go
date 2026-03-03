@@ -60,7 +60,7 @@ func (m *HydrateOrchestrator) upsertPR(
 		ctx,
 		contents,
 		newBranchName,
-		"Update deployments",
+		"ci: Update deployments",
 		title,
 		body,
 		dagger.GhCommitAndCreatePrOpts{
