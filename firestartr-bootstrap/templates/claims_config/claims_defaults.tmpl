@@ -17,6 +17,8 @@ ComponentClaim:
         defaultBranch: {{ or $.DefaultBranch "main" }}
       orgPermissions: {{ or $.DefaultOrgPermissions "view"}}
       visibility: private
+      allowAutoMerge: true
+      deleteBranchOnMerge: true
       technology:
         stack: "none"
         version: "none"
