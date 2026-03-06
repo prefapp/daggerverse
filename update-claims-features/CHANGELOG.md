@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.14](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.13...update-claims-features-v1.1.14) (2026-03-06)
+
+
+### Bug Fixes
+
+* Error on PR creation ([#414](https://github.com/prefapp/daggerverse/issues/414)) ([eaf1ab7](https://github.com/prefapp/daggerverse/commit/eaf1ab7fe0e01f79fd286ee2aafa9b20d25fe8b1))
+* Updated all commit messages to include the ci: prefix ([#422](https://github.com/prefapp/daggerverse/issues/422)) ([d1ff06d](https://github.com/prefapp/daggerverse/commit/d1ff06d72afb51ea16b1f79fd6fc47f561ddefe2))
+
 ## [1.1.13](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.12...update-claims-features-v1.1.13) (2026-02-19)
 
 
