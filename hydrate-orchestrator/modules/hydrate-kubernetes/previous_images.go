@@ -87,6 +87,14 @@ func (m *HydrateKubernetes) BuildPreviousImagesApp(
 
 		}
 
+		artifact.Metadata.Annotations.PreviousImage = artifact.Metadata.Annotations.Image
+
+		updatedFileContents, err := yaml.Marshal(artifact)
+		if err != nil {
+			return "", err
+		}
+
+		m.WetRepoDir.WithNewFile(targetDir+"/"+manifest, string(updatedFileContents))
 	}
 
 	marshaled, err := yaml.Marshal(mapImages)
