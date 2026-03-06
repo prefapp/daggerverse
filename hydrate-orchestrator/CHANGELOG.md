@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.3.10](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.9...hydrate-orchestrator-v6.3.10) (2026-03-06)
+
+
+### Bug Fixes
+
+* Updated all commit messages to include the ci: prefix ([#422](https://github.com/prefapp/daggerverse/issues/422)) ([d1ff06d](https://github.com/prefapp/daggerverse/commit/d1ff06d72afb51ea16b1f79fd6fc47f561ddefe2))
+
 ## [6.3.9](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.8...hydrate-orchestrator-v6.3.9) (2025-12-23)
 
 
