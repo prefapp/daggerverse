@@ -190,7 +190,10 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 							changelog, err := m.getReleaseChangelog(ctx, fullFeatureTag)
 
 							if err != nil {
-								fmt.Printf("☢️ No changelog for tag %s found, skipping\n")
+								fmt.Printf(
+									"☢️ No changelog for tag %s found, skipping\n",
+									fullFeatureTag,
+								)
 								continue
 							}
 
