@@ -191,7 +191,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 
 							if err != nil {
 								fmt.Printf(
-									"☢️ No changelog for tag %s found, skipping\n",
+									"☢️ No changelog for tag %s exists, skipping\n",
 									fullFeatureTag,
 								)
 								continue
