@@ -11,6 +11,11 @@ argoEvents:
       alb.ingress.kubernetes.io/scheme: internet-facing
       alb.ingress.kubernetes.io/ssl-redirect: "443"
       alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+      alb.ingress.kubernetes.io/healthcheck-port: http
+      alb.ingress.kubernetes.io/healthcheck-path: /health
+      alb.ingress.kubernetes.io/success-codes: '200'
+      alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=25
   webhooks:
     - state-infra
     - state-github
