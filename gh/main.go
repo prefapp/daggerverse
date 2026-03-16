@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,6 +26,8 @@ type Gh struct {
 }
 
 var ErrorNoNewCommits error = errors.New("no new commits created")
+var MaxRetries int = 5
+var BaseWaitTimeBetweenRetries time.Duration = 2 * time.Second
 
 // Exit code 10 is used to indicate the 'no new commits' scenario.
 // This value is chosen to distinguish it from standard exit codes (e.g., 0 for success, 1 for general errors).
@@ -148,7 +151,7 @@ func (m *Gh) Container(
 
 		if currentVersion != version {
 			fmt.Printf(
-				"WARNING: local gh binary version and specified version differ. Local gh version: %s, specified version: %s",
+				"WARNING: local gh binary version and specified version differ. Local gh version: %s, specified version: %s\n",
 				currentVersion, version,
 			)
 		}
@@ -347,28 +350,70 @@ func (m *Gh) CreatePR(
 	}
 
 	ctr = ctr.
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec(cmd)
 
-	_, err = ctr.Sync(ctx)
-	if err != nil {
-		return "", errors.New(
-			extractErrorMessage(err),
+	waitTimeBetweenRetries := BaseWaitTimeBetweenRetries
+	fmt.Println("Creating PR...")
+	for i := range MaxRetries {
+		_, err = ctr.Sync(ctx)
+
+		if err == nil {
+			waitTimeBetweenRetries = BaseWaitTimeBetweenRetries
+			break
+		}
+
+		retryErr := retry(
+			ctx,
+			i == MaxRetries-1,
+			errors.New(extractErrorMessage(err)),
+			fmt.Sprintf("Error creating PR, retrying... (%d/%d)", i+1, MaxRetries-1),
+			waitTimeBetweenRetries,
 		)
+
+		if retryErr != nil {
+			return "", retryErr
+		}
+
+		waitTimeBetweenRetries *= 2
 	}
 
-	prId, err := ctr.
-		WithExec([]string{
-			"gh", "pr", "list",
-			"--head", branch,
-			"--json", "number",
-			"--jq", ".[0].number",
-		}).
-		Stdout(ctx)
+	var prId string
+	fmt.Println("Getting PR ID...")
+	for i := range MaxRetries {
+		prId, err = ctr.
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithExec([]string{
+				"gh", "pr", "list",
+				"--head", branch,
+				"--json", "number",
+				"--jq", ".[0].number",
+			}).
+			Stdout(ctx)
 
-	if err != nil {
-		return "", errors.New(
-			extractErrorMessage(err),
+		// Check if the prId is a valid integer (which means we got the PR ID successfully). If not, we retry.
+		_, convErr := strconv.Atoi(strings.TrimSpace(prId))
+
+		if err == nil && convErr == nil {
+			waitTimeBetweenRetries = BaseWaitTimeBetweenRetries
+			break
+		}
+
+		errToExtract := lo.Ternary(err != nil, err, convErr)
+
+		retryErr := retry(
+			ctx,
+			i == MaxRetries-1,
+			errors.New(extractErrorMessage(errToExtract)),
+			fmt.Sprintf("Error getting PR ID, retrying... (%d/%d)", i+1, MaxRetries-1),
+			waitTimeBetweenRetries,
 		)
+
+		if retryErr != nil {
+			return "", retryErr
+		}
+
+		waitTimeBetweenRetries *= 2
 	}
 
 	prLink, err := ctr.

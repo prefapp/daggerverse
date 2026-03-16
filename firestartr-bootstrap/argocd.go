@@ -12,11 +12,9 @@ import (
 func (m *FirestartrBootstrap) CreateArgCDApplications(
 	ctx context.Context,
 ) (*dagger.Directory, error) {
-
 	argoCDRenderedDir, err := m.RenderArgoCDApplications(ctx)
 
 	if err != nil {
-
 		return nil, fmt.Errorf("rendering ArgoCD apps: %w", err)
 	}
 
@@ -26,7 +24,6 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 	)
 
 	argoCDRepo, err := m.CloneRepo(
-
 		ctx,
 		fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
 		"state-argocd",
@@ -34,12 +31,10 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 	)
 
 	if err != nil {
-
 		return nil, fmt.Errorf("cloning ArgoCD repo: %w", err)
 	}
 
 	projectDir, err := addProjectDestination(
-
 		ctx,
 		argoCDRepo.Directory("/repo"),
 		"apps/firestartr/argo-firestartr.Project.yaml",
@@ -52,7 +47,7 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 	}
 
 	argoCDRenderedDir = argoCDRenderedDir.WithFile(
-		"firestartr/argo-firestartr.Project.yaml",
+		"apps/firestartr/argo-firestartr.Project.yaml",
 		projectDir.File("apps/firestartr/argo-firestartr.Project.yaml"),
 	)
 
@@ -62,8 +57,8 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 		fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
 		argoCDRenderedDir,
 		fmt.Sprintf("automated-create-applications-%s", m.Bootstrap.Org),
-		fmt.Sprintf("feat: add applications for %s [automated]", m.Bootstrap.Org),
-		"apps",
+		fmt.Sprintf("ci: add applications for %s [automated]", m.Bootstrap.Org),
+		"",
 		tokenSecret,
 	)
 
@@ -108,7 +103,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 			m.Bootstrap.Org,
 		),
 
-		App: "state-github",
+		App: "state-infra",
 
 		Repo: fmt.Sprintf("https://github.com/%s/state-infra",
 			m.Bootstrap.Org,
@@ -137,20 +132,22 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 	}
 
 	pathAppStateGithub := fmt.Sprintf(
-        "/apps/firestartr/%s/argo-firestartr-%s.%s.Application.yaml",
+		"/apps/firestartr/%s/argo-firestartr-%s.%s.Application.yaml",
 		m.Bootstrap.Customer,
 		"state-github",
 		m.Bootstrap.Org,
 	)
 
 	pathAppStateInfra := fmt.Sprintf(
-        "/apps/firestartr/%s/argo-firestartr-%s.%s.Application.yaml",
+		"/apps/firestartr/%s/argo-firestartr-%s.%s.Application.yaml",
 		m.Bootstrap.Customer,
 		"state-infra",
 		m.Bootstrap.Org,
 	)
 
-	return dag.Directory().WithNewFile(pathAppStateGithub, applicationStateGithub).WithNewFile(pathAppStateInfra, applicationStateInfra), nil
+	return dag.Directory().
+		WithNewFile(pathAppStateGithub, applicationStateGithub).
+		WithNewFile(pathAppStateInfra, applicationStateInfra), nil
 }
 
 func renderArgoCDApplication(

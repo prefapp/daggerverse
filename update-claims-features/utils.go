@@ -190,7 +190,11 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 							changelog, err := m.getReleaseChangelog(ctx, fullFeatureTag)
 
 							if err != nil {
-								return "", err
+								fmt.Printf(
+									"☢️ No changelog for tag %s exists, skipping\n",
+									fullFeatureTag,
+								)
+								continue
 							}
 
 							err = json.Unmarshal([]byte(changelog), &parsedJson)
