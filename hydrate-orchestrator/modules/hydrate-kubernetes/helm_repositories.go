@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
@@ -20,27 +21,13 @@ type RepositoriesStructFile struct {
 	Repositories []HelmRepo `yaml:"repositories"`
 }
 
-func (m *HydrateKubernetes) BuildHelmRepositoriesFile(
-
+func (m *HydrateKubernetes) getDeploymentConfig(
 	ctx context.Context,
 
-	dotFirestartrDir *dagger.Directory,
-
 	envFileLocation string,
-
-) (*dagger.File, error) {
+) (*EnvYaml, error) {
 
 	envFile := m.ValuesDir.File(envFileLocation)
-
-	fsConf := dag.FirestartrConfig(dotFirestartrDir)
-
-	regs, err := fsConf.Registries(ctx)
-
-	if err != nil {
-
-		return nil, err
-
-	}
 
 	envYamlContent, err := envFile.Contents(ctx)
 
@@ -60,74 +47,172 @@ func (m *HydrateKubernetes) BuildHelmRepositoriesFile(
 
 	}
 
+	return &envYamlStruct, nil
+}
+
+// Create a function that get's all helm possible configurations from the firestartr config directory and creates a helm repositories file with all the possible helm repositories that can be used in the helm charts of the firestartr config directory and return a helmrepo structure array.
+ func (m *HydrateKubernetes) getHelmReposFromFirestartrConfig(
+	ctx context.Context,
+
+	dotFirestartrDir *dagger.Directory,
+
+	deploymentConfig *EnvYaml,
+ ) ([]HelmRepo, error) {
+
+	// Resulting array of helm repositories
 	var helmRepos []HelmRepo
 
-	repositoryName := strings.Split(envYamlStruct.Chart, "/")[0]
+	fsConf := dag.FirestartrConfig(dotFirestartrDir)
 
-	var hRepo HelmRepo
+	legacyRegs, err := fsConf.LegacyRegistries(ctx)
+	
+	if err != nil {
+		return nil, err
+	}
 
-	// Set OCI disabled by default
-	ociEnabled := false
-	if envYamlStruct.Oci != nil {
+	regs, err := fsConf.Registries(ctx)
 
-		ociEnabled = *envYamlStruct.Oci
+	if err != nil {
+
+		return nil, err
 
 	}
 
-	if envYamlStruct.Registry != "" {
+	for _, reg := range regs {
 
-		hRepo = HelmRepo{
+		regName, err := reg.Name(ctx)
 
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		regHost, err := reg.Registry(ctx)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		repositoryName := strings.Split(deploymentConfig.Chart, "/")[0]
+
+		if repositoryName == regName {
+
+			hRepo := HelmRepo{
+
+				Name: regName,
+
+				Url: regHost,
+
+				Oci: true,
+			}
+
+			helmRepos = append(helmRepos, hRepo)
+
+		}
+	}
+
+	repositories, err := fsConf.Repositories(ctx)
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	for _, repo := range repositories {
+
+		repoName, err := repo.Name(ctx)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		repoUrl, err := repo.URL(ctx)
+
+		if err != nil {
+
+			return nil, err
+
+		}
+
+		helmRepos = append(helmRepos, HelmRepo{
+			Name: repoName,
+			Url: repoUrl,
+			Oci: false,
+		})
+	}
+
+	/* Keep legacy logic*/
+	repositoryName := strings.Split(deploymentConfig.Chart, "/")[0]
+
+	if deploymentConfig.Registry != "" {
+		helmRepos = append(helmRepos, HelmRepo{
 			Name: repositoryName,
+			Url: deploymentConfig.Registry,
+			Oci: lo.FromPtrOr(deploymentConfig.Oci, false),
+		})
+	}
 
-			Url: envYamlStruct.Registry,
+	for _, legacyReg := range legacyRegs {
 
-			Oci: ociEnabled,
+		name, err := legacyReg.Name(ctx)
+		if err != nil {
+			return nil, err
 		}
 
-		helmRepos = append(helmRepos, hRepo)
-
-	} else {
-
-		for _, reg := range regs {
-
-			regName, err := reg.Name(ctx)
-
-			if err != nil {
-
-				return nil, err
-
-			}
-
-			regHost, err := reg.Registry(ctx)
-
-			if err != nil {
-
-				return nil, err
-
-			}
-
-			if repositoryName == regName {
-
-				hRepo = HelmRepo{
-
-					Name: regName,
-
-					Url: regHost,
-
-					Oci: true,
-				}
-
-				helmRepos = append(helmRepos, hRepo)
-
-			}
-
+		url, err := legacyReg.Registry(ctx)
+		if err != nil {
+			return nil, err
 		}
 
-		if len(helmRepos) == 0 {
-
-			return nil, fmt.Errorf("No registry found for repository in your firestartr config directory %s", repositoryName)
+		hr := HelmRepo{
+			Name: name,
+			Url: url,
+			Oci: true,
 		}
+
+		helmRepos = append(helmRepos, hr)
+	}
+
+	if len(helmRepos) == 0 {
+
+		return nil, fmt.Errorf("No registry found for repository in your firestartr config directory %s", repositoryName)
+	}
+
+	return helmRepos, nil
+}
+
+func (m *HydrateKubernetes) BuildHelmRepositoriesFile(
+
+	ctx context.Context,
+
+	dotFirestartrDir *dagger.Directory,
+
+	envFileLocation string,
+
+) (*dagger.File, error) {
+
+
+	envConfig , err := m.getDeploymentConfig(ctx, envFileLocation)
+	
+	if err != nil {
+		return nil, err
+	}
+
+	helmRepos, err := m.getHelmReposFromFirestartrConfig(
+		ctx,
+		dotFirestartrDir,
+		envConfig,
+	)
+	if err != nil {
+
+		return nil, err
+
 	}
 
 	reposStruct := RepositoriesStructFile{
