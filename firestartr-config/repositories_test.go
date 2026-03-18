@@ -17,24 +17,24 @@ func TestRepositories(t *testing.T) {
 
 		if err != nil {
 
-			t.Errorf("Error loading repositories: %s", err)
+			t.Fatalf("Error loading repositories: %s", err)
 
 		}
 
 		if len(repositories) != 2 {
-			t.Errorf("Expected 2 repositories, got %d", len(repositories))
+			t.Fatalf("Expected 2 repositories, got %d", len(repositories))
 		}
 
 		expectedFirstRegistry := "000000000000.dkr.ecr.eu-west-1.amazonaws.com"
 
 		if repositories[0].Url != expectedFirstRegistry {
-			t.Errorf("Expected %s, got %s", expectedFirstRegistry, repositories[0].Url)
+			t.Fatalf("Expected %s, got %s", expectedFirstRegistry, repositories[0].Url)
 		}
 
 		expectedSecondRegistry := "xxxxxxxxxx.azurecr.io"
 
 		if repositories[1].Url != expectedSecondRegistry {
-			t.Errorf("Expected %s, got %s", expectedSecondRegistry, repositories[1].Url)
+			t.Fatalf("Expected %s, got %s", expectedSecondRegistry, repositories[1].Url)
 		}
 	})
 }
