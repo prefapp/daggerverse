@@ -27,7 +27,7 @@ func loadRegistries(ctx context.Context, firestartrDir *dagger.Directory) ([]Reg
 
 	for _, ext := range []string{".yaml", ".yml"} {
 
-		filePaths, err := firestartrDir.Glob(ctx, "docker_registries/*"+ext)
+		filePaths, err := firestartrDir.Glob(ctx, "registries/*"+ext)
 
 		if err != nil {
 
