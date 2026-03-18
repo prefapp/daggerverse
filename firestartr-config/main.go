@@ -23,7 +23,7 @@ type FirestartrConfig struct {
 	Apps             []FirestartrApp
 	Registries       []Registry
 	LegacyRegistries []LegacyRegistry
-	Repositories		 []Repository
+	Repositories     []Repository
 	Platforms        []Platform
 	DotFirestartrDir *dagger.Directory
 }
