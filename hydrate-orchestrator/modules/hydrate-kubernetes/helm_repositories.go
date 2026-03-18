@@ -50,13 +50,13 @@ func (m *HydrateKubernetes) getDeploymentConfig(
 }
 
 // Create a function that get's all helm possible configurations from the firestartr config directory and creates a helm repositories file with all the possible helm repositories that can be used in the helm charts of the firestartr config directory and return a helmrepo structure array.
- func (m *HydrateKubernetes) getHelmReposFromFirestartrConfig(
+func (m *HydrateKubernetes) getHelmReposFromFirestartrConfig(
 	ctx context.Context,
 
 	dotFirestartrDir *dagger.Directory,
 
 	deploymentConfig *EnvYaml,
- ) ([]HelmRepo, error) {
+) ([]HelmRepo, error) {
 
 	// Resulting array of helm repositories
 	var helmRepos []HelmRepo
@@ -66,7 +66,7 @@ func (m *HydrateKubernetes) getDeploymentConfig(
 	fsConf := dag.FirestartrConfig(dotFirestartrDir)
 
 	legacyRegs, err := fsConf.LegacyRegistries(ctx)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,6 @@ func (m *HydrateKubernetes) getDeploymentConfig(
 			return nil, err
 
 		}
-
 
 		if repositoryName == regName {
 
@@ -144,10 +143,10 @@ func (m *HydrateKubernetes) getDeploymentConfig(
 
 			helmRepos = append(helmRepos, HelmRepo{
 				Name: repoName,
-				Url: repoUrl,
-				Oci: false,
+				Url:  repoUrl,
+				Oci:  false,
 			})
-	}
+		}
 	}
 
 	for _, legacyReg := range legacyRegs {
@@ -165,8 +164,8 @@ func (m *HydrateKubernetes) getDeploymentConfig(
 		if repositoryName == name {
 			helmRepos = append(helmRepos, HelmRepo{
 				Name: name,
-				Url: url,
-				Oci: true,
+				Url:  url,
+				Oci:  true,
 			})
 		}
 	}
@@ -189,9 +188,8 @@ func (m *HydrateKubernetes) BuildHelmRepositoriesFile(
 
 ) (*dagger.File, error) {
 
+	envConfig, err := m.getDeploymentConfig(ctx, envFileLocation)
 
-	envConfig , err := m.getDeploymentConfig(ctx, envFileLocation)
-	
 	if err != nil {
 		return nil, err
 	}
