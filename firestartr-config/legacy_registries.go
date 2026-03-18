@@ -21,7 +21,7 @@ type LegacyRegistry struct {
 	Name         string          `yaml:"name"`
 	Registry     string          `yaml:"registry"`
 	ImageTypes   []string        `yaml:"image_types"`
-	AuthStrategy AuthStrategy    `yaml:"auth_strategy"`
+AuthStrategy *AuthStrategy   `yaml:"auth_strategy,omitempty"`
 	BasePaths    LegacyBasePaths `yaml:"base_paths"`
 }
 
