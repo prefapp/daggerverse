@@ -7,11 +7,21 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type AuthStrategy string
+
+const (
+	AuthStrategyAWSOIDC    AuthStrategy = "aws_oidc"
+	AuthStrategyAzureOIDC  AuthStrategy = "azure_oidc"
+	AuthStrategyGeneric    AuthStrategy = "generic"
+	AuthStrategyGHCR       AuthStrategy = "ghcr"
+	AuthStrategyDockerHub  AuthStrategy = "dockerhub"
+)
+
 type LegacyRegistry struct {
 	Name         string          `yaml:"name"`
 	Registry     string          `yaml:"registry"`
 	ImageTypes   []string        `yaml:"image_types"`
-	AuthStrategy string          `yaml:"auth_strategy"`
+	AuthStrategy AuthStrategy    `yaml:"auth_strategy"`
 	BasePaths    LegacyBasePaths `yaml:"base_paths"`
 }
 
