@@ -18,7 +18,7 @@ func loadRepositories(ctx context.Context, firestartrDir *dagger.Directory) ([]R
 
 	for _, ext := range []string{".yaml", ".yml"} {
 
-		filePaths, err := firestartrDir.Glob(ctx, "repositories/*"+ext)
+		filePaths, err := firestartrDir.Glob(ctx, "helm_repositories/*"+ext)
 
 		if err != nil {
 

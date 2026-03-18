@@ -48,12 +48,6 @@ func loadLegacyRegistries(ctx context.Context, firestartrDir *dagger.Directory) 
 
 			err = yaml.Unmarshal([]byte(fileContent), &reg)
 
-			if err != nil {
-
-				return nil, err
-
-			}
-
 			registries = append(registries, reg)
 
 		}
