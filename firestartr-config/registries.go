@@ -11,7 +11,6 @@ type Registry struct {
 	Name         string    `yaml:"name"`
 	Url          string    `yaml:"url"`
 	ImageTypes   []string  `yaml:"image_types"`
-	IsDefault    bool      `yaml:"default"`
 	AuthStrategy string    `yaml:"auth_strategy"`
 	BasePaths    BasePaths `yaml:"base_paths"`
 }
