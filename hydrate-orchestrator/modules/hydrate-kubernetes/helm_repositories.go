@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
@@ -62,6 +61,8 @@ func (m *HydrateKubernetes) getDeploymentConfig(
 	// Resulting array of helm repositories
 	var helmRepos []HelmRepo
 
+	repositoryName := strings.Split(deploymentConfig.Chart, "/")[0]
+
 	fsConf := dag.FirestartrConfig(dotFirestartrDir)
 
 	legacyRegs, err := fsConf.LegacyRegistries(ctx)
@@ -88,7 +89,7 @@ func (m *HydrateKubernetes) getDeploymentConfig(
 
 		}
 
-		regHost, err := reg.Registry(ctx)
+		regHost, err := reg.URL(ctx)
 
 		if err != nil {
 
@@ -96,7 +97,6 @@ func (m *HydrateKubernetes) getDeploymentConfig(
 
 		}
 
-		repositoryName := strings.Split(deploymentConfig.Chart, "/")[0]
 
 		if repositoryName == regName {
 
@@ -140,22 +140,14 @@ func (m *HydrateKubernetes) getDeploymentConfig(
 
 		}
 
-		helmRepos = append(helmRepos, HelmRepo{
-			Name: repoName,
-			Url: repoUrl,
-			Oci: false,
-		})
+		if repositoryName == repoName {
+
+			helmRepos = append(helmRepos, HelmRepo{
+				Name: repoName,
+				Url: repoUrl,
+				Oci: false,
+			})
 	}
-
-	/* Keep legacy logic*/
-	repositoryName := strings.Split(deploymentConfig.Chart, "/")[0]
-
-	if deploymentConfig.Registry != "" {
-		helmRepos = append(helmRepos, HelmRepo{
-			Name: repositoryName,
-			Url: deploymentConfig.Registry,
-			Oci: lo.FromPtrOr(deploymentConfig.Oci, false),
-		})
 	}
 
 	for _, legacyReg := range legacyRegs {
@@ -170,13 +162,13 @@ func (m *HydrateKubernetes) getDeploymentConfig(
 			return nil, err
 		}
 
-		hr := HelmRepo{
-			Name: name,
-			Url: url,
-			Oci: true,
+		if repositoryName == name {
+			helmRepos = append(helmRepos, HelmRepo{
+				Name: name,
+				Url: url,
+				Oci: true,
+			})
 		}
-
-		helmRepos = append(helmRepos, hr)
 	}
 
 	if len(helmRepos) == 0 {
@@ -227,8 +219,6 @@ func (m *HydrateKubernetes) BuildHelmRepositoriesFile(
 		return nil, err
 
 	}
-
-	// panic(string(reposStructYamlContent))
 
 	return dag.Directory().
 		WithNewFile("repositories.yaml", string(reposStructYamlContent)).

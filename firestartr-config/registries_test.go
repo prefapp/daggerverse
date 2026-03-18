@@ -27,14 +27,14 @@ func TestRegistries(t *testing.T) {
 
 		expectedFirstRegistry := "000000000000.dkr.ecr.eu-west-1.amazonaws.com"
 
-		if registries[0].Registry != expectedFirstRegistry {
-			t.Errorf("Expected %s, got %s", expectedFirstRegistry, registries[0].Registry)
+		if registries[0].Url != expectedFirstRegistry {
+			t.Errorf("Expected %s, got %s", expectedFirstRegistry, registries[0].Url)
 		}
 
 		expectedSecondRegistry := "xxxxxxxxxx.azurecr.io"
 
-		if registries[1].Registry != expectedSecondRegistry {
-			t.Errorf("Expected %s, got %s", expectedSecondRegistry, registries[1].Registry)
+		if registries[1].Url != expectedSecondRegistry {
+			t.Errorf("Expected %s, got %s", expectedSecondRegistry, registries[1].Url)
 		}
 	})
 }

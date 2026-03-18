@@ -9,7 +9,7 @@ import (
 
 type Registry struct {
 	Name         string    `yaml:"name"`
-	Registry     string    `yaml:"registry"`
+	Url          string    `yaml:"url"`
 	ImageTypes   []string  `yaml:"image_types"`
 	IsDefault    bool      `yaml:"default"`
 	AuthStrategy string    `yaml:"auth_strategy"`
