@@ -17,12 +17,12 @@ func TestLegacyRegistries(t *testing.T) {
 
 		if err != nil {
 
-			t.Errorf("Error loading registries: %s", err)
+			t.Fatalf("Error loading registries: %s", err)
 
 		}
 
 		if len(registries) != 2 {
-			t.Errorf("Expected 2 registries, got %d", len(registries))
+			t.Fatalf("Expected 2 registries, got %d", len(registries))
 		}
 
 		expectedFirstRegistry := "000000000000.dkr.ecr.eu-west-1.amazonaws.com"
