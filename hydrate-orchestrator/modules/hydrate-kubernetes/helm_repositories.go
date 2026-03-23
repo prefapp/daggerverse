@@ -218,8 +218,6 @@ func (m *HydrateKubernetes) BuildHelmRepositoriesFile(
 
 	}
 
-	panic(string(reposStructYamlContent))
-
 	return dag.Directory().
 		WithNewFile("repositories.yaml", string(reposStructYamlContent)).
 		File("repositories.yaml"), nil
