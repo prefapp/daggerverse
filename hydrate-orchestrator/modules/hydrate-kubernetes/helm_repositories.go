@@ -49,7 +49,13 @@ func (m *HydrateKubernetes) getDeploymentConfig(
 	return &envYamlStruct, nil
 }
 
-// Create a function that get's all helm possible configurations from the firestartr config directory and creates a helm repositories file with all the possible helm repositories that can be used in the helm charts of the firestartr config directory and return a helmrepo structure array.
+/*
+getHelmReposFromFirestartrConfig collects all Helm repository configurations
+from the Firestartr config directory and returns them as a slice of HelmRepo.
+It aggregates all possible Helm repositories that can be used by the Helm
+charts in the Firestartr config directory into a single repositories
+representation.
+*/
 func (m *HydrateKubernetes) getHelmReposFromFirestartrConfig(
 	ctx context.Context,
 
