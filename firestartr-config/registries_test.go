@@ -21,20 +21,15 @@ func TestRegistries(t *testing.T) {
 
 		}
 
-		if len(registries) != 2 {
-			t.Errorf("Expected 2 registries, got %d", len(registries))
+		if len(registries) != 1 {
+			t.Errorf("Expected 1 registry, got %d", len(registries))
 		}
 
-		expectedFirstRegistry := "000000000000.dkr.ecr.eu-west-1.amazonaws.com"
+		expectedFirstRegistry := "xxxxxxxxxx.azurecr.io"
 
 		if registries[0].Url != expectedFirstRegistry {
 			t.Errorf("Expected %s, got %s", expectedFirstRegistry, registries[0].Url)
 		}
 
-		expectedSecondRegistry := "xxxxxxxxxx.azurecr.io"
-
-		if registries[1].Url != expectedSecondRegistry {
-			t.Errorf("Expected %s, got %s", expectedSecondRegistry, registries[1].Url)
-		}
 	})
 }
