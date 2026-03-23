@@ -80,11 +80,9 @@ func loadLegacyRegistries(ctx context.Context, firestartrDir *dagger.Directory) 
 				return nil, err
 			}
 
-			if !reg.isValid() {
-				continue
+			if reg.isValid() {
+				registries = append(registries, reg)
 			}
-
-			registries = append(registries, reg)
 
 		}
 

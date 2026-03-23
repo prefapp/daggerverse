@@ -8,11 +8,30 @@ import (
 )
 
 type Registry struct {
-	Name         string    `yaml:"name"`
-	Url          string    `yaml:"url"`
-	ImageTypes   []string  `yaml:"image_types"`
-	AuthStrategy string    `yaml:"auth_strategy"`
-	BasePaths    BasePaths `yaml:"base_paths"`
+	Name         string       `yaml:"name"`
+	Url          string       `yaml:"url"`
+	ImageTypes   []string     `yaml:"image_types"`
+	AuthStrategy AuthStrategy `yaml:"auth_strategy"`
+	BasePaths    BasePaths    `yaml:"base_paths"`
+}
+
+func (r *Registry) isValid() bool {
+
+	if r.Name == "" || r.Url == "" || len(r.ImageTypes) == 0 || r.AuthStrategy == "" {
+		return false
+	}
+
+	if r.AuthStrategy != "" {
+		switch r.AuthStrategy {
+		case AuthStrategyAWSOIDC, AuthStrategyAzureOIDC, AuthStrategyGeneric, AuthStrategyGHCR, AuthStrategyDockerHub:
+			return true
+		default:
+			return false
+		}
+	}
+
+	return true
+
 }
 
 type BasePaths struct {
@@ -48,8 +67,10 @@ func loadRegistries(ctx context.Context, firestartrDir *dagger.Directory) ([]Reg
 
 			err = yaml.Unmarshal([]byte(fileContent), &reg)
 
-			registries = append(registries, reg)
+			if reg.isValid() {
 
+			registries = append(registries, reg)
+			}
 		}
 
 	}
