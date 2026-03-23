@@ -14,6 +14,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var fullSemverRegex = regexp.MustCompile(
+	`^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`,
+)
+
 func extractErrorMessage(err error) string {
 	switch e := err.(type) {
 	case *dagger.ExecError:
@@ -35,10 +39,6 @@ func extractErrorMessage(err error) string {
 func (m *UpdateClaimsFeatures) getFeaturesMapData(
 	ghReleaseListResult string,
 ) (map[string]string, map[string][]string, error) {
-	fullSemverRegex := regexp.MustCompile(
-		`^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`,
-	)
-
 	var latestFeaturesMap = make(map[string]string)
 	var allFeaturesMap = make(map[string][]string)
 	var sortedFeaturesMap = make(map[string][]*semver.Version)
@@ -51,7 +51,7 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 
 		featureData := strings.Split(featureTag, "-")
 
-		if len(featureData) == 0 {
+		if len(featureData) < 2 {
 			fmt.Printf(
 				"Feature tag %s is not valid, skipping\n",
 				featureTag,
@@ -66,7 +66,7 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 		)
 		if err != nil {
 			fmt.Printf(
-				"Version %s of feature %s is not a valid SemVer, skipping",
+				"Version %s of feature %s is not a valid SemVer, skipping\n",
 				featureData[len(featureData)-1],
 				featureName,
 			)
@@ -75,7 +75,7 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 
 		if !fullSemverRegex.MatchString(featureVersion) {
 			fmt.Printf(
-				"Version %s of feature %s is not a full SemVer (X.Y.Z), skipping as it's probably a rolling release tag",
+				"Version %s of feature %s is not a full SemVer (X.Y.Z), skipping as it's probably a rolling release tag\n",
 				featureVersion,
 				featureName,
 			)
