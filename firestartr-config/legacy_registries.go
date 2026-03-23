@@ -80,6 +80,12 @@ func loadLegacyRegistries(ctx context.Context, firestartrDir *dagger.Directory) 
 				return nil, err
 			}
 
+			/*
+			This is done this way because Unmarshal does not has a way of validating the content while unmarshalling.
+			We need to make sure that it has all required fields since it can get confused with legacy configuration
+			and create a valid object with missing fields, specifically the url and registry.
+			We cannot use a custom UnmarshalYAML function because dagger then is not able to export that type in dagger.gen
+			*/
 			if reg.isValid() {
 				registries = append(registries, reg)
 			}
