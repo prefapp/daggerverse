@@ -72,6 +72,8 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 
 	// Only allow alphanumeric, underscores, and hyphens
 	validFeatureName := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+	queryNameTemplate := "feature_query_%d"
+	currentQueryIndex := 0
 
 	if len(m.FeaturesToUpdate) > 0 {
 		query := `{
@@ -95,7 +97,9 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
   nodes {
 	name
   }
-}`, featureQuery, feature, feature)
+}`, featureQuery, fmt.Sprintf(queryNameTemplate, currentQueryIndex), feature)
+
+			currentQueryIndex++
 		}
 
 		if featureQuery == "" {
