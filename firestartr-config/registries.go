@@ -66,6 +66,9 @@ func loadRegistries(ctx context.Context, firestartrDir *dagger.Directory) ([]Reg
 			reg := Registry{}
 
 			err = yaml.Unmarshal([]byte(fileContent), &reg)
+			if err != nil {
+				return nil, err
+			}
 
 			/*
 			This is done this way because Unmarshal does not has a way of validating the content while unmarshalling.
