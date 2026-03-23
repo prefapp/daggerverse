@@ -21,20 +21,16 @@ func TestRepositories(t *testing.T) {
 
 		}
 
-		if len(repositories) != 2 {
-			t.Fatalf("Expected 2 repositories, got %d", len(repositories))
+		if len(repositories) != 1 {
+			t.Fatalf("Expected 1 repository, got %d", len(repositories))
 		}
 
-		expectedFirstRegistry := "000000000000.dkr.ecr.eu-west-1.amazonaws.com"
-
-		if repositories[0].Url != expectedFirstRegistry {
-			t.Fatalf("Expected %s, got %s", expectedFirstRegistry, repositories[0].Url)
+		if repositories[0].Url != "https://argoproj.github.io/argo-helm" {
+			t.Fatalf("Expected %s, got %s", "https://argoproj.github.io/argo-helm", repositories[0].Url)
 		}
 
-		expectedSecondRegistry := "xxxxxxxxxx.azurecr.io"
-
-		if repositories[1].Url != expectedSecondRegistry {
-			t.Fatalf("Expected %s, got %s", expectedSecondRegistry, repositories[1].Url)
+		if repositories[0].Name != "argo" {
+			t.Fatalf("Expected %s, got %s", "argo", repositories[0].Name)
 		}
 	})
 }
