@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dagger/firestartr-config/internal/dagger"
-	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -26,31 +25,23 @@ type LegacyRegistry struct {
 	BasePaths    LegacyBasePaths `yaml:"base_paths"`
 }
 
-// Custom unmarshal to ensure all required fields are present
-func (l *LegacyRegistry) UnmarshalYAML(value *yaml.Node) error {
-	type raw LegacyRegistry
-	var aux raw
-	if err := value.Decode(&aux); err != nil {
-		return err
+func (lc *LegacyRegistry) isValid() bool {
+
+	if lc.Name == "" || lc.Registry == "" || len(lc.ImageTypes) == 0 {
+		return false
 	}
-	// Check required fields
-	if aux.Name == "" {
-		return fmt.Errorf("missing required field: name")
+
+	if lc.AuthStrategy != nil {
+		switch *lc.AuthStrategy {
+		case AuthStrategyAWSOIDC, AuthStrategyAzureOIDC, AuthStrategyGeneric, AuthStrategyGHCR, AuthStrategyDockerHub:
+			return true
+		default:
+			return false
+		}
 	}
-	if aux.Registry == "" {
-		return fmt.Errorf("missing required field: registry")
-	}
-	if len(aux.ImageTypes) == 0 {
-		return fmt.Errorf("missing required field: image_types")
-	}
-	if aux.BasePaths.Services == "" {
-		return fmt.Errorf("missing required field: base_paths.services")
-	}
-	if aux.BasePaths.Charts == "" {
-		return fmt.Errorf("missing required field: base_paths.charts")
-	}
-	*l = LegacyRegistry(aux)
-	return nil
+
+	return true
+
 }
 
 type LegacyBasePaths struct {
@@ -85,6 +76,13 @@ func loadLegacyRegistries(ctx context.Context, firestartrDir *dagger.Directory) 
 			reg := LegacyRegistry{}
 
 			err = yaml.Unmarshal([]byte(fileContent), &reg)
+			if err != nil {
+				return nil, err
+			}
+
+			if !reg.isValid() {
+				continue
+			}
 
 			registries = append(registries, reg)
 
