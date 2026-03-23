@@ -63,9 +63,8 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 	createPR := false
 
 	for _, feature := range claim.Providers.Github.Features {
-		if (m.FeaturesToUpdate == nil ||
-			slices.Contains(m.FeaturesToUpdate, feature.Name)) &&
-			feature.Version != "" {
+		if m.FeaturesToUpdate == nil ||
+			slices.Contains(m.FeaturesToUpdate, feature.Name) {
 			featureVersionSemver, err := semver.NewVersion(
 				featuresMap[feature.Name],
 			)
