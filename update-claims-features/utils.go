@@ -6,6 +6,7 @@ import (
 	"dagger/update-claims-features/internal/dagger"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -34,6 +35,10 @@ func extractErrorMessage(err error) string {
 func (m *UpdateClaimsFeatures) getFeaturesMapData(
 	ghReleaseListResult string,
 ) (map[string]string, map[string][]string, error) {
+	fullSemverRegex := regexp.MustCompile(
+		`^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`,
+	)
+
 	var latestFeaturesMap = make(map[string]string)
 	var allFeaturesMap = make(map[string][]string)
 	var sortedFeaturesMap = make(map[string][]*semver.Version)
@@ -61,8 +66,17 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 		)
 		if err != nil {
 			fmt.Printf(
-				"Version %s of feature %s is not valid SemVer, skipping",
+				"Version %s of feature %s is not a valid SemVer, skipping",
 				featureData[len(featureData)-1],
+				featureName,
+			)
+			continue
+		}
+
+		if !fullSemverRegex.MatchString(featureVersion) {
+			fmt.Printf(
+				"Version %s of feature %s is not a full SemVer (X.Y.Z), skipping as it's probably a rolling release tag",
+				featureVersion,
 				featureName,
 			)
 			continue
