@@ -62,7 +62,7 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 		if err != nil {
 			fmt.Printf(
 				"Version %s of feature %s is not valid SemVer, skipping",
-				featureData[1],
+				featureData[len(featureData)-1],
 				featureName,
 			)
 			continue
