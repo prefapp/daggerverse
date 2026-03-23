@@ -172,7 +172,7 @@ func (m *HydrateKubernetes) getHelmReposFromFirestartrConfig(
 
 	if len(helmRepos) == 0 {
 
-		return nil, fmt.Errorf("No registry found for repository in your firestartr config directory %s", repositoryName)
+		return nil, fmt.Errorf("no registry or helm repository found for %s in your firestartr config directory", repositoryName)
 	}
 
 	return helmRepos, nil
