@@ -10,9 +10,9 @@ import (
 type Registry struct {
 	Name         string       `yaml:"name"`
 	Url          string       `yaml:"url"`
-	ImageTypes   []string     `yaml:"image_types"`
-	AuthStrategy AuthStrategy `yaml:"auth_strategy"`
-	BasePaths    BasePaths    `yaml:"base_paths"`
+	ImageTypes   []string     `yaml:"image_types,omitempty"`
+	AuthStrategy AuthStrategy `yaml:"auth_strategy,omitempty"`
+	BasePaths    BasePaths    `yaml:"base_paths,omitempty"`
 }
 
 func (r *Registry) isValid() bool {

@@ -20,9 +20,9 @@ const (
 type LegacyRegistry struct {
 	Name         string          `yaml:"name"`
 	Registry     string          `yaml:"registry"`
-	ImageTypes   []string        `yaml:"image_types"`
+	ImageTypes   []string        `yaml:"image_types,omitempty"`
 	AuthStrategy *AuthStrategy   `yaml:"auth_strategy,omitempty"`
-	BasePaths    LegacyBasePaths `yaml:"base_paths"`
+	BasePaths    LegacyBasePaths `yaml:"base_paths,omitempty"`
 }
 
 func (lc *LegacyRegistry) isValid() bool {
