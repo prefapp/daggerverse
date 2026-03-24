@@ -205,23 +205,24 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushDeploymentStep(
      🚀 DEPLOYMENT FIRESTARTR PUSHED 🚀
 =====================================================
 Deployment files created and successfully pushed to the app-firestartr
-repo. The PR has been created in the following repo:
-
-%s/pulls
+repo. The PR has been created in its corresponding repo.
 
 
 ⚠️⚠️⚠️⚠️⚠️ USER INTERVENTION REQUIRED 🛑
 
-You need to review and merge it.
 
-Run a deployment of the new applications machinery by invoking the [action](%s/actions/workflows/generate-deployment-kubernetes.yml), using this coordinates:
+You need to perform the following actions:
 
-%s
+  1. Review and merge the PR created in:
+     - %s/pulls
 
-And merge the resultant deployment PR
+  2. Run a deployment of the new applications machinery by invoking the [action](%s/actions/workflows/generate-deployment-kubernetes.yml), using these coordinates:
 
-`, prURL, prURL, cardinality,
-	)
+     %s
+
+  3. Review and merge the resultant deployment PR that is created by the action.
+
+`, prURL, prURL, cardinality)
 	return m.UpdateSummaryAndRun(ctx, successMessage)
 
 }
@@ -238,23 +239,25 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushArgoCDStep(
      🚀 DEPLOYMENT ARGOCD APPLICATIONS PUSHED 🚀
 =====================================================
 Application and secret files created and successfully pushed to the argocd
-repo. The PRs has been created in the following repos:
+repo. The PRs have been created in its corresponding repos.
 
-- %s/pulls
-- %s/pulls
 
 ⚠️⚠️⚠️⚠️⚠️ USER INTERVENTION REQUIRED 🛑
 
-You need to review and merge them.
 
-Run a deployment of the new secrets machinery by invoking the [action](%s/actions/workflows/generate-deployment.yml), using this coordinates:
+You need to perform the following actions:
 
-%s
+  1. Review and merge the PRs created in:
+     - %s/pulls
+     - %s/pulls
 
-And merge the resultant deployment PR
+  2. Run a deployment of the new secrets machinery by invoking the [action](%s/actions/workflows/generate-deployment.yml), using these coordinates:
 
-`, repoArgoCD, repoSysServices, repoSysServices, cardinality,
-	)
+     %s
+
+  3. Review and merge the resultant deployment PR that is created by the action.
+
+`, repoArgoCD, repoSysServices, repoSysServices, cardinality)
 	return m.UpdateSummaryAndRun(ctx, successMessage)
 
 }
