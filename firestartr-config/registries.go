@@ -17,7 +17,7 @@ type Registry struct {
 
 func (r *Registry) isValid() bool {
 
-	if r.Name == "" || r.Url == "" || len(r.ImageTypes) == 0 || r.AuthStrategy == "" {
+	if r.Name == "" || r.Url == "" {
 		return false
 	}
 
@@ -78,7 +78,7 @@ func loadRegistries(ctx context.Context, firestartrDir *dagger.Directory) ([]Reg
 			*/
 			if reg.isValid() {
 
-			registries = append(registries, reg)
+				registries = append(registries, reg)
 			}
 		}
 

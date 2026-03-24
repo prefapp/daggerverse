@@ -28,7 +28,7 @@ type LegacyRegistry struct {
 
 func (lc *LegacyRegistry) isValid() bool {
 
-	if lc.Name == "" || lc.Registry == "" || len(lc.ImageTypes) == 0 {
+	if lc.Name == "" || lc.Registry == "" {
 		return false
 	}
 
