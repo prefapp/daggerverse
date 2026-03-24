@@ -75,7 +75,7 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 	}
 
 	queryNameTemplate := "feature_query_%d"
-	queryVarTemplate := "$feature_var_%d"
+	queryVarTemplate := "feature_var_%d"
 	queryVarList := "$owner: String!, $name: String!"
 	currentQueryIndex := 0
 
@@ -98,7 +98,7 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 }`, featureQuery, fmt.Sprintf(queryNameTemplate, currentQueryIndex), varName)
 
 			queryVarList = fmt.Sprintf("%s, $%s: String!", queryVarList, varName)
-			cmd = append(cmd, "-F", fmt.Sprintf("%s=%s-", varName, feature))
+			cmd = append(cmd, "-F", fmt.Sprintf("\"%s=%s-\"", varName, feature))
 
 			currentQueryIndex++
 		}
