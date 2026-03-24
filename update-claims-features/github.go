@@ -92,6 +92,10 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 		featureQuery := ""
 
 		for _, feature := range m.FeaturesToUpdate {
+			if feature == "" {
+				continue
+			}
+
 			varName := fmt.Sprintf(queryVarTemplate, currentQueryIndex)
 
 			featureQuery = fmt.Sprintf(`%s
