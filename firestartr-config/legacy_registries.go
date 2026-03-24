@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dagger/firestartr-config/internal/dagger"
-	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -89,8 +88,6 @@ func loadLegacyRegistries(ctx context.Context, firestartrDir *dagger.Directory) 
 			*/
 			if reg.isValid() {
 				registries = append(registries, reg)
-			} else {
-				panic(fmt.Sprintf("Invalid registry: %+v", reg))
 			}
 
 		}
