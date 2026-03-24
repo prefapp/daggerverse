@@ -15,13 +15,14 @@ const (
 	AuthStrategyGeneric    AuthStrategy = "generic"
 	AuthStrategyGHCR       AuthStrategy = "ghcr"
 	AuthStrategyDockerHub  AuthStrategy = "dockerhub"
+	AuthStrategyNone       AuthStrategy = ""
 )
 
 type LegacyRegistry struct {
 	Name         string          `yaml:"name"`
 	Registry     string          `yaml:"registry"`
 	ImageTypes   []string        `yaml:"image_types,omitempty"`
-	AuthStrategy *AuthStrategy   `yaml:"auth_strategy,omitempty"`
+	AuthStrategy AuthStrategy   `yaml:"auth_strategy,omitempty"`
 	BasePaths    LegacyBasePaths `yaml:"base_paths,omitempty"`
 }
 
