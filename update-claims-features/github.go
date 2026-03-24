@@ -102,7 +102,7 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 }`, featureQuery, fmt.Sprintf(queryNameTemplate, currentQueryIndex), varName)
 
 			queryVarList = fmt.Sprintf("%s, $%s: String!", queryVarList, varName)
-			cmd = append(cmd, "-F", fmt.Sprintf("\"%s=%s-\"", varName, feature))
+			cmd = append(cmd, "-F", fmt.Sprintf("%s=%s-", varName, feature))
 
 			currentQueryIndex++
 		}
