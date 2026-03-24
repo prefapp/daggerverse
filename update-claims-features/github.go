@@ -72,6 +72,10 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 		"gh",
 		"api",
 		"graphql",
+		"-F",
+		"owner=prefapp",
+		"-F",
+		"name=features",
 	}
 
 	queryNameTemplate := "feature_query_%d"
