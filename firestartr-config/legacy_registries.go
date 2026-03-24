@@ -32,8 +32,8 @@ func (lc *LegacyRegistry) isValid() bool {
 		return false
 	}
 
-	if lc.AuthStrategy != nil {
-		switch *lc.AuthStrategy {
+	if lc.AuthStrategy != "" {
+		switch lc.AuthStrategy {
 		case AuthStrategyAWSOIDC, AuthStrategyAzureOIDC, AuthStrategyGeneric, AuthStrategyGHCR, AuthStrategyDockerHub:
 			return true
 		default:
