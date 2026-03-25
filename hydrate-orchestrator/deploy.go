@@ -559,7 +559,9 @@ func (m *HydrateOrchestrator) processDeploymentGlob(
 		panic(err)
 	}
 
-	jsonString, err := json.Marshal(affected_files)
+	uniqueFiles := m.removeDuplicatedDeployments(ctx, affected_files)
+
+	jsonString, err := json.Marshal(uniqueFiles)
 
 	if err != nil {
 		panic(err)
@@ -595,7 +597,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 		dirs := splitPath(deployment)
 
 		if len(dirs) == 0 {
-			panic(fmt.Sprintf("Invalid deployment path provided (dir count is zeri): %s", deployment))
+			panic(fmt.Sprintf("Invalid deployment path provided (dir count is zero): %s", deployment))
 		}
 
 		deploymentType := dirs[0]
@@ -659,4 +661,24 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 
 	return result
 
+}
+
+func (m *HydrateOrchestrator) removeDuplicatedDeployments(
+	ctx context.Context,
+	deploymentList []string,
+) []string {
+	uniqueDeployments := make(map[string]struct{})
+
+	for _, deployment := range deploymentList {
+		name := strings.TrimSuffix(deployment, ".yaml")
+
+		uniqueDeployments[name] = struct{}{}
+	}
+
+	resultingList := make([]string, 0, len(uniqueDeployments))
+	for name := range uniqueDeployments {
+		resultingList = append(resultingList, name)
+	}
+
+	return resultingList
 }
