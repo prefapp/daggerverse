@@ -5,6 +5,7 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/samber/lo"
@@ -559,7 +560,7 @@ func (m *HydrateOrchestrator) processDeploymentGlob(
 		panic(err)
 	}
 
-	uniqueFiles := m.removeDuplicatedDeployments(ctx, affected_files)
+	uniqueFiles := m.deduplicateDeployments(affected_files)
 
 	jsonString, err := json.Marshal(uniqueFiles)
 
@@ -663,14 +664,13 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 
 }
 
-func (m *HydrateOrchestrator) removeDuplicatedDeployments(
-	ctx context.Context,
+func (m *HydrateOrchestrator) deduplicateDeployments(
 	deploymentList []string,
 ) []string {
 	uniqueDeployments := make(map[string]struct{})
 
 	for _, deployment := range deploymentList {
-		name := strings.TrimSuffix(deployment, ".yaml")
+		name := strings.TrimSuffix(deployment, filepath.Ext(deployment))
 
 		uniqueDeployments[name] = struct{}{}
 	}
