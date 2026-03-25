@@ -117,6 +117,7 @@ type OIDC struct {
 type Feature struct {
 	Name    string            `yaml:"name,omitempty"`
 	Version string            `yaml:"version,omitempty"`
+	Ref     string            `yaml:"ref,omitempty"`
 	Args    map[string]string `yaml:"args,omitempty"`
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -69,40 +68,61 @@ func (m *UpdateClaimsFeatures) MergePullRequest(ctx context.Context, prLink stri
 func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) {
 	ghReleaseListResult := ""
 	var err error
+	cmd := []string{
+		"gh",
+		"api",
+		"graphql",
+		"-F",
+		"owner=prefapp",
+		"-F",
+		"name=features",
+	}
 
-	// Only allow alphanumeric, underscores, and hyphens
-	validFeatureName := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+	queryNameTemplate := "feature_query_%d"
+	queryVarTemplate := "feature_var_%d"
+	queryVarList := "$owner: String!, $name: String!"
+	currentQueryIndex := 0
 
 	if len(m.FeaturesToUpdate) > 0 {
-		query := `{
-  repository(owner: "prefapp", name: "features") {
+		query := `query GetReleases(%s) {
+  repository(owner: $owner, name: $name) {
 	%s
   }
 }`
 		featureQuery := ""
 
 		for _, feature := range m.FeaturesToUpdate {
-			if !validFeatureName.MatchString(feature) {
-				fmt.Printf(
-					"'%s' is not a valid feature name, it won't be queried\n",
-					feature,
-				)
+			if feature == "" {
 				continue
 			}
 
+			varName := fmt.Sprintf(queryVarTemplate, currentQueryIndex)
+
 			featureQuery = fmt.Sprintf(`%s
-%s: refs(refPrefix: "refs/tags/", last: 100, query: "%s-") {
+%s: refs(refPrefix: "refs/tags/", last: 100, query: $%s) {
   nodes {
 	name
   }
-}`, featureQuery, feature, feature)
+}`, featureQuery, fmt.Sprintf(queryNameTemplate, currentQueryIndex), varName)
+
+			queryVarList = fmt.Sprintf("%s, $%s: String!", queryVarList, varName)
+			cmd = append(cmd, "-F", fmt.Sprintf("%s=%s-", varName, feature))
+
+			currentQueryIndex++
 		}
 
 		if featureQuery == "" {
 			return "", fmt.Errorf("no valid features to update specified")
 		}
 
-		query = fmt.Sprintf(query, featureQuery)
+		query = fmt.Sprintf(query, queryVarList, featureQuery)
+		cmd = append(
+			cmd,
+			"-f",
+			fmt.Sprintf("query=%s", query),
+			"--jq",
+			".data.repository.[].nodes[].name",
+		)
 
 		ghReleaseListResult, err = dag.Gh(dagger.GhOpts{
 			Version: m.GhCliVersion,
@@ -112,15 +132,7 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 		}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
 			WithWorkdir(m.ClaimsDirPath).
 			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-			WithExec([]string{
-				"gh",
-				"api",
-				"graphql",
-				"-f",
-				fmt.Sprintf("query=%s", query),
-				"--jq",
-				".data.repository.[].nodes[].name",
-			}).
+			WithExec(cmd).
 			Stdout(ctx)
 	} else {
 		return "", fmt.Errorf("no features to update specified")
