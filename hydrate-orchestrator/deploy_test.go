@@ -124,12 +124,12 @@ func TestProcessedUpdatedDeployments(t *testing.T) {
 
 func TestDeduplicateDeployments(t *testing.T) {
 	deployments := []string{
-		"test", "test.yaml", "another-test.yaml", "third-test",
-		"more-tests/test.yaml", "more-tests/test", "another-tests/another-test.yaml",
+		"kubernetes/test", "kubernetes/test.yaml", "kubernetes/another-test.yaml", "kubernetes/third-test",
+		"kubernetes/more-tests/test.yaml", "kubernetes/more-tests/test", "kubernetes/another-tests/another-test.yaml",
 	}
 	expectedResult := []string{
-		"another-test.yaml", "another-tests/another-test.yaml",
-		"more-tests/test", "test", "third-test",
+		"kubernetes/another-test.yaml", "kubernetes/another-tests/another-test.yaml",
+		"kubernetes/more-tests/test", "kubernetes/test", "kubernetes/third-test",
 	}
 
 	m := &HydrateOrchestrator{}
