@@ -676,8 +676,8 @@ func (m *HydrateOrchestrator) deduplicateDeployments(
 		if strings.HasPrefix(deployment, "kubernetes") {
 			fmt.Printf("Deployment %s is a kubernetes deployment\n", deployment)
 			name = strings.TrimSuffix(
-				strings.TrimSuffix(deployment, filepath.Ext(deployment)),
-				"/",
+				strings.TrimSuffix(deployment, "/"),
+				filepath.Ext(deployment),
 			)
 		} else {
 			fmt.Printf("Deployment %s is not a kubernetes deployment\n", deployment)
