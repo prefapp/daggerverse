@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/samber/lo"
@@ -670,7 +671,12 @@ func (m *HydrateOrchestrator) deduplicateDeployments(
 	uniqueDeployments := make(map[string]struct{})
 
 	for _, deployment := range deploymentList {
-		name := strings.TrimSuffix(deployment, filepath.Ext(deployment))
+		var name string
+		if strings.HasPrefix(deployment, "kubernetes") {
+			name = strings.TrimSuffix(deployment, filepath.Ext(deployment))
+		} else {
+			name = deployment
+		}
 
 		uniqueDeployments[name] = struct{}{}
 	}
@@ -680,5 +686,6 @@ func (m *HydrateOrchestrator) deduplicateDeployments(
 		resultingList = append(resultingList, name)
 	}
 
+	sort.Strings(resultingList)
 	return resultingList
 }
