@@ -136,6 +136,10 @@ func TestDeduplicateDeployments(t *testing.T) {
 
 	result := m.deduplicateDeployments(deployments)
 
+	if len(result) != len(expectedResult) {
+		t.Errorf("Expected %v deployments, got %v", len(expectedResult), len(result))
+	}
+
 	for i := range result {
 		if result[i] != expectedResult[i] {
 			t.Errorf("Expected %v, got %v", expectedResult[i], result[i])
