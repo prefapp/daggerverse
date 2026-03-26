@@ -670,6 +670,7 @@ func (m *HydrateOrchestrator) deduplicateDeployments(
 ) []string {
 	uniqueDeployments := make(map[string]string)
 
+	fmt.Printf("Deduplicating deployments: %s\n", deploymentList)
 	for _, deployment := range deploymentList {
 		var name string
 		if strings.HasPrefix(deployment, "kubernetes") {
@@ -690,5 +691,6 @@ func (m *HydrateOrchestrator) deduplicateDeployments(
 	}
 
 	sort.Strings(resultingList)
+	fmt.Printf("Unique deployments: %s\n", resultingList)
 	return resultingList
 }
