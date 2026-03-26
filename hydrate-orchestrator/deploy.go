@@ -668,7 +668,7 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 func (m *HydrateOrchestrator) deduplicateDeployments(
 	deploymentList []string,
 ) []string {
-	uniqueDeployments := make(map[string]struct{})
+	uniqueDeployments := make(map[string]string)
 
 	for _, deployment := range deploymentList {
 		var name string
@@ -678,12 +678,12 @@ func (m *HydrateOrchestrator) deduplicateDeployments(
 			name = deployment
 		}
 
-		uniqueDeployments[name] = struct{}{}
+		uniqueDeployments[name] = deployment
 	}
 
 	resultingList := make([]string, 0, len(uniqueDeployments))
-	for name := range uniqueDeployments {
-		resultingList = append(resultingList, name)
+	for _, dep := range uniqueDeployments {
+		resultingList = append(resultingList, dep)
 	}
 
 	sort.Strings(resultingList)
