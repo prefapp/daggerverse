@@ -678,7 +678,10 @@ func (m *HydrateOrchestrator) deduplicateDeployments(
 			name = deployment
 		}
 
-		uniqueDeployments[name] = deployment
+		_, exists := uniqueDeployments[name]
+		if !exists {
+			uniqueDeployments[name] = deployment
+		}
 	}
 
 	resultingList := make([]string, 0, len(uniqueDeployments))

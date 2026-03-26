@@ -125,7 +125,7 @@ func TestProcessedUpdatedDeployments(t *testing.T) {
 func TestDeduplicateDeployments(t *testing.T) {
 	deployments := []string{
 		"kubernetes/test", "kubernetes/test.yaml", "kubernetes/another-test.yaml", "kubernetes/third-test",
-		"kubernetes/more-tests/test.yaml", "kubernetes/more-tests/test", "kubernetes/another-tests/another-test.yaml",
+		"kubernetes/more-tests/test", "kubernetes/more-tests/test.yaml", "kubernetes/another-tests/another-test.yaml",
 	}
 	expectedResult := []string{
 		"kubernetes/another-test.yaml", "kubernetes/another-tests/another-test.yaml",
