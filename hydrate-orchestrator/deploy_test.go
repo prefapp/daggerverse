@@ -129,8 +129,10 @@ func TestDeduplicateDeployments(t *testing.T) {
 		"kubernetes-sys-services/another-tests/another-test.yaml",
 	}
 	expectedResult := []string{
-		"kubernetes/another-test.yaml", "kubernetes-sys-services/another-tests/another-test.yaml",
-		"kubernetes-sys-services/more-tests/test", "kubernetes/test", "kubernetes/third-test",
+		"kubernetes-sys-services/another-tests/another-test.yaml",
+		"kubernetes-sys-services/more-tests/test",
+		"kubernetes/another-test.yaml", "kubernetes/test",
+		"kubernetes/third-test",
 	}
 
 	m := &HydrateOrchestrator{}
