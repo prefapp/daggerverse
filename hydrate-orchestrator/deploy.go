@@ -684,6 +684,7 @@ func (m *HydrateOrchestrator) deduplicateDeployments(
 			uniqueDeployments[name] = deployment
 		}
 	}
+	fmt.Printf("Unique deployments map: %+v\n", uniqueDeployments)
 
 	resultingList := make([]string, 0, len(uniqueDeployments))
 	for _, dep := range uniqueDeployments {
