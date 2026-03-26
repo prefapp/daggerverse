@@ -50,6 +50,7 @@ lifecycle: production
 name: firestartr-secrets
 system: system:firestartr
 version: "1.0"
+owner: group:{{ $.DefaultFirestartrGroup }}
 providers:
   external_secrets:
     name: firestartr-secrets
@@ -81,6 +82,7 @@ providers:
 kind: OrgWebhookClaim
 version: "1.0"
 name: firestartr-webhook
+owner: group:{{ $.DefaultFirestartrGroup }}
 annotations:
   firestartr.dev/bootstrapped: "true"
 providers:

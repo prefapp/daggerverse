@@ -6,11 +6,16 @@ import (
 	"dagger/update-claims-features/internal/dagger"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
 	"gopkg.in/yaml.v3"
+)
+
+var fullSemverRegex = regexp.MustCompile(
+	`^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$`,
 )
 
 func extractErrorMessage(err error) string {
@@ -54,13 +59,24 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 			continue
 		}
 
-		featureName := featureData[0]
-		featureVersion := strings.Trim(featureData[1], "v")
-		featureVersionSemver, err := semver.NewVersion(featureData[1])
+		featureName := strings.Join(featureData[:len(featureData)-1], "-")
+		featureVersion := strings.Trim(featureData[len(featureData)-1], "v")
+		featureVersionSemver, err := semver.NewVersion(
+			featureData[len(featureData)-1],
+		)
 		if err != nil {
 			fmt.Printf(
-				"Version %s of feature %s is not valid SemVer, skipping",
-				featureData[1],
+				"Version %s of feature %s is not a valid SemVer, skipping\n",
+				featureData[len(featureData)-1],
+				featureName,
+			)
+			continue
+		}
+
+		if !fullSemverRegex.MatchString(featureVersion) {
+			fmt.Printf(
+				"Version %s of feature %s is not a full SemVer (X.Y.Z), skipping as it's probably a rolling release tag\n",
+				featureVersion,
 				featureName,
 			)
 			continue
