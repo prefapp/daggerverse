@@ -121,3 +121,24 @@ func TestProcessedUpdatedDeployments(t *testing.T) {
 	}
 
 }
+
+func TestDeduplicateDeployments(t *testing.T) {
+	deployments := []string{
+		"test", "test.yaml", "another-test.yaml", "third-test",
+		"more-tests/test.yaml", "more-tests/test", "another-tests/another-test.yaml",
+	}
+	expectedResult := []string{
+		"another-test.yaml", "another-tests/another-test.yaml",
+		"more-tests/test", "test", "third-test",
+	}
+
+	m := &HydrateOrchestrator{}
+
+	result := m.deduplicateDeployments(deployments)
+
+	for i := range result {
+		if result[i] != expectedResult[i] {
+			t.Errorf("Expected %v, got %v", expectedResult[i], result[i])
+		}
+	}
+}
