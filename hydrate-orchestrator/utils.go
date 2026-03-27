@@ -353,7 +353,10 @@ func kubernetesSysDepFromStr(deployment string) *KubernetesSysDeployment {
 
 		return &KubernetesSysDeployment{
 			Deployment: Deployment{
-				DeploymentPath: strings.Join(dirs[0:3], string(os.PathSeparator)),
+				DeploymentPath: strings.Join(
+					append(dirs[0:2], sysServiceName),
+					string(os.PathSeparator),
+				),
 			},
 			Cluster:        dirs[1],
 			SysServiceName: sysServiceName,
