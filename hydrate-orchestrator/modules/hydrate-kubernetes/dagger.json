@@ -1,6 +1,6 @@
 {
   "name": "hydrate-kubernetes",
-  "engineVersion": "v0.18.8",
+  "engineVersion": "v0.19.10",
   "sdk": {
     "source": "go"
   },
@@ -9,5 +9,6 @@
       "name": "firestartr-config",
       "source": "../../../firestartr-config"
     }
-  ]
+  ],
+  "disableDefaultFunctionCaching": true
 }
