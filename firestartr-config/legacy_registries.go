@@ -15,7 +15,7 @@ const (
 	AuthStrategyGeneric    AuthStrategy = "generic"
 	AuthStrategyGHCR       AuthStrategy = "ghcr"
 	AuthStrategyDockerHub  AuthStrategy = "dockerhub"
-	// AuthStrategyNone       AuthStrategy = ""
+	AuthStrategyNone       AuthStrategy = ""
 )
 
 type LegacyRegistry struct {
