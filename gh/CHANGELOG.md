@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/prefapp/daggerverse/compare/gh-v1.4.0...gh-v1.4.1) (2026-04-01)
+
+
+### Bug Fixes
+
+* Error on PR creation ([#414](https://github.com/prefapp/daggerverse/issues/414)) ([eaf1ab7](https://github.com/prefapp/daggerverse/commit/eaf1ab7fe0e01f79fd286ee2aafa9b20d25fe8b1))
+
 ## [1.4.0](https://github.com/prefapp/daggerverse/compare/gh-v1.3.5...gh-v1.4.0) (2026-01-13)
 
 
