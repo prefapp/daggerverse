@@ -222,7 +222,11 @@ You need to perform the following actions:
 
   3. Review and merge the resultant deployment PR that is created by the action.
 
-`, prURL, prURL, cardinality)
+`,
+		prURL,
+		prURL,
+		cardinality,
+	)
 	return m.UpdateSummaryAndRun(ctx, successMessage)
 
 }
@@ -239,7 +243,7 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushArgoCDStep(
      🚀 DEPLOYMENT ARGOCD APPLICATIONS PUSHED 🚀
 =====================================================
 Application and secret files created and successfully pushed to the argocd
-repo. The PRs have been created in its corresponding repos.
+repo. The PRs have been created in their corresponding repos.
 
 
 ⚠️⚠️⚠️⚠️⚠️ USER INTERVENTION REQUIRED 🛑
@@ -257,7 +261,12 @@ You need to perform the following actions:
 
   3. Review and merge the resultant deployment PR that is created by the action.
 
-`, repoArgoCD, repoSysServices, repoSysServices, cardinality)
+`,
+		repoArgoCD,
+		repoSysServices,
+		repoSysServices,
+		cardinality,
+	)
 	return m.UpdateSummaryAndRun(ctx, successMessage)
 
 }
