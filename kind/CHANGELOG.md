@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/prefapp/daggerverse/compare/kind-v1.1.1...kind-v2.0.0) (2026-04-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* bump to new default version ([#416](https://github.com/prefapp/daggerverse/issues/416))
+
+### Features
+
+* bump to new default version ([#416](https://github.com/prefapp/daggerverse/issues/416)) ([d467a8c](https://github.com/prefapp/daggerverse/commit/d467a8cbadc7a3965cfabedc45ed3b22fe3b3179))
+
 ## [1.1.1](https://github.com/prefapp/daggerverse/compare/kind-v1.1.0...kind-v1.1.1) (2025-06-13)
 
 
