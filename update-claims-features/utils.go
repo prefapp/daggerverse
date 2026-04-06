@@ -6,6 +6,7 @@ import (
 	"dagger/update-claims-features/internal/dagger"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -13,12 +14,25 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var fullSemverRegex = regexp.MustCompile(
+	`^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$`,
+)
+
 func extractErrorMessage(err error) string {
 	switch e := err.(type) {
 	case *dagger.ExecError:
-		return fmt.Sprintf("Failed: %s\nSTDERR: %s\nSTDOUT: %s", e.Error(), e.Stderr, e.Stdout)
+		errorMsg := ""
+
+		if e.Stderr != "" {
+			errorMsg += fmt.Sprintf("::error::%s\n", e.Stderr)
+		}
+		if e.Stdout != "" {
+			errorMsg += fmt.Sprintf("::info::%s", e.Stdout)
+		}
+
+		return errorMsg
 	default:
-		return fmt.Sprintf("Failed: %s", err.Error())
+		return fmt.Sprintf("::error::%s", strings.ReplaceAll(err.Error(), "::error::", ""))
 	}
 }
 
@@ -45,13 +59,24 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 			continue
 		}
 
-		featureName := featureData[0]
-		featureVersion := strings.Trim(featureData[1], "v")
-		featureVersionSemver, err := semver.NewVersion(featureData[1])
+		featureName := strings.Join(featureData[:len(featureData)-1], "-")
+		featureVersion := strings.Trim(featureData[len(featureData)-1], "v")
+		featureVersionSemver, err := semver.NewVersion(
+			featureData[len(featureData)-1],
+		)
 		if err != nil {
 			fmt.Printf(
-				"Version %s of feature %s is not valid SemVer, skipping",
-				featureData[1],
+				"Version %s of feature %s is not a valid SemVer, skipping\n",
+				featureData[len(featureData)-1],
+				featureName,
+			)
+			continue
+		}
+
+		if !fullSemverRegex.MatchString(featureVersion) {
+			fmt.Printf(
+				"Version %s of feature %s is not a full SemVer (X.Y.Z), skipping as it's probably a rolling release tag\n",
+				featureVersion,
 				featureName,
 			)
 			continue
@@ -182,7 +207,11 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 							changelog, err := m.getReleaseChangelog(ctx, fullFeatureTag)
 
 							if err != nil {
-								return "", err
+								fmt.Printf(
+									"☢️ No changelog for tag %s exists, skipping\n",
+									fullFeatureTag,
+								)
+								continue
 							}
 
 							err = json.Unmarshal([]byte(changelog), &parsedJson)

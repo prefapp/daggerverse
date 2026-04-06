@@ -29,8 +29,8 @@ func (m *HydrateSecrets) RenderWithFirestartrContainer(ctx context.Context, clai
 				"--excludePath", path.Join("/crs", ".github"),
 				"--claimsDefaults", "/.config",
 				"--outputCrDir", "/output",
+				"--claimRefsList", "SecretsClaim-" + claimName,
 				"--provider", "externalSecrets",
-            "--claimRefsList", "SecretsClaim-" + claimName,
 			},
 		).Sync(ctx)
 

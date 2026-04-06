@@ -5,6 +5,7 @@ import (
 	"dagger/update-claims-features/internal/dagger"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -97,19 +98,9 @@ func (m *UpdateClaimsFeatures) New(
 func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	ctx context.Context,
 ) (*dagger.File, error) {
+	errorMsg := ""
 	summary := &UpdateSummary{
 		Items: []UpdateSummaryRow{},
-	}
-	ghReleaseListResult, err := m.getReleases(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	latestFeaturesMap, allFeaturesMap, err := m.getFeaturesMapData(
-		ghReleaseListResult,
-	)
-	if err != nil {
-		return nil, err
 	}
 
 	// Get all ComponentClaim claims
@@ -118,6 +109,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		return nil, err
 	}
 
+	claimsMap := make(map[string]*Claim)
 	for _, entry := range claims {
 		fmt.Printf("Reading claim %s\n", entry)
 
@@ -174,17 +166,30 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 					continue
 				}
 
+			if err != nil {
 				summary.addUpdateSummaryRow(
 					claimName,
 					fmt.Sprintf("Success: <a href=\"%s\">%s</a>", prLink, prLink),
 				)
+				errorMsg = fmt.Sprintf("%s\n%s", errorMsg, extractErrorMessage(err))
+				continue
+			}
 
-				if m.Automerge {
-					m.MergePullRequest(ctx, prLink)
-				}
+			summary.addUpdateSummaryRow(
+				claim.Name,
+				fmt.Sprintf("Success: <a href=\"%s\">%s</a>", prLink, prLink),
+			)
+
+			if m.Automerge {
+				m.MergePullRequest(ctx, prLink)
 			}
 		}
 	}
 
-	return m.DeploymentSummaryToFile(ctx, summary), nil
+	var returnedError error
+	if errorMsg != "" {
+		returnedError = fmt.Errorf("%s", errorMsg)
+	}
+
+	return m.DeploymentSummaryToFile(ctx, summary), returnedError
 }

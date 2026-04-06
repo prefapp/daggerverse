@@ -11,19 +11,13 @@ import (
 // Dagger cannot read files from testing go system with dag.CurrentModule(),
 // so we need to read the files and create a simulated dagger.Directory
 func getDir(dirPath string) *dagger.Directory {
-
 	daggerDir := dag.Directory()
 
 	filepath.Walk(dirPath, func(path string, info fs.FileInfo, err error) error {
-
 		if !info.IsDir() {
-
 			content, err := os.ReadFile(path)
-
 			if err != nil {
-
-				panic(err)
-
+				return err
 			}
 
 			daggerDir = daggerDir.WithNewFile(path, string(content),
@@ -33,7 +27,6 @@ func getDir(dirPath string) *dagger.Directory {
 		}
 
 		return nil
-
 	})
 
 	return daggerDir

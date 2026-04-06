@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,6 +26,8 @@ type Gh struct {
 }
 
 var ErrorNoNewCommits error = errors.New("no new commits created")
+var MaxRetries int = 5
+var BaseWaitTimeBetweenRetries time.Duration = 2 * time.Second
 
 // Exit code 10 is used to indicate the 'no new commits' scenario.
 // This value is chosen to distinguish it from standard exit codes (e.g., 0 for success, 1 for general errors).
@@ -94,7 +97,9 @@ func (m *Gh) Container(
 ) (*dagger.Container, error) {
 	file, err := lo.Ternary(version != "", m.Binary.WithVersion(version), m.Binary).binary(ctx, localGhCliPath, token)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(
+			extractErrorMessage(err),
+		)
 	}
 
 	// get the github container configuration
@@ -127,7 +132,9 @@ func (m *Gh) Container(
 	if version != "" && localGhCliPath != nil {
 		versionOutput, err := ctr.WithExec([]string{"gh", "--version"}).Stdout(ctx)
 		if err != nil {
-			return nil, err
+			return nil, errors.New(
+				extractErrorMessage(err),
+			)
 		}
 
 		// versionOutput[0] example => "gh version <version> (<date>)"
@@ -144,7 +151,7 @@ func (m *Gh) Container(
 
 		if currentVersion != version {
 			fmt.Printf(
-				"WARNING: local gh binary version and specified version differ. Local gh version: %s, specified version: %s",
+				"WARNING: local gh binary version and specified version differ. Local gh version: %s, specified version: %s\n",
 				currentVersion, version,
 			)
 		}
@@ -191,7 +198,10 @@ func (m *Gh) Run(
 ) (*dagger.Container, error) {
 	ctr, err := m.Container(ctx, version, token, repo, pluginNames, pluginVersions, localGhCliPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(
+			extractErrorMessage(err),
+		)
+
 	}
 
 	// disable cache if requested
@@ -286,7 +296,9 @@ func (m *Gh) CreatePR(
 	if ctr == nil {
 		ctr, err = m.Container(ctx, version, token, "", []string{}, []string{}, localGhCliPath)
 		if err != nil {
-			return "", err
+			return "", errors.New(
+				extractErrorMessage(err),
+			)
 		}
 	}
 
@@ -324,7 +336,9 @@ func (m *Gh) CreatePR(
 			Sync(ctx)
 
 		if err != nil {
-			return "", err
+			return "", errors.New(
+				extractErrorMessage(err),
+			)
 		}
 
 		cmd = append(cmd, "--label", label)
@@ -336,24 +350,70 @@ func (m *Gh) CreatePR(
 	}
 
 	ctr = ctr.
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec(cmd)
 
-	_, err = ctr.Sync(ctx)
-	if err != nil {
-		return "", err
+	waitTimeBetweenRetries := BaseWaitTimeBetweenRetries
+	fmt.Println("Creating PR...")
+	for i := range MaxRetries {
+		_, err = ctr.Sync(ctx)
+
+		if err == nil {
+			waitTimeBetweenRetries = BaseWaitTimeBetweenRetries
+			break
+		}
+
+		retryErr := retry(
+			ctx,
+			i == MaxRetries-1,
+			errors.New(extractErrorMessage(err)),
+			fmt.Sprintf("Error creating PR, retrying... (%d/%d)", i+1, MaxRetries-1),
+			waitTimeBetweenRetries,
+		)
+
+		if retryErr != nil {
+			return "", retryErr
+		}
+
+		waitTimeBetweenRetries *= 2
 	}
 
-	prId, err := ctr.
-		WithExec([]string{
-			"gh", "pr", "list",
-			"--head", branch,
-			"--json", "number",
-			"--jq", ".[0].number",
-		}).
-		Stdout(ctx)
+	var prId string
+	fmt.Println("Getting PR ID...")
+	for i := range MaxRetries {
+		prId, err = ctr.
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithExec([]string{
+				"gh", "pr", "list",
+				"--head", branch,
+				"--json", "number",
+				"--jq", ".[0].number",
+			}).
+			Stdout(ctx)
 
-	if err != nil {
-		return "", err
+		// Check if the prId is a valid integer (which means we got the PR ID successfully). If not, we retry.
+		_, convErr := strconv.Atoi(strings.TrimSpace(prId))
+
+		if err == nil && convErr == nil {
+			waitTimeBetweenRetries = BaseWaitTimeBetweenRetries
+			break
+		}
+
+		errToExtract := lo.Ternary(err != nil, err, convErr)
+
+		retryErr := retry(
+			ctx,
+			i == MaxRetries-1,
+			errors.New(extractErrorMessage(errToExtract)),
+			fmt.Sprintf("Error getting PR ID, retrying... (%d/%d)", i+1, MaxRetries-1),
+			waitTimeBetweenRetries,
+		)
+
+		if retryErr != nil {
+			return "", retryErr
+		}
+
+		waitTimeBetweenRetries *= 2
 	}
 
 	prLink, err := ctr.
@@ -366,7 +426,9 @@ func (m *Gh) CreatePR(
 		Stdout(ctx)
 
 	if err != nil {
-		return "", err
+		return "", errors.New(
+			extractErrorMessage(err),
+		)
 	}
 
 	return strings.TrimSpace(prLink), nil
@@ -428,7 +490,10 @@ func (m *Gh) Commit(
 			localGhCliPath,
 		)
 		if err != nil {
-			return nil, err
+			return nil, errors.New(
+				extractErrorMessage(err),
+			)
+
 		}
 	}
 
@@ -460,7 +525,10 @@ func (m *Gh) Commit(
 		if e, ok := err.(*dagger.ExecError); ok && e.ExitCode == NoNewCommitsExitCode {
 			return nil, ErrorNoNewCommits
 		}
-		return nil, err
+		return nil, errors.New(
+			extractErrorMessage(err),
+		)
+
 	}
 
 	return ctr, nil
@@ -536,12 +604,17 @@ func (m *Gh) CommitAndCreatePR(
 		localGhCliPath,
 	)
 	if err != nil {
-		return "", err
+		return "", errors.New(
+			extractErrorMessage(err),
+		)
 	}
 
 	err = m.DeleteRemoteBranch(ctx, repoDir, branchName, version, token, ctr, localGhCliPath)
 	if err != nil {
-		return "", err
+		return "", errors.New(
+			extractErrorMessage(err),
+		)
+
 	}
 
 	ctr, err = m.Commit(
@@ -553,7 +626,10 @@ func (m *Gh) CommitAndCreatePR(
 			return "", nil
 		}
 
-		return "", err
+		return "", errors.New(
+			extractErrorMessage(err),
+		)
+
 	}
 
 	return m.CreatePR(
@@ -604,7 +680,9 @@ func (m *Gh) DeleteRemoteBranch(
 			localGhCliPath,
 		)
 		if err != nil {
-			return err
+			return errors.New(
+				extractErrorMessage(err),
+			)
 		}
 	}
 
@@ -617,7 +695,9 @@ func (m *Gh) DeleteRemoteBranch(
 		WithExec([]string{"git", "ls-remote"}).
 		Stdout(ctx)
 	if err != nil {
-		return err
+		return errors.New(
+			extractErrorMessage(err),
+		)
 	}
 
 	exp := regexp.MustCompile(fmt.Sprintf("refs/heads/%s\n", branchName))
@@ -629,7 +709,9 @@ func (m *Gh) DeleteRemoteBranch(
 			Sync(ctx)
 
 		if err != nil {
-			return err
+			return errors.New(
+				extractErrorMessage(err),
+			)
 		}
 	}
 

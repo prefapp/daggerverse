@@ -5,10 +5,10 @@ labels:
 deploy:
   replicas: 1
   image:
-    name: bitnami/kubectl 
+    name: bitnami/kubectl
     tag: latest
     pullPolicy: IfNotPresent
-  command: 
+  command:
     - "tail"
     - "-f"
     - "/dev/null"

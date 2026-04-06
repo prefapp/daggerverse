@@ -17,12 +17,15 @@ ComponentClaim:
         defaultBranch: {{ or $.DefaultBranch "main" }}
       orgPermissions: {{ or $.DefaultOrgPermissions "view"}}
       visibility: private
+      allowAutoMerge: true
+      deleteBranchOnMerge: true
       technology:
         stack: "none"
         version: "none"
       features: []
 
 GroupClaim:
+  description: ""
   providers:
     github:
       sync:
@@ -54,4 +57,3 @@ TFWorkspaceClaim:
         period: 24h
         enabled: true
       policy: apply
-

@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.1.14](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.13...update-claims-features-v1.1.14) (2026-03-25)
+
+
+### Bug Fixes
+
+* Error on PR creation ([#414](https://github.com/prefapp/daggerverse/issues/414)) ([eaf1ab7](https://github.com/prefapp/daggerverse/commit/eaf1ab7fe0e01f79fd286ee2aafa9b20d25fe8b1))
+* Query names ([#437](https://github.com/prefapp/daggerverse/issues/437)) ([9379828](https://github.com/prefapp/daggerverse/commit/9379828ee1b2e93ae4152837438f4e724da455ff))
+* Skip changelogs that are not found ([#431](https://github.com/prefapp/daggerverse/issues/431)) ([7d886b4](https://github.com/prefapp/daggerverse/commit/7d886b4da93a6391ee13813ed5e021b74f51d775))
+* Updated all commit messages to include the ci: prefix ([#422](https://github.com/prefapp/daggerverse/issues/422)) ([d1ff06d](https://github.com/prefapp/daggerverse/commit/d1ff06d72afb51ea16b1f79fd6fc47f561ddefe2))
+
+## [1.1.13](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.12...update-claims-features-v1.1.13) (2026-02-19)
+
+
+### Bug Fixes
+
+* pr verify main ([#389](https://github.com/prefapp/daggerverse/issues/389)) ([f2fde97](https://github.com/prefapp/daggerverse/commit/f2fde97074ab732c5603f1c5b340cc84c962707b))
+* Update errors and allow specifying only a claim name to update its features ([#395](https://github.com/prefapp/daggerverse/issues/395)) ([273c23f](https://github.com/prefapp/daggerverse/commit/273c23fafd68f2c01790341c0c34044e47c61d6b))
+
+## [1.1.12](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.11...update-claims-features-v1.1.12) (2025-10-16)
+
+
+### Bug Fixes
+
+* Fix logging ([#338](https://github.com/prefapp/daggerverse/issues/338)) ([3f57a95](https://github.com/prefapp/daggerverse/commit/3f57a954441b95347d922523acfc706beead8146))
+
+## [1.1.11](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.10...update-claims-features-v1.1.11) (2025-10-10)
+
+
+### Bug Fixes
+
+* Update claim struct to allow secrets and vars ([#336](https://github.com/prefapp/daggerverse/issues/336)) ([1431e45](https://github.com/prefapp/daggerverse/commit/1431e45375b367323fd86e33443de0a24fa0d044))
+
 ## [1.1.10](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.9...update-claims-features-v1.1.10) (2025-08-22)
 
 

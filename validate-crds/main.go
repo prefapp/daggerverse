@@ -11,8 +11,6 @@ type ValidateCrds struct {
 	Crs *dagger.Directory
 }
 
-type Version string
-
 func New(
 	ctx context.Context,
 
@@ -37,14 +35,14 @@ func New(
 	// The Kubernetes version you want to install in the Kind cluster. Has to be
 	// one of the available ones in the current Kind version used.
 	// +optional
-	version dagger.KindVersion,
+	version string,
 
 ) *ValidateCrds {
 
 	opts := dagger.KindOpts{}
 
 	if version != "" {
-		opts.Version = version
+		opts.Version = dagger.KindVersion(version)
 	}
 
 	container := dag.Kind(dockerSocket, kindSvc, opts).Container()

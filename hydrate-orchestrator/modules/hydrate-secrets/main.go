@@ -108,14 +108,14 @@ func (m *HydrateSecrets) Render(ctx context.Context, app string, tenant string, 
 		return nil, err
 	}
 
-    outputDir, err := m.RenderWithFirestartrContainer(
-        ctx,
-        secretsDir,
-        claimName,
-    )
-    if err != nil {
-        return nil, err
-    }
+	outputDir, err := m.RenderWithFirestartrContainer(
+		ctx,
+		secretsDir,
+		claimName,
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	crFiles, err := m.GetCrsFileByClaimName(
 		ctx,

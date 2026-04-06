@@ -44,7 +44,9 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	}
 
 	if claim["kind"].(string) == "ComponentClaim" &&
-		(m.ClaimsToUpdate == nil || slices.Contains(m.ClaimsToUpdate, claim["name"].(string))) {
+		(m.ClaimsToUpdate == nil ||
+			slices.Contains(m.ClaimsToUpdate, claim["name"].(string)) ||
+			slices.Contains(m.ClaimsToUpdate, claim.Providers.Github.Name)) {
 
 		return claim, nil
 

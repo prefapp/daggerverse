@@ -9,7 +9,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
+func (m *FirestartrBootstrap) BuildHelmValues(
+	ctx context.Context,
+) (string, error) {
 
 	helmValues := &HelmValues{
 		Labels: Labels{},
@@ -18,8 +20,8 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 			Image: Image{
 				Name: "ghcr.io/prefapp/gitops-k8s",
 				Tag: fmt.Sprintf(
-					"v%s_full-%s",
-					m.Bootstrap.Firestartr.Version,
+					"%s_full-%s",
+					m.Bootstrap.Firestartr.OperatorVersion,
 					m.Creds.CloudProvider.Name,
 				),
 				PullPolicy: "Always",
@@ -44,7 +46,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 		Secret: Secret{
 			Type: "Opaque",
 			Data: map[string]string{
-				"GITHUB_APP_PEM_FILE": m.Creds.GithubApp.Pem,
+				"GITHUB_APP_PEM_FILE": m.Creds.GithubAppOperator.Pem,
 			},
 		},
 		Config: Config{
@@ -54,18 +56,21 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 					"githubmemberships",
 					"githubrepositories",
 					"githubrepositoryfeatures",
+					"githubrepositorysecretssections",
+					"githuborgwebhooks",
 					"terraformworkspaces",
 					"terraformworkspaceplans",
 				}, ","),
 				"OPERATOR_NAMESPACE":               "default",
 				"OPERATOR_IGNORE_LEASE":            "true",
-				"GITHUB_APP_ID":                    m.Creds.GithubApp.GhAppId,
-				"GITHUB_APP_INSTALLATION_ID":       m.Creds.GithubApp.InstallationId,
-				"PREFAPP_BOT_PAT":                  m.Creds.GithubApp.BotPat,
+				"GITHUB_APP_ID":                    m.Creds.GithubAppOperator.GhAppId,
+				"GITHUB_APP_INSTALLATION_ID":       m.Creds.GithubAppOperator.InstallationId,
+				"PREFAPP_BOT_PAT":                  m.Creds.GithubApp.PrefappBotPat,
 				"NODE_TLS_REJECT_UNAUTHORIZED":     "0",
 				"ORG":                              m.GhOrg,
 				"LOG_LEVEL":                        "debug",
 				"AVOID_PROVIDER_SECRET_ENCRYPTION": "1",
+				"CHECK_IN_BOOTSTRAP_PROCESS":       "IN_BOOTSTRAP",
 			},
 		},
 	}
@@ -74,23 +79,15 @@ func (m *FirestartrBootstrap) BuildHelmValues(ctx context.Context) string {
 }
 
 func dumpValuesToYaml(
-
 	ctx context.Context,
-
 	values *HelmValues,
-
-) string {
-
+) (string, error) {
 	yamlContent, err := yaml.Marshal(values)
-
 	if err != nil {
-
-		panic(err)
-
+		return "", err
 	}
 
-	return string(yamlContent)
-
+	return string(yamlContent), nil
 }
 
 func encodeB64DaggerSecret(ctx context.Context, text string) string {

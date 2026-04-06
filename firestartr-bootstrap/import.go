@@ -10,8 +10,7 @@ import (
 func (m *FirestartrBootstrap) RunImporter(
 	ctx context.Context,
 	kindContainer *dagger.Container,
-	alreadyCreatedReposList []string,
-) *dagger.Container {
+) (*dagger.Container, error) {
 	claimsDir := dag.Directory().
 		WithNewDirectory("/claims")
 
@@ -22,12 +21,12 @@ func (m *FirestartrBootstrap) RunImporter(
 			File("templates/initial_claims.tmpl"),
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	claimsDir, err = m.SplitRenderedClaimsInFiles(renderedClaims)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	crsDir := dag.Directory().
@@ -51,21 +50,7 @@ func (m *FirestartrBootstrap) RunImporter(
 		"--claimsDefaults", "/claims_defaults",
 		"--filters", groupFilter,
 		"--filters", "gh-members,REGEXP=[A-Za-z0-9\\-]+",
-	}
-	if len(alreadyCreatedReposList) > 0 {
-		for _, repoName := range alreadyCreatedReposList {
-			importCommand = append(
-				importCommand,
-				"--filters",
-				fmt.Sprintf("gh-repo,NAME=%s", repoName),
-			)
-		}
-	} else {
-		importCommand = append(
-			importCommand,
-			"--filters",
-			"gh-repo,SKIP=SKIP",
-		)
+		"--filters", "gh-repo,SKIP=SKIP",
 	}
 
 	kindContainer = kindContainer.
@@ -78,16 +63,16 @@ func (m *FirestartrBootstrap) RunImporter(
 		WithEnvVariable("GITHUB_APP_ID", m.Creds.GithubApp.GhAppId).
 		WithEnvVariable("GITHUB_APP_INSTALLATION_ID", m.Creds.GithubApp.InstallationId).
 		WithEnvVariable("GITHUB_APP_PEM_FILE", m.Creds.GithubApp.Pem).
-		WithEnvVariable("PREFAPP_BOT_PAT", m.Creds.GithubApp.BotPat).
+		WithEnvVariable("PREFAPP_BOT_PAT", m.Creds.GithubApp.PrefappBotPat).
 		WithEnvVariable("ORG", m.GhOrg).
 		WithExec([]string{"apk", "add", "nodejs", "npm"}).
 		WithExec([]string{
 			"npm", "install", "-g",
-			fmt.Sprintf("@firestartr/cli@v%s", m.Bootstrap.Firestartr.Version),
+			fmt.Sprintf("@firestartr/cli@%s", m.Bootstrap.Firestartr.CliVersion),
 		}).
 		WithExec(importCommand)
 
-	kindContainer = m.ApplyFirestartrCrs(
+	kindContainer, err = m.ApplyFirestartrCrs(
 		ctx,
 		kindContainer,
 		"/import/crs",
@@ -98,7 +83,10 @@ func (m *FirestartrBootstrap) RunImporter(
 			"FirestartrGithubRepositoryFeature.*",
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
-	return kindContainer
+	return kindContainer, nil
 
 }

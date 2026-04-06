@@ -47,7 +47,12 @@ func (m *FirestartrBootstrap) SplitRenderedClaimsInFiles(renderedContent string)
 
 		manifest = "---\n" + manifest
 
-		pathFile := fmt.Sprintf("claims/%s/%s", getPathByKind(claim.Kind), fileName)
+		path, err := getPathByKind(claim.Kind)
+		if err != nil {
+			return nil, err
+		}
+
+		pathFile := fmt.Sprintf("claims/%s/%s", path, fileName)
 
 		dir = dir.WithNewFile(pathFile, manifest)
 	}
@@ -55,19 +60,20 @@ func (m *FirestartrBootstrap) SplitRenderedClaimsInFiles(renderedContent string)
 	return dir, nil
 }
 
-func getPathByKind(kind string) string {
+func getPathByKind(kind string) (string, error) {
 	mapKindPath := map[string]string{
-		"ComponentClaim": "components",
-		"GroupClaim":     "groups",
-		"SystemClaim":    "systems",
-		"DomainClaim":    "domains",
-		"SecretsClaim":   "secrets",
+		"ComponentClaim":  "components",
+		"GroupClaim":      "groups",
+		"SystemClaim":     "systems",
+		"DomainClaim":     "domains",
+		"SecretsClaim":    "secrets",
+		"OrgWebhookClaim": "orgwebhooks",
 	}
 
 	if path, ok := mapKindPath[kind]; ok {
-		return path
+		return path, nil
 	} else {
-		panic(fmt.Sprintf("Unknown kind: %s", kind))
+		return "", fmt.Errorf("Unknown kind: %s", kind)
 	}
 }
 
@@ -109,6 +115,7 @@ func (m *FirestartrBootstrap) SplitRenderedCrsInFiles(
 }
 
 func loadCredsFile(ctx context.Context, creds *dagger.Secret) (*CredsFile, error) {
+
 	credsContent, err := creds.Plaintext(ctx)
 	if err != nil {
 		return nil, err
@@ -122,4 +129,31 @@ func loadCredsFile(ctx context.Context, creds *dagger.Secret) (*CredsFile, error
 	}
 
 	return credsFile, nil
+}
+
+func (m *FirestartrBootstrap) SetLatestFeatureVersionWhenNecessary(
+	ctx context.Context,
+	ghToken *dagger.Secret,
+) error {
+	err := m.SetLatestFeatureVersionInfo(ctx, ghToken)
+	if err != nil {
+		return err
+	}
+
+	for i, component := range m.Bootstrap.Components {
+		for j, feature := range component.Features {
+			if featureNeedsVersionResolution(feature.Version) {
+				latestVersion, err := m.GetLatestFeatureVersion(
+					ctx, feature.Name,
+				)
+				if err != nil {
+					return err
+				}
+
+				m.Bootstrap.Components[i].Features[j].Version = latestVersion
+			}
+		}
+	}
+
+	return nil
 }
