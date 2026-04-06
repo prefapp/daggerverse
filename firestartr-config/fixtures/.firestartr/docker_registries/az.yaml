@@ -1,7 +1,6 @@
-name: aws
-registry: xxxxxxxxxx.azurecr.io
+name: azure
+url: xxxxxxxxxx.azurecr.io
 image_types: [snapshots, releases]
-default: true
 auth_strategy: azure_oidc
 base_paths:
   services: "service"
