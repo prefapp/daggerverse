@@ -120,91 +120,56 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 
 		if claim != nil {
-			claimsMap[entry] = claim
-		}
-	}
-
-	if len(claimsMap) == 0 {
-		return nil, fmt.Errorf(
-			"no ComponentClaim found with name or repository name: %s",
-			strings.Join(m.ClaimsToUpdate, ", "),
-		)
-	}
-
-	if len(m.FeaturesToUpdate) == 0 {
-		for _, claim := range claimsMap {
-			for _, feature := range claim.Providers.Github.Features {
-				if !slices.Contains(m.FeaturesToUpdate, feature.Name) {
-					m.FeaturesToUpdate = append(
-						m.FeaturesToUpdate,
-						feature.Name,
-					)
-				}
-			}
-		}
-	}
-
-	if len(m.FeaturesToUpdate) == 0 {
-		return nil, fmt.Errorf(
-			"no features found to update: no features specified and none present in claims",
-		)
-	}
-
-	ghReleaseListResult, err := m.getReleases(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	latestFeaturesMap, allFeaturesMap, err := m.getFeaturesMapData(
-		ghReleaseListResult,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	for entry, claim := range claimsMap {
-		updatedFeaturesList, createPR, err := m.updateClaimFeatures(
-			claim,
-			latestFeaturesMap,
-		)
-		if err != nil {
-			summary.addUpdateSummaryRow(
-				claim.Name, extractErrorMessage(err),
-			)
-			continue
-		}
-
-		if createPR {
-			currentFeatureVersionsMap := m.extractCurrentFeatureVersionsFromClaim(
-				claim,
-			)
-			claim.Providers.Github.Features = updatedFeaturesList
-			updatedDir := m.updateDirWithClaim(claim, entry)
-			releaseBody, err := m.getPrBodyForFeatureUpdate(
-				ctx,
-				updatedFeaturesList,
-				allFeaturesMap,
-				currentFeatureVersionsMap,
+			claimName := claim["name"].(string)
+			claimKind := claim["kind"].(string)
+			updatedFeaturesList, createPR, err := m.updateClaimFeatures(
+				claim, latestFeaturesMap,
 			)
 			if err != nil {
 				summary.addUpdateSummaryRow(
-					claim.Name, extractErrorMessage(err),
+					claimName, extractErrorMessage(err),
 				)
 				continue
 			}
 
-			prLink, err := m.upsertPR(
-				ctx,
-				fmt.Sprintf("update-%s-%s", claim.Name, claim.Kind),
-				updatedDir,
-				[]string{},
-				fmt.Sprintf("Update %s features to latest version", claim.Name),
-				releaseBody,
-			)
+			if createPR {
+				currentFeatureVersionsMap := m.extractCurrentFeatureVersionsFromClaim(
+					claim,
+				)
+				updatedDir := m.updateDirWithClaim(claim, entry)
+				releaseBody, err := m.getPrBodyForFeatureUpdate(
+					ctx,
+					updatedFeaturesList,
+					allFeaturesMap,
+					currentFeatureVersionsMap,
+				)
+				if err != nil {
+					summary.addUpdateSummaryRow(
+						claimName, extractErrorMessage(err),
+					)
+					continue
+				}
+
+				prLink, err := m.upsertPR(
+					ctx,
+					fmt.Sprintf("update-%s-%s", claimName, claimKind),
+					updatedDir,
+					[]string{},
+					fmt.Sprintf("Update %s features to latest version", claimName),
+					releaseBody,
+				)
+
+				if err != nil {
+					summary.addUpdateSummaryRow(
+						claimName, extractErrorMessage(err),
+					)
+					continue
+				}
 
 			if err != nil {
 				summary.addUpdateSummaryRow(
-					claim.Name, extractErrorMessage(err),
+					claimName,
+					fmt.Sprintf("Success: <a href=\"%s\">%s</a>", prLink, prLink),
 				)
 				errorMsg = fmt.Sprintf("%s\n%s", errorMsg, extractErrorMessage(err))
 				continue
