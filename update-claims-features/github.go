@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -139,6 +140,35 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 	}
 
 	return ghReleaseListResult, err
+}
+
+func (m *UpdateClaimsFeatures) WorkflowRun(
+	ctx context.Context,
+	claimName string,
+) error {
+	ctr := dag.Gh(dagger.GhOpts{
+		Version: m.GhCliVersion,
+	}).Container(dagger.GhContainerOpts{
+		Token: m.GhToken,
+	})
+
+	_, err := ctr.
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithExec([]string{
+			"gh", "workflow", "run",
+			"-R", fmt.Sprintf("%s/%s", m.Org, m.Repo),
+			"hydrate-github-claim.yaml",
+			"-f", fmt.Sprintf("claim=%s", claimName),
+			"-f", "kind=ComponentClaim",
+		}).
+		Sync(ctx)
+
+	if err != nil {
+		errMsg := extractErrorMessage(err)
+		return errors.New(errMsg)
+	}
+
+	return nil
 }
 
 var releasesChangelog = make(map[string]string)

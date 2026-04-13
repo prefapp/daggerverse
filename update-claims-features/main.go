@@ -163,7 +163,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	}
 
 	for entry, claim := range claimsMap {
-		updatedFeaturesList, createPR, err := m.updateClaimFeatures(
+		updatedFeaturesList, createPR, hydrateClaim, err := m.updateClaimFeatures(
 			claim,
 			latestFeaturesMap,
 		)
@@ -217,6 +217,16 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 			if m.Automerge {
 				m.MergePullRequest(ctx, prLink)
+			}
+		}
+
+		if hydrateClaim {
+			err := m.WorkflowRun(ctx, claim.Name)
+			if err != nil {
+				summary.addUpdateSummaryRow(
+					claim.Name, extractErrorMessage(err),
+				)
+				continue
 			}
 		}
 	}

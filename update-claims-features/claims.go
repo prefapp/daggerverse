@@ -58,9 +58,10 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 func (m *UpdateClaimsFeatures) updateClaimFeatures(
 	claim *Claim,
 	featuresMap map[string]string,
-) ([]Feature, bool, error) {
+) ([]Feature, bool, bool, error) {
 	var updatedFeaturesList []Feature
 	createPR := false
+	hydrateClaim := false
 
 	for _, feature := range claim.Providers.Github.Features {
 		if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, feature.Name) {
@@ -68,7 +69,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 				featuresMap[feature.Name],
 			)
 			if err != nil {
-				return []Feature{}, false, err
+				return []Feature{}, false, false, err
 			}
 
 			if feature.Version != "" {
@@ -76,7 +77,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 					fmt.Sprintf("!=%s", feature.Version),
 				)
 				if err != nil {
-					return []Feature{}, false, err
+					return []Feature{}, false, false, err
 				}
 
 				// if instead of createPR = versionIsGreater.Check()
@@ -84,6 +85,10 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 				if versionIsDifferent.Check(featureVersionSemver) {
 					createPR = true
 					feature.Version = featuresMap[feature.Name]
+				}
+			} else {
+				if feature.Ref != "" {
+					hydrateClaim = true
 				}
 			}
 		}
@@ -93,5 +98,5 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 		updatedFeaturesList = append(updatedFeaturesList, feature)
 	}
 
-	return updatedFeaturesList, createPR, nil
+	return updatedFeaturesList, createPR, hydrateClaim, nil
 }
