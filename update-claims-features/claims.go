@@ -65,14 +65,14 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 
 	for _, feature := range claim.Providers.Github.Features {
 		if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, feature.Name) {
-			featureVersionSemver, err := semver.NewVersion(
-				featuresMap[feature.Name],
-			)
-			if err != nil {
-				return []Feature{}, false, false, err
-			}
-
 			if feature.Version != "" {
+				featureVersionSemver, err := semver.NewVersion(
+					featuresMap[feature.Name],
+				)
+				if err != nil {
+					return []Feature{}, false, false, err
+				}
+
 				versionIsDifferent, err := semver.NewConstraint(
 					fmt.Sprintf("!=%s", feature.Version),
 				)
