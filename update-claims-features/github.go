@@ -179,7 +179,12 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 		return "", errors.New(errMsg)
 	}
 
-	return strings.TrimSpace(workflowURL), nil
+	workflowURL = strings.TrimSpace(workflowURL)
+	if workflowURL == "" || workflowURL == "null" {
+		return "", errors.New("failed to determine workflow URL")
+	}
+
+	return workflowURL, nil
 }
 
 var releasesChangelog = make(map[string]string)
