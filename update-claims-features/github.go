@@ -179,7 +179,7 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 		return "", errors.New(errMsg)
 	}
 
-	return workflowURL, nil
+	return strings.TrimSpace(workflowURL), nil
 }
 
 var releasesChangelog = make(map[string]string)
