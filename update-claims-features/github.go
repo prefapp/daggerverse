@@ -145,30 +145,40 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 func (m *UpdateClaimsFeatures) WorkflowRun(
 	ctx context.Context,
 	claimName string,
-) error {
+) (string, error) {
+	workflowName := "hydrate-github-claim.yaml"
+
 	ctr := dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
 		Token: m.GhToken,
 	})
 
-	_, err := ctr.
+	workflowURL, err := ctr.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"gh", "workflow", "run",
 			"-R", m.Repo,
-			"hydrate-github-claim.yaml",
+			workflowName,
 			"-f", fmt.Sprintf("name=%s", claimName),
 			"-f", "kind=ComponentClaim",
 		}).
-		Sync(ctx)
+		WithExec([]string{"sleep", "3"}). // Wait for the workflow to be triggered
+		WithExec([]string{
+			"gh", "run", "list",
+			"--workflow", workflowName,
+			"--limit", "1",
+			"--json", "url",
+			"--jq", "'.[0].url'",
+		}).
+		Stdout(ctx)
 
 	if err != nil {
 		errMsg := extractErrorMessage(err)
-		return errors.New(errMsg)
+		return "", errors.New(errMsg)
 	}
 
-	return nil
+	return workflowURL, nil
 }
 
 var releasesChangelog = make(map[string]string)

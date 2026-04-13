@@ -221,13 +221,21 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 
 		if hydrateClaim {
-			err := m.WorkflowRun(ctx, claim.Name)
+			workflowURL, err := m.WorkflowRun(ctx, claim.Name)
 			if err != nil {
 				summary.addUpdateSummaryRow(
 					claim.Name, extractErrorMessage(err),
 				)
 				continue
 			}
+
+			summary.addUpdateSummaryRow(
+				claim.Name,
+				fmt.Sprintf(
+					"Ref detected. Hydration workflow triggered: <a href=\"%s\">%s</a>",
+					workflowURL, workflowURL,
+				),
+			)
 		}
 	}
 
