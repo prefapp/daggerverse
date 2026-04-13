@@ -175,8 +175,7 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 		Stdout(ctx)
 
 	if err != nil {
-		errMsg := extractErrorMessage(err)
-		return "", errors.New(errMsg)
+		return "", err
 	}
 
 	workflowURL = strings.TrimSpace(workflowURL)
