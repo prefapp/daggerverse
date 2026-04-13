@@ -170,7 +170,7 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 			"--workflow", workflowName,
 			"--limit", "1",
 			"--json", "url",
-			"--jq", "'.[0].url'",
+			"--jq", ".[0].url",
 		}).
 		Stdout(ctx)
 
