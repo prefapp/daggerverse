@@ -166,6 +166,7 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 		WithExec([]string{"sleep", "3"}). // Wait for the workflow to be triggered
 		WithExec([]string{
 			"gh", "run", "list",
+			"-R", m.Repo,
 			"--workflow", workflowName,
 			"--limit", "1",
 			"--json", "url",
