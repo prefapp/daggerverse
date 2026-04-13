@@ -155,7 +155,7 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 	})
 
 	workflowURL, err := ctr.
-		WithEnvVariable("BUST_CACHE", time.Now().String()).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
 			"gh", "workflow", "run",
 			"-R", m.Repo,
