@@ -156,7 +156,7 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec([]string{
 			"gh", "workflow", "run",
-			"-R", fmt.Sprintf("%s/%s", m.Org, m.Repo),
+			"-R", m.Repo,
 			"hydrate-github-claim.yaml",
 			"-f", fmt.Sprintf("claim=%s", claimName),
 			"-f", "kind=ComponentClaim",
