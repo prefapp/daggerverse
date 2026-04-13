@@ -158,7 +158,7 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 			"gh", "workflow", "run",
 			"-R", m.Repo,
 			"hydrate-github-claim.yaml",
-			"-f", fmt.Sprintf("claim=%s", claimName),
+			"-f", fmt.Sprintf("name=%s", claimName),
 			"-f", "kind=ComponentClaim",
 		}).
 		Sync(ctx)
