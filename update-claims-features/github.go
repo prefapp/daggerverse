@@ -172,13 +172,15 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 	}
 
 	type workflowRun struct {
-		URL       string    `json:"url"`
-		CreatedAt time.Time `json:"createdAt"`
-		Event     string    `json:"event"`
+		URL          string    `json:"url"`
+		CreatedAt    time.Time `json:"createdAt"`
+		Event        string    `json:"event"`
+		DisplayTitle string    `json:"displayTitle"`
 	}
 
-	const maxAttempts = 5
-	const pollInterval = 3 * time.Second
+	const maxAttempts = 8
+	const initialPollInterval = 3 * time.Second
+	normalizedClaimName := strings.ToLower(strings.TrimSpace(claimName))
 	for attempt := 0; attempt < maxAttempts; attempt++ {
 		runsJSON, err := ctr.
 			WithEnvVariable("BUST_CACHE", time.Now().String()).
@@ -187,7 +189,7 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 				"-R", m.Repo,
 				"--workflow", workflowName,
 				"--limit", "20",
-				"--json", "url,createdAt,event",
+				"--json", "url,createdAt,event,displayTitle",
 			}).
 			Stdout(ctx)
 		if err != nil {
@@ -208,10 +210,13 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 			if strings.TrimSpace(run.URL) == "" {
 				continue
 			}
+			if normalizedClaimName != "" && !strings.Contains(strings.ToLower(run.DisplayTitle), normalizedClaimName) {
+				continue
+			}
 			return strings.TrimSpace(run.URL), nil
 		}
 		if attempt < maxAttempts-1 {
-			time.Sleep(pollInterval)
+			time.Sleep(initialPollInterval * time.Duration(attempt+1))
 		}
 	}
 	return "", fmt.Errorf(
