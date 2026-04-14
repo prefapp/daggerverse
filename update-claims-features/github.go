@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -139,6 +141,89 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 	}
 
 	return ghReleaseListResult, err
+}
+
+func (m *UpdateClaimsFeatures) workflowRun(
+	ctx context.Context,
+	claimName string,
+) (string, error) {
+	workflowName := "hydrate-github-claim.yaml"
+
+	ctr := dag.Gh(dagger.GhOpts{
+		Version: m.GhCliVersion,
+	}).Container(dagger.GhContainerOpts{
+		Token: m.GhToken,
+	})
+
+	dispatchedAt := time.Now().UTC()
+	_, err := ctr.
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{
+			"gh", "workflow", "run",
+			"-R", m.Repo,
+			workflowName,
+			"-f", fmt.Sprintf("name=%s", claimName),
+			"-f", "kind=ComponentClaim",
+		}).
+		Sync(ctx)
+
+	if err != nil {
+		return "", err
+	}
+
+	type workflowRun struct {
+		URL          string    `json:"url"`
+		CreatedAt    time.Time `json:"createdAt"`
+		Event        string    `json:"event"`
+		DisplayTitle string    `json:"displayTitle"`
+	}
+
+	const maxAttempts = 8
+	const initialPollInterval = 3 * time.Second
+	normalizedClaimName := strings.ToLower(strings.TrimSpace(claimName))
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		runsJSON, err := ctr.
+			WithEnvVariable("BUST_CACHE", time.Now().String()).
+			WithExec([]string{
+				"gh", "run", "list",
+				"-R", m.Repo,
+				"--workflow", workflowName,
+				"--limit", "20",
+				"--json", "url,createdAt,event,displayTitle",
+			}).
+			Stdout(ctx)
+		if err != nil {
+			errMsg := extractErrorMessage(err)
+			return "", errors.New(errMsg)
+		}
+		var runs []workflowRun
+		if err := json.Unmarshal([]byte(strings.TrimSpace(runsJSON)), &runs); err != nil {
+			return "", fmt.Errorf("failed to parse workflow runs for %s: %w", workflowName, err)
+		}
+		for _, run := range runs {
+			if run.Event != "workflow_dispatch" {
+				continue
+			}
+			if run.CreatedAt.Before(dispatchedAt) {
+				continue
+			}
+			if strings.TrimSpace(run.URL) == "" {
+				continue
+			}
+			if normalizedClaimName != "" && !strings.Contains(strings.ToLower(run.DisplayTitle), normalizedClaimName) {
+				continue
+			}
+			return strings.TrimSpace(run.URL), nil
+		}
+		if attempt < maxAttempts-1 {
+			time.Sleep(initialPollInterval * time.Duration(attempt+1))
+		}
+	}
+	return "", fmt.Errorf(
+		"failed to find workflow run URL for %s after dispatching %q",
+		workflowName,
+		claimName,
+	)
 }
 
 var releasesChangelog = make(map[string]string)
