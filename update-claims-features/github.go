@@ -143,7 +143,7 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 	return ghReleaseListResult, err
 }
 
-func (m *UpdateClaimsFeatures) WorkflowRun(
+func (m *UpdateClaimsFeatures) workflowRun(
 	ctx context.Context,
 	claimName string,
 ) (string, error) {

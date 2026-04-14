@@ -221,7 +221,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 
 		if hydrateClaim {
-			workflowURL, err := m.WorkflowRun(ctx, claim.Name)
+			workflowURL, err := m.workflowRun(ctx, claim.Name)
 			if err != nil {
 				summary.addUpdateSummaryRow(
 					claim.Name, extractErrorMessage(err),
