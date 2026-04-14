@@ -183,6 +183,10 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 	if len(splittedOutput) > 2 {
 		workflowURL = splittedOutput[1]
 	}
+	fmt.Printf(
+		"☢️ Output: %s\nWorkflow URL:%s\n",
+		commandOutput, splittedOutput,
+	)
 
 	workflowURL = strings.TrimSpace(workflowURL)
 	if workflowURL == "" || workflowURL == "null" {
