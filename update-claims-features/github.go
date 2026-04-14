@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/update-claims-features/internal/dagger"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -154,7 +155,8 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 		Token: m.GhToken,
 	})
 
-	commandOutput, err := ctr.
+	dispatchedAt := time.Now().UTC()
+	_, err := ctr.
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
 			"gh", "workflow", "run",
@@ -163,37 +165,60 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 			"-f", fmt.Sprintf("name=%s", claimName),
 			"-f", "kind=ComponentClaim",
 		}).
-		// WithExec([]string{"sleep", "3"}). // Wait for the workflow to be triggered
-		// WithExec([]string{
-		// 	"gh", "run", "list",
-		// 	"-R", m.Repo,
-		// 	"--workflow", workflowName,
-		// 	"--limit", "1",
-		// 	"--json", "url",
-		// 	"--jq", ".[0].url",
-		// }).
-		Stdout(ctx)
+		Sync(ctx)
 
 	if err != nil {
 		return "", err
 	}
 
-	splittedOutput := strings.Split(commandOutput, "\n")
-	workflowURL := ""
-	if len(splittedOutput) > 2 {
-		workflowURL = splittedOutput[1]
+	type workflowRun struct {
+		URL       string    `json:"url"`
+		CreatedAt time.Time `json:"createdAt"`
+		Event     string    `json:"event"`
 	}
-	fmt.Printf(
-		"☢️ Output: %s\nWorkflow URL:%s\n",
-		commandOutput, splittedOutput,
+
+	const maxAttempts = 5
+	const pollInterval = 3 * time.Second
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		runsJSON, err := ctr.
+			WithEnvVariable("BUST_CACHE", time.Now().String()).
+			WithExec([]string{
+				"gh", "run", "list",
+				"-R", m.Repo,
+				"--workflow", workflowName,
+				"--limit", "20",
+				"--json", "url,createdAt,event",
+			}).
+			Stdout(ctx)
+		if err != nil {
+			errMsg := extractErrorMessage(err)
+			return "", errors.New(errMsg)
+		}
+		var runs []workflowRun
+		if err := json.Unmarshal([]byte(strings.TrimSpace(runsJSON)), &runs); err != nil {
+			return "", fmt.Errorf("failed to parse workflow runs for %s: %w", workflowName, err)
+		}
+		for _, run := range runs {
+			if run.Event != "workflow_dispatch" {
+				continue
+			}
+			if run.CreatedAt.Before(dispatchedAt) {
+				continue
+			}
+			if strings.TrimSpace(run.URL) == "" {
+				continue
+			}
+			return strings.TrimSpace(run.URL), nil
+		}
+		if attempt < maxAttempts-1 {
+			time.Sleep(pollInterval)
+		}
+	}
+	return "", fmt.Errorf(
+		"failed to find workflow run URL for %s after dispatching %q",
+		workflowName,
+		claimName,
 	)
-
-	workflowURL = strings.TrimSpace(workflowURL)
-	if workflowURL == "" || workflowURL == "null" {
-		return "", errors.New("failed to determine workflow URL")
-	}
-
-	return workflowURL, nil
 }
 
 var releasesChangelog = make(map[string]string)
