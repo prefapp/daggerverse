@@ -154,7 +154,7 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 		Token: m.GhToken,
 	})
 
-	workflowURL, err := ctr.
+	commandOutput, err := ctr.
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{
 			"gh", "workflow", "run",
@@ -163,19 +163,25 @@ func (m *UpdateClaimsFeatures) WorkflowRun(
 			"-f", fmt.Sprintf("name=%s", claimName),
 			"-f", "kind=ComponentClaim",
 		}).
-		WithExec([]string{"sleep", "3"}). // Wait for the workflow to be triggered
-		WithExec([]string{
-			"gh", "run", "list",
-			"-R", m.Repo,
-			"--workflow", workflowName,
-			"--limit", "1",
-			"--json", "url",
-			"--jq", ".[0].url",
-		}).
+		// WithExec([]string{"sleep", "3"}). // Wait for the workflow to be triggered
+		// WithExec([]string{
+		// 	"gh", "run", "list",
+		// 	"-R", m.Repo,
+		// 	"--workflow", workflowName,
+		// 	"--limit", "1",
+		// 	"--json", "url",
+		// 	"--jq", ".[0].url",
+		// }).
 		Stdout(ctx)
 
 	if err != nil {
 		return "", err
+	}
+
+	splittedOutput := strings.Split(commandOutput, "\n")
+	workflowURL := ""
+	if len(splittedOutput) > 2 {
+		workflowURL = splittedOutput[1]
 	}
 
 	workflowURL = strings.TrimSpace(workflowURL)
