@@ -4,8 +4,8 @@
    "notify-and-hydrate-state": "1.4.2",
    "hydrate-orchestrator": "6.3.10",
    "firestartr-bootstrap": "1.3.0",
-   "validate-crds": "2.0.0",
    "kind": "2.0.0",
    "update-claims-features": "1.2.0",
+   "validate-crds": "2.0.0",
    "gh": "1.4.0"
 }
