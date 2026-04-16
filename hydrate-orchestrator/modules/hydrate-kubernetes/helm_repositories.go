@@ -71,12 +71,6 @@ func (m *HydrateKubernetes) getHelmReposFromFirestartrConfig(
 
 	fsConf := dag.FirestartrConfig(dotFirestartrDir)
 
-	legacyRegs, err := fsConf.LegacyRegistries(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
 	regs, err := fsConf.Registries(ctx)
 
 	if err != nil {
@@ -95,7 +89,7 @@ func (m *HydrateKubernetes) getHelmReposFromFirestartrConfig(
 
 		}
 
-		regHost, err := reg.URL(ctx)
+		regHost, err := reg.Registry(ctx)
 
 		if err != nil {
 
@@ -151,27 +145,6 @@ func (m *HydrateKubernetes) getHelmReposFromFirestartrConfig(
 				Name: repoName,
 				Url:  repoUrl,
 				Oci:  false,
-			})
-		}
-	}
-
-	for _, legacyReg := range legacyRegs {
-
-		name, err := legacyReg.Name(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		url, err := legacyReg.Registry(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		if repositoryName == name {
-			helmRepos = append(helmRepos, HelmRepo{
-				Name: name,
-				Url:  url,
-				Oci:  true,
 			})
 		}
 	}
