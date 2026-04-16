@@ -7,22 +7,33 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type AuthStrategy string
+
+const (
+	AuthStrategyAWSOIDC    AuthStrategy = "aws_oidc"
+	AuthStrategyAzureOIDC  AuthStrategy = "azure_oidc"
+	AuthStrategyGeneric    AuthStrategy = "generic"
+	AuthStrategyGHCR       AuthStrategy = "ghcr"
+	AuthStrategyDockerHub  AuthStrategy = "dockerhub"
+	AuthStrategyNone       AuthStrategy = ""
+)
+
 type Registry struct {
-	Name         string       `yaml:"name"`
-	Url          string       `yaml:"url"`
-	ImageTypes   []string     `yaml:"image_types,omitempty"`
-	AuthStrategy AuthStrategy `yaml:"auth_strategy,omitempty"`
-	BasePaths    BasePaths    `yaml:"base_paths,omitempty"`
+	Name         string          `yaml:"name"`
+	Registry     string          `yaml:"registry"`
+	ImageTypes   []string        `yaml:"image_types,omitempty"`
+	AuthStrategy AuthStrategy   `yaml:"auth_strategy,omitempty"`
+	BasePaths    LegacyBasePaths `yaml:"base_paths,omitempty"`
 }
 
-func (r *Registry) isValid() bool {
+func (lc *Registry) isValid() bool {
 
-	if r.Name == "" || r.Url == "" {
+	if lc.Name == "" || lc.Registry == "" {
 		return false
 	}
 
-	if r.AuthStrategy != "" {
-		switch r.AuthStrategy {
+	if lc.AuthStrategy != "" {
+		switch lc.AuthStrategy {
 		case AuthStrategyAWSOIDC, AuthStrategyAzureOIDC, AuthStrategyGeneric, AuthStrategyGHCR, AuthStrategyDockerHub:
 			return true
 		default:
@@ -34,7 +45,7 @@ func (r *Registry) isValid() bool {
 
 }
 
-type BasePaths struct {
+type LegacyBasePaths struct {
 	Services string `yaml:"services"`
 	Charts   string `yaml:"charts"`
 }
@@ -77,9 +88,9 @@ func loadRegistries(ctx context.Context, firestartrDir *dagger.Directory) ([]Reg
 			We cannot use a custom UnmarshalYAML function because dagger then is not able to export that type in dagger.gen
 			*/
 			if reg.isValid() {
-
 				registries = append(registries, reg)
 			}
+
 		}
 
 	}

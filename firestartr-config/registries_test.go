@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestRegistries(t *testing.T) {
+func TestLegacyRegistries(t *testing.T) {
 
 	ctx := context.Background()
 
@@ -17,18 +17,18 @@ func TestRegistries(t *testing.T) {
 
 		if err != nil {
 
-			t.Errorf("Error loading registries: %s", err)
+			t.Fatalf("Error loading registries: %s", err)
 
 		}
 
 		if len(registries) != 1 {
-			t.Errorf("Expected 1 registry, got %d", len(registries))
+			t.Fatalf("Expected 1 registry, got %d", len(registries))
 		}
 
-		expectedFirstRegistry := "xxxxxxxxxx.azurecr.io"
+		expectedFirstRegistry := "000000000000.dkr.ecr.eu-west-1.amazonaws.com"
 
-		if registries[0].Url != expectedFirstRegistry {
-			t.Errorf("Expected %s, got %s", expectedFirstRegistry, registries[0].Url)
+		if registries[0].Registry != expectedFirstRegistry {
+			t.Errorf("Expected %s, got %s", expectedFirstRegistry, registries[0].Registry)
 		}
 
 	})
