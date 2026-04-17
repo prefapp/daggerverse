@@ -43,10 +43,13 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 		return nil, err
 	}
 
-	if claim["kind"].(string) == "ComponentClaim" &&
+	claimName := claim["name"].(string)
+	claimKind := claim["kind"].(string)
+	claimProviderName := claim["providers"].(map[string]any)["github"].(map[string]any)["name"].(string)
+	if claimKind == "ComponentClaim" &&
 		(m.ClaimsToUpdate == nil ||
-			slices.Contains(m.ClaimsToUpdate, claim["name"].(string)) ||
-			slices.Contains(m.ClaimsToUpdate, claim.Providers.Github.Name)) {
+			slices.Contains(m.ClaimsToUpdate, claimName) ||
+			slices.Contains(m.ClaimsToUpdate, claimProviderName)) {
 
 		return claim, nil
 
@@ -62,11 +65,12 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 	updatedFeaturesList := []map[string]string{}
 	createPR := false
 	hydrateClaim := false
-  featuresList := claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)
+	featuresList := claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)
 
 	for idx, feature := range featuresList {
 		featureName := feature.(map[string]any)["name"].(string)
 		featureVersion := feature.(map[string]any)["version"].(string)
+		featureRef := feature.(map[string]any)["ref"].(string)
 		if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, featureName) {
 			if featureVersion != "" {
 				featureVersionSemver, err := semver.NewVersion(
@@ -94,7 +98,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 					})
 				}
 			} else {
-				if feature.Ref != "" {
+				if featureRef != "" {
 					hydrateClaim = true
 				}
 			}
