@@ -81,6 +81,10 @@ func loadRegistries(ctx context.Context, firestartrDir *dagger.Directory) ([]Reg
 				return nil, err
 			}
 
+			if reg.AuthStrategy == "" {
+				reg.AuthStrategy = AuthStrategyNone
+			}
+
 			/*
 			This is done this way because Unmarshal does not have a way of validating the content while unmarshalling.
 			We need to make sure that it has all required fields since it can get confused with legacy configuration
