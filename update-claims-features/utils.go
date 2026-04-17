@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v3"
 )
 
@@ -33,6 +34,38 @@ func extractErrorMessage(err error) string {
 		return errorMsg
 	default:
 		return fmt.Sprintf("::error::%s", strings.ReplaceAll(err.Error(), "::error::", ""))
+	}
+}
+
+func validateClaimMap(claim map[string]interface{}, rawSchema []byte) error {
+	var schemas []interface{}
+	targetID := "firestartr.dev://common/ComponentClaim"
+
+	if err := json.Unmarshal(rawSchema, &schemas); err != nil {
+		panic(err)
+	}
+
+	sl := gojsonschema.NewSchemaLoader()
+
+	for _, s := range schemas {
+		loader := gojsonschema.NewGoLoader(s)
+		if err := sl.AddSchemas(loader); err != nil {
+			panic(err)
+		}
+	}
+
+	compiledSchema, err := sl.Compile(gojsonschema.NewReferenceLoader(targetID))
+	if err != nil {
+		panic(err)
+	}
+
+	documentLoader := gojsonschema.NewGoLoader(claim)
+	result, _ := compiledSchema.Validate(documentLoader)
+
+	if result.Valid() {
+		return nil
+	} else {
+		return result.Errors()
 	}
 }
 

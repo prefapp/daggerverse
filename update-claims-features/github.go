@@ -226,6 +226,33 @@ func (m *UpdateClaimsFeatures) workflowRun(
 	)
 }
 
+func (m *UpdateClaimsFeatures) getValidationSchema(ctx context.Context) ([]byte, error) {
+	ctr, err := dag.Gh(dagger.GhOpts{
+		Version: m.GhCliVersion,
+	}).Container(dagger.GhContainerOpts{
+		Token: m.PrefappGhToken,
+		Repo:  "prefapp/features",
+	}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
+		WithWorkdir(m.ClaimsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{
+			"sh", "-c",
+			fmt.Sprintf(
+				"gh api repos/%s/%s/contents/%s/site/raw/core/claims/claims.schema.json "+
+					"--header 'Accept: application/vnd.github.v3.raw' > /tmp/schema.json",
+				"firestartr-pro", "docs", "main", // TODO: use CLI version instead of main
+			),
+		}).
+		Sync(ctx)
+
+	schemaContent, err := ctr.File("/tmp/schema.json").Contents(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	return []byte(schemaContent), nil
+}
+
 var releasesChangelog = make(map[string]string)
 
 func (m *UpdateClaimsFeatures) getReleaseChangelog(
