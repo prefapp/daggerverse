@@ -15,7 +15,7 @@ const (
 	AuthStrategyGeneric    AuthStrategy = "generic"
 	AuthStrategyGHCR       AuthStrategy = "ghcr"
 	AuthStrategyDockerHub  AuthStrategy = "dockerhub"
-	AuthStrategyNone       AuthStrategy = ""
+	AuthStrategyNone       AuthStrategy = "none"
 )
 
 type Registry struct {
@@ -34,7 +34,7 @@ func (lc *Registry) isValid() bool {
 
 	if lc.AuthStrategy != "" {
 		switch lc.AuthStrategy {
-		case AuthStrategyAWSOIDC, AuthStrategyAzureOIDC, AuthStrategyGeneric, AuthStrategyGHCR, AuthStrategyDockerHub:
+		case AuthStrategyAWSOIDC, AuthStrategyAzureOIDC, AuthStrategyGeneric, AuthStrategyGHCR, AuthStrategyDockerHub, AuthStrategyNone:
 			return true
 		default:
 			return false
