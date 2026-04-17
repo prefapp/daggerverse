@@ -179,8 +179,9 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 				if versionIsDifferentThanOriginal.Check(updatedFeatureVersionSemver) {
 					addChangeLog, err := semver.NewConstraint(
 						fmt.Sprintf(
-							"> %1$s, <= %2$s || =%2$s",
+							"> %s, <= %s || =%s",
 							originalVersionMap[updatedFeatureName],
+							updatedFeatureVersion,
 							updatedFeatureVersion,
 						),
 					)
