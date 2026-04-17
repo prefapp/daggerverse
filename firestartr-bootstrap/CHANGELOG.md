@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.3.1](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.3.0...firestartr-bootstrap-v1.3.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* Remove duplicated field ([#449](https://github.com/prefapp/daggerverse/issues/449)) ([84078cc](https://github.com/prefapp/daggerverse/commit/84078cc1620a48d984fc3fad9cdf7ae46a4e646a))
+
+## [1.3.1](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.3.0...firestartr-bootstrap-v1.3.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* Remove duplicated field ([#449](https://github.com/prefapp/daggerverse/issues/449)) ([84078cc](https://github.com/prefapp/daggerverse/commit/84078cc1620a48d984fc3fad9cdf7ae46a4e646a))
+
+## [1.3.0](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.5...firestartr-bootstrap-v1.3.0) (2026-04-01)
+
+
+### Features
+
+* Add argo events ingress annotations for health checks ([#428](https://github.com/prefapp/daggerverse/issues/428)) ([affb90f](https://github.com/prefapp/daggerverse/commit/affb90f4e2839e3e6c79c44519dccd288f50be6b))
+* add boot example configurations ([#408](https://github.com/prefapp/daggerverse/issues/408)) ([076c543](https://github.com/prefapp/daggerverse/commit/076c543d8184340800a86915b92c8856b2fd3bca))
+* Allow `latest` for operator and cli versions ([#412](https://github.com/prefapp/daggerverse/issues/412)) ([9b5ecbc](https://github.com/prefapp/daggerverse/commit/9b5ecbc3984b1613155b511a650302b246900551))
+
+
+### Bug Fixes
+
+* [`firestartr-bootstrap`] Use controller GitHub App instead of Admin one ([#411](https://github.com/prefapp/daggerverse/issues/411)) ([b302839](https://github.com/prefapp/daggerverse/commit/b302839764613b006b46bc17ecde2b0bdfb01c30))
+* add owner to claim templates ([#438](https://github.com/prefapp/daggerverse/issues/438)) ([ab7e4be](https://github.com/prefapp/daggerverse/commit/ab7e4beed45daaece202b870d6eb11e17fc2c72f))
+* better handling errors ([#387](https://github.com/prefapp/daggerverse/issues/387)) ([ffba81e](https://github.com/prefapp/daggerverse/commit/ffba81e36b0686e27f9bfe054fa9fdd1c552edee))
+* edit deploy instructions ([#439](https://github.com/prefapp/daggerverse/issues/439)) ([bb97c8d](https://github.com/prefapp/daggerverse/commit/bb97c8dfe8029ba1127ab3329da8599b0df93e64))
+* Error when patching &lt;org&gt;-all claim ([#398](https://github.com/prefapp/daggerverse/issues/398)) ([ff3274f](https://github.com/prefapp/daggerverse/commit/ff3274f90122b0bae4cb87794ae10c2cf790b66b))
+* Update docs with version field changes ([#396](https://github.com/prefapp/daggerverse/issues/396)) ([d2d837d](https://github.com/prefapp/daggerverse/commit/d2d837d07646bf13175e3ebe1c84511bc390f142))
+* Updated all commit messages to include the ci: prefix ([#422](https://github.com/prefapp/daggerverse/issues/422)) ([d1ff06d](https://github.com/prefapp/daggerverse/commit/d1ff06d72afb51ea16b1f79fd6fc47f561ddefe2))
+* Upload missing rego validation policy ([#401](https://github.com/prefapp/daggerverse/issues/401)) ([030d6db](https://github.com/prefapp/daggerverse/commit/030d6db4284f84c990ee3c3fc52afcb7367e7fd7))
+* Wait on each resource kind in a group rather than individually ([#409](https://github.com/prefapp/daggerverse/issues/409)) ([160f532](https://github.com/prefapp/daggerverse/commit/160f5328cfb994a01701548c38ffe2935d36b208))
+* Wrong app label and duplicated folder ([#421](https://github.com/prefapp/daggerverse/issues/421)) ([a323bd6](https://github.com/prefapp/daggerverse/commit/a323bd6d62211530107f6ac68016f9c073cb6592))
+
 ## [1.2.5](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.4...firestartr-bootstrap-v1.2.5) (2026-01-13)
 
 

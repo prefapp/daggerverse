@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.14...update-claims-features-v1.2.0) (2026-04-15)
+
+
+### Features
+
+* Hydrate claims that have ref instead of version ([#446](https://github.com/prefapp/daggerverse/issues/446)) ([0687b97](https://github.com/prefapp/daggerverse/commit/0687b97daceec7808e046a80c45fced6971875ad))
+
 ## [1.1.14](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.13...update-claims-features-v1.1.14) (2026-03-25)
 
 
