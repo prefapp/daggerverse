@@ -226,7 +226,9 @@ func (m *UpdateClaimsFeatures) workflowRun(
 	)
 }
 
-func (m *UpdateClaimsFeatures) getValidationSchema(ctx context.Context) ([]byte, error) {
+func (m *UpdateClaimsFeatures) getValidationSchema(
+	ctx context.Context,
+) ([]byte, error) {
 	ctr, err := dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{

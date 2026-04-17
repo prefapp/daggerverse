@@ -43,7 +43,12 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 		return nil, err
 	}
 
-	schemaErrs := validateClaimMap(claim, m.ClaimSchema)
+	schema, err := m.getValidationSchema(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	schemaErrs := validateClaimMap(claim, schema)
 	if schemaErrs != nil {
 		return nil, fmt.Errorf("claim %s does not match ComponentClaim schema: %s", claimPath, schemaErrs)
 	}
