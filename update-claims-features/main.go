@@ -120,10 +120,73 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 
 		if claim != nil {
-			claimName := claim["name"].(string)
-			claimKind := claim["kind"].(string)
-			updatedFeaturesList, createPR, err := m.updateClaimFeatures(
-				claim, latestFeaturesMap,
+			claimsMap[entry] = claim
+		}
+	}
+
+	if len(claimsMap) == 0 {
+		return nil, fmt.Errorf(
+			"no ComponentClaim found with name or repository name: %s",
+			strings.Join(m.ClaimsToUpdate, ", "),
+		)
+	}
+
+	if len(m.FeaturesToUpdate) == 0 {
+		for _, claim := range claimsMap {
+			for _, feature := range claim.Providers.Github.Features {
+				if !slices.Contains(m.FeaturesToUpdate, feature.Name) {
+					m.FeaturesToUpdate = append(
+						m.FeaturesToUpdate,
+						feature.Name,
+					)
+				}
+			}
+		}
+	}
+
+	if len(m.FeaturesToUpdate) == 0 {
+		return nil, fmt.Errorf(
+			"no features found to update: no features specified and none present in claims",
+		)
+	}
+
+	ghReleaseListResult, err := m.getReleases(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	latestFeaturesMap, allFeaturesMap, err := m.getFeaturesMapData(
+		ghReleaseListResult,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	for entry, claim := range claimsMap {
+    claimName := claim["name"].(string)
+		claimKind := claim["kind"].(string)
+		updatedFeaturesList, createPR, hydrateClaim, err := m.updateClaimFeatures(
+			claim,
+			latestFeaturesMap,
+		)
+		if err != nil {
+			summary.addUpdateSummaryRow(
+				claim.Name, extractErrorMessage(err),
+			)
+			continue
+		}
+
+		if createPR {
+			currentFeatureVersionsMap := m.extractCurrentFeatureVersionsFromClaim(
+				claim,
+			)
+			claim.Providers.Github.Features = updatedFeaturesList
+			updatedDir := m.updateDirWithClaim(claim, entry)
+			releaseBody, err := m.getPrBodyForFeatureUpdate(
+				ctx,
+				updatedFeaturesList,
+				allFeaturesMap,
+				currentFeatureVersionsMap,
 			)
 			if err != nil {
 				summary.addUpdateSummaryRow(
@@ -183,6 +246,24 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			if m.Automerge {
 				m.MergePullRequest(ctx, prLink)
 			}
+		}
+
+		if hydrateClaim {
+			workflowURL, err := m.workflowRun(ctx, claim.Name)
+			if err != nil {
+				summary.addUpdateSummaryRow(
+					claim.Name, extractErrorMessage(err),
+				)
+				continue
+			}
+
+			summary.addUpdateSummaryRow(
+				claim.Name,
+				fmt.Sprintf(
+					"Ref detected. Hydration workflow triggered: <a href=\"%s\">%s</a>",
+					workflowURL, workflowURL,
+				),
+			)
 		}
 	}
 

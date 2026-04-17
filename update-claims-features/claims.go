@@ -58,28 +58,29 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 func (m *UpdateClaimsFeatures) updateClaimFeatures(
 	claim map[string]any,
 	featuresMap map[string]string,
-) ([]map[string]string, bool, error) {
+) ([]map[string]string, bool, bool, error) {
 	updatedFeaturesList := []map[string]string{}
 	createPR := false
-	featuresList := claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)
+	hydrateClaim := false
+  featuresList := claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)
 
 	for idx, feature := range featuresList {
 		featureName := feature.(map[string]any)["name"].(string)
 		featureVersion := feature.(map[string]any)["version"].(string)
 		if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, featureName) {
-			featureVersionSemver, err := semver.NewVersion(
-				featuresMap[featureName],
-			)
-			if err != nil {
-				return []map[string]string{}, false, err
-			}
-
 			if featureVersion != "" {
+				featureVersionSemver, err := semver.NewVersion(
+					featuresMap[featureName],
+				)
+				if err != nil {
+					return []map[string]string{}, false, false, err
+				}
+
 				versionIsDifferent, err := semver.NewConstraint(
 					fmt.Sprintf("!=%s", featureVersion),
 				)
 				if err != nil {
-					return []map[string]string{}, false, err
+					return []map[string]string{}, false, false, err
 				}
 
 				// if instead of createPR = versionIsGreater.Check()
@@ -92,9 +93,13 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 						"version": featuresMap[featureName],
 					})
 				}
+			} else {
+				if feature.Ref != "" {
+					hydrateClaim = true
+				}
 			}
 		}
 	}
 
-	return updatedFeaturesList, createPR, nil
+	return updatedFeaturesList, createPR, hydrateClaim, nil
 }

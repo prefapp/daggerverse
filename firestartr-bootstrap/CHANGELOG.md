@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.1](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.3.0...firestartr-bootstrap-v1.3.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* Remove duplicated field ([#449](https://github.com/prefapp/daggerverse/issues/449)) ([84078cc](https://github.com/prefapp/daggerverse/commit/84078cc1620a48d984fc3fad9cdf7ae46a4e646a))
+
+## [1.3.1](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.3.0...firestartr-bootstrap-v1.3.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* Remove duplicated field ([#449](https://github.com/prefapp/daggerverse/issues/449)) ([84078cc](https://github.com/prefapp/daggerverse/commit/84078cc1620a48d984fc3fad9cdf7ae46a4e646a))
+
 ## [1.3.0](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.2.5...firestartr-bootstrap-v1.3.0) (2026-04-01)
 
 
