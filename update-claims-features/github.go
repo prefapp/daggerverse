@@ -251,18 +251,23 @@ func (m *UpdateClaimsFeatures) getValidationSchema(
 
 	schemaContent, err := ctr.File("/tmp/schema.json").Contents(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	var schemas []interface{}
 	if err := json.Unmarshal([]byte(schemaContent), &schemas); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	sl := gojsonschema.NewSchemaLoader()
 	err = loadSchemaList(schemas, *sl, 0)
 	if err != nil {
-		panic(err)
+		return nil, err
+	}
+
+	err = sl.Validate()
+	if err != nil {
+		return nil, err
 	}
 
 	return sl, nil
