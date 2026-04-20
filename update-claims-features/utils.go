@@ -206,7 +206,7 @@ func (m *UpdateClaimsFeatures) updateDirWithClaim(
 
 func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 	ctx context.Context,
-	updatedFeaturesList []map[string]string,
+	updatedFeaturesList []map[string]any,
 	allFeaturesMap map[string][]string,
 	originalVersionMap map[string]string,
 ) (string, error) {
@@ -214,8 +214,8 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 	var parsedJson ReleaseBody
 
 	for _, updatedFeature := range updatedFeaturesList {
-		updatedFeatureName := updatedFeature["name"]
-		updatedFeatureVersion := updatedFeature["version"]
+		updatedFeatureName := updatedFeature["name"].(string)
+		updatedFeatureVersion := updatedFeature["version"].(string)
 		if updatedFeatureVersion != "" {
 			updatedFeatureVersionSemver, err := semver.NewVersion(updatedFeatureVersion)
 
