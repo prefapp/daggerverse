@@ -46,20 +46,20 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	}
 
 	schemaErrs := validateClaimMap(claim, schemaLoader)
-	if schemaErrs != nil {
-		return nil, fmt.Errorf("claim %s does not match ComponentClaim schema: %s", claimPath, schemaErrs)
-	}
+	if schemaErrs == "" {
+		claimName := claim["name"].(string)
+		claimKind := claim["kind"].(string)
+		claimProviderName := claim["providers"].(map[string]any)["github"].(map[string]any)["name"].(string)
+		if claimKind == "ComponentClaim" &&
+			(m.ClaimsToUpdate == nil ||
+				slices.Contains(m.ClaimsToUpdate, claimName) ||
+				slices.Contains(m.ClaimsToUpdate, claimProviderName)) {
 
-	claimName := claim["name"].(string)
-	claimKind := claim["kind"].(string)
-	claimProviderName := claim["providers"].(map[string]any)["github"].(map[string]any)["name"].(string)
-	if claimKind == "ComponentClaim" &&
-		(m.ClaimsToUpdate == nil ||
-			slices.Contains(m.ClaimsToUpdate, claimName) ||
-			slices.Contains(m.ClaimsToUpdate, claimProviderName)) {
+			return claim, nil
 
-		return claim, nil
-
+		}
+	} else {
+		fmt.Printf("Claim %s did not pass validation:\n%s\nSkipping\n", claimPath, schemaErrs)
 	}
 
 	return nil, nil

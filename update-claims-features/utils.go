@@ -69,7 +69,7 @@ func loadSchemaList(
 func validateClaimMap(
 	claim map[string]interface{},
 	schemaLoader *gojsonschema.SchemaLoader,
-) error {
+) string {
 	targetID := "firestartr.dev://common/ComponentClaim"
 
 	compiledSchema, err := schemaLoader.Compile(
@@ -83,14 +83,14 @@ func validateClaimMap(
 	result, err := compiledSchema.Validate(documentLoader)
 
 	if result.Valid() {
-		return nil
+		return ""
 	} else {
 		errorMsg := "The document is not valid. errors :\n"
 		for _, desc := range result.Errors() {
 			errorMsg = fmt.Sprintf("%s- %s\n", errorMsg, desc)
 		}
 
-		return fmt.Errorf(errorMsg)
+		return errorMsg
 	}
 }
 
