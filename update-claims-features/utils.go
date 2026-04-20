@@ -216,6 +216,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 	for _, updatedFeature := range updatedFeaturesList {
 		updatedFeatureName := updatedFeature["name"].(string)
 		updatedFeatureVersion := updatedFeature["version"].(string)
+		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>Checking %s with version %s\n", updatedFeatureName, updatedFeatureVersion)
 		if updatedFeatureVersion != "" {
 			updatedFeatureVersionSemver, err := semver.NewVersion(updatedFeatureVersion)
 
@@ -235,6 +236,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 				// the same version as they originally had, so we filter them here
 				// (they are added so they don't get deleted when updating the feature list)
 				if versionIsDifferentThanOriginal.Check(updatedFeatureVersionSemver) {
+					fmt.Printf(">>>>>>>>>>>>>>>>>>>>>Feature version was updated")
 					addChangeLog, err := semver.NewConstraint(
 						fmt.Sprintf(
 							"> %s, <= %s || =%s",
@@ -260,6 +262,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 						// installed (which won't necessarily be latest)
 						versionInfo := ""
 						if addChangeLog.Check(featureVersionSemver) {
+							fmt.Printf(">>>>>>>>>>>>>>>>>>>>>Added to changelog")
 							fullFeatureTag := fmt.Sprintf(
 								"%s-v%s", updatedFeatureName, featureVersion,
 							)
