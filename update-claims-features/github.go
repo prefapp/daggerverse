@@ -248,6 +248,9 @@ func (m *UpdateClaimsFeatures) getValidationSchema(
 			),
 		}).
 		Sync(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	schemaContent, err := ctr.File("/tmp/schema.json").Contents(ctx)
 	if err != nil {

@@ -213,8 +213,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 			if err != nil {
 				summary.addUpdateSummaryRow(
-					claimName,
-					fmt.Sprintf("Success: <a href=\"%s\">%s</a>", prLink, prLink),
+					claimName, extractErrorMessage(err),
 				)
 				errorMsg = fmt.Sprintf("%s\n%s", errorMsg, extractErrorMessage(err))
 				continue

@@ -45,7 +45,11 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 		return nil, err
 	}
 
-	schemaErrs := validateClaimMap(claim, schemaLoader)
+	schemaErrs, err := validateClaimMap(claim, schemaLoader)
+	if err != nil {
+		return nil, err
+	}
+
 	if schemaErrs == "" {
 		claimName := claim["name"].(string)
 		claimKind := claim["kind"].(string)
@@ -82,9 +86,9 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 			featureVersionProperty, hasVersion := feature.(map[string]any)["version"]
 			_, hasRef := feature.(map[string]any)["ref"]
 			if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, featureName) {
-				if hasVersion {
-					featureVersion := featureVersionProperty.(string)
+				featureVersion := featureVersionProperty.(string)
 
+				if hasVersion && featureVersion != "" {
 					featureVersionSemver, err := semver.NewVersion(
 						featuresMap[featureName],
 					)
@@ -99,18 +103,20 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 						return []map[string]any{}, false, false, err
 					}
 
+					featureDataCopy := cloneMap(claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)[idx].(map[string]any))
+
 					// if instead of createPR = versionIsGreater.Check()
 					// because a later updated feature could override this value
 					if versionIsDifferent.Check(featureVersionSemver) {
 						createPR = true
 
-						featureDataCopy := cloneMap(claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)[idx].(map[string]any))
 						featureDataCopy["version"] = featuresMap[featureName]
-						updatedFeaturesList = append(
-							updatedFeaturesList,
-							featureDataCopy,
-						)
 					}
+
+					updatedFeaturesList = append(
+						updatedFeaturesList,
+						featureDataCopy,
+					)
 				} else {
 					if hasRef {
 						hydrateClaim = true
