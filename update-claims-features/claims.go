@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v3"
 )
 
@@ -30,6 +31,7 @@ func (m *UpdateClaimsFeatures) getAllClaims(
 func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	ctx context.Context,
 	claimPath string,
+	schemaLoader gojsonschema.SchemaLoader,
 ) (map[string]any, error) {
 	file := m.ClaimsDir.File(claimPath)
 	contents, err := file.Contents(ctx)
@@ -43,12 +45,7 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 		return nil, err
 	}
 
-	schema, err := m.getValidationSchema(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	schemaErrs := validateClaimMap(claim, schema)
+	schemaErrs := validateClaimMap(claim, schemaLoader)
 	if schemaErrs != nil {
 		return nil, fmt.Errorf("claim %s does not match ComponentClaim schema: %s", claimPath, schemaErrs)
 	}

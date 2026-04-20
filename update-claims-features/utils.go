@@ -66,21 +66,15 @@ func loadSchemaList(
 	return nil
 }
 
-func validateClaimMap(claim map[string]interface{}, rawSchema []byte) error {
-	var schemas []interface{}
+func validateClaimMap(
+	claim map[string]interface{},
+	schemaLoader gojsonschema.SchemaLoader,
+) error {
 	targetID := "firestartr.dev://common/ComponentClaim"
 
-	if err := json.Unmarshal(rawSchema, &schemas); err != nil {
-		panic(err)
-	}
-
-	sl := gojsonschema.NewSchemaLoader()
-	err := loadSchemaList(schemas, *sl, 0)
-	if err != nil {
-		panic(err)
-	}
-
-	compiledSchema, err := sl.Compile(gojsonschema.NewReferenceLoader(targetID))
+	compiledSchema, err := schemaLoader.Compile(
+		gojsonschema.NewReferenceLoader(targetID),
+	)
 	if err != nil {
 		panic(err)
 	}

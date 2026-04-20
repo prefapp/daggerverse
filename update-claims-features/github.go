@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/xeipuuv/gojsonschema"
 )
 
 /*
@@ -228,7 +230,7 @@ func (m *UpdateClaimsFeatures) workflowRun(
 
 func (m *UpdateClaimsFeatures) getValidationSchema(
 	ctx context.Context,
-) ([]byte, error) {
+) (gojsonschema.SchemaLoader, error) {
 	ctr, err := dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
@@ -252,7 +254,18 @@ func (m *UpdateClaimsFeatures) getValidationSchema(
 		panic(err)
 	}
 
-	return []byte(schemaContent), nil
+	var schemas []interface{}
+	if err := json.Unmarshal([]byte(schemaContent), &schemas); err != nil {
+		panic(err)
+	}
+
+	sl := gojsonschema.NewSchemaLoader()
+	err = loadSchemaList(schemas, *sl, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	return sl, nil
 }
 
 var releasesChangelog = make(map[string]string)
