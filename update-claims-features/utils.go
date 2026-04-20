@@ -48,7 +48,12 @@ func validateClaimMap(claim map[string]interface{}, rawSchema []byte) error {
 	sl := gojsonschema.NewSchemaLoader()
 
 	for id, s := range schemas {
-		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>%s\n", id)
+		schemaString, err := json.Marshal(s)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>%d\n%s", id, schemaString)
 		loader := gojsonschema.NewGoLoader(s)
 		if err := sl.AddSchemas(loader); err != nil {
 			panic(err)
