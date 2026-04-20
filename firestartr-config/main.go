@@ -22,6 +22,7 @@ import (
 type FirestartrConfig struct {
 	Apps             []FirestartrApp
 	Registries       []Registry
+	Repositories     []Repository
 	Platforms        []Platform
 	DotFirestartrDir *dagger.Directory
 }
@@ -35,7 +36,16 @@ func New(
 
 ) (*FirestartrConfig, error) {
 
+
 	registries, err := loadRegistries(ctx, dotFirestartr)
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	repositories, err := loadRepositories(ctx, dotFirestartr)
 
 	if err != nil {
 
@@ -64,6 +74,8 @@ func New(
 		DotFirestartrDir: dotFirestartr,
 
 		Registries: registries,
+
+		Repositories: repositories,
 
 		Apps: apps,
 
