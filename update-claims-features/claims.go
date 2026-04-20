@@ -68,7 +68,7 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 func (m *UpdateClaimsFeatures) updateClaimFeatures(
 	claim map[string]any,
 	featuresMap map[string]string,
-) ([]map[string]string, bool, bool, error) {
+) ([]map[string]any, bool, bool, error) {
 	updatedFeaturesList := []map[string]any{}
 	createPR := false
 	hydrateClaim := false
