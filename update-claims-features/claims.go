@@ -104,10 +104,11 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 					if versionIsDifferent.Check(featureVersionSemver) {
 						createPR = true
 
-						claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)[idx].(map[string]any)["version"] = featuresMap[featureName]
+						featureDataCopy := cloneMap(claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)[idx].(map[string]any))
+						featureDataCopy["version"] = featuresMap[featureName]
 						updatedFeaturesList = append(
 							updatedFeaturesList,
-							claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)[idx].(map[string]any),
+							featureDataCopy,
 						)
 					}
 				} else {
