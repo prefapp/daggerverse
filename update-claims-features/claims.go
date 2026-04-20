@@ -74,7 +74,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 	hydrateClaim := false
 	featuresListProperty, hasFeatures := claim["providers"].(map[string]any)["github"].(map[string]any)["features"]
 
-	if !hasFeatures {
+	if hasFeatures {
 		featuresList := featuresListProperty.([]any)
 
 		for idx, feature := range featuresList {
