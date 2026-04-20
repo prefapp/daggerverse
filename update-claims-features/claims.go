@@ -31,7 +31,7 @@ func (m *UpdateClaimsFeatures) getAllClaims(
 func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	ctx context.Context,
 	claimPath string,
-	schemaLoader gojsonschema.SchemaLoader,
+	schemaLoader *gojsonschema.SchemaLoader,
 ) (map[string]any, error) {
 	file := m.ClaimsDir.File(claimPath)
 	contents, err := file.Contents(ctx)

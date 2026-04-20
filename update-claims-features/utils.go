@@ -68,7 +68,7 @@ func loadSchemaList(
 
 func validateClaimMap(
 	claim map[string]interface{},
-	schemaLoader gojsonschema.SchemaLoader,
+	schemaLoader *gojsonschema.SchemaLoader,
 ) error {
 	targetID := "firestartr.dev://common/ComponentClaim"
 
