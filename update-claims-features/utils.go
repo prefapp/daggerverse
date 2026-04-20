@@ -85,7 +85,12 @@ func validateClaimMap(
 	if result.Valid() {
 		return nil
 	} else {
-		return err
+		errorMsg := "The document is not valid. errors :\n"
+		for _, desc := range result.Errors() {
+			errorMsg = fmt.Sprintf("%s- %s\n", errorMsg, desc)
+		}
+
+		return fmt.Errorf(errorMsg)
 	}
 }
 

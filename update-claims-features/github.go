@@ -265,11 +265,6 @@ func (m *UpdateClaimsFeatures) getValidationSchema(
 		return nil, err
 	}
 
-	err = sl.Validate()
-	if err != nil {
-		return nil, err
-	}
-
 	return sl, nil
 }
 
