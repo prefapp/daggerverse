@@ -135,7 +135,7 @@ func New(
 
 	// calculate operator and CLI versions if necessary (when equal to "latest")
 	if bootstrap.Firestartr.OperatorVersion == "latest" {
-		opVer, err := getLatestOperatorVersion(ctx, creds.GithubApp.PrefappBotPat)
+		opVer, err := getLatestOperatorVersion(ctx, creds.GithubApp.OperatorPat)
 		if err != nil {
 			return nil, err
 		}
