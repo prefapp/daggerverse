@@ -172,6 +172,9 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	for entry, claim := range claimsMap {
 		claimName := claim["name"].(string)
 		claimKind := claim["kind"].(string)
+		currentFeatureVersionsMap := m.extractCurrentFeatureVersionsFromClaim(
+			claim,
+		)
 		updatedFeaturesList, createPR, hydrateClaim, err := m.updateClaimFeatures(
 			claim,
 			latestFeaturesMap,
@@ -184,9 +187,6 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		}
 
 		if createPR {
-			currentFeatureVersionsMap := m.extractCurrentFeatureVersionsFromClaim(
-				claim,
-			)
 			claim["providers"].(map[string]any)["github"].(map[string]any)["features"] = updatedFeaturesList
 			updatedDir := m.updateDirWithClaim(claim, entry)
 			releaseBody, err := m.getPrBodyForFeatureUpdate(
