@@ -1,6 +1,6 @@
 module dagger/update-claims-features
 
-go 1.25.0
+go 1.23.6
 
 require (
 	github.com/99designs/gqlgen v0.17.75
