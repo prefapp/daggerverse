@@ -7,6 +7,7 @@ require (
 	github.com/Khan/genqlient v0.8.1
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/vektah/gqlparser/v2 v2.5.28
+	github.com/xeipuuv/gojsonschema v1.2.0
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.12.2
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.12.2
