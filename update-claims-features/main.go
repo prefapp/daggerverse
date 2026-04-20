@@ -120,7 +120,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 		claim, err := m.getClaimIfKindComponent(ctx, entry, schemaLoader)
 		if err != nil {
-			summary.addUpdateSummaryRow(entry, extractErrorMessage(err))
+			summary.addUpdateSummaryRow(entry, err.Error())
 			continue
 		}
 
