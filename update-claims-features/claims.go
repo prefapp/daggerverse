@@ -58,6 +58,8 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 			slices.Contains(m.ClaimsToUpdate, claimName) ||
 			slices.Contains(m.ClaimsToUpdate, claimProviderName)) {
 
+		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>CLAIM IS VALID")
+
 		return claim, nil
 
 	}
