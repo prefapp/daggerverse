@@ -65,7 +65,7 @@ func validateClaimMap(claim map[string]interface{}, rawSchema []byte) error {
 	if result.Valid() {
 		return nil
 	} else {
-		return err.Error()
+		return err
 	}
 }
 
