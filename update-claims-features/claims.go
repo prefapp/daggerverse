@@ -69,7 +69,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 	claim map[string]any,
 	featuresMap map[string]string,
 ) ([]map[string]string, bool, bool, error) {
-	updatedFeaturesList := []map[string]string{}
+	updatedFeaturesList := []map[string]any{}
 	createPR := false
 	hydrateClaim := false
 	featuresListProperty, hasFeatures := claim["providers"].(map[string]any)["github"].(map[string]any)["features"]
@@ -107,7 +107,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 						claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)[idx].(map[string]any)["version"] = featuresMap[featureName]
 						updatedFeaturesList = append(
 							updatedFeaturesList,
-							claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)[idx].(map[string]string),
+							claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)[idx].(map[string]any),
 						)
 					}
 				} else {
