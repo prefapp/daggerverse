@@ -103,11 +103,12 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 					// because a later updated feature could override this value
 					if versionIsDifferent.Check(featureVersionSemver) {
 						createPR = true
+
 						claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)[idx].(map[string]any)["version"] = featuresMap[featureName]
-						updatedFeaturesList = append(updatedFeaturesList, map[string]string{
-							"name":    featureName,
-							"version": featuresMap[featureName],
-						})
+						updatedFeaturesList = append(
+							updatedFeaturesList,
+							claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)[idx].(map[string]string),
+						)
 					}
 				} else {
 					if hasRef {
