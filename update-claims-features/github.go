@@ -228,7 +228,7 @@ func (m *UpdateClaimsFeatures) workflowRun(
 	)
 }
 
-func (m *UpdateClaimsFeatures) getValidationSchema(
+func (m *UpdateClaimsFeatures) getAllValidationSchemas(
 	ctx context.Context,
 ) (*gojsonschema.SchemaLoader, error) {
 	ctr, err := dag.Gh(dagger.GhOpts{
@@ -269,6 +269,26 @@ func (m *UpdateClaimsFeatures) getValidationSchema(
 	}
 
 	return sl, nil
+}
+
+func (m *UpdateClaimsFeatures) getComponentValidationSchema(
+	ctx context.Context,
+) (*gojsonschema.SchemaLoader, error) {
+	targetID := "firestartr.dev://common/ComponentClaim"
+
+	schemaLoader, err := m.getAllValidationSchemas(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	compiledSchema, err := schemaLoader.Compile(
+		gojsonschema.NewReferenceLoader(targetID),
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return compiledSchema, nil
 }
 
 var releasesChangelog = make(map[string]string)

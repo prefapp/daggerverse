@@ -109,7 +109,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		return nil, err
 	}
 
-	schemaLoader, err := m.getValidationSchema(ctx)
+	compiledSchema, err := m.getComponentValidationSchema(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	for _, entry := range claims {
 		fmt.Printf("Reading claim %s\n", entry)
 
-		claim, err := m.getClaimIfKindComponent(ctx, entry, schemaLoader)
+		claim, err := m.getClaimIfKindComponent(ctx, entry, compiledSchema)
 		if err != nil {
 			summary.addUpdateSummaryRow(entry, err.Error())
 			continue

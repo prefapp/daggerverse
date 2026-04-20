@@ -68,17 +68,8 @@ func loadSchemaList(
 
 func validateClaimMap(
 	claim map[string]interface{},
-	schemaLoader *gojsonschema.SchemaLoader,
+	compiledSchema *gojsonschema.SchemaLoader,
 ) (string, error) {
-	targetID := "firestartr.dev://common/ComponentClaim"
-
-	compiledSchema, err := schemaLoader.Compile(
-		gojsonschema.NewReferenceLoader(targetID),
-	)
-	if err != nil {
-		return "", err
-	}
-
 	documentLoader := gojsonschema.NewGoLoader(claim)
 	result, err := compiledSchema.Validate(documentLoader)
 
