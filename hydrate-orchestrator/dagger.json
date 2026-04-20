@@ -1,6 +1,6 @@
 {
   "name": "hydrate-orchestrator",
-  "engineVersion": "v0.18.8",
+  "engineVersion": "v0.19.10",
   "sdk": {
     "source": "go"
   },
@@ -11,7 +11,7 @@
     },
     {
       "name": "gh",
-      "source": "github.com/prefapp/daggerverse/gh",
+      "source": "github.com/prefapp/daggerverse/gh@main",
       "pin": "3e0911c41e76560ccaa0e84a05de6786fe725778"
     },
     {
@@ -26,5 +26,6 @@
       "name": "hydrate-tfworkspaces",
       "source": "modules/hydrate-tfworkspaces"
     }
-  ]
+  ],
+  "disableDefaultFunctionCaching": true
 }

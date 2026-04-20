@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.4.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.10...hydrate-orchestrator-v6.4.0) (2026-04-17)
+
+
+### Features
+
+* Add OCI support to Helm repositories and update related logic ([#394](https://github.com/prefapp/daggerverse/issues/394)) ([056e1b6](https://github.com/prefapp/daggerverse/commit/056e1b6ba6c79e423a7523aed5be67e44d7d09ca))
+
 ## [6.3.10](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.9...hydrate-orchestrator-v6.3.10) (2026-04-15)
 
 
