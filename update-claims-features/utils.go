@@ -60,12 +60,12 @@ func validateClaimMap(claim map[string]interface{}, rawSchema []byte) error {
 	}
 
 	documentLoader := gojsonschema.NewGoLoader(claim)
-	result, _ := compiledSchema.Validate(documentLoader)
+	result, err := compiledSchema.Validate(documentLoader)
 
 	if result.Valid() {
 		return nil
 	} else {
-		return result.Errors()
+		return err.Error()
 	}
 }
 
