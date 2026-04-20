@@ -80,6 +80,11 @@ func validateClaimMap(
 	}
 
 	documentLoader := gojsonschema.NewGoLoader(claim)
+	err = documentLoader.Validate()
+	if err != nil {
+		return err
+	}
+
 	result, err := compiledSchema.Validate(documentLoader)
 
 	if result.Valid() {
