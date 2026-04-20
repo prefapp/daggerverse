@@ -59,7 +59,7 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 
 		}
 	} else {
-		fmt.Printf("Claim %s did not pass validation:\n%s\nSkipping\n", claimPath, schemaErrs)
+		return nil, fmt.Errorf("Claim %s did not pass validation:\n%s\nSkipping\n", claimPath, schemaErrs)
 	}
 
 	return nil, nil
