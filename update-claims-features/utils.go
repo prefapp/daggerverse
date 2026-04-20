@@ -37,6 +37,35 @@ func extractErrorMessage(err error) string {
 	}
 }
 
+func loadSchemaList(
+	schemasList []interface{},
+	loader *gojsonschema.SchemaLoader,
+	currentCall int,
+) error {
+	currentCall++
+	if currentCall > 10 {
+		return fmt.Errorf("too many recursive calls to loadSchemaList, possible circular reference in schemas")
+	}
+
+	for _, schema := range schemasList {
+		_, isArray := schema.([]interface{})
+
+		if isArray {
+			err := loadSchemaList(schema.([]interface{}), loader, currentCall)
+			if err != nil {
+				return err
+			}
+		} else {
+			loader := gojsonschema.NewGoLoader(schema)
+			if err := loader.AddSchemas(loader); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func validateClaimMap(claim map[string]interface{}, rawSchema []byte) error {
 	var schemas []interface{}
 	targetID := "firestartr.dev://common/ComponentClaim"
@@ -46,18 +75,9 @@ func validateClaimMap(claim map[string]interface{}, rawSchema []byte) error {
 	}
 
 	sl := gojsonschema.NewSchemaLoader()
-
-	for id, s := range schemas {
-		schemaString, err := json.Marshal(s)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>%d\n%s", id, schemaString)
-		loader := gojsonschema.NewGoLoader(s)
-		if err := sl.AddSchemas(loader); err != nil {
-			panic(err)
-		}
+	err := loadSchemaList(schemas, *sl, 0)
+	if err != nil {
+		panic(err)
 	}
 
 	compiledSchema, err := sl.Compile(gojsonschema.NewReferenceLoader(targetID))
