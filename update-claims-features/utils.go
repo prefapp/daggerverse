@@ -39,7 +39,7 @@ func extractErrorMessage(err error) string {
 
 func loadSchemaList(
 	schemasList []interface{},
-	schemaLoader *gojsonschema.SchemaLoader,
+	schemaLoader gojsonschema.SchemaLoader,
 	currentCall int,
 ) error {
 	currentCall++
@@ -75,7 +75,7 @@ func validateClaimMap(claim map[string]interface{}, rawSchema []byte) error {
 	}
 
 	sl := gojsonschema.NewSchemaLoader()
-	err := loadSchemaList(schemas, &sl, 0)
+	err := loadSchemaList(schemas, *sl, 0)
 	if err != nil {
 		panic(err)
 	}
