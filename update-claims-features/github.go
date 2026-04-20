@@ -230,7 +230,7 @@ func (m *UpdateClaimsFeatures) workflowRun(
 
 func (m *UpdateClaimsFeatures) getValidationSchema(
 	ctx context.Context,
-) (gojsonschema.SchemaLoader, error) {
+) (*gojsonschema.SchemaLoader, error) {
 	ctr, err := dag.Gh(dagger.GhOpts{
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
