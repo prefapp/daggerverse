@@ -240,7 +240,7 @@ func (m *UpdateClaimsFeatures) getValidationSchema(
 		WithExec([]string{
 			"sh", "-c",
 			fmt.Sprintf(
-				"gh api repos/%s/%s/contents/%s/site/raw/core/claims/claims.schema.json "+
+				"gh api https://raw.githubusercontent.com/%s/%s/refs/heads/%s/site/raw/core/claims/claims.schema.json "+
 					"--header 'Accept: application/vnd.github.v3.raw' > /tmp/schema.json",
 				"firestartr-pro", "docs", "main", // TODO: use CLI version instead of main
 			),
