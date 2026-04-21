@@ -39,7 +39,7 @@ func extractErrorMessage(err error) string {
 
 func loadSchemaList(
 	schemasList []interface{},
-	schemaLoader gojsonschema.SchemaLoader,
+	schemaLoader *gojsonschema.SchemaLoader,
 	currentCall int,
 ) error {
 	currentCall++
@@ -68,7 +68,7 @@ func loadSchemaList(
 
 func validateClaimMap(
 	claim map[string]interface{},
-	compiledSchema *gojsonschema.SchemaLoader,
+	compiledSchema *gojsonschema.Schema,
 ) (string, error) {
 	documentLoader := gojsonschema.NewGoLoader(claim)
 	result, err := compiledSchema.Validate(documentLoader)
@@ -218,7 +218,12 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 
 	for _, updatedFeature := range updatedFeaturesList {
 		updatedFeatureName := updatedFeature["name"].(string)
-		updatedFeatureVersion := updatedFeature["version"].(string)
+		versionProperty, hasVersion := updatedFeature["version"]
+		if !hasVersion {
+			continue
+		}
+
+		updatedFeatureVersion := versionProperty.(string)
 		if updatedFeatureVersion != "" {
 			updatedFeatureVersionSemver, err := semver.NewVersion(updatedFeatureVersion)
 
@@ -310,7 +315,12 @@ func (m *UpdateClaimsFeatures) extractCurrentFeatureVersionsFromClaim(
 
 	for _, featureData := range featuresList {
 		featureName := featureData.(map[string]any)["name"].(string)
-		featureVersion := featureData.(map[string]any)["version"].(string)
+		versionProperty, hasVersion := featureData.(map[string]any)["version"]
+		if !hasVersion {
+			continue
+		}
+
+		featureVersion := versionProperty.(string)
 		currentFeaturesVersion[featureName] = featureVersion
 	}
 

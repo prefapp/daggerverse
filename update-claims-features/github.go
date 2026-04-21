@@ -273,7 +273,7 @@ func (m *UpdateClaimsFeatures) getAllValidationSchemas(
 
 func (m *UpdateClaimsFeatures) getComponentValidationSchema(
 	ctx context.Context,
-) (*gojsonschema.SchemaLoader, error) {
+) (*gojsonschema.Schema, error) {
 	targetID := "firestartr.dev://common/ComponentClaim"
 
 	schemaLoader, err := m.getAllValidationSchemas(ctx)
@@ -285,7 +285,7 @@ func (m *UpdateClaimsFeatures) getComponentValidationSchema(
 		gojsonschema.NewReferenceLoader(targetID),
 	)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	return compiledSchema, nil

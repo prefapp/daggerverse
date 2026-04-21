@@ -138,7 +138,12 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 	if len(m.FeaturesToUpdate) == 0 {
 		for _, claim := range claimsMap {
-			claimFeatures := claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)
+			featuresProperty, hasFeatures := claim["providers"].(map[string]any)["github"].(map[string]any)["features"]
+			if !hasFeatures {
+				continue
+			}
+
+			claimFeatures := featuresProperty.([]any)
 			for _, feature := range claimFeatures {
 				featureName := feature.(map[string]any)["name"].(string)
 				if !slices.Contains(m.FeaturesToUpdate, featureName) {
@@ -227,24 +232,24 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			if m.Automerge {
 				m.MergePullRequest(ctx, prLink)
 			}
-		}
+		} else {
+			if hydrateClaim {
+				workflowURL, err := m.workflowRun(ctx, claimName)
+				if err != nil {
+					summary.addUpdateSummaryRow(
+						claimName, extractErrorMessage(err),
+					)
+					continue
+				}
 
-		if hydrateClaim {
-			workflowURL, err := m.workflowRun(ctx, claimName)
-			if err != nil {
 				summary.addUpdateSummaryRow(
-					claimName, extractErrorMessage(err),
+					claimName,
+					fmt.Sprintf(
+						"Ref detected. Hydration workflow triggered: <a href=\"%s\">%s</a>",
+						workflowURL, workflowURL,
+					),
 				)
-				continue
 			}
-
-			summary.addUpdateSummaryRow(
-				claimName,
-				fmt.Sprintf(
-					"Ref detected. Hydration workflow triggered: <a href=\"%s\">%s</a>",
-					workflowURL, workflowURL,
-				),
-			)
 		}
 	}
 
