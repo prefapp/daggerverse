@@ -15,7 +15,7 @@ This module either updates feature version fields to the latest available releas
 
 Before making changes, the claim(s) are validated against the official JSON Schema to avoid creating invalid changes. The module uses the claims schema hosted in the firestartr-pro/docs repository:
 
-https://github.com/firestartr-pro/docs/blob/main/site/raw/core/claims/claims.schema.json
+https://raw.githubusercontent.com/firestartr-pro/docs/main/site/raw/core/claims/claims.schema.json
 
 If validation fails for a claim, the workflow reports the error in the workflow summary and will not create a PR or trigger the hydration workflow for that claim.
 
