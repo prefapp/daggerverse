@@ -87,7 +87,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 			featureDataCopy := cloneMap(feature.(map[string]any))
 			featureName := feature.(map[string]any)["name"].(string)
 			featureVersionProperty, hasVersion := feature.(map[string]any)["version"]
-			_, hasRef := feature.(map[string]any)["ref"]
+			refProperty, hasRef := feature.(map[string]any)["ref"]
 
 			if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, featureName) {
 				if hasVersion {
@@ -122,7 +122,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 						)
 					}
 				} else {
-					if hasRef {
+					if hasRef && refProperty.(string) != "" {
 						hydrateClaim = true
 					}
 				}

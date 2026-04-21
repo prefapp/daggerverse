@@ -16,6 +16,7 @@ type UpdateClaimsFeatures struct {
 	VersionConstraint string
 	Automerge         bool
 	LocalGhCliPath    *dagger.File
+	FirestartrVersion string
 }
 
 type Pr struct {
