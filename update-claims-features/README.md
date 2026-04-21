@@ -6,7 +6,7 @@ This module either updates feature version fields to the latest available releas
 
 ## Key behaviors
 
-- If a feature in a claim has a `version` field, that field will be updated to the newest release available in the `features` repository and a PR will be created in the `claims` repository with the updated claim.
+- If a feature in a claim has a `version` field, the module checks it against the newest release available in the `features` repository, updates the field if needed, and creates a PR in the `claims` repository only when an update is required.
 - If a feature has a `ref` field, the module will not change the claim; instead it will trigger the hydration workflow for that claim.
 - If a claim contains multiple features and some use `version` while others use `ref`, the module creates a PR updating only the `version` features and does not trigger hydration automatically (hydration must run after the PR is merged).
 - If a PR is created, the workflow can optionally automerge it when the `automerge` option is enabled.
