@@ -263,7 +263,7 @@ func (m *UpdateClaimsFeatures) getAllValidationSchemas(
 	}
 
 	sl := gojsonschema.NewSchemaLoader()
-	err = loadSchemaList(schemas, *sl, 0)
+	err = loadSchemaList(schemas, sl, 0)
 	if err != nil {
 		return nil, err
 	}
