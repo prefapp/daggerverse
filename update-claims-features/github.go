@@ -241,9 +241,13 @@ func (m *UpdateClaimsFeatures) getAllValidationSchemas(
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
 		WithExec([]string{"apk", "add", "curl"}).
 		WithExec([]string{
-			"sh", "-c",
+			"curl",
+			"--fail",
+			"--location",
+			"--output",
+			"/tmp/schema.json",
 			fmt.Sprintf(
-				"curl https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/%s/site/raw/core/claims/claims.schema.json  > /tmp/schema.json",
+				"https://raw.githubusercontent.com/firestartr-pro/docs/%s/site/raw/core/claims/claims.schema.json",
 				m.FirestartrVersion,
 			),
 		}).
