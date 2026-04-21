@@ -63,12 +63,6 @@ func (m *UpdateClaimsFeatures) New(
 	// If not provided, the GitHub CLI will be downloaded automatically.
 	// +optional
 	localGhCliPath *dagger.File,
-
-	// Firestartr version
-	// Used to determine which version of the schemas to validate the claims against
-	// +optional
-	// +default="main"
-	firestartrVersion string,
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
 	var featuresToUpdateList []string = nil
@@ -98,7 +92,6 @@ func (m *UpdateClaimsFeatures) New(
 		VersionConstraint: versionConstraint,
 		Automerge:         automerge,
 		LocalGhCliPath:    localGhCliPath,
-		FirestartrVersion: firestartrVersion,
 	}, nil
 }
 
