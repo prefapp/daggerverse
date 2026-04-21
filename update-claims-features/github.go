@@ -239,6 +239,7 @@ func (m *UpdateClaimsFeatures) getAllValidationSchemas(
 	}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
 		WithWorkdir(m.ClaimsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{"apk", "add", "curl"}).
 		WithExec([]string{
 			"sh", "-c",
 			fmt.Sprintf(
