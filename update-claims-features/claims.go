@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v3"
 )
 
@@ -30,72 +31,108 @@ func (m *UpdateClaimsFeatures) getAllClaims(
 func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	ctx context.Context,
 	claimPath string,
-) (*Claim, error) {
+	schemaLoader *gojsonschema.Schema,
+) (map[string]any, error) {
 	file := m.ClaimsDir.File(claimPath)
 	contents, err := file.Contents(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	claim := &Claim{}
-	err = yaml.Unmarshal([]byte(contents), claim)
+	var claim map[string]any
+	err = yaml.Unmarshal([]byte(contents), &claim)
 	if err != nil {
 		return nil, err
 	}
 
-	if claim.Kind == "ComponentClaim" &&
-		(m.ClaimsToUpdate == nil ||
-			slices.Contains(m.ClaimsToUpdate, claim.Name) ||
-			slices.Contains(m.ClaimsToUpdate, claim.Providers.Github.Name)) {
+	claimKindProperty, hasKind := claim["kind"]
 
-		return claim, nil
+	if hasKind && claimKindProperty.(string) == "ComponentClaim" {
+		schemaErrs, err := validateClaimMap(claim, schemaLoader)
+		if err != nil {
+			return nil, err
+		}
 
+		if schemaErrs == "" {
+			claimName := claim["name"].(string)
+			claimProviderName := claim["providers"].(map[string]any)["github"].(map[string]any)["name"].(string)
+			if m.ClaimsToUpdate == nil ||
+				slices.Contains(m.ClaimsToUpdate, claimName) ||
+				slices.Contains(m.ClaimsToUpdate, claimProviderName) {
+
+				return claim, nil
+
+			}
+		} else {
+			return nil, fmt.Errorf("Claim %s did not pass validation:\n%s\nSkipping\n", claimPath, schemaErrs)
+		}
 	}
 
 	return nil, nil
 }
 
 func (m *UpdateClaimsFeatures) updateClaimFeatures(
-	claim *Claim,
+	claim map[string]any,
 	featuresMap map[string]string,
-) ([]Feature, bool, bool, error) {
-	var updatedFeaturesList []Feature
+) ([]map[string]any, bool, bool, error) {
+	updatedFeaturesList := []map[string]any{}
 	createPR := false
 	hydrateClaim := false
+	featuresListProperty, hasFeatures := claim["providers"].(map[string]any)["github"].(map[string]any)["features"]
 
-	for _, feature := range claim.Providers.Github.Features {
-		if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, feature.Name) {
-			if feature.Version != "" {
-				featureVersionSemver, err := semver.NewVersion(
-					featuresMap[feature.Name],
-				)
-				if err != nil {
-					return []Feature{}, false, false, err
-				}
+	if hasFeatures {
+		featuresList := featuresListProperty.([]any)
 
-				versionIsDifferent, err := semver.NewConstraint(
-					fmt.Sprintf("!=%s", feature.Version),
-				)
-				if err != nil {
-					return []Feature{}, false, false, err
-				}
+		for _, feature := range featuresList {
+			featureDataCopy := cloneMap(feature.(map[string]any))
+			featureName := feature.(map[string]any)["name"].(string)
+			featureVersionProperty, hasVersion := feature.(map[string]any)["version"]
+			refProperty, hasRef := feature.(map[string]any)["ref"]
 
-				// if instead of createPR = versionIsGreater.Check()
-				// because a later updated feature could override this value
-				if versionIsDifferent.Check(featureVersionSemver) {
-					createPR = true
-					feature.Version = featuresMap[feature.Name]
-				}
-			} else {
-				if feature.Ref != "" {
-					hydrateClaim = true
+			if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, featureName) {
+				if hasVersion {
+					featureVersion := featureVersionProperty.(string)
+
+					if featureVersion != "" {
+						featureVersionSemver, err := semver.NewVersion(
+							featuresMap[featureName],
+						)
+						if err != nil {
+							return []map[string]any{}, false, false, err
+						}
+
+						versionIsDifferent, err := semver.NewConstraint(
+							fmt.Sprintf("!=%s", featureVersion),
+						)
+						if err != nil {
+							return []map[string]any{}, false, false, err
+						}
+
+						// if instead of createPR = versionIsGreater.Check()
+						// because a later updated feature could override this value
+						if versionIsDifferent.Check(featureVersionSemver) {
+							createPR = true
+
+							featureDataCopy["version"] = featuresMap[featureName]
+						}
+					} else {
+						return []map[string]any{}, false, false, fmt.Errorf(
+							"feature %s has empty version, cannot update",
+							featureName,
+						)
+					}
+				} else {
+					if hasRef && refProperty.(string) != "" {
+						hydrateClaim = true
+					}
 				}
 			}
-		}
 
-		// Add feature whether its version is greater or not,
-		// so unupdated features are not deleted
-		updatedFeaturesList = append(updatedFeaturesList, feature)
+			updatedFeaturesList = append(
+				updatedFeaturesList,
+				featureDataCopy,
+			)
+		}
 	}
 
 	return updatedFeaturesList, createPR, hydrateClaim, nil

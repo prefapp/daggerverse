@@ -109,13 +109,18 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		return nil, err
 	}
 
-	claimsMap := make(map[string]*Claim)
+	compiledSchema, err := m.getComponentValidationSchema(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	claimsMap := make(map[string]map[string]any)
 	for _, entry := range claims {
 		fmt.Printf("Reading claim %s\n", entry)
 
-		claim, err := m.getClaimIfKindComponent(ctx, entry)
+		claim, err := m.getClaimIfKindComponent(ctx, entry, compiledSchema)
 		if err != nil {
-			summary.addUpdateSummaryRow(entry, extractErrorMessage(err))
+			summary.addUpdateSummaryRow(entry, err.Error())
 			continue
 		}
 
@@ -133,11 +138,18 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 	if len(m.FeaturesToUpdate) == 0 {
 		for _, claim := range claimsMap {
-			for _, feature := range claim.Providers.Github.Features {
-				if !slices.Contains(m.FeaturesToUpdate, feature.Name) {
+			featuresProperty, hasFeatures := claim["providers"].(map[string]any)["github"].(map[string]any)["features"]
+			if !hasFeatures {
+				continue
+			}
+
+			claimFeatures := featuresProperty.([]any)
+			for _, feature := range claimFeatures {
+				featureName := feature.(map[string]any)["name"].(string)
+				if !slices.Contains(m.FeaturesToUpdate, featureName) {
 					m.FeaturesToUpdate = append(
 						m.FeaturesToUpdate,
-						feature.Name,
+						featureName,
 					)
 				}
 			}
@@ -163,13 +175,15 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	}
 
 	for entry, claim := range claimsMap {
+		claimName := claim["name"].(string)
+		claimKind := claim["kind"].(string)
 		updatedFeaturesList, createPR, hydrateClaim, err := m.updateClaimFeatures(
 			claim,
 			latestFeaturesMap,
 		)
 		if err != nil {
 			summary.addUpdateSummaryRow(
-				claim.Name, extractErrorMessage(err),
+				claimName, extractErrorMessage(err),
 			)
 			continue
 		}
@@ -178,7 +192,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			currentFeatureVersionsMap := m.extractCurrentFeatureVersionsFromClaim(
 				claim,
 			)
-			claim.Providers.Github.Features = updatedFeaturesList
+			claim["providers"].(map[string]any)["github"].(map[string]any)["features"] = updatedFeaturesList
 			updatedDir := m.updateDirWithClaim(claim, entry)
 			releaseBody, err := m.getPrBodyForFeatureUpdate(
 				ctx,
@@ -188,54 +202,54 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			)
 			if err != nil {
 				summary.addUpdateSummaryRow(
-					claim.Name, extractErrorMessage(err),
+					claimName, extractErrorMessage(err),
 				)
 				continue
 			}
 
 			prLink, err := m.upsertPR(
 				ctx,
-				fmt.Sprintf("update-%s-%s", claim.Name, claim.Kind),
+				fmt.Sprintf("update-%s-%s", claimName, claimKind),
 				updatedDir,
 				[]string{},
-				fmt.Sprintf("Update %s features to latest version", claim.Name),
+				fmt.Sprintf("Update %s features to latest version", claimName),
 				releaseBody,
 			)
 
 			if err != nil {
 				summary.addUpdateSummaryRow(
-					claim.Name, extractErrorMessage(err),
+					claimName, extractErrorMessage(err),
 				)
 				errorMsg = fmt.Sprintf("%s\n%s", errorMsg, extractErrorMessage(err))
 				continue
 			}
 
 			summary.addUpdateSummaryRow(
-				claim.Name,
+				claimName,
 				fmt.Sprintf("Success: <a href=\"%s\">%s</a>", prLink, prLink),
 			)
 
 			if m.Automerge {
 				m.MergePullRequest(ctx, prLink)
 			}
-		}
+		} else {
+			if hydrateClaim {
+				workflowURL, err := m.workflowRun(ctx, claimName)
+				if err != nil {
+					summary.addUpdateSummaryRow(
+						claimName, extractErrorMessage(err),
+					)
+					continue
+				}
 
-		if hydrateClaim {
-			workflowURL, err := m.workflowRun(ctx, claim.Name)
-			if err != nil {
 				summary.addUpdateSummaryRow(
-					claim.Name, extractErrorMessage(err),
+					claimName,
+					fmt.Sprintf(
+						"Ref detected. Hydration workflow triggered: <a href=\"%s\">%s</a>",
+						workflowURL, workflowURL,
+					),
 				)
-				continue
 			}
-
-			summary.addUpdateSummaryRow(
-				claim.Name,
-				fmt.Sprintf(
-					"Ref detected. Hydration workflow triggered: <a href=\"%s\">%s</a>",
-					workflowURL, workflowURL,
-				),
-			)
 		}
 	}
 

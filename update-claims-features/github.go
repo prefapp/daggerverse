@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/xeipuuv/gojsonschema"
 )
 
 /*
@@ -50,7 +52,7 @@ func (m *UpdateClaimsFeatures) upsertPR(
 
 func (m *UpdateClaimsFeatures) MergePullRequest(ctx context.Context, prLink string) error {
 
-	command := strings.Join([]string{"pr", "merge", "--merge", prLink}, " ")
+	command := strings.Join([]string{"pr", "merge", "--merge", prLink, "--auto"}, " ")
 
 	_, err := dag.Gh().Run(command, dagger.GhRunOpts{
 		Version:      m.GhCliVersion,
@@ -224,6 +226,70 @@ func (m *UpdateClaimsFeatures) workflowRun(
 		workflowName,
 		claimName,
 	)
+}
+
+func (m *UpdateClaimsFeatures) getAllValidationSchemas(
+	ctx context.Context,
+) (*gojsonschema.SchemaLoader, error) {
+	ctr, err := dag.Gh(dagger.GhOpts{
+		Version: m.GhCliVersion,
+	}).Container(dagger.GhContainerOpts{
+		Token: m.PrefappGhToken,
+		Repo:  "prefapp/features",
+	}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
+		WithWorkdir(m.ClaimsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{"apk", "add", "curl"}).
+		WithExec([]string{
+			"curl",
+			"--fail",
+			"--location",
+			"--output",
+			"/tmp/schema.json",
+			"https://raw.githubusercontent.com/firestartr-pro/docs/main/site/raw/core/claims/claims.schema.json",
+		}).
+		Sync(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	schemaContent, err := ctr.File("/tmp/schema.json").Contents(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var schemas []interface{}
+	if err := json.Unmarshal([]byte(schemaContent), &schemas); err != nil {
+		return nil, err
+	}
+
+	sl := gojsonschema.NewSchemaLoader()
+	err = loadSchemaList(schemas, sl, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	return sl, nil
+}
+
+func (m *UpdateClaimsFeatures) getComponentValidationSchema(
+	ctx context.Context,
+) (*gojsonschema.Schema, error) {
+	targetID := "firestartr.dev://common/ComponentClaim"
+
+	schemaLoader, err := m.getAllValidationSchemas(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	compiledSchema, err := schemaLoader.Compile(
+		gojsonschema.NewReferenceLoader(targetID),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return compiledSchema, nil
 }
 
 var releasesChangelog = make(map[string]string)
