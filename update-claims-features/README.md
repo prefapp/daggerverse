@@ -6,6 +6,8 @@ This dagger module updates a feature's claim to the latest version. This can be 
 - If the feature has a `ref` field, no changes will be made. Instead, the hydration workflow will be automatically called.
 - If the claim has multiple features to be updated and some have `version` fields while others have `ref` fields, then just the PR (updating only the features with `version` fields) will be created, and the hydration workflow will not be automatically called. This is because the hydration workflow must be called after merging the PR anyway.
 
+If a PR is created, it can be automerged by checking the `Automerge` checkbox when calling the workflow. This will call the `gh pr merge --auto` command, which will mark the PR as ready to be merged and will do so as soon as all relevants checks pass.
+
 Whether a PR was created or a workflow was called, the link to it will be posted in the workflow summary.
 
 The workflow also validates claims by using the JSON Schema located at the [`firestartr-pro/docs` repository](https://github.com/firestartr-pro/docs/blob/main/site/raw/core/claims/claims.schema.json), to avoid errors caused by missing fields or wrong field types. If a claim is invalid, it will be reported in the workflow summary, and no PR will be created or workflow called for that claim.
