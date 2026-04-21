@@ -1,6 +1,6 @@
 # Update claims' features
 
-A Dagger module intended to run in GitHub Actions that updates feature claims to the latest release.
+A Dagger module intended to run in GitHub Actions that updates claims' features to the latest release.
 
 This module either updates feature version fields to the latest available release (from the `features` repository) and opens a PR in the `claims` repository, or triggers the hydration workflow when a feature uses a `ref` field.
 
