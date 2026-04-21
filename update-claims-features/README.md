@@ -2,7 +2,7 @@
 
 A Dagger module intended to run in GitHub Actions that updates claims' features to the latest release.
 
-This module either updates feature version fields to the latest available release (from the `features` repository) and opens a PR in the `claims` repository, or triggers the hydration workflow when a feature uses a `ref` field.
+This module either updates feature version fields to the latest release (when a new one is avaliable from the `features` repository) and opens a PR in the `claims` repository, or triggers the hydration workflow when a feature uses a `ref` field. When not using the `ref` field and the `version` field is up to date, the module does not create a PR or trigger hydration.
 
 ## Key behaviors
 
