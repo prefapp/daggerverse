@@ -21,4 +21,4 @@ If validation fails for a claim, the workflow reports the error in the workflow 
 
 ## Automerge behavior
 
-When automerge is requested the workflow requests an automated merge (`gh pr merge --auto`). The PR will be merged automatically once required checks pass and merge conditions are satisfied.
+When automerge is enabled, the workflow requests an automated merge (`gh pr merge --auto`). The PR will be merged automatically once required checks pass and merge conditions are satisfied.
