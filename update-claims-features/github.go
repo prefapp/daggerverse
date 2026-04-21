@@ -239,12 +239,14 @@ func (m *UpdateClaimsFeatures) getAllValidationSchemas(
 	}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
 		WithWorkdir(m.ClaimsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{"apk", "add", "curl"}).
 		WithExec([]string{
-			"sh", "-c",
-			fmt.Sprintf(
-				"curl https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/%s/site/raw/core/claims/claims.schema.json  > /tmp/schema.json",
-				"main",
-			),
+			"curl",
+			"--fail",
+			"--location",
+			"--output",
+			"/tmp/schema.json",
+			"https://raw.githubusercontent.com/firestartr-pro/docs/main/site/raw/core/claims/claims.schema.json",
 		}).
 		Sync(ctx)
 	if err != nil {
