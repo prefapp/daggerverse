@@ -1,11 +1,24 @@
 # Update claims' features
 
-This dagger module updates a feature's claim to the latest version. This can be done in one of two ways:
+A Dagger module intended to run in GitHub Actions that updates claims' features to the latest release.
 
-- If the feature has a `version` field, then that field's value will be updated to the latest avaliable version, which we get by pooling the releases of the `features` repository on GitHub, and a PR with the updated claim will be created in the `claims` repository.
-- If the feature has a `ref` field, no changes will be made. Instead, the hydration workflow will be automatically called.
-- If the claim has multiple features to be updated and some have `version` fields while others have `ref` fields, then just the PR (updating only the features with `version` fields) will be created, and the hydration workflow will not be automatically called. This is because the hydration workflow must be called after merging the PR anyway.
+This module either updates feature version fields to the latest release (when a new one is avaliable from the `features` repository) and opens a PR in the `claims` repository, or triggers the hydration workflow when a feature uses a `ref` field. When not using the `ref` field and the `version` field is up to date, the module does not create a PR or trigger hydration.
 
-Whether a PR was created or a workflow was called, the link to it will be posted in the workflow summary.
+## Key behaviors
 
-The workflow also validates claims by using the JSON Schema located at the [`firestartr-pro/docs` repository](https://github.com/firestartr-pro/docs/blob/main/site/raw/core/claims/claims.schema.json), to avoid errors caused by missing fields or wrong field types. If a claim is invalid, it will be reported in the workflow summary, and no PR will be created or workflow called for that claim.
+- If a feature in a claim has a `version` field, the module checks it against the newest release available in the `features` repository, updates the field if needed, and creates a PR in the `claims` repository only when an update is required.
+- If a feature has a `ref` field, the module will not change the claim; instead it will trigger the hydration workflow for that claim.
+- If a claim contains multiple features and some use `version` while others use `ref`, the module creates a PR updating only the `version` features and does not trigger hydration automatically (hydration must run after the PR is merged).
+- If a PR is created, the workflow can optionally automerge it when the `automerge` option is enabled.
+
+## Validation
+
+Before making changes, the claim(s) are validated against the official JSON Schema to avoid creating invalid changes. The module uses the claims schema hosted in the firestartr-pro/docs repository:
+
+https://raw.githubusercontent.com/firestartr-pro/docs/main/site/raw/core/claims/claims.schema.json
+
+If validation fails for a claim, the workflow reports the error in the workflow summary and will not create a PR or trigger the hydration workflow for that claim.
+
+## Automerge behavior
+
+When automerge is enabled, the workflow requests an automated merge (`gh pr merge --auto`). The PR will be merged automatically once required checks pass and merge conditions are satisfied.
