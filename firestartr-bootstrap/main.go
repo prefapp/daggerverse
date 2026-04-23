@@ -242,6 +242,11 @@ func (m *FirestartrBootstrap) ValidateBootstrap(
 		errorMsgs = append(errorMsgs, err.Error())
 	}
 
+	err = m.validationGithubOrgComponents(ctx, m.Bootstrap.WebhookUrl)
+	if err != nil{
+		errorMSgs = append(errorMsgs, err.Error())
+	}
+
 	err = m.ValidateKindKubernetesConnection(ctx, kubeconfig, kindSvc, kindClusterName)
 	if err != nil {
 		errorMsgs = append(errorMsgs, err.Error())
