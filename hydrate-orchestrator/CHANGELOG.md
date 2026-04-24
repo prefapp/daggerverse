@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.4.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.4.0...hydrate-orchestrator-v6.4.1) (2026-04-24)
+
+
+### Bug Fixes
+
+* Add --include-crds flag to helmfile template commands in RenderApp and RenderSysService ([#462](https://github.com/prefapp/daggerverse/issues/462)) ([9b262fc](https://github.com/prefapp/daggerverse/commit/9b262fc7535cacb4d0d466b0827f709755b03b15))
+
 ## [6.4.0](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.3.10...hydrate-orchestrator-v6.4.0) (2026-04-17)
 
 
