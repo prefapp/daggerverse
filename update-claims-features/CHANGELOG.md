@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.2.0...update-claims-features-v1.2.1) (2026-04-24)
+
+
+### Bug Fixes
+
+* Allow arbitrary CRs in update-claims-features module ([#335](https://github.com/prefapp/daggerverse/issues/335)) ([db9d855](https://github.com/prefapp/daggerverse/commit/db9d85580245e8a41a68245ab1a98b501e6fdaf0))
+* Updated docs to be clearer ([#458](https://github.com/prefapp/daggerverse/issues/458)) ([e41ff9f](https://github.com/prefapp/daggerverse/commit/e41ff9ffd6336431a912647df1236e11e6e7d966))
+
 ## [1.2.0](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.1.14...update-claims-features-v1.2.0) (2026-04-15)
 
 
