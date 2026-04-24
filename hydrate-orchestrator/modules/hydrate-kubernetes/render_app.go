@@ -82,7 +82,7 @@ func (m *HydrateKubernetes) RenderApp(
 
 	return helmfileCtr.
 		WithExec([]string{
-			"helmfile", "-e", env, "template",
+			"helmfile", "-e", env, "template", "--include-crds",
 			"--state-values-set-string", "tenant=" + tenant + ",app=" + app + ",cluster=" + cluster,
 			"--state-values-file", "./kubernetes/" + cluster + "/" + tenant + "/" + env + ".yaml",
 		}).
