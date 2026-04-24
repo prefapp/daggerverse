@@ -49,7 +49,7 @@ func (m *HydrateKubernetes) RenderSysService(
 
 	return helmfileCtr.
 		WithExec([]string{
-			"helmfile", "template",
+			"helmfile", "template", "--include-crds",
 			"--state-values-set-string", "app=" + app + ",cluster=" + cluster,
 			"--state-values-file", "./kubernetes-sys-services/" + cluster + "/" + app + ".yaml",
 		}).
