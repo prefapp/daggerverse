@@ -293,26 +293,6 @@ func (m *FirestartrBootstrap) ValidateOperatorPat(
 	}
 }
 
-func (m *FirestartrBootstrap) validationGithubOrgComponents(
-	ctx context.Context,
-	webhookURL string,
-){
-	operatorPatError := m.ValidateOperatorPat(ctx)
-	if operatorPatError != nil{
-		return err
-	}else{
-		ghToken := dag.SetSecret("token",m.Creds.GitHubApp.OperatorPat,)
-		ctr, err := m.CheckIfDefaultGroupExists(ctx,ghToken)
-		if err != nil {
-			return  err
-		}
-		ctr, err := ValidateWebhookNotExists(ctx,webhookURL,ghToken)
-		if err != nil{
-			return err
-		}
-	}
-}
-
 func (m *FirestartrBootstrap) GithubRepositoryExists(
 	ctx context.Context,
 	repo string,
@@ -411,6 +391,29 @@ func (m *FirestartrBootstrap) ValidateWebhookNotExists(
 	}
 
 	return nil
+}
+
+func (m *FirestartrBootstrap) validationGithubOrgComponents(
+	ctx context.Context,
+	webhookURL string,
+) error {
+	operatorPatError,err := m.ValidateOperatorPat(ctx)
+	if operatorPatError != nil{
+		return err
+	}else{
+		ghToken := dag.SetSecret(
+		"token",
+		m.Creds.GithubApp.OperatorPat,
+		)
+		_, err := m.CheckIfDefaultGroupExists(ctx,ghToken)
+		if err != nil {
+			return  err
+		}
+		_, err := ValidateWebhookNotExists(ctx,webhookURL,ghToken)
+		if err != nil{
+			return err
+		}
+	}
 }
 
 func (m *FirestartrBootstrap) CheckAlreadyCreatedRepositories(
