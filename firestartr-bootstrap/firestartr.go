@@ -20,12 +20,16 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
 	}
 	fmt.Printf("💡 💡 Claims Entries: %v\n", entries)
 
-	fsCtr, err := dag.Container().From(
-		fmt.Sprintf(
-			"ghcr.io/prefapp/gitops-k8s:%s_slim",
-			m.Bootstrap.Firestartr.OperatorVersion,
-		),
-	).
+	prefappBotPat := dag.SetSecret("prefapp-bot-pat", m.Creds.GithubApp.PrefappBotPat)
+
+	fsCtr, err := dag.Container().
+		WithRegistryAuth("ghcr.io", "prefapp-bot", prefappBotPat).
+		From(
+			fmt.Sprintf(
+				"ghcr.io/prefapp/gitops-k8s:%s_slim",
+				m.Bootstrap.Firestartr.OperatorVersion,
+			),
+		).
 		WithDirectory("/claims", claimsDir).
 		WithDirectory("/crs", crsDir).
 		WithDirectory("/config", m.CrsDotConfigDir).

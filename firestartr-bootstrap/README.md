@@ -310,10 +310,9 @@ You can run the individual commands that compose the bootstrap process separatel
 Create persistent volume:
 
 ```shell
-dagger --bootstrap-file="./Bootstrapfile.yaml" \
-       --credentials-secret="file:./Credentialsfile.yaml" \
-       call cmd-create-persistent-volume \
-       --volume-name "firestartr-init"
+dagger --bootstrap-file="file://./boot/BootstrapFile.yaml" \
+    --credentials-secret="file://./boot/CredentialsFile.yaml" \
+    call cmd-create-persistent-volume --volume-name "firestartr-init"
 ```
 
 This will create a persistent volume in dagger that will be used to cache resources between commands. Note the volume ID returned, as it will be needed in the commands that need it (it will be marked as `<your-volume-id>`, and will be the SHA outputed by this command).
@@ -322,8 +321,8 @@ This will create a persistent volume in dagger that will be used to cache resour
 Validate bootstrap configuration:
 
 ```shell
-dagger --bootstrap-file="./Bootstrapfile.yaml" \
-       --credentials-secret="file:./Credentialsfile.yaml" \
+dagger --bootstrap-file="file://./boot/BootstrapFile.yaml" \
+       --credentials-secret="file://./boot/CredentialsFile.yaml" \
        call cmd-validate-bootstrap
 ```
 
@@ -333,8 +332,8 @@ This will validate the bootstrap configuration files.
 Initialize secrets machinery:
 
 ```shell
-dagger --bootstrap-file="./Bootstrapfile.yaml" \
-       --credentials-secret="file:./Credentialsfile.yaml" \
+dagger --bootstrap-file="file://./boot/BootstrapFile.yaml" \
+       --credentials-secret="file://./boot/Credentialsfile.yaml" \
        call cmd-init-secrets-machinery \
        --kubeconfig="${HOME}/.kube" \
        --kind-svc=tcp://localhost:<your-kind-port>
