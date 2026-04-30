@@ -90,9 +90,9 @@ func (m *FirestartrBootstrap) PushBootstrapFiles(
 		if err != nil {
 			if strings.Contains(err.Error(), "nothing to commit") {
 				fmt.Println("No terraform CRs to push, skipping...")
-				return nil
+			} else {
+				return err
 			}
-			return err
 		}
 	}
 
