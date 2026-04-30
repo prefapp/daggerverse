@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
+	"strings"
 )
 
 func (m *FirestartrBootstrap) PushBootstrapFiles(
@@ -68,6 +69,29 @@ func (m *FirestartrBootstrap) PushBootstrapFiles(
 			tokenSecret,
 		)
 		if err != nil {
+			return err
+		}
+	}
+
+	if m.Bootstrap.PushFiles.Crs.Providers.Terraform.Push {
+		crsDir := kindContainer.Directory("/resources/firestartr-crs/infra")
+
+		// Exclude non terraform CRs
+		terraformDir := crsDir.Filter(dagger.DirectoryFilterOpts{
+			Include: []string{"FirestartrTerraformWorkspace.*"},
+		})
+
+		err := m.PushDirToRepo(
+			ctx,
+			terraformDir,
+			m.Bootstrap.PushFiles.Crs.Providers.Terraform.Repo,
+			tokenSecret,
+		)
+		if err != nil {
+			if strings.Contains(err.Error(), "nothing to commit") {
+				fmt.Println("No terraform CRs to push, skipping...")
+				return nil
+			}
 			return err
 		}
 	}
