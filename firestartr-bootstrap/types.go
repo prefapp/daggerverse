@@ -62,6 +62,7 @@ type PushFilesRepo struct {
 type Providers struct {
 	Github    PushFilesRepo `yaml:"github"`
 	Terraform PushFilesRepo `yaml:"terraform"`
+	Secrets   PushFilesRepo `yaml:"secrets"`
 }
 
 type Firestartr struct {

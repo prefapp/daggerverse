@@ -75,10 +75,34 @@ func (m *FirestartrBootstrap) PushBootstrapFiles(
 	if m.Bootstrap.PushFiles.Crs.Providers.Terraform.Push {
 		crsDir := kindContainer.Directory("/resources/firestartr-crs/infra")
 
+		// Exclude non terraform CRs
+		terraformDir := crsDir.Filter(dagger.DirectoryFilterOpts{
+			Include: []string{"FirestartrTerraformWorkspace.*"},
+		})
+
 		err := m.PushDirToRepo(
 			ctx,
-			crsDir,
+			terraformDir,
 			m.Bootstrap.PushFiles.Crs.Providers.Terraform.Repo,
+			tokenSecret,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	if m.Bootstrap.PushFiles.Crs.Providers.Secrets.Push {
+		crsDir := kindContainer.Directory("/resources/firestartr-crs/infra")
+
+		// Exclude non secret CRs
+		secretsDir := crsDir.Filter(dagger.DirectoryFilterOpts{
+			Include: []string{"ExternalSecret.*"},
+		})
+
+		err := m.PushDirToRepo(
+			ctx,
+			secretsDir,
+			m.Bootstrap.PushFiles.Crs.Providers.Secrets.Repo,
 			tokenSecret,
 		)
 		if err != nil {
