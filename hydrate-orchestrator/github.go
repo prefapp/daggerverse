@@ -5,6 +5,8 @@ import (
 	"dagger/hydrate-orchestrator/internal/dagger"
 	"fmt"
 	"strings"
+
+	"github.com/gobwas/glob"
 )
 
 type Pr struct {
@@ -86,23 +88,25 @@ func (m *HydrateOrchestrator) AutomergeFileExists(ctx context.Context, globPatte
 		panic(err)
 	}
 
-	automergeFileFound := false
-
 	for _, entry := range entries {
 
-		if fmt.Sprintf("%s/%s", globPattern, "AUTO_MERGE") == entry {
+		g, err := glob.Compile(globPattern + "/AUTO_MERGE")
+		if err != nil {
+			panic(err)
+		}
+
+		if g.Match(entry) {
 
 			fmt.Printf("☢️ Automerge file found: %s\n", entry)
 
-			automergeFileFound = true
+			return true
 
-			break
 		}
 	}
 
 	fmt.Printf("☢️ Automerge file not found\n")
 
-	return automergeFileFound
+	return false
 
 }
 

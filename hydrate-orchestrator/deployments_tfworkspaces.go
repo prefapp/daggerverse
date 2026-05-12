@@ -50,7 +50,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 %s
 `, repositoryCaller, repoURL, tfDep.String(false))
 
-		globPattern := fmt.Sprintf("%s/%s/%s/%s", "tfworkspaces", tfDep.ClaimName, "*", "*")
+		globPattern := fmt.Sprintf("%s/%s/%s/%s", "tfworkspaces", tfDep.Platform, tfDep.Tenant, tfDep.Environment)
 
 		labels := []LabelInfo{
 			{
@@ -67,7 +67,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			labels,
 			tfDep.String(true),
 			prBody,
-			fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+			fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.Platform, tfDep.Tenant, tfDep.Environment),
 			reviewers,
 			DEPLOYMENT_BRANCH_NAME,
 		)
@@ -132,7 +132,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			m.GhToken,
 			dagger.GhCommitOpts{
 				BaseBranch:     DEPLOYMENT_BRANCH_NAME,
-				DeletePath:     fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+				DeletePath:     fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.Platform, tfDep.Tenant, tfDep.Environment),
 				LocalGhCliPath: m.LocalGhCliPath,
 			},
 		).Sync(ctx)
@@ -233,6 +233,7 @@ func (m *HydrateOrchestrator) processImagesMatrixForTfworkspaces(
 			Deployment: Deployment{
 				DeploymentPath: "tfworkspaces",
 			},
+			Platform: image.Platform,
 			ClaimName:    image.Claim,
 			ImagesMatrix: string(jsonUniqueImage),
 			Tenant:       image.Tenant,
