@@ -67,7 +67,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			labels,
 			tfDep.String(true),
 			prBody,
-			fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.Platform, tfDep.Tenant, tfDep.Environment),
+			"tfworkspaces",
 			reviewers,
 			DEPLOYMENT_BRANCH_NAME,
 		)
@@ -132,7 +132,7 @@ func (m *HydrateOrchestrator) GenerateTfWorkspacesDeployments(
 			m.GhToken,
 			dagger.GhCommitOpts{
 				BaseBranch:     DEPLOYMENT_BRANCH_NAME,
-				DeletePath:     fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.Platform, tfDep.Tenant, tfDep.Environment),
+				DeletePath:     "tfworkspaces",
 				LocalGhCliPath: m.LocalGhCliPath,
 			},
 		).Sync(ctx)
