@@ -152,6 +152,7 @@ type KubernetesAppDeployment struct {
 */
 type TfWorkspaceDeployment struct {
 	Deployment
+	Platform     string
 	ClaimName    string
 	Tenant       string
 	Environment  string
@@ -172,7 +173,10 @@ func (sd *SecretsDeployment) Equals(other SecretsDeployment) bool {
 
 func (tfd *TfWorkspaceDeployment) Equals(other TfWorkspaceDeployment) bool {
 	return tfd.DeploymentPath == other.DeploymentPath &&
-		tfd.ClaimName == other.ClaimName
+		tfd.ClaimName == other.ClaimName &&
+		tfd.Platform == other.Platform &&
+		tfd.Tenant == other.Tenant &&
+		tfd.Environment == other.Environment
 }
 
 func (tfd *TfWorkspaceDeployment) String(summary bool) string {
