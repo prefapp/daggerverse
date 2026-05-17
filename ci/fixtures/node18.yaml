@@ -1,0 +1,40 @@
+setup:
+  technology: node
+  version: 18
+defaults: 
+  tasks:
+    - name: test 
+      run: mkdir test-dir
+
+    #- name: build docker image
+    #  uses: "@prefapp/daggerverse/build-and-publish-docker-image-spa@v1"
+    #  function: build 
+    #  with:
+    #    nginx_tag: "1.21.1" 
+    #    # args: # <- input KEY/VALUE pairs
+    #      #REACT_APP_API_URL: api.dev.councilbox.com
+    #      #REACT_APP_CERT_API: secure-api.dev.councilbox.com 
+    #    registry: # <- input registry/tag
+    #    token: # <- input token
+
+    #- name: build docker image
+    #  uses: "@prefapp/daggerverse/ci@v1"
+    #  with:
+    #    tarball: /tmp/myimage.tar 
+        # tasks:
+        #   - name
+
+    # - name: build
+    #   run: |
+    #     npm build
+
+    # - name: lint
+    #   needs: [install]
+    #   working_dir: packages/backend
+    #   run: npm run lint
+
+    # - name: unit-test
+    #   needs: [install]
+    #   run: |
+    #     npm run test
+    #   image: node:20
