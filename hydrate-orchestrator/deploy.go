@@ -306,7 +306,7 @@ Created by @%s from %s within commit [%s](%s)
 			m.GhToken,
 			dagger.GhCommitOpts{
 				BaseBranch:     DEPLOYMENT_BRANCH_NAME,
-				DeletePath:     fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.ClaimName, tfDep.Tenant, tfDep.Environment),
+				DeletePath:     "tfworkspaces",
 				LocalGhCliPath: m.LocalGhCliPath,
 			},
 		).Sync(ctx)
