@@ -246,7 +246,7 @@ func (m *UpdateClaimsFeatures) getAllValidationSchemas(
 			"--location",
 			"--output",
 			"/tmp/schema.json",
-			"https://raw.githubusercontent.com/firestartr-pro/docs/main/site/raw/core/claims/claims.schema.json",
+			"https://raw.githubusercontent.com/firestartr-pro/docs/cd863fe5cf56045fa98f74672bcac1da21483a20/site/raw/core/claims/claims.schema.json",
 		}).
 		Sync(ctx)
 	if err != nil {
@@ -279,14 +279,14 @@ func (m *UpdateClaimsFeatures) getComponentValidationSchema(
 
 	schemaLoader, err := m.getAllValidationSchemas(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("test error loader")
+		return nil, err
 	}
 
 	compiledSchema, err := schemaLoader.Compile(
 		gojsonschema.NewReferenceLoader(targetID),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("test error compilation")
+		return nil, err
 	}
 
 	return compiledSchema, nil
