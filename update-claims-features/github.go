@@ -279,14 +279,14 @@ func (m *UpdateClaimsFeatures) getComponentValidationSchema(
 
 	schemaLoader, err := m.getAllValidationSchemas(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("test error loader")
 	}
 
 	compiledSchema, err := schemaLoader.Compile(
 		gojsonschema.NewReferenceLoader(targetID),
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("test error compilation")
 	}
 
 	return compiledSchema, nil
