@@ -246,7 +246,7 @@ func (m *UpdateClaimsFeatures) getAllValidationSchemas(
 			"--location",
 			"--output",
 			"/tmp/schema.json",
-			"https://raw.githubusercontent.com/firestartr-pro/docs/cd863fe5cf56045fa98f74672bcac1da21483a20/site/raw/core/claims/claims.schema.json",
+			"https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/test/schema-changes/site/raw/core/claims/claims.schema.json",
 		}).
 		Sync(ctx)
 	if err != nil {
