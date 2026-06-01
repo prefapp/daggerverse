@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.4.2](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.4.1...hydrate-orchestrator-v6.4.2) (2026-05-13)
+
+
+### Bug Fixes
+
+* Update TfWorkspaceDeployment structure and glob pattern handling ([#468](https://github.com/prefapp/daggerverse/issues/468)) ([dfd1232](https://github.com/prefapp/daggerverse/commit/dfd1232ceabadf5fa6840f8e31335f6c7728f83d))
+
 ## [6.4.1](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.4.0...hydrate-orchestrator-v6.4.1) (2026-04-24)
 
 
