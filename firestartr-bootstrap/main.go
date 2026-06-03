@@ -27,6 +27,7 @@ type FirestartrBootstrap struct {
 	CrsDotConfigDir       *dagger.Directory
 	IncludeAllGroup       bool
 	ExpectedAWSParameters []string
+	CreateWebhook         bool
 }
 
 // baseTemplates holds the parameter paths with placeholders.
@@ -81,7 +82,9 @@ func New(
 		return nil, err
 	}
 
-	bootstrap := &Bootstrap{}
+	bootstrap := &Bootstrap{
+		CreateWebhook: true, // default to true, users can set to false if they want to skip webhook creation
+	}
 	err = yaml.Unmarshal([]byte(bootstrapContentFile), bootstrap)
 	if err != nil {
 		return nil, err
@@ -165,6 +168,7 @@ func New(
 		ClaimsDotConfigDir:    claimsDotConfigDir,
 		CrsDotConfigDir:       crsDotConfigDir,
 		ExpectedAWSParameters: calculateParameters(bootstrap.Customer, ghOrgLowerCase),
+		CreateWebhook:         bootstrap.CreateWebhook,
 	}, nil
 }
 

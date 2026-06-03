@@ -356,16 +356,18 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}
 	}
 
-	err = m.ValidateWebhookNotExists(ctx, tokenSecret, m.Bootstrap.WebhookUrl)
-	if err != nil {
-		errorMessage := PrepareAndPrintError(
-			ctx,
-			"CmdImportResources",
-			"A problem was detected while checking if the webhook already exists",
-			err,
-		)
+	if m.CreateWebhook {
+		err = m.ValidateWebhookNotExists(ctx, tokenSecret, m.Bootstrap.WebhookUrl)
+		if err != nil {
+			errorMessage := PrepareAndPrintError(
+				ctx,
+				"CmdImportResources",
+				"A problem was detected while checking if the webhook already exists",
+				err,
+			)
 
-		return "", errorMessage
+			return "", errorMessage
+		}
 	}
 
 	err = m.EnableActionsToCreateAndApprovePullRequestsInOrg(ctx, tokenSecret)
