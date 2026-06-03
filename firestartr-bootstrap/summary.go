@@ -259,7 +259,26 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushArgoCDStep(
 	repoArgoCD string,
 	repoSysServices string,
 	cardinality string,
+	missingPRs []string,
 ) string {
+	missingPRMsg := ""
+
+	if len(missingPRs) > 0 {
+		missingPRList := ""
+		for _, pr := range missingPRs {
+			missingPRList += fmt.Sprintf("- %s\n", pr)
+		}
+
+		missingPRMsg = fmt.Sprintf(`
+⚠️⚠️⚠️⚠️⚠️  WARNING: SOME PRs WERE NOT CREATED ⚠️⚠️⚠️⚠️⚠️
+
+The following PRs were not created due to the repository being already updated with the necessary changes. The unchanged repositories are:
+
+%s
+
+Please check the state of these repositories manually, and ensure the relevant files do exist and are up to date`, missingPRList)
+
+	}
 
 	successMessage := fmt.Sprintf(`
 =====================================================
@@ -284,11 +303,14 @@ You need to perform the following actions:
 
   3. Review and merge the resultant deployment PR that is created by the action.
 
+%s
+
 `,
 		repoArgoCD,
 		repoSysServices,
 		repoSysServices,
 		cardinality,
+		missingPRMsg,
 	)
 	return m.UpdateSummaryAndRun(ctx, successMessage)
 
