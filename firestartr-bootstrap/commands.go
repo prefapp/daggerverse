@@ -668,7 +668,7 @@ func (m *FirestartrBootstrap) CmdPushArgo(
 	_, err = m.CreateArgCDApplications(ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "nothing to commit, working tree clean") {
-			missingPRs = append(missingPRs, "applications (state-argocd)")
+			missingPRs = append(missingPRs, "ArgoCD applications (state-argocd)")
 		} else {
 			errorMessage := PrepareAndPrintError(
 				ctx,
