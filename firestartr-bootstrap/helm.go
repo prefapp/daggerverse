@@ -13,6 +13,20 @@ func (m *FirestartrBootstrap) BuildHelmValues(
 	ctx context.Context,
 ) (string, error) {
 
+	operatorKindList := []string{
+		"githubgroups",
+		"githubmemberships",
+		"githubrepositories",
+		"githubrepositoryfeatures",
+		"githubrepositorysecretssections",
+		"terraformworkspaces",
+		"terraformworkspaceplans",
+	}
+
+	if m.CreateWebhook {
+		operatorKindList = append(operatorKindList, "githuborgwebhooks")
+	}
+
 	helmValues := &HelmValues{
 		Labels: Labels{},
 		Deploy: Deploy{
@@ -51,16 +65,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(
 		},
 		Config: Config{
 			Data: map[string]string{
-				"OPERATOR_KIND_LIST": strings.Join([]string{
-					"githubgroups",
-					"githubmemberships",
-					"githubrepositories",
-					"githubrepositoryfeatures",
-					"githubrepositorysecretssections",
-					"githuborgwebhooks",
-					"terraformworkspaces",
-					"terraformworkspaceplans",
-				}, ","),
+				"OPERATOR_KIND_LIST":               strings.Join(operatorKindList, ","),
 				"OPERATOR_NAMESPACE":               "default",
 				"OPERATOR_IGNORE_LEASE":            "true",
 				"GITHUB_APP_ID":                    m.Creds.GithubAppOperator.GhAppId,

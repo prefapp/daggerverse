@@ -115,6 +115,26 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 		),
 	}
 
+	argoCDDataSecrets := ArgoCDConfig{
+
+		Name: fmt.Sprintf("app-firestartr-firestartr-%s-%s-%s-state-secrets",
+			m.Bootstrap.Env,
+			m.Bootstrap.Customer,
+			m.Bootstrap.Org,
+		),
+
+		App: "state-secrets",
+
+		Repo: fmt.Sprintf("https://github.com/%s/state-secrets",
+			m.Bootstrap.Org,
+		),
+
+		Namespace: fmt.Sprintf("%s-firestartr-%s",
+			m.Bootstrap.Customer,
+			m.Bootstrap.Env,
+		),
+	}
+
 	applicationStateGithub, errGithub := renderArgoCDApplication(
 		ctx,
 		&argoCDData,
@@ -131,6 +151,14 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 		return nil, fmt.Errorf("error creating ArgoCD infra app: %w", errInfra)
 	}
 
+	applicationStateSecrets, errSecrets := renderArgoCDApplication(
+		ctx,
+		&argoCDDataSecrets,
+	)
+	if errSecrets != nil {
+		return nil, fmt.Errorf("error creating ArgoCD secrets app: %w", errSecrets)
+	}
+
 	pathAppStateGithub := fmt.Sprintf(
 		"/apps/firestartr/%s/argo-firestartr-%s.%s.Application.yaml",
 		m.Bootstrap.Customer,
@@ -145,9 +173,17 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 		m.Bootstrap.Org,
 	)
 
+	pathAppStateSecrets := fmt.Sprintf(
+		"/apps/firestartr/%s/argo-firestartr-%s.%s.Application.yaml",
+		m.Bootstrap.Customer,
+		"state-secrets",
+		m.Bootstrap.Org,
+	)
+
 	return dag.Directory().
 		WithNewFile(pathAppStateGithub, applicationStateGithub).
-		WithNewFile(pathAppStateInfra, applicationStateInfra), nil
+		WithNewFile(pathAppStateInfra, applicationStateInfra).
+		WithNewFile(pathAppStateSecrets, applicationStateSecrets), nil
 }
 
 func renderArgoCDApplication(

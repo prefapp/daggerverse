@@ -69,9 +69,16 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForImportResourcesStep(
 
 	createdInfraResources, err := kindContainer.Directory(
 		"/resources/firestartr-crs/infra",
-	).Entries(ctx)
+	).Glob(ctx, "FirestartrTerraformWorkspace.*")
 	if err != nil {
 		return "", fmt.Errorf("error creating the list of generated infra artifacts: %w", err)
+	}
+
+	createdSecretResources, err := kindContainer.Directory(
+		"/resources/firestartr-crs/infra",
+	).Glob(ctx, "ExternalSecret.*")
+	if err != nil {
+		return "", fmt.Errorf("error creating the list of generated secret artifacts: %w", err)
 	}
 
 	successMessage := fmt.Sprintf(`
@@ -91,6 +98,9 @@ The environment is fully provisioned.
 #### Generated and created resources (Infra):
 - %s
 
+#### Generated and created resources (Secrets):
+- %s
+
 #### Copied to the cache:
 - /import
 - /resources
@@ -98,6 +108,7 @@ The environment is fully provisioned.
 		strings.Join(importedFiles, "\n- "),
 		strings.Join(createdGhResources, "\n- "),
 		strings.Join(createdInfraResources, "\n- "),
+		strings.Join(createdSecretResources, "\n- "),
 	)
 
 	return m.UpdateSummaryAndRun(ctx, successMessage), nil
@@ -130,9 +141,16 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushResourcesStep(
 
 	pushedInfraCrs, err := kindContainer.Directory(
 		"/resources/firestartr-crs/infra",
-	).Entries(ctx)
+	).Glob(ctx, "FirestartrTerraformWorkspace.*")
 	if err != nil {
 		return "", fmt.Errorf("error creating the list of pushed infra CRs: %w", err)
+	}
+
+	pushedSecretCrs, err := kindContainer.Directory(
+		"/resources/firestartr-crs/infra",
+	).Glob(ctx, "ExternalSecret.*")
+	if err != nil {
+		return "", fmt.Errorf("error creating the list of pushed secret CRs: %w", err)
 	}
 
 	successMessage := fmt.Sprintf(`
@@ -151,6 +169,9 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushResourcesStep(
 
 #### List of pushed CRs (%s/state-infra)
 	- %s
+
+#### List of pushed CRs (%s/state-secrets)
+	- %s
 	`,
 		m.Bootstrap.Org,
 		strings.Join(pushedClaims, "\n- "),
@@ -158,6 +179,8 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushResourcesStep(
 		strings.Join(pushedGithubCrs, "\n- "),
 		m.Bootstrap.Org,
 		strings.Join(pushedInfraCrs, "\n- "),
+		m.Bootstrap.Org,
+		strings.Join(pushedSecretCrs, "\n- "),
 	)
 	return m.UpdateSummaryAndRun(ctx, successMessage), nil
 
@@ -236,7 +259,26 @@ func (m *FirestartrBootstrap) UpdateSummaryAndRunForPushArgoCDStep(
 	repoArgoCD string,
 	repoSysServices string,
 	cardinality string,
+	missingPRs []string,
 ) string {
+	missingPRMsg := ""
+
+	if len(missingPRs) > 0 {
+		missingPRList := ""
+		for _, pr := range missingPRs {
+			missingPRList += fmt.Sprintf("- %s\n", pr)
+		}
+
+		missingPRMsg = fmt.Sprintf(`
+⚠️⚠️⚠️⚠️⚠️  WARNING: SOME PRs WERE NOT CREATED ⚠️⚠️⚠️⚠️⚠️
+
+The following PRs were not created due to the repository being already updated with the necessary changes. The unchanged repositories are:
+
+%s
+
+Please check the state of these repositories manually, and ensure the relevant files do exist and are up to date`, missingPRList)
+
+	}
 
 	successMessage := fmt.Sprintf(`
 =====================================================
@@ -261,11 +303,14 @@ You need to perform the following actions:
 
   3. Review and merge the resultant deployment PR that is created by the action.
 
+%s
+
 `,
 		repoArgoCD,
 		repoSysServices,
 		repoSysServices,
 		cardinality,
+		missingPRMsg,
 	)
 	return m.UpdateSummaryAndRun(ctx, successMessage)
 

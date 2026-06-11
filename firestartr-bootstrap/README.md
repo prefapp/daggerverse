@@ -83,6 +83,12 @@ pushFiles:
       terraform:
         push: true # When the process finishes, the generated crs will be pushed to the crs repository.
         repo: "state-infra" # Normally, the state-infra repository will be called "state-infra", but it is possible to change the name.
+      secrets:
+        push: true # When the process finishes, the generated crs will be pushed to the crs repository.
+        repo: "state-secrets" # Normally, the state-secrets repository will be called "state-secrets", but it is possible to change the name.
+  dotFirestartr:
+    push: true # When the process finishes, the generated crs will be pushed to the crs repository.
+    repo: ".firestartr" # Normally, the .firestartr repository will be called ".firestartr", but it is possible to change the name.
 
 components:
   - name: "dot-firestartr" # claim name
@@ -130,6 +136,13 @@ components:
         version: latest  # Check available versions at github.com/prefapp/features
     labels:
       - plan
+
+  - name: "state-secrets"
+    description: "Firestartr Secrets wet repository"
+    defaultBranch: main
+    features:
+      - name: state_secrets
+        version: latest  # Check available versions at github.com/prefapp/features
 ```
 
 All the parameters must be filled. When copy pasting this file, `<placeholders>` must be replaced, but any other values can be treated as defaults and changed if needed:

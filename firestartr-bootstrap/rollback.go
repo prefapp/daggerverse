@@ -79,8 +79,11 @@ func (m *FirestartrBootstrap) ProcessArtifactsByKind(
 		"githubrepositoryfeature",
 		"githubrepositorysecretssections",
 		"githubrepository",
-		"githuborgwebhook",
 		"githubgroup",
+	}
+
+	if m.CreateWebhook {
+		targetKinds = append(targetKinds, "githuborgwebhook")
 	}
 
 	fullSummary := ""

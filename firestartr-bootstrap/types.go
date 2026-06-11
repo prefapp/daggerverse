@@ -36,6 +36,7 @@ type Bootstrap struct {
 	DefaultBranchStrategy         string      `yaml:"defaultBranchStrategy"`
 	DefaultOrgPermissions         string      `yaml:"defaultOrgPermissions"`
 	DefaultGroup                  string      `yaml:"defaultGroup"`
+	CreateWebhook                 bool        `yaml:"createWebhook"`
 	FinalSecretStoreName          string      `yaml:"finalSecretStoreName"`
 	WebhookUrl                    string      // Autocalculated
 	WebhookSecretRef              string      // Autocalculated
@@ -62,6 +63,7 @@ type PushFilesRepo struct {
 type Providers struct {
 	Github    PushFilesRepo `yaml:"github"`
 	Terraform PushFilesRepo `yaml:"terraform"`
+	Secrets   PushFilesRepo `yaml:"secrets"`
 }
 
 type Firestartr struct {
