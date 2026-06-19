@@ -278,7 +278,7 @@ func (m *FirestartrBootstrap) ValidateOperatorPat(
 	switch permission {
 	case "push", "maintain", "admin", "write":
 		return nil
-	case "pull", "triage", "read":
+	case "pull", "triage", "read", "none":
 		return fmt.Errorf(
 			"User doesn't have write access for repo %s/%s. Permissions are: %s",
 			owner, repo, permission,
