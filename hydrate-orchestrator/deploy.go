@@ -45,6 +45,9 @@ func (m *HydrateOrchestrator) GenerateDeployment(
 
 		branchName := fmt.Sprintf("kubernetes-%s-%s-%s", kdep.Cluster, kdep.Tenant, kdep.Environment)
 
+		globPattern := fmt.
+			Sprintf("%s/%s/%s/%s", "kubernetes", kdep.Cluster, kdep.Tenant, kdep.Environment)
+
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
@@ -109,18 +112,50 @@ Created by @%s from %s within commit [%s](%s)
 			continue
 		}
 
-		summary.addDeploymentSummaryRow(
-			kdep.DeploymentPath,
-			fmt.Sprintf(
-				"Success: <a href=\"%s\">%s</a>",
-				output,
-				output,
-			),
-		)
+		if m.AutomergeFileExists(ctx, globPattern) {
+
+			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
+
+			if output == "" {
+
+				summary.addDeploymentSummaryRow(
+					kdep.DeploymentPath,
+					"Failed: PR link is empty, cannot merge PR",
+				)
+
+				continue
+			}
+
+			err = m.MergePullRequest(ctx, output)
+
+			if err != nil {
+				summary.addDeploymentSummaryRow(
+					kdep.DeploymentPath,
+					extractErrorMessage(err),
+				)
+
+				continue
+			}
+		} else {
+
+			fmt.Println("AUTO_MERGE file does not exist, skipping automerge")
+
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf(
+					"Success, pr created: <a href=\"%s\">%s</a>",
+					output,
+					output,
+				),
+			)
+		}
 	}
 
 	for _, kdep := range deployments.KubernetesSysDeployments {
 		branchName := fmt.Sprintf("kubernetes-sys-services-%s-%s", kdep.Cluster, kdep.SysServiceName)
+
+		globPattern := fmt.
+			Sprintf("%s/%s/%s", "kubernetes-sys-services", kdep.Cluster, kdep.SysServiceName)
 
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
@@ -185,14 +220,57 @@ Created by @%s from %s within commit [%s](%s)
 			continue
 		}
 
-		summary.addDeploymentSummaryRow(
-			kdep.DeploymentPath,
-			fmt.Sprintf(
-				"Success: <a href=\"%s\">%s</a>",
-				output,
-				output,
-			),
-		)
+		if m.AutomergeFileExists(ctx, globPattern) {
+
+			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
+
+			if output == "" {
+
+				summary.addDeploymentSummaryRow(
+					kdep.DeploymentPath,
+					"Failed: PR link is empty, cannot merge PR",
+				)
+
+				continue
+			}
+
+			err = m.MergePullRequest(ctx, output)
+
+			if err != nil {
+				summary.addDeploymentSummaryRow(
+					kdep.DeploymentPath,
+					extractErrorMessage(err),
+				)
+
+				continue
+			}
+
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf(
+					"Success, pr created and merged: <a href=\"%s\">%s</a>",
+					output,
+					output,
+				),
+			)
+
+			continue
+
+		} else {
+
+			fmt.Println("AUTO_MERGE file does not exist, skipping automerge")
+
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf(
+					"Success, pr created: <a href=\"%s\">%s</a>",
+					output,
+					output,
+				),
+			)
+
+		}
+
 	}
 
 	for _, tfDep := range deployments.TfWorkspaceDeployments {
