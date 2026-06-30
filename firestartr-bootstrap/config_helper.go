@@ -110,6 +110,17 @@ func getCrsDotConfigDir(
 		return nil, err
 	}
 
+	orgsettingsDefaults, err := RenderDotConfigFile(
+		ctx,
+		dag.CurrentModule().
+			Source().
+			File("templates/crs_config/resources/defaults_github_orgsettings.tmpl"),
+		defaultsInterface,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	claimsDotConfigDir := dag.Directory().
 		WithNewDirectory("/.config").
 		WithNewFile("branch_strategies.yaml", branchStrategies).
@@ -117,7 +128,8 @@ func getCrsDotConfigDir(
 		WithNewFile("resources/defaults_github_group.yaml", groupDefaults).
 		WithNewFile("resources/defaults_github_membership.yaml", membersDefaults).
 		WithNewFile("resources/defaults_github_repository.yaml", repoDefaults).
-		WithNewFile("resources/defaults_github_orgwebhook.yaml", orgwebhookDefaults)
+		WithNewFile("resources/defaults_github_orgwebhook.yaml", orgwebhookDefaults).
+		WithNewFile("resources/defaults_github_orgsettings.yaml", orgsettingsDefaults)
 
 	return claimsDotConfigDir, nil
 }
