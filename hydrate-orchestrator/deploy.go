@@ -739,12 +739,8 @@ func (m *HydrateOrchestrator) processUpdatedDeployments(
 			kdep := kubernetesSysDepFromStr(deployment)
 			result.addDeployment(kdep)
 		case "tfworkspaces":
-			tfDep := &TfWorkspaceDeployment{
-				Deployment: Deployment{
-					DeploymentPath: deployment,
-				},
-				ClaimName: m.ArtifactRef,
-			}
+			tfDep := tfworkspacesDepFromStr(deployment)
+			tfDep.ClaimName = m.ArtifactRef
 
 			if strings.Trim(m.ArtifactRef, " ") == "" && m.Event == Manual {
 				panic(fmt.Sprintf("error: your input artifact ref %s is empty", m.ArtifactRef))

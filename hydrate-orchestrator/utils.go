@@ -391,6 +391,27 @@ func secretsDepFromStr(deployment string) *SecretsDeployment {
 	panic(fmt.Sprintf("Invalid secrets deployment path provided: %s", deployment))
 }
 
+func tfworkspacesDepFromStr(deployment string) *TfWorkspaceDeployment {
+
+	dirs := splitPath(deployment)
+
+	fmt.Printf("tfworkspacesDepFromStr dirs: %v\n", dirs)
+	fmt.Printf("tfworkspacesDepFromStr len(dirs): %d\n", len(dirs))
+	// Path structure: tfworkspaces/<platform>/<tenant>/<env>/<claim>.yaml
+	if len(dirs) >= 4 {
+		return &TfWorkspaceDeployment{
+			Deployment: Deployment{
+				DeploymentPath: strings.Join(dirs[0:4], string(os.PathSeparator)),
+			},
+			Platform:    dirs[1],
+			Tenant:      dirs[2],
+			Environment: dirs[3],
+		}
+	}
+
+	panic(fmt.Sprintf("Invalid tfworkspaces deployment path provided: %s", deployment))
+}
+
 func splitPath(path string) []string {
 
 	// remove "/" a the end
