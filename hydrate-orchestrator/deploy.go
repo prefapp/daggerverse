@@ -294,6 +294,8 @@ Created by @%s from %s within commit [%s](%s)
 
 		branchName := fmt.Sprintf("tfworkspaces-%s", tfDep.ClaimName)
 
+		globPattern := fmt.Sprintf("tfworkspaces/%s/%s/%s/%s", tfDep.Platform, tfDep.Tenant, tfDep.Environment)
+
 		prBody := fmt.Sprintf(`
 # New deployment manually triggered
 Created by @%s from %s within commit [%s](%s)
@@ -398,10 +400,35 @@ Created by @%s from %s within commit [%s](%s)
 			continue
 		}
 
+		if m.AutomergeFileExists(ctx, globPattern) {
+
+			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
+
+			if output == "" {
+
+				summary.addDeploymentSummaryRow(
+					tfDep.DeploymentPath,
+					"Failed: PR link is empty, cannot merge PR",
+				)
+
+				continue
+			}
+
+			err = m.MergePullRequest(ctx, output)
+
+			if err != nil {
+				summary.addDeploymentSummaryRow(
+					tfDep.DeploymentPath,
+					extractErrorMessage(err),
+				)
+
+				continue
+			}
+
 		summary.addDeploymentSummaryRow(
 			tfDep.DeploymentPath,
 			fmt.Sprintf(
-				"Success: <a href=\"%s\">%s</a>",
+				"Success, pr created: <a href=\"%s\">%s</a>",
 				output,
 				output,
 			),
