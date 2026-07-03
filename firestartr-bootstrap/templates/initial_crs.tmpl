@@ -6,13 +6,29 @@ metadata:
 spec:
   config: |
     {
+      "owner": "{{.GithubApp.Owner}}",
       "app_auth": {
-        "id": "{{.GithubApp.GhAppId}}",
-        "installation_id": "{{.GithubApp.InstallationId}}",
-        "pem_file": "{{ .GithubApp.RawPem }}"
-      },
-      "owner": "{{.GithubApp.Owner}}"
+        "id": "${{ print "{{" }} secrets.GITHUB_APP_ID {{ print "}}" }}",
+        "installation_id": "${{ print "{{" }} secrets.GITHUB_APP_INSTALLATION_ID {{ print "}}" }}",
+        "pem_file": "${{ print "{{" }} secrets.GITHUB_APP_PEM_FILE {{ print "}}" }}"
+      }
     }
+  secrets:
+    GITHUB_APP_ID:
+      secretRef:
+        key: fs-admin-appid
+        name: bootstrap-secrets
+        namespace: default
+    GITHUB_APP_INSTALLATION_ID:
+      secretRef:
+        key: fs-admin-installationid
+        name: bootstrap-secrets
+        namespace: default
+    GITHUB_APP_PEM_FILE:
+      secretRef:
+        key: fs-admin-pem
+        name: bootstrap-secrets
+        namespace: default
   source: "integrations/github"
   type: "github"
   version: "~> 5.0"

@@ -36,17 +36,21 @@ func (m *FirestartrBootstrap) RunOperator(
 		return nil, err
 	}
 
+	crList := []string{
+		"FirestartrGithubGroup.*",
+		"FirestartrGithubRepository.*",
+		"FirestartrGithubRepositorySecretsSection.*",
+		"FirestartrGithubRepositoryFeature.*",
+	}
+	if m.CreateWebhook {
+		crList = append(crList, "FirestartrGithubOrgWebhook.*")
+	}
+
 	kindContainer, err = m.ApplyFirestartrCrs(
 		ctx,
 		kindContainer,
 		"/resources/firestartr-crs/github",
-		[]string{
-			"FirestartrGithubGroup.*",
-			"FirestartrGithubRepository.*",
-			"FirestartrGithubRepositorySecretsSection.*",
-			"FirestartrGithubRepositoryFeature.*",
-			"FirestartrGithubOrgWebhook.*",
-		},
+		crList,
 	)
 	if err != nil {
 		return nil, err
