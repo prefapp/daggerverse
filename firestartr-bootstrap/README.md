@@ -424,5 +424,38 @@ The `kubectl apply` commands have a timeout of 10 hours. This is done to allow t
 - If the CR has an error status, the actual error message won't appear in it (instead a generic error message will be shown). To see the actual error message, go to the `tfresults` CRD and select the record whose name matches the one in the error status of the CR you're debugging.
 - You can also check the logs of the pod running the controller. It will be in the namespace `default` and its name will be similar to `firestartr-init-firestartr-init-<random-string>`.
 
-## 8. Flow chart
+## 8. Updating an already existing repository
+
+In some cases, we might want to use this module to update an already bootstrapped repository: when we want to update a claims repository with the `claims_repo` feature from `1.X.Y` to `2.X.Y`, as version `2.X.Y` requires creating the `state-repo` repository and adding it to the ArgoCD ecosystem. In those cases, this module can be used to simplify that process, though it also can be done manually. The steps to do it are:
+
+- Add the following to the Bootstrapfile.yaml configuration file:
+
+```
+createWebhook: false
+
+pushFiles:
+  providers:
+    ....
+    secrets:
+      push: true  # Set all other <provider>.push values to false
+      repo: "state-secrets"
+
+components:
+  - name: "state-secrets"
+    description: "Firestartr secrets wet repository"
+    defaultBranch: main
+    features:
+      - name: state_secrets
+```
+
+- Execute the Bootstrap process:
+1. The first five steps will create the new repository and push the ExternalSecrets.firestartr-secrets.yaml file to it.
+2. Skip the Push organization state secrets step, as this creates the secrets in the GitHub org and that was already done by the first Bootstrap process.
+3. The two ArgoCD steps should create new PRs in app-firestartr and state-argocd. state-sys-services will be skipped as no changes are necessary and a warning will be shown on screen, but this is normal and can be safely ignored.
+- Give fs-<org>-argocd and fs-<org>-state access to the newly created state-secrets
+- The ExternalSecrets.firestartr-secrets.yaml file stored in state-infra must be manually deleted. Since a new one already exists in state-secrets and these files have no tfStateKey nothing should happen
+
+[More info](https://github.com/prefapp/gitops-k8s/issues/1999#issuecomment-4519670990)
+
+## 9. Flow chart
 ![BootstrapDiagram drawio](https://github.com/user-attachments/assets/1c824119-b147-47bb-b8f8-8cc17db29c6a)
