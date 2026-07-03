@@ -294,7 +294,7 @@ Created by @%s from %s within commit [%s](%s)
 
 		branchName := fmt.Sprintf("tfworkspaces-%s", tfDep.ClaimName)
 
-		globPattern := fmt.Sprintf("tfworkspaces/%s/%s/%s/%s", tfDep.Platform, tfDep.Tenant, tfDep.Environment)
+		globPattern := fmt.Sprintf("tfworkspaces/%s/%s/%s", tfDep.Platform, tfDep.Tenant, tfDep.Environment)
 
 		prBody := fmt.Sprintf(`
 # New deployment manually triggered
@@ -425,14 +425,31 @@ Created by @%s from %s within commit [%s](%s)
 				continue
 			}
 
-		summary.addDeploymentSummaryRow(
-			tfDep.DeploymentPath,
-			fmt.Sprintf(
-				"Success, pr created: <a href=\"%s\">%s</a>",
-				output,
-				output,
-			),
-		)
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				fmt.Sprintf(
+					"Success, pr created and merged: <a href=\"%s\">%s</a>",
+					output,
+					output,
+				),
+			)
+
+			continue
+
+		} else {
+
+			fmt.Println("AUTO_MERGE file does not exist, skipping automerge")
+
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				fmt.Sprintf(
+					"Success, pr created: <a href=\"%s\">%s</a>",
+					output,
+					output,
+				),
+			)
+
+		}
 	}
 
 	for _, secDep := range deployments.SecretsDeployment {
