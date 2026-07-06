@@ -463,6 +463,7 @@ Created by @%s from %s within commit [%s](%s)
 
 	for _, secDep := range deployments.SecretsDeployment {
 		branchName := fmt.Sprintf("secrets-%s-%s", secDep.Tenant, secDep.Environment)
+		globPattern := fmt.Sprintf("secrets/%s/%s", secDep.Tenant, secDep.Environment)
 
 		renderedDeployment, err := dag.HydrateSecrets(
 			m.ValuesStateDir,
@@ -537,14 +538,52 @@ Created by @%s from %s within commit [%s](%s)
 			continue
 		}
 
-		summary.addDeploymentSummaryRow(
-			secDep.DeploymentPath,
-			fmt.Sprintf(
-				"Success: <a href=\"%s\">%s</a>",
-				output,
-				output,
-			),
-		)
+		if m.AutomergeFileExists(ctx, globPattern) {
+
+			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
+
+			if output == "" {
+
+				summary.addDeploymentSummaryRow(
+					secDep.DeploymentPath,
+					"Failed: PR link is empty, cannot merge PR",
+				)
+
+				continue
+			}
+
+			err = m.MergePullRequest(ctx, output)
+
+			if err != nil {
+				summary.addDeploymentSummaryRow(
+					secDep.DeploymentPath,
+					extractErrorMessage(err),
+				)
+
+				continue
+			}
+
+			summary.addDeploymentSummaryRow(
+				secDep.DeploymentPath,
+				fmt.Sprintf(
+					"Success, pr created and merged: <a href=\"%s\">%s</a>",
+					output,
+					output,
+				),
+			)
+		} else {
+
+			fmt.Println("AUTO_MERGE file does not exist, skipping automerge")
+
+			summary.addDeploymentSummaryRow(
+				secDep.DeploymentPath,
+				fmt.Sprintf(
+					"Success, pr created: <a href=\"%s\">%s</a>",
+					output,
+					output,
+				),
+			)
+		}
 	}
 
 	return m.DeploymentSummaryToFile(ctx, summary)
