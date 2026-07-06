@@ -161,9 +161,7 @@ Created by @%s from %s within commit [%s](%s)
 	for _, kdep := range deployments.KubernetesSysDeployments {
 		branchName := fmt.Sprintf("kubernetes-sys-services-%s-%s", kdep.Cluster, kdep.SysServiceName)
 
-		globPattern := fmt.
-			Sprintf("%s/%s/%s", "kubernetes-sys-services", kdep.Cluster, kdep.SysServiceName)
-
+		globPattern := fmt.Sprintf("kubernetes-sys-services/%s/%s", kdep.Cluster, kdep.SysServiceName)
 		renderedDeployment, err := dag.HydrateKubernetes(
 			m.ValuesStateDir,
 			m.WetStateDir,
