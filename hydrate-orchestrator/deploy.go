@@ -136,6 +136,15 @@ Created by @%s from %s within commit [%s](%s)
 
 				continue
 			}
+
+			summary.addDeploymentSummaryRow(
+				kdep.DeploymentPath,
+				fmt.Sprintf(
+					"Success, pr created and merged: <a href=\"%s\">%s</a>",
+					output,
+					output,
+				),
+			)
 		} else {
 
 			fmt.Println("AUTO_MERGE file does not exist, skipping automerge")
