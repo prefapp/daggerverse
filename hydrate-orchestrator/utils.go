@@ -397,7 +397,7 @@ func tfworkspacesDepFromStr(deployment string) *TfWorkspaceDeployment {
 
 	fmt.Printf("tfworkspacesDepFromStr dirs: %v\n", dirs)
 	fmt.Printf("tfworkspacesDepFromStr len(dirs): %d\n", len(dirs))
-	// Path structure: tfworkspaces/<platform>/<tenant>/<env>/<claim>.yaml
+	// Path structure: tfworkspaces/<platform>/<tenant>/<env>[/<claim>.yaml]
 	if len(dirs) >= 4 {
 		return &TfWorkspaceDeployment{
 			Deployment: Deployment{
