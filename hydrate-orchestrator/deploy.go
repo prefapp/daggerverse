@@ -114,16 +114,6 @@ Created by @%s from %s within commit [%s](%s)
 
 			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
 
-			if output == "" {
-
-				summary.addDeploymentSummaryRow(
-					kdep.DeploymentPath,
-					"Failed: PR link is empty, cannot merge PR",
-				)
-
-				continue
-			}
-
 			err = m.MergePullRequest(ctx, output)
 
 			if err != nil {
@@ -228,16 +218,6 @@ Created by @%s from %s within commit [%s](%s)
 		if m.AutomergeFileExists(ctx, globPattern) {
 
 			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
-
-			if output == "" {
-
-				summary.addDeploymentSummaryRow(
-					kdep.DeploymentPath,
-					"Failed: PR link is empty, cannot merge PR",
-				)
-
-				continue
-			}
 
 			err = m.MergePullRequest(ctx, output)
 
@@ -405,19 +385,19 @@ Created by @%s from %s within commit [%s](%s)
 			continue
 		}
 
+		if output == "" {
+
+			summary.addDeploymentSummaryRow(
+				tfDep.DeploymentPath,
+				NO_PR_CREATED_MESSAGE,
+			)
+
+			continue
+		}
+
 		if m.AutomergeFileExists(ctx, globPattern) {
 
 			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
-
-			if output == "" {
-
-				summary.addDeploymentSummaryRow(
-					tfDep.DeploymentPath,
-					"Failed: PR link is empty, cannot merge PR",
-				)
-
-				continue
-			}
 
 			err = m.MergePullRequest(ctx, output)
 
@@ -537,16 +517,6 @@ Created by @%s from %s within commit [%s](%s)
 		if m.AutomergeFileExists(ctx, globPattern) {
 
 			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
-
-			if output == "" {
-
-				summary.addDeploymentSummaryRow(
-					secDep.DeploymentPath,
-					"Failed: PR link is empty, cannot merge PR",
-				)
-
-				continue
-			}
 
 			err = m.MergePullRequest(ctx, output)
 
