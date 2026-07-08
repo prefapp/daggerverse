@@ -9,6 +9,7 @@ AUTO=false
 LAST_EXIT_CODE=0
 COMMAND_WAIT_TIME=5
 DELETE_CLUSTER_ON_FAILURE=false
+CLAIM_NAME=""
 
 wait_for() {
     local WAIT_TIME=$1
@@ -192,8 +193,12 @@ while [[ $# -gt 0 ]]; do
             CLUSTER_NAME="$2"
             shift 2 # Move past the flag AND its value
             ;;
+        --extract-claim | -e)
+            CLAIM_NAME="$2"
+            shift 2 # Move past the flag AND its value
+            ;;
         --help | -h)
-            echo "Usage: $0 [--kind-cluster-name|-k <name>] [--delete-cluster-on-failure|-d] [--auto-execute-script] [--wait-time|-w <seconds>]"
+            echo "Usage: $0 [--kind-cluster-name|-k <name>] [--delete-cluster-on-failure|-d] [--auto-execute-script] [--wait-time|-w <seconds>] [--extract-claim|-e <claim-name>]"
             exit 0
             ;;
         *)
@@ -333,6 +338,23 @@ execute_step "$ACTION" dagger \
 if [ "$ACTION" = "continue" ]; then
     wait_for_user
 fi
+
+# Extract claim from cache (if requested)
+if [ -n "$CLAIM_NAME" ]; then
+    ACTION=$(prompt_or_auto "Extract claim '${CLAIM_NAME}' from cache?" "Extracting claim '${CLAIM_NAME}' from cache")
+    execute_step "$ACTION" dagger \
+        --bootstrap-file="${BOOTSTRAP_FILE}" \
+        --credentials-secret="file:${CREDENTIALS_FILE}" \
+        call extract-claim-from-cache \
+        --cache-volume="${VOLUME_ID}" \
+        --claim-name="${CLAIM_NAME}" \
+        export --path="./boot/extracted/${CLAIM_NAME}"
+
+    if [ "$ACTION" = "continue" ]; then
+        wait_for_user
+    fi
+fi
+
 
 # Delete cluster after successful completion
 ACTION=$(prompt_or_auto "Delete kind cluster ${CLUSTER_NAME}?" "Deleting kind cluster ${CLUSTER_NAME} after the Bootstrap process has finished")
