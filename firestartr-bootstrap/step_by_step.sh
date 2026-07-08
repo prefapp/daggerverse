@@ -341,6 +341,17 @@ fi
 
 # Extract claim from cache (if requested)
 if [ -n "$CLAIM_NAME" ]; then
+    case "$CLAIM_NAME" in
+        */*|*\\*|*..*)
+            echo "ERROR: CLAIM_NAME contains invalid characters (/, \\, ..)" >&2
+            exit 1
+            ;;
+    esac
+    SAFE_CLAIM_NAME="$CLAIM_NAME"
+    if [ -z "$VOLUME_ID" ]; then
+        echo "ERROR: --extract-claim requires a valid --cache-volume, but VOLUME_ID is empty" >&2
+        exit 1
+    fi
     ACTION=$(prompt_or_auto "Extract claim '${CLAIM_NAME}' from cache?" "Extracting claim '${CLAIM_NAME}' from cache")
     execute_step "$ACTION" dagger \
         --bootstrap-file="${BOOTSTRAP_FILE}" \
@@ -348,7 +359,7 @@ if [ -n "$CLAIM_NAME" ]; then
         call extract-claim-from-cache \
         --cache-volume="${VOLUME_ID}" \
         --claim-name="${CLAIM_NAME}" \
-        export --path="./boot/extracted/${CLAIM_NAME}"
+        export --path="./boot/extracted/${SAFE_CLAIM_NAME}"
 
     if [ "$ACTION" = "continue" ]; then
         wait_for_user

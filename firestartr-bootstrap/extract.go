@@ -77,7 +77,7 @@ print("Found %%d claim matches, %%d CR matches" %% (claim_matches, cr_matches))
 		WithExec([]string{"python", "/search.py"}).
 		Sync(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to search cache: %s", extractErrorMessage(err))
+		return nil, fmt.Errorf("failed to search cache: %s", extractErrorMessage(err, "unknown error during cache search"))
 	}
 
 	claimEntries, err := ctr.Directory("/output").Glob(ctx, "*")
