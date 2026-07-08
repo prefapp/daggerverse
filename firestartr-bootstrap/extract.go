@@ -4,7 +4,6 @@ import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
 	"fmt"
-	"strings"
 )
 
 func (m *FirestartrBootstrap) ExtractClaimFromCache(
@@ -38,16 +37,16 @@ for root, dirs, files in os.walk("/cache"):
 
         if f.endswith(".yaml"):
             yaml_count += 1
-            if "/claims/" in rel.replace("\\", "/"):
-                if data.get("name") == claim_name:
-                    dest = os.path.join("/output", os.path.basename(path))
-                    os.makedirs("/output", exist_ok=True)
-                    shutil.copy2(path, dest)
-                    claim_matches += 1
-                    claim_files.append(os.path.basename(path))
-
-        if f.endswith(".yml"):
+        elif f.endswith(".yml"):
             yml_count += 1
+
+        if (f.endswith(".yaml") or f.endswith(".yml")) and "/claims/" in rel.replace("\\", "/"):
+            if data.get("name") == claim_name:
+                dest = os.path.join("/output", os.path.basename(path))
+                os.makedirs("/output", exist_ok=True)
+                shutil.copy2(path, dest)
+                claim_matches += 1
+                claim_files.append(os.path.basename(path))
 
         if f.endswith(".yaml") or f.endswith(".yml"):
             annotations = data.get("metadata", {}).get("annotations", {})
@@ -67,28 +66,6 @@ for root, dirs, files in os.walk("/cache"):
 
 print("Scanned %%d .yaml files, %%d .yml files" %% (yaml_count, yml_count))
 print("Found %%d claim matches, %%d CR matches" %% (claim_matches, cr_matches))
-
-
-claim_msg = ""
-cr_msg = ""
-for f in sorted(os.listdir("/output")):
-    path = os.path.join("/output", f)
-    with open(path) as fh:
-        content = fh.read()
-    if f in claim_files:
-        claim_msg += "--- " + f + " ---\n" + content + "\n"
-    else:
-        cr_msg += "--- " + f + " ---\n" + content + "\n"
-
-if claim_msg:
-    print("=== CLAIM FILES ===")
-    print(claim_msg)
-else:
-    print("no claim file found with name \"%%s\" in cache" %% claim_name)
-
-if cr_msg:
-    print("=== CR FILES ===")
-    print(cr_msg)
 `, claimName)
 
 	ctr, err := dag.Container().
@@ -100,8 +77,7 @@ if cr_msg:
 		WithExec([]string{"python", "/search.py"}).
 		Sync(ctx)
 	if err != nil {
-		output, _ := ctr.Stderr(ctx)
-		return nil, fmt.Errorf("failed to search cache: %s", strings.TrimSpace(output))
+		return nil, fmt.Errorf("failed to search cache: %s", extractErrorMessage(err))
 	}
 
 	claimEntries, err := ctr.Directory("/output").Glob(ctx, "*")
