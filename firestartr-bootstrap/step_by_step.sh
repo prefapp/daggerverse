@@ -87,7 +87,7 @@ check_dagger_version() {
     INSTALLED_MINOR=$(echo "$INSTALLED_VERSION" | cut -d. -f2)
     local INSTALLED_PATCH
     INSTALLED_PATCH=$(echo "$INSTALLED_VERSION" | cut -d. -f3)
-    
+
     local MINIMUM_MAJOR
     MINIMUM_MAJOR=$(echo "$MINIMUM_VERSION" | cut -d. -f1)
     local MINIMUM_MINOR
@@ -121,15 +121,15 @@ if [ "$VERSION_OK" = false ]; then
 
 handle_command_failure() {
     local EXIT_CODE=$1
-    
+
     if [ "$EXIT_CODE" -ne 0 ]; then
         echo "❌ Command failed with exit code $EXIT_CODE."
-        
+
         if [ "$DELETE_CLUSTER_ON_FAILURE" = true ]; then
             echo "🗑️ Deleting kind cluster ${CLUSTER_NAME}..."
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
-        
+
         echo "🛑 Aborting script execution."
         exit "$EXIT_CODE"
     fi
@@ -154,7 +154,7 @@ prompt_or_auto() {
 execute_step() {
     local ACTION="$1"
     shift
-    
+
     case "$ACTION" in
         "continue")
             "$@"
@@ -356,7 +356,7 @@ if [ -n "$CLAIM_NAME" ]; then
         echo "ERROR: --extract-claim requires a cache volume, but VOLUME_ID is empty. Ensure VOLUME_ID is set in the script header or environment." >&2
         exit 1
     fi
-    ACTION=$(prompt_or_auto "Extract claim '${CLAIM_NAME}' from cache?" "Extracting claim '${CLAIM_NAME}' from cache")
+    ACTION=$(prompt_or_auto "Extract resources for claim '${CLAIM_NAME}' from cache?" "Extracting resources for claim '${CLAIM_NAME}' from cache")
     execute_step "$ACTION" dagger \
         --bootstrap-file="${BOOTSTRAP_FILE}" \
         --credentials-secret="file:${CREDENTIALS_FILE}" \
