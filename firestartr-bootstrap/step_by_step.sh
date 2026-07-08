@@ -349,7 +349,7 @@ if [ -n "$CLAIM_NAME" ]; then
     esac
     SAFE_CLAIM_NAME="$CLAIM_NAME"
     if [ -z "$VOLUME_ID" ]; then
-        echo "ERROR: --extract-claim requires a valid --cache-volume, but VOLUME_ID is empty" >&2
+        echo "ERROR: --extract-claim requires a cache volume, but VOLUME_ID is empty. Ensure VOLUME_ID is set in the script header or environment." >&2
         exit 1
     fi
     ACTION=$(prompt_or_auto "Extract claim '${CLAIM_NAME}' from cache?" "Extracting claim '${CLAIM_NAME}' from cache")
