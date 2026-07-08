@@ -194,6 +194,10 @@ while [[ $# -gt 0 ]]; do
             shift 2 # Move past the flag AND its value
             ;;
         --extract-claim | -e)
+            if [ -z "$2" ] || [ "${2#-}" != "$2" ]; then
+                echo "ERROR: --extract-claim/-e requires a claim name argument" >&2
+                exit 1
+            fi
             CLAIM_NAME="$2"
             shift 2 # Move past the flag AND its value
             ;;
