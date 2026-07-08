@@ -42,11 +42,11 @@ for root, dirs, files in os.walk("/cache"):
 
         if (f.endswith(".yaml") or f.endswith(".yml")) and "/claims/" in rel.replace("\\", "/"):
             if data.get("name") == claim_name:
-                dest = os.path.join("/output", rel)
-                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                dest = os.path.join("/output", os.path.basename(path))
+                os.makedirs("/output", exist_ok=True)
                 shutil.copy2(path, dest)
                 claim_matches += 1
-                claim_files.append(rel)
+                claim_files.append(os.path.basename(path))
 
         if f.endswith(".yaml") or f.endswith(".yml"):
             annotations = data.get("metadata", {}).get("annotations", {})
@@ -55,8 +55,8 @@ for root, dirs, files in os.walk("/cache"):
                 if ref is not None:
                     ref_name = ref.split("/")[-1]
                     if ref_name == claim_name:
-                        dest = os.path.join("/output", rel)
-                        os.makedirs(os.path.dirname(dest), exist_ok=True)
+                        dest = os.path.join("/output", os.path.basename(path))
+                        os.makedirs("/output", exist_ok=True)
                         shutil.copy2(path, dest)
                         cr_matches += 1
                     else:
@@ -71,7 +71,7 @@ print("Found %%d claim matches, %%d CR matches" %% (claim_matches, cr_matches))
 	ctr, err := dag.Container().
 		From("python:3-alpine").
 		WithMountedCache("/cache", cacheVolume).
-		WithExec([]string{"apk", "add", "--no-cache", "py3-yaml"}).
+		WithExec([]string{"pip", "install", "--quiet", "--root-user-action=ignore", "pyyaml"}).
 		WithExec([]string{"mkdir", "-p", "/output"}).
 		WithNewFile("/search.py", script).
 		WithExec([]string{"python", "/search.py"}).
