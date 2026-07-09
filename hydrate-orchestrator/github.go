@@ -89,13 +89,12 @@ func (m *HydrateOrchestrator) AutomergeFileExists(ctx context.Context, globPatte
 	}
 
 	g, err := glob.Compile(globPattern + "/AUTO_MERGE")
-	
+
 	if err != nil {
 		panic(err)
 	}
-	
-	for _, entry := range entries {
 
+	for _, entry := range entries {
 
 		if g.Match(entry) {
 
