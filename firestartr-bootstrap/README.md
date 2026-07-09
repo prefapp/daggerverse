@@ -314,6 +314,7 @@ bash my-steps.sh
 - `-d` or `--delete-cluster-on-failure`: if set, the kind cluster will be deleted if any step fails.
 - `--auto-execute-script`: if set, the script will not prompt the user for input and will automatically proceed to the next step. This option is not recommended unless the script is being executed in a testing environment.
 - `-w` or `--wait-time`: time in seconds to wait between steps when `--auto-execute-script` is set. Default is 5 seconds.
+- `-e` or `--extract-claim`: the name of a claim to extract from the cache volume after rendering. The claim YAML and any associated custom resources are exported to `./boot/extracted/<claim-name>`. Requires a valid `VOLUME_ID` set in the script header.
 - `-h` or `--help`: display a help message showing all the previous commands.
 
 ## 6. Individual commands
