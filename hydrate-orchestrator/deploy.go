@@ -92,60 +92,43 @@ Created by @%s from %s within commit [%s](%s)
 			DEPLOYMENT_BRANCH_NAME,
 		)
 
+		var summaryMessage string
+
 		if err != nil {
-			summary.addDeploymentSummaryRow(
-				kdep.DeploymentPath,
-				extractErrorMessage(err),
-			)
-
-			continue
-		}
-
-		if output == "" {
-			summary.addDeploymentSummaryRow(
-				kdep.DeploymentPath,
-				NO_PR_CREATED_MESSAGE,
-			)
-
-			continue
-		}
-
-		if m.AutomergeFileExists(ctx, globPattern) {
+			summaryMessage = extractErrorMessage(err)
+		} else if output == "" {
+			summaryMessage = NO_PR_CREATED_MESSAGE
+		} else if m.AutomergeFileExists(ctx, globPattern) {
 
 			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
 
 			err = m.MergePullRequest(ctx, output)
 
 			if err != nil {
-				summary.addDeploymentSummaryRow(
-					kdep.DeploymentPath,
-					extractErrorMessage(err),
-				)
-
-				continue
-			}
-
-			summary.addDeploymentSummaryRow(
-				kdep.DeploymentPath,
-				fmt.Sprintf(
+				summaryMessage = extractErrorMessage(err)
+			} else {
+				summaryMessage = fmt.Sprintf(
 					"Success, pr created and merged: <a href=\"%s\">%s</a>",
 					output,
 					output,
-				),
-			)
+				)
+			}
+
 		} else {
 
 			fmt.Println("AUTO_MERGE file does not exist, skipping automerge")
 
-			summary.addDeploymentSummaryRow(
-				kdep.DeploymentPath,
-				fmt.Sprintf(
-					"Success, pr created: <a href=\"%s\">%s</a>",
-					output,
-					output,
-				),
+			summaryMessage = fmt.Sprintf(
+				"Success, pr created: <a href=\"%s\">%s</a>",
+				output,
+				output,
 			)
 		}
+
+		summary.addDeploymentSummaryRow(
+			kdep.DeploymentPath,
+			summaryMessage,
+		)
 	}
 
 	for _, kdep := range deployments.KubernetesSysDeployments {
@@ -197,64 +180,43 @@ Created by @%s from %s within commit [%s](%s)
 			DEPLOYMENT_BRANCH_NAME,
 		)
 
+		var summaryMessage string
+
 		if err != nil {
-			summary.addDeploymentSummaryRow(
-				kdep.DeploymentPath,
-				extractErrorMessage(err),
-			)
-
-			continue
-		}
-
-		if output == "" {
-			summary.addDeploymentSummaryRow(
-				kdep.DeploymentPath,
-				NO_PR_CREATED_MESSAGE,
-			)
-
-			continue
-		}
-
-		if m.AutomergeFileExists(ctx, globPattern) {
+			summaryMessage = extractErrorMessage(err)
+		} else if output == "" {
+			summaryMessage = NO_PR_CREATED_MESSAGE
+		} else if m.AutomergeFileExists(ctx, globPattern) {
 
 			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
 
 			err = m.MergePullRequest(ctx, output)
 
 			if err != nil {
-				summary.addDeploymentSummaryRow(
-					kdep.DeploymentPath,
-					extractErrorMessage(err),
-				)
-
-				continue
-			}
-
-			summary.addDeploymentSummaryRow(
-				kdep.DeploymentPath,
-				fmt.Sprintf(
+				summaryMessage = extractErrorMessage(err)
+			} else {
+				summaryMessage = fmt.Sprintf(
 					"Success, pr created and merged: <a href=\"%s\">%s</a>",
 					output,
 					output,
-				),
-			)
-
-			continue
+				)
+			}
 
 		} else {
 
 			fmt.Println("AUTO_MERGE file does not exist, skipping automerge")
 
-			summary.addDeploymentSummaryRow(
-				kdep.DeploymentPath,
-				fmt.Sprintf(
-					"Success, pr created: <a href=\"%s\">%s</a>",
-					output,
-					output,
-				),
+			summaryMessage = fmt.Sprintf(
+				"Success, pr created: <a href=\"%s\">%s</a>",
+				output,
+				output,
 			)
-
 		}
+
+		summary.addDeploymentSummaryRow(
+			kdep.DeploymentPath,
+			summaryMessage,
+		)
 
 	}
 
@@ -313,128 +275,88 @@ Created by @%s from %s within commit [%s](%s)
 			DEPLOYMENT_BRANCH_NAME,
 		)
 
-		if err != nil {
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				extractErrorMessage(err),
-			)
-
-			continue
-		}
-
-		if output == "" {
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				NO_PR_CREATED_MESSAGE,
-			)
-
-			continue
-		}
-
-		parts := strings.Split(output, "/")
-		if err := m.validatePrUrl(output, parts); err != nil {
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				extractErrorMessage(err),
-			)
-			continue
-		}
-
-		// https://github.com/org/app-repo/pull/8
-		// parts:    [https:, , github.com, org, app-repo, pull, 8]
-		// positions:  0     1       2        3     4        5   6
-		prNumber := parts[6]
-		repo := parts[4]
-		org := parts[3]
-		fmt.Printf("🔗 Getting PR number from PR link\n")
-		fmt.Printf("PR link: %s\n", output)
-		fmt.Printf("PR number: %s\n", prNumber)
-		fmt.Printf("Repo: %s\n", repo)
-		fmt.Printf("Org: %s\n", org)
-
-		updatedDir := dag.HydrateTfworkspaces(
-			m.ValuesStateDir,
-			&renderedDep[0],
-			m.DotFirestartr,
-		).AddPrAnnotationToCr(
-			tfDep.ClaimName,
-			prNumber,
-			org,
-			repo,
-			&renderedDep[0],
-		)
-
-		_, err = dag.Gh().Commit(
-			updatedDir,
-			branchName,
-			"ci: Update deployments",
-			m.GhToken,
-			dagger.GhCommitOpts{
-				BaseBranch:     DEPLOYMENT_BRANCH_NAME,
-				DeletePath:     "tfworkspaces",
-				LocalGhCliPath: m.LocalGhCliPath,
-			},
-		).Sync(ctx)
+		var summaryMessage string
 
 		if err != nil {
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				extractErrorMessage(err),
-			)
+			summaryMessage = extractErrorMessage(err)
+		} else if output == "" {
+			summaryMessage = NO_PR_CREATED_MESSAGE
+		} else {
+			parts := strings.Split(output, "/")
+			if err := m.validatePrUrl(output, parts); err != nil {
+				summaryMessage = extractErrorMessage(err)
+			} else {
+				// https://github.com/org/app-repo/pull/8
+				// parts:    [https:, , github.com, org, app-repo, pull, 8]
+				// positions:  0     1       2        3     4        5   6
+				prNumber := parts[6]
+				repo := parts[4]
+				org := parts[3]
+				fmt.Printf("🔗 Getting PR number from PR link\n")
+				fmt.Printf("PR link: %s\n", output)
+				fmt.Printf("PR number: %s\n", prNumber)
+				fmt.Printf("Repo: %s\n", repo)
+				fmt.Printf("Org: %s\n", org)
 
-			continue
-		}
-
-		if output == "" {
-
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				NO_PR_CREATED_MESSAGE,
-			)
-
-			continue
-		}
-
-		if m.AutomergeFileExists(ctx, globPattern) {
-
-			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
-
-			err = m.MergePullRequest(ctx, output)
-
-			if err != nil {
-				summary.addDeploymentSummaryRow(
-					tfDep.DeploymentPath,
-					extractErrorMessage(err),
+				updatedDir := dag.HydrateTfworkspaces(
+					m.ValuesStateDir,
+					&renderedDep[0],
+					m.DotFirestartr,
+				).AddPrAnnotationToCr(
+					tfDep.ClaimName,
+					prNumber,
+					org,
+					repo,
+					&renderedDep[0],
 				)
 
-				continue
+				_, err = dag.Gh().Commit(
+					updatedDir,
+					branchName,
+					"ci: Update deployments",
+					m.GhToken,
+					dagger.GhCommitOpts{
+						BaseBranch:     DEPLOYMENT_BRANCH_NAME,
+						DeletePath:     "tfworkspaces",
+						LocalGhCliPath: m.LocalGhCliPath,
+					},
+				).Sync(ctx)
+
+				if err != nil {
+					summaryMessage = extractErrorMessage(err)
+				} else if m.AutomergeFileExists(ctx, globPattern) {
+
+					fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
+
+					err = m.MergePullRequest(ctx, output)
+
+					if err != nil {
+						summaryMessage = extractErrorMessage(err)
+					} else {
+						summaryMessage = fmt.Sprintf(
+							"Success, pr created and merged: <a href=\"%s\">%s</a>",
+							output,
+							output,
+						)
+					}
+
+				} else {
+
+					fmt.Println("AUTO_MERGE file does not exist, skipping automerge")
+
+					summaryMessage = fmt.Sprintf(
+						"Success, pr created: <a href=\"%s\">%s</a>",
+						output,
+						output,
+					)
+				}
 			}
-
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				fmt.Sprintf(
-					"Success, pr created and merged: <a href=\"%s\">%s</a>",
-					output,
-					output,
-				),
-			)
-
-			continue
-
-		} else {
-
-			fmt.Println("AUTO_MERGE file does not exist, skipping automerge")
-
-			summary.addDeploymentSummaryRow(
-				tfDep.DeploymentPath,
-				fmt.Sprintf(
-					"Success, pr created: <a href=\"%s\">%s</a>",
-					output,
-					output,
-				),
-			)
-
 		}
+
+		summary.addDeploymentSummaryRow(
+			tfDep.DeploymentPath,
+			summaryMessage,
+		)
 	}
 
 	for _, secDep := range deployments.SecretsDeployment {
@@ -496,60 +418,42 @@ Created by @%s from %s within commit [%s](%s)
 			"deployment",
 		)
 
+		var summaryMessage string
+
 		if err != nil {
-			summary.addDeploymentSummaryRow(
-				secDep.DeploymentPath,
-				extractErrorMessage(err),
-			)
-
-			continue
-		}
-
-		if output == "" {
-			summary.addDeploymentSummaryRow(
-				secDep.DeploymentPath,
-				NO_PR_CREATED_MESSAGE,
-			)
-
-			continue
-		}
-
-		if m.AutomergeFileExists(ctx, globPattern) {
+			summaryMessage = extractErrorMessage(err)
+		} else if output == "" {
+			summaryMessage = NO_PR_CREATED_MESSAGE
+		} else if m.AutomergeFileExists(ctx, globPattern) {
 
 			fmt.Printf("AUTO_MERGE file found, merging PR %s\n", output)
 
 			err = m.MergePullRequest(ctx, output)
 
 			if err != nil {
-				summary.addDeploymentSummaryRow(
-					secDep.DeploymentPath,
-					extractErrorMessage(err),
-				)
-
-				continue
-			}
-
-			summary.addDeploymentSummaryRow(
-				secDep.DeploymentPath,
-				fmt.Sprintf(
+				summaryMessage = extractErrorMessage(err)
+			} else {
+				summaryMessage = fmt.Sprintf(
 					"Success, pr created and merged: <a href=\"%s\">%s</a>",
 					output,
 					output,
-				),
-			)
+				)
+			}
 		} else {
 
 			fmt.Println("AUTO_MERGE file does not exist, skipping automerge")
 
-			summary.addDeploymentSummaryRow(
-				secDep.DeploymentPath,
-				fmt.Sprintf(
-					"Success, pr created: <a href=\"%s\">%s</a>",
-					output,
-					output,
-				),
+			summaryMessage = fmt.Sprintf(
+				"Success, pr created: <a href=\"%s\">%s</a>",
+				output,
+				output,
 			)
 		}
+
+		summary.addDeploymentSummaryRow(
+			secDep.DeploymentPath,
+			summaryMessage,
+		)
 	}
 
 	return m.DeploymentSummaryToFile(ctx, summary)
