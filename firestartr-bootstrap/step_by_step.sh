@@ -9,6 +9,7 @@ AUTO=false
 LAST_EXIT_CODE=0
 COMMAND_WAIT_TIME=5
 DELETE_CLUSTER_ON_FAILURE=false
+CLAIM_NAME=""
 
 wait_for() {
     local WAIT_TIME=$1
@@ -86,7 +87,7 @@ check_dagger_version() {
     INSTALLED_MINOR=$(echo "$INSTALLED_VERSION" | cut -d. -f2)
     local INSTALLED_PATCH
     INSTALLED_PATCH=$(echo "$INSTALLED_VERSION" | cut -d. -f3)
-    
+
     local MINIMUM_MAJOR
     MINIMUM_MAJOR=$(echo "$MINIMUM_VERSION" | cut -d. -f1)
     local MINIMUM_MINOR
@@ -120,15 +121,15 @@ if [ "$VERSION_OK" = false ]; then
 
 handle_command_failure() {
     local EXIT_CODE=$1
-    
+
     if [ "$EXIT_CODE" -ne 0 ]; then
         echo "❌ Command failed with exit code $EXIT_CODE."
-        
+
         if [ "$DELETE_CLUSTER_ON_FAILURE" = true ]; then
             echo "🗑️ Deleting kind cluster ${CLUSTER_NAME}..."
             kind delete cluster --name "${CLUSTER_NAME}"
         fi
-        
+
         echo "🛑 Aborting script execution."
         exit "$EXIT_CODE"
     fi
@@ -153,7 +154,7 @@ prompt_or_auto() {
 execute_step() {
     local ACTION="$1"
     shift
-    
+
     case "$ACTION" in
         "continue")
             "$@"
@@ -192,8 +193,16 @@ while [[ $# -gt 0 ]]; do
             CLUSTER_NAME="$2"
             shift 2 # Move past the flag AND its value
             ;;
+        --extract-claim | -e)
+            if [ -z "$2" ] || [ "${2#-}" != "$2" ]; then
+                echo "ERROR: --extract-claim/-e requires a claim name argument" >&2
+                exit 1
+            fi
+            CLAIM_NAME="$2"
+            shift 2 # Move past the flag AND its value
+            ;;
         --help | -h)
-            echo "Usage: $0 [--kind-cluster-name|-k <name>] [--delete-cluster-on-failure|-d] [--auto-execute-script] [--wait-time|-w <seconds>]"
+            echo "Usage: $0 [--kind-cluster-name|-k <name>] [--delete-cluster-on-failure|-d] [--auto-execute-script] [--wait-time|-w <seconds>] [--extract-claim|-e <claim-name>]"
             exit 0
             ;;
         *)
@@ -333,6 +342,34 @@ execute_step "$ACTION" dagger \
 if [ "$ACTION" = "continue" ]; then
     wait_for_user
 fi
+
+# Extract claim from cache (if requested)
+if [ -n "$CLAIM_NAME" ]; then
+    case "$CLAIM_NAME" in
+        */*|*\\*|*..*)
+            echo "ERROR: CLAIM_NAME contains invalid characters (/, \\, ..)" >&2
+            exit 1
+            ;;
+    esac
+    SAFE_CLAIM_NAME="$CLAIM_NAME"
+    if [ -z "$VOLUME_ID" ]; then
+        echo "ERROR: --extract-claim requires a cache volume, but VOLUME_ID is empty. Ensure VOLUME_ID is set in the script header or environment." >&2
+        exit 1
+    fi
+    ACTION=$(prompt_or_auto "Extract resources for claim '${CLAIM_NAME}' from cache?" "Extracting resources for claim '${CLAIM_NAME}' from cache")
+    execute_step "$ACTION" dagger \
+        --bootstrap-file="${BOOTSTRAP_FILE}" \
+        --credentials-secret="file:${CREDENTIALS_FILE}" \
+        call extract-claim-from-cache \
+        --cache-volume="${VOLUME_ID}" \
+        --claim-name="${CLAIM_NAME}" \
+        export --path="./boot/extracted/${SAFE_CLAIM_NAME}"
+
+    if [ "$ACTION" = "continue" ]; then
+        wait_for_user
+    fi
+fi
+
 
 # Delete cluster after successful completion
 ACTION=$(prompt_or_auto "Delete kind cluster ${CLUSTER_NAME}?" "Deleting kind cluster ${CLUSTER_NAME} after the Bootstrap process has finished")
