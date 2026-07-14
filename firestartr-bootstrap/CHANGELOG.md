@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.0](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.3.1...firestartr-bootstrap-v1.4.0) (2026-07-14)
+
+
+### Features
+
+* Add support for state-secrets repo ([#466](https://github.com/prefapp/daggerverse/issues/466)) ([8248ca3](https://github.com/prefapp/daggerverse/commit/8248ca3f6a112dd519816f8bca488cb712f95fc5))
+* **bootstrap:** add org settings defaults template ([#476](https://github.com/prefapp/daggerverse/issues/476)) ([80f59c0](https://github.com/prefapp/daggerverse/commit/80f59c0ac8d3920fe5e844240b8b308744ae91d4))
+
+
+### Bug Fixes
+
+* Added a way to upload claims and CRs ([#482](https://github.com/prefapp/daggerverse/issues/482)) ([cd1dcde](https://github.com/prefapp/daggerverse/commit/cd1dcde411cb7988fab33bc5f73e70eec3059d5d))
+
 ## [1.3.1](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.3.0...firestartr-bootstrap-v1.3.1) (2026-04-15)
 
 
