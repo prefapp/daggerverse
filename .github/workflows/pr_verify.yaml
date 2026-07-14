@@ -26,10 +26,18 @@ jobs:
       run: |
         # get the list of changed folders
         if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.event_name }}" == "push" ]] ; then
-          # For workflow_dispatch or push, include all folders except .github
-          mapfile -t CHANGED_MODULES <<< "$(git ls-tree -d --name-only HEAD | grep -v '.github' | sort -u)"
+          # For workflow_dispatch or push, include all top-level Dagger modules
+          mapfile -t CHANGED_MODULES < <(
+            git ls-tree -d --name-only HEAD | grep -v '.github' | sort -u | while read -r dir; do
+              [[ -f "$dir/dagger.json" ]] && echo "$dir"
+            done
+          )
         else
-          mapfile -t CHANGED_MODULES <<< "$(git diff --name-only origin/main '${{ github.head_ref }}' | grep -oE '^[^/]+/' | grep -v '.github' | sort -u)"
+          mapfile -t CHANGED_MODULES < <(
+            git diff --name-only origin/main '${{ github.head_ref }}' | grep -oE '^[^/]+/' | grep -v '.github' | sort -u | while read -r dir; do
+              [[ -f "$dir/dagger.json" ]] && echo "$dir"
+            done
+          )
         fi
 
         echo "::notice::Changed folders: ${CHANGED_MODULES[@]}" | tr '\n' ' '
