@@ -16,6 +16,9 @@ providers:
     name: {{ default $claim.Name $claim.RepoName }}
     org: {{ $.Org }}
     visibility: private
+    allowAutoMerge: true
+    deleteBranchOnMerge: true
+    allowUpdateBranch: true
     actions:
       oidc:
         useDefault: true
