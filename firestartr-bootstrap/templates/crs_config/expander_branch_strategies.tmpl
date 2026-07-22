@@ -15,3 +15,15 @@ expanderValues:
             enforceAdmins: false
             requireSignedCommits: true
             requireConversationResolution: false
+    - name: trunkBasedDevelopment
+      values:
+        defaultBranch: {{ or .DefaultBranch "main"}}
+        branchProtections:
+          - branch: {{ or .DefaultBranch "main"}}
+            statusChecks:
+              - "pr_verify"
+            requiredReviewersCount: 1
+            requiredCodeownersReviewers: false
+            enforceAdmins: true
+            requireSignedCommits: true
+            requireConversationResolution: false
