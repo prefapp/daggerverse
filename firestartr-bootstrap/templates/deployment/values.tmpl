@@ -19,6 +19,7 @@ argoEvents:
   webhooks:
     - state-infra
     - state-github
+    - state-secrets
   secretStoreKeysRefs:
     webhookSecret: {{ .Webhook.Secret }}
 

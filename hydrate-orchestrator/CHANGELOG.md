@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.4.3](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.4.2...hydrate-orchestrator-v6.4.3) (2026-07-09)
+
+
+### Bug Fixes
+
+* allow automerge when creating deployments manually ([#481](https://github.com/prefapp/daggerverse/issues/481)) ([cc170cc](https://github.com/prefapp/daggerverse/commit/cc170cc61e66be90440b8ef3a67ca1825ff8a33c))
+
 ## [6.4.2](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.4.1...hydrate-orchestrator-v6.4.2) (2026-05-13)
 
 

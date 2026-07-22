@@ -356,16 +356,18 @@ func (m *FirestartrBootstrap) CmdImportResources(
 		}
 	}
 
-	err = m.ValidateWebhookNotExists(ctx, tokenSecret, m.Bootstrap.WebhookUrl)
-	if err != nil {
-		errorMessage := PrepareAndPrintError(
-			ctx,
-			"CmdImportResources",
-			"A problem was detected while checking if the webhook already exists",
-			err,
-		)
+	if m.CreateWebhook {
+		err = m.ValidateWebhookNotExists(ctx, tokenSecret, m.Bootstrap.WebhookUrl)
+		if err != nil {
+			errorMessage := PrepareAndPrintError(
+				ctx,
+				"CmdImportResources",
+				"A problem was detected while checking if the webhook already exists",
+				err,
+			)
 
-		return "", errorMessage
+			return "", errorMessage
+		}
 	}
 
 	err = m.EnableActionsToCreateAndApprovePullRequestsInOrg(ctx, tokenSecret)
@@ -645,28 +647,38 @@ have been successfully configured.
 func (m *FirestartrBootstrap) CmdPushArgo(
 	ctx context.Context,
 ) (string, error) {
+	missingPRs := []string{}
+
 	_, err := m.AddArgoCDSecrets(ctx)
 	if err != nil {
-		errorMessage := PrepareAndPrintError(
-			ctx,
-			"CmdPushArgo",
-			"An error occurred while adding ArgoCD secrets",
-			err,
-		)
+		if strings.Contains(err.Error(), "nothing to commit, working tree clean") {
+			missingPRs = append(missingPRs, "ArgoCD secrets (state-sys-services)")
+		} else {
+			errorMessage := PrepareAndPrintError(
+				ctx,
+				"CmdPushArgo",
+				"An error occurred while adding ArgoCD secrets",
+				err,
+			)
 
-		return "", errorMessage
+			return "", errorMessage
+		}
 	}
 
 	_, err = m.CreateArgCDApplications(ctx)
 	if err != nil {
-		errorMessage := PrepareAndPrintError(
-			ctx,
-			"CmdPushArgo",
-			"An error occurred while creating the ArgoCD applications",
-			err,
-		)
+		if strings.Contains(err.Error(), "nothing to commit, working tree clean") {
+			missingPRs = append(missingPRs, "ArgoCD applications (state-argocd)")
+		} else {
+			errorMessage := PrepareAndPrintError(
+				ctx,
+				"CmdPushArgo",
+				"An error occurred while creating the ArgoCD applications",
+				err,
+			)
 
-		return "", errorMessage
+			return "", errorMessage
+		}
 	}
 
 	summary := m.UpdateSummaryAndRunForPushArgoCDStep(
@@ -683,6 +695,7 @@ func (m *FirestartrBootstrap) CmdPushArgo(
 			"firestartr-%s  /  argo-configuration-secrets  ",
 			m.Bootstrap.Env,
 		),
+		missingPRs,
 	)
 
 	return summary, nil
