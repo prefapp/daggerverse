@@ -22,8 +22,8 @@ expanderValues:
           - branch: {{ or .DefaultBranch "main"}}
             statusChecks:
               - "pr_verify"
-            requiredReviewersCount: 1
+            requiredReviewersCount: 2
             requiredCodeownersReviewers: false
-            enforceAdmins: true
+            enforceAdmins: false
             requireSignedCommits: true
             requireConversationResolution: false
