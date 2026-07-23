@@ -9,13 +9,18 @@ func (m *FirestartrBootstrap) GeneratePushSecrets(
 	ctx context.Context,
 ) (*dagger.Directory, error) {
 
+	secretStore := "aws"
+	if isAzureProvider(m.Creds.CloudProvider.Name) {
+		secretStore = "azure"
+	}
+
 	webHookPushSecret := PushSecretElement{
 		Name:                "webhook-pushsecret",
 		KubernetesSecret:    "webhook-secret",
 		KubernetesSecretKey: "webhook-secret-key",
 		ParameterName:       m.Bootstrap.WebhookSecretRef,
 		Value:               "my-secret-secret",
-		SecretStore:         "aws",
+		SecretStore:         secretStore,
 	}
 
 	prefappBotPatSecret := PushSecretElement{
@@ -24,7 +29,7 @@ func (m *FirestartrBootstrap) GeneratePushSecrets(
 		KubernetesSecretKey: "botpat-secret-key",
 		ParameterName:       m.Bootstrap.PrefappBotPatSecretRef,
 		Value:               m.Creds.GithubApp.PrefappBotPat,
-		SecretStore:         "aws",
+		SecretStore:         secretStore,
 	}
 
 	prefappCliVersion := PushSecretElement{
@@ -33,7 +38,7 @@ func (m *FirestartrBootstrap) GeneratePushSecrets(
 		KubernetesSecretKey: "cli-version-key",
 		ParameterName:       m.Bootstrap.FirestartrCliVersionSecretRef,
 		Value:               m.Bootstrap.Firestartr.CliVersion,
-		SecretStore:         "aws",
+		SecretStore:         secretStore,
 	}
 
 	rendered, err := renderPushSecret(ctx, &webHookPushSecret, "external_secrets/push_secret.tmpl")

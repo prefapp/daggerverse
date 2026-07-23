@@ -47,6 +47,42 @@ The following AWS Parameter Store parameters are required:
 - `/firestartr/<customer>/fs-<customer>-argocd/app-id`
 - `/firestartr/<customer>/fs-<customer>-argocd/<org>/installation-id`
 
+#### 1.3 Azure requirements
+
+An Azure Key Vault named according to `key_vault_name` in `Credentialsfile.yaml` (e.g. `firestartr-<customer>`) must exist and be accessible by the service principal provided in the credentials file.
+
+The following secrets must exist inside the Key Vault (Azure Key Vault names use alphanumeric characters and dashes only — no forward slashes):
+
+| Key Vault Secret Name | Description |
+| :--- | :--- |
+| `fs-pem` | Operator GitHub App private key |
+| `fs-app-id` | Operator GitHub App ID |
+| `fs-client-id` | Operator GitHub App client ID |
+| `fs-<org>-installation-id` | Operator GitHub App installation ID for `<org>` |
+| `fs-admin-pem` | Admin GitHub App private key |
+| `fs-admin-app-id` | Admin GitHub App ID |
+| `fs-admin-client-id` | Admin GitHub App client ID |
+| `fs-admin-<org>-installation-id` | Admin GitHub App installation ID for `<org>` |
+| `fs-checks-pem` | Checks GitHub App private key |
+| `fs-checks-app-id` | Checks GitHub App ID |
+| `fs-checks-client-id` | Checks GitHub App client ID |
+| `fs-checks-<org>-installation-id` | Checks GitHub App installation ID for `<org>` |
+| `fs-state-pem` | State GitHub App private key |
+| `fs-state-app-id` | State GitHub App ID |
+| `fs-state-client-id` | State GitHub App client ID |
+| `fs-state-<org>-installation-id` | State GitHub App installation ID for `<org>` |
+| `fs-import-pem` | Import GitHub App private key |
+| `fs-import-app-id` | Import GitHub App ID |
+| `fs-import-client-id` | Import GitHub App client ID |
+| `fs-import-<org>-installation-id` | Import GitHub App installation ID for `<org>` |
+| `fs-argocd-pem` | ArgoCD GitHub App private key |
+| `fs-argocd-app-id` | ArgoCD GitHub App ID |
+| `fs-argocd-client-id` | ArgoCD GitHub App client ID |
+| `fs-argocd-<org>-installation-id` | ArgoCD GitHub App installation ID for `<org>` |
+| `prefapp-bot-pat` | Prefapp Bot Personal Access Token |
+
+The service principal must have the **Key Vault Secrets Officer** (or **Key Vault Administrator**) role on the vault, and **Storage Blob Data Contributor** on the Blob Storage container used for Terraform state.
+
 ### 2. Bootstrap File
 
 ```yaml
@@ -210,27 +246,42 @@ The rest of the parameters of the `cloudProvider` section are the AWS S3 bucket 
 - `github.prefappBotPat`: Personal Access Token for the Prefapp Bot user, used to download the features from the features repository.
 - `github.operatorPat`: Personal Access Token for the Operator user, used to commit the deployment and ArgoCD application PRs to the `firestartr-<env>` organization.
 
-#### 3.2 Azure terraform backend provider configuration (currently not supported)
+#### 3.2 Azure terraform backend provider configuration
 
 ```yaml
 # Credentialsfile.yaml
 ---
 cloudProvider:
-  providerConfigName: backend-provider-config-name
-  name: azurerm
+  name: azure
   config:
-    use_azuread_auth: true
-    tenant_id: "00000000-0000-0000-0000-000000000000"
-    client_id: "00000000-0000-0000-0000-000000000000"
-    client_secret: "************************************"
-    storage_account_name: "abcd1234"
+    tenant_id: "<azure-tenant-id>"
+    subscription_id: "<azure-subscription-id>"
+    client_id: "<azure-client-id>"
+    client_secret: "<azure-client-secret>"
+    storage_account_name: "tfstate<customer>"
     container_name: "tfstate"
-  source: hashicorp/aws
-  type: aws
-  version: ~> 4.0
+    resource_group_name: "rg-firestartr-<env>"
+    key_vault_name: "firestartr-<customer>"
+  source: hashicorp/azurerm
+  type: azurerm
+  version: "~> 3.0"
 github:
-  providerConfigName: github-app-provider-config-name
+  prefappBotPat: "<your-prefapp-bot-pat>"
+  operatorPat: "<your-operator-pat>"
 ```
+
+All `<placeholders>` must be replaced with actual values.
+
+- `cloudProvider.config.tenant_id`: Azure Active Directory tenant ID.
+- `cloudProvider.config.subscription_id`: Azure subscription ID.
+- `cloudProvider.config.client_id`: Service principal application (client) ID.
+- `cloudProvider.config.client_secret`: Service principal client secret.
+- `cloudProvider.config.storage_account_name`: Azure Storage Account name used as the Terraform state backend.
+- `cloudProvider.config.container_name`: Blob container within the storage account (usually `tfstate`).
+- `cloudProvider.config.resource_group_name`: Resource group containing the storage account and Key Vault.
+- `cloudProvider.config.key_vault_name`: Name of the Azure Key Vault that holds the GitHub App secrets (see section 1.3 for required secrets).
+
+The pre-flight validation step (`cmd-validate-bootstrap`) will verify that the service principal can authenticate, that the storage container is accessible, and that the Key Vault exists.
 
 ### 4. How to launch the bootstrap
 

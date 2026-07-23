@@ -99,16 +99,25 @@ func New(
 	} else {
 		bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.%s.firestartr.dev", bootstrap.Customer, bootstrap.Env)
 	}
-	bootstrap.WebhookSecretRef = fmt.Sprintf("/firestartr/%s/github-webhook/secret", bootstrap.Customer)
 
-	// We need to calculate the bucket (if necessary)
-	if creds.CloudProvider.Config.Bucket == nil {
-		calculatedBucket := fmt.Sprintf("tfstate-%s", bootstrap.Customer)
-		creds.CloudProvider.Config.Bucket = &calculatedBucket
+	// Secret references differ between providers: Azure Key Vault names must be
+	// alphanumeric + dashes only (no forward slashes), while AWS uses hierarchical
+	// Parameter Store paths.
+	if isAzureProvider(creds.CloudProvider.Name) {
+		bootstrap.WebhookSecretRef = "github-webhook-secret"
+		bootstrap.PrefappBotPatSecretRef = "prefapp-bot-pat"
+		bootstrap.FirestartrCliVersionSecretRef = "firestartr-cli-version"
+	} else {
+		bootstrap.WebhookSecretRef = fmt.Sprintf("/firestartr/%s/github-webhook/secret", bootstrap.Customer)
+		bootstrap.PrefappBotPatSecretRef = fmt.Sprintf("/firestartr/%s/prefapp-bot-pat", bootstrap.Customer)
+		bootstrap.FirestartrCliVersionSecretRef = fmt.Sprintf("/firestartr/%s/firestartr-cli-version", bootstrap.Customer)
+
+		// We need to calculate the bucket (if necessary)
+		if creds.CloudProvider.Config.Bucket == nil {
+			calculatedBucket := fmt.Sprintf("tfstate-%s", bootstrap.Customer)
+			creds.CloudProvider.Config.Bucket = &calculatedBucket
+		}
 	}
-
-	bootstrap.PrefappBotPatSecretRef = fmt.Sprintf("/firestartr/%s/prefapp-bot-pat", bootstrap.Customer)
-	bootstrap.FirestartrCliVersionSecretRef = fmt.Sprintf("/firestartr/%s/firestartr-cli-version", bootstrap.Customer)
 
 	claimsDotConfigDir, err := getClaimsDotConfigDir(ctx, bootstrap)
 	if err != nil {
@@ -221,19 +230,36 @@ func (m *FirestartrBootstrap) ValidateBootstrap(
 		errorMsgs = append(errorMsgs, err.Error())
 	}
 
-	_, err = m.ValidateSTSCredentials(ctx)
-	if err != nil {
-		errorMsgs = append(errorMsgs, err.Error())
-	}
+	if isAzureProvider(m.Creds.CloudProvider.Name) {
+		err = m.ValidateAzureCredentials(ctx)
+		if err != nil {
+			errorMsgs = append(errorMsgs, err.Error())
+		}
 
-	err = m.ValidateBucket(ctx)
-	if err != nil {
-		errorMsgs = append(errorMsgs, err.Error())
-	}
+		err = m.ValidateAzureStorageAccount(ctx)
+		if err != nil {
+			errorMsgs = append(errorMsgs, err.Error())
+		}
 
-	err = m.ValidateParameters(ctx, fmt.Sprintf("/firestartr/%s", m.Bootstrap.Customer))
-	if err != nil {
-		errorMsgs = append(errorMsgs, err.Error())
+		err = m.ValidateAzureKeyVault(ctx)
+		if err != nil {
+			errorMsgs = append(errorMsgs, err.Error())
+		}
+	} else {
+		_, err = m.ValidateSTSCredentials(ctx)
+		if err != nil {
+			errorMsgs = append(errorMsgs, err.Error())
+		}
+
+		err = m.ValidateBucket(ctx)
+		if err != nil {
+			errorMsgs = append(errorMsgs, err.Error())
+		}
+
+		err = m.ValidateParameters(ctx, fmt.Sprintf("/firestartr/%s", m.Bootstrap.Customer))
+		if err != nil {
+			errorMsgs = append(errorMsgs, err.Error())
+		}
 	}
 
 	err = m.ValidatePrefappBotPat(ctx)

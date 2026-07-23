@@ -27,23 +27,45 @@ var OPERATOR_CREDS_SECRET_LIST = map[string]string{
 	"Pem":            "ref:secretsclaim:operator-secrets:fs-pem",
 }
 
+// isAzureProvider returns true when the cloud provider is Azure (azure or azurerm).
+func isAzureProvider(providerName string) bool {
+	return providerName == "azure" || providerName == "azurerm"
+}
+
 func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 	ctx context.Context,
 	kindContainer *dagger.Container,
 ) (*dagger.Container, error) {
+	// Select the credentials secret template based on the cloud provider.
+	secretTemplatePath := "templates/secret.tmpl"
+	if isAzureProvider(m.Creds.CloudProvider.Name) {
+		secretTemplatePath = "templates/azure_secret.tmpl"
+	}
+
 	secretsTmpl, err := dag.CurrentModule().
 		Source().
-		File("templates/secret.tmpl").
+		File(secretTemplatePath).
 		Contents(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	secretsCr, err := renderTmpl(secretsTmpl, m.Creds)
 	if err != nil {
 		return nil, err
 	}
 
+	// Select ExternalSecret templates based on the cloud provider.
+	bootstrapSecretsTmplPath := "external_secrets/bootstrap_secrets.tmpl"
+	operatorSecretsTmplPath := "external_secrets/operator_secrets.tmpl"
+	if isAzureProvider(m.Creds.CloudProvider.Name) {
+		bootstrapSecretsTmplPath = "external_secrets/azure_bootstrap_secrets.tmpl"
+		operatorSecretsTmplPath = "external_secrets/azure_operator_secrets.tmpl"
+	}
+
 	bootstrapSecretsTmpl, err := dag.CurrentModule().
 		Source().
-		File("external_secrets/bootstrap_secrets.tmpl").
+		File(bootstrapSecretsTmplPath).
 		Contents(ctx)
 	if err != nil {
 		return nil, err
@@ -56,7 +78,7 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 
 	operatorSecretsTmpl, err := dag.CurrentModule().
 		Source().
-		File("external_secrets/operator_secrets.tmpl").
+		File(operatorSecretsTmplPath).
 		Contents(ctx)
 	if err != nil {
 		return nil, err
@@ -67,9 +89,31 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		return nil, err
 	}
 
-	awsSecretStoreFile := dag.CurrentModule().
-		Source().
-		File("external_secrets/aws_secretstore.yaml")
+	// Render and mount the SecretStore manifest based on the cloud provider.
+	const secretStorePath = "/secret_store/secretstore.yaml"
+	var secretStoreCr string
+	if isAzureProvider(m.Creds.CloudProvider.Name) {
+		azureSecretStoreTmpl, err := dag.CurrentModule().
+			Source().
+			File("external_secrets/azure_secretstore.tmpl").
+			Contents(ctx)
+		if err != nil {
+			return nil, err
+		}
+		secretStoreCr, err = renderTmpl(azureSecretStoreTmpl, m.Creds)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		awsSecretStoreContent, err := dag.CurrentModule().
+			Source().
+			File("external_secrets/aws_secretstore.yaml").
+			Contents(ctx)
+		if err != nil {
+			return nil, err
+		}
+		secretStoreCr = awsSecretStoreContent
+	}
 
 	firestartrPodName, err := kindContainer.
 		WithExec([]string{
@@ -105,9 +149,9 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 			"--timeout=10h",
 			"-n", "external-secrets",
 		}).
-		WithFile("/secret_store/aws_secretstore.yaml", awsSecretStoreFile).
+		WithNewFile(secretStorePath, secretStoreCr).
 		WithExec([]string{
-			"kubectl", "apply", "-f", "/secret_store/aws_secretstore.yaml",
+			"kubectl", "apply", "-f", secretStorePath,
 		}).
 		WithExec([]string{
 			"kubectl", "apply", "-f", BOOTSTRAP_SECRETS_FILE_PATH,

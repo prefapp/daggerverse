@@ -87,11 +87,22 @@ type CloudProvider struct {
 }
 
 type ConfigProvider struct {
+	// AWS fields
 	Bucket    *string `json:"bucket" yaml:"bucket"`
 	Region    string  `json:"region" yaml:"region"`
 	AccessKey string  `json:"access_key" yaml:"access_key"`
 	SecretKey string  `json:"secret_key" yaml:"secret_key"`
 	Token     string  `json:"token" yaml:"token"`
+
+	// Azure fields
+	TenantId           string `json:"tenant_id" yaml:"tenant_id"`
+	SubscriptionId     string `json:"subscription_id" yaml:"subscription_id"`
+	ClientId           string `json:"client_id" yaml:"client_id"`
+	ClientSecret       string `json:"client_secret" yaml:"client_secret"`
+	StorageAccountName string `json:"storage_account_name" yaml:"storage_account_name"`
+	ContainerName      string `json:"container_name" yaml:"container_name"`
+	ResourceGroupName  string `json:"resource_group_name" yaml:"resource_group_name"`
+	KeyVaultName       string `json:"key_vault_name" yaml:"key_vault_name"`
 }
 
 type GithubApp struct {
