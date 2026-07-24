@@ -49,7 +49,7 @@ The following AWS Parameter Store parameters are required:
 
 #### 1.3 Azure requirements
 
-An Azure Key Vault named according to `key_vault_name` in `Credentialsfile.yaml` (e.g. `firestartr-<customer>`) must exist and be accessible by the service principal provided in the credentials file.
+An Azure Key Vault named according to `key_vault_name` in `Credentialsfile.yaml` (e.g. `firestartr-kv`) must exist and be accessible by the service principal provided in the credentials file.
 
 The following secrets must exist inside the Key Vault (Azure Key Vault names use alphanumeric characters and dashes only — no forward slashes):
 
@@ -261,7 +261,7 @@ cloudProvider:
     storage_account_name: "tfstate<customer>"
     container_name: "tfstate"
     resource_group_name: "rg-firestartr-<env>"
-    key_vault_name: "firestartr-<customer>"
+    key_vault_name: "firestartr-kv"
   source: hashicorp/azurerm
   type: azurerm
   version: "~> 3.0"
