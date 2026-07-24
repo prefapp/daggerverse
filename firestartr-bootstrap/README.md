@@ -122,9 +122,6 @@ pushFiles:
       secrets:
         push: true # When the process finishes, the generated crs will be pushed to the crs repository.
         repo: "state-secrets" # Normally, the state-secrets repository will be called "state-secrets", but it is possible to change the name.
-  dotFirestartr:
-    push: true # When the process finishes, the generated crs will be pushed to the crs repository.
-    repo: ".firestartr" # Normally, the .firestartr repository will be called ".firestartr", but it is possible to change the name.
 
 components:
   - name: "dot-firestartr" # claim name
