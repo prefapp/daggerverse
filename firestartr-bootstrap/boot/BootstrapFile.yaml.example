@@ -11,8 +11,8 @@ defaultFirestartrGroup: firestartr # default group for firestartr users and rela
 
 firestartr:
   # Check latest available release at github.com/prefapp/gitops-k8s
-  operator: <operator_version> # Ex. v1.56.1
-  cli: <cli_version> # Ex. v1.56.1
+  operator: <operator_version> # Ex. v1.56.1 or "latest"
+  cli: <cli_version> # Ex. v1.56.1 or "latest"
 
 pushFiles:
   claims:
