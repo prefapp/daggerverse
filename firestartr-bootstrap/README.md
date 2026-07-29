@@ -127,6 +127,8 @@ components:
     features:
       - name: state_github
         version: latest  # Check available versions at github.com/prefapp/features
+    labels:
+      - plan
 
   - name: "state-infra"
     description: "Firestartr Terraform workspaces wet repository"
