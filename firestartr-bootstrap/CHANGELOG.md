@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.4.0...firestartr-bootstrap-v1.5.0) (2026-07-29)
+
+
+### Features
+
+* Add trunkBaseDevelopment to expander_branch_strategies.tmpl ([#489](https://github.com/prefapp/daggerverse/issues/489)) ([9a7d938](https://github.com/prefapp/daggerverse/commit/9a7d938d12b974054d60b2122692aa1eb307ae03))
+
+
+### Bug Fixes
+
+* Bootstrap defaults ([#487](https://github.com/prefapp/daggerverse/issues/487)) ([64edbe8](https://github.com/prefapp/daggerverse/commit/64edbe81781da6d0de6fab5fe7eccf00ac00b567))
+* update BootstrapFile.yaml.example ([#492](https://github.com/prefapp/daggerverse/issues/492)) ([922660d](https://github.com/prefapp/daggerverse/commit/922660d4bf87b1f1e257875293678d7fade6f8c8))
+
 ## [1.4.0](https://github.com/prefapp/daggerverse/compare/firestartr-bootstrap-v1.3.1...firestartr-bootstrap-v1.4.0) (2026-07-14)
 
 
