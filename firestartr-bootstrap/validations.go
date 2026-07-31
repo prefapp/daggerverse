@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"dagger/firestartr-bootstrap/internal/dagger"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/xeipuuv/gojsonschema"
 	"sigs.k8s.io/yaml"
@@ -140,7 +142,13 @@ func (m *FirestartrBootstrap) ValidateExistenceOfNeededImages(
 		m.Bootstrap.Firestartr.OperatorVersion,
 	)
 
-	err := validateExistenceOfImage(ctx, slimImage)
+	ghcrAuth := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("prefapp-bot:%s", m.Creds.GithubApp.PrefappBotPat)))
+	registryConfig := dag.SetSecret(
+		"ghcr-config",
+		fmt.Sprintf(`{"auths":{"ghcr.io":{"auth":"%s"}}}`, ghcrAuth),
+	)
+
+	err := validateExistenceOfImage(ctx, slimImage, registryConfig)
 	if err != nil {
 		return err
 	}
@@ -152,7 +160,7 @@ func (m *FirestartrBootstrap) ValidateExistenceOfNeededImages(
 		m.Creds.CloudProvider.Name,
 	))
 
-	err = validateExistenceOfImage(ctx, fullImage)
+	err = validateExistenceOfImage(ctx, fullImage, registryConfig)
 	if err != nil {
 		return err
 	}
@@ -164,24 +172,24 @@ func (m *FirestartrBootstrap) ValidateExistenceOfNeededImages(
 func validateExistenceOfImage(
 	ctx context.Context,
 	imageRef string,
+	registryToken *dagger.Secret,
 ) error {
 
 	// Use an image that has the 'crane' tool (from Google's container-registry tools)
 	craneContainer := dag.Container().
-		From("gcr.io/go-containerregistry/crane:latest")
-
-	craneArgs := []string{
-		"crane",
-		"manifest",
-		imageRef,
-	}
+		From("gcr.io/go-containerregistry/crane:latest").
+		WithEnvVariable("IMAGE_REF", imageRef).
+		WithMountedSecret("/root/.docker/config.json", registryToken)
 
 	_, err := craneContainer.
-		WithExec(craneArgs).
+		WithExec(
+			[]string{"manifest", "$IMAGE_REF"},
+			dagger.ContainerWithExecOpts{UseEntrypoint: true, Expand: true},
+		).
 		Stdout(ctx)
 
 	if err != nil {
-		return fmt.Errorf("image does not exist: %s", imageRef)
+		return fmt.Errorf("image does not exist or is not accessible: %s: %w", imageRef, err)
 	}
 
 	return nil
@@ -227,6 +235,7 @@ func (m *FirestartrBootstrap) ValidateOperatorPat(
 
 	base := dag.Container().From("alpine/curl").
 		WithExec([]string{"apk", "add", "jq"}).
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithSecretVariable("GITHUB_PAT", tokenSecret)
 
 	// Add jq to extract the 'login' field

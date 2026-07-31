@@ -60,7 +60,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(
 		Secret: Secret{
 			Type: "Opaque",
 			Data: map[string]string{
-				"GITHUB_APP_PEM_FILE": m.Creds.GithubAppOperator.Pem,
+				"GITHUB_APP_PEM_FILE": m.Creds.GithubApp.Pem,
 			},
 		},
 		Config: Config{
@@ -68,8 +68,8 @@ func (m *FirestartrBootstrap) BuildHelmValues(
 				"OPERATOR_KIND_LIST":               strings.Join(operatorKindList, ","),
 				"OPERATOR_NAMESPACE":               "default",
 				"OPERATOR_IGNORE_LEASE":            "true",
-				"GITHUB_APP_ID":                    m.Creds.GithubAppOperator.GhAppId,
-				"GITHUB_APP_INSTALLATION_ID":       m.Creds.GithubAppOperator.InstallationId,
+				"GITHUB_APP_ID":                    m.Creds.GithubApp.GhAppId,
+				"GITHUB_APP_INSTALLATION_ID":       m.Creds.GithubApp.InstallationId,
 				"PREFAPP_BOT_PAT":                  m.Creds.GithubApp.PrefappBotPat,
 				"NODE_TLS_REJECT_UNAUTHORIZED":     "0",
 				"ORG":                              m.GhOrg,
