@@ -36,7 +36,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(
 				Tag: fmt.Sprintf(
 					"%s_full-%s",
 					m.Bootstrap.Firestartr.OperatorVersion,
-					m.Creds.CloudProvider.Name,
+					m.Creds.CloudProvider.ImageFlavorSuffix(),
 				),
 				PullPolicy: "Always",
 			},
