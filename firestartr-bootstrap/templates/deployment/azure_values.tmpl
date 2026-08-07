@@ -1,0 +1,95 @@
+org: {{ .Org }}
+
+argoEvents:
+  host: {{ .Webhook.URL }}
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+  webhooks:
+    - state-infra
+    - state-github
+    - state-secrets
+  secretStoreKeysRefs:
+    webhookSecret: {{ .Webhook.Secret }}
+
+general:
+  image: {{ .Controller.Image }}
+  auth:
+    provider: azure
+    config:
+      azureIdentity:
+        clientId: "{{ .CloudProvider.Config.ClientId }}"
+        tenantId: "{{ .CloudProvider.Config.TenantId }}"
+
+externalSecrets:
+  auth:
+    provider: azure
+    config:
+      azureIdentity:
+        clientId: "{{ .CloudProvider.Config.ClientId }}"
+        tenantId: "{{ .CloudProvider.Config.TenantId }}"
+        vaultUrl: "https://{{ .CloudProvider.Config.KeyVaultName }}.vault.azure.net"
+
+controller:
+  enabled: true
+  secretStoreKeysRefs:
+    githubAppPem: "fs-pem"
+    githubAppId: "fs-app-id"
+  metrics:
+    enabled: true
+  datadog:
+    enabled: false
+
+crsAnalyzer:
+  enabled: false
+
+providerConfigs:
+  tfstate-{{ .Customer }}:
+    config: |
+      {
+        "storage_account_name": "{{ .CloudProvider.Config.StorageAccountName }}",
+        "container_name": "{{ .CloudProvider.Config.ContainerName }}",
+        "resource_group_name": "{{ .CloudProvider.Config.ResourceGroupName }}",
+        "subscription_id": "{{ .CloudProvider.Config.SubscriptionId }}",
+        "tenant_id": "{{ .CloudProvider.Config.TenantId }}",
+        "client_id": "{{ .CloudProvider.Config.ClientId }}",
+        "use_oidc": true
+      }
+    type: azurerm
+    source: "hashicorp/azurerm"
+    version: "~> 3.0"
+  github-{{ .Customer }}:
+    config: |
+      {
+        "owner": "{{ .Org }}",
+        "app_auth": {
+          "id": "${{"{{"}} secrets.GITHUB_APP_ID {{"}}"}}",
+          "installation_id": "${{"{{"}} secrets.GITHUB_APP_INSTALLATION_ID {{"}}"}}",
+          "pem_file": "${{"{{"}} secrets.GITHUB_APP_PEM_FILE {{"}}"}}"
+        }
+      }
+    secrets:
+      GITHUB_APP_PEM_FILE:
+        secretRef:
+          key: github-app-pem-file
+          secretStoreKeyRef: "fs-pem"
+      GITHUB_APP_ID:
+        secretRef:
+          key: github-app-id
+          secretStoreKeyRef: "fs-app-id"
+      GITHUB_APP_INSTALLATION_ID:
+        secretRef:
+          key: github-app-installation-id
+          secretStoreKeyRef: "fs-{{ .OrgLowerCase }}-installation-id"
+    type: github
+    source: integrations/github
+    version: "~> 6.0"
+
+tfPlanner:
+  enabled: true
+  secretStoreKeysRefs:
+    githubAppId: "fs-app-id"
+    githubAppPem: "fs-pem"
+
+argoRefresher:
+  enabled: true

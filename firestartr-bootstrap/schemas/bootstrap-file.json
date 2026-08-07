@@ -18,12 +18,22 @@
           "cli"
         ]
       },
+      "deploymentMode": {
+        "type": "string",
+        "enum": ["saas", "dedicated"],
+        "description": "Deployment topology. 'saas' targets the shared firestartr-<env> org (AWS). 'dedicated' targets the customer's own GitHub org (currently Azure only)."
+      },
       "env": {
         "type": "string",
         "enum": [
             "pre",
             "pro"
-        ]
+        ],
+        "description": "Environment name. Required for SaaS deployments; absent for dedicated deployments."
+      },
+      "domain": {
+        "type": "string",
+        "description": "Fully-qualified base domain for the dedicated deployment (e.g. 'azure-pre.firestartr.dev'). Required when deploymentMode is 'dedicated'."
       },
       "org": {
         "type": "string"
@@ -191,7 +201,6 @@
       }
     },
     "required": [
-      "env",
       "firestartr",
       "org",
       "pushFiles",
@@ -204,5 +213,20 @@
       "defaultBranchStrategy",
       "defaultFirestartrGroup",
       "defaultGroup"
-    ]
+    ],
+    "if": {
+      "properties": {
+        "deploymentMode": { "const": "dedicated" }
+      },
+      "required": ["deploymentMode"]
+    },
+    "then": {
+      "required": ["domain"],
+      "properties": {
+        "domain": { "type": "string", "minLength": 1 }
+      }
+    },
+    "else": {
+      "required": ["env"]
+    }
   }
