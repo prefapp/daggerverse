@@ -1,0 +1,89 @@
+# config
+organizations:
+  - name: prefapp
+    component_types:
+      - service
+      - library
+      - spa
+      - web
+      - batch
+      - config
+      - cli
+      - cac
+      - iac
+      - gha
+      - docs
+      - catalog
+      - generic
+    ciSystem: github
+    repositoriesDefault:
+      defaultBranch: main
+    lifecycle:
+      - experimental
+      - production
+      - deprecated
+      - archived
+    registries:
+      docker_releases_publication: prefappacrsnapshots.azureacr.com
+      docker_snapshots_publication: prefappacrreleases.azureacr.com
+      docker_ci: prefappacrci.azureacr.com
+    technologies:
+      - name: node
+        artifact_repositories:
+          releases:
+            url: npm.pkg.github.com
+            config:
+              vars:
+                - name: SCOPE
+                  value: prefapp
+              secrets:
+                - name: NPM_AUTH
+                  value: secrets.NPM_AUTH_TOKEN
+          snapshots:
+            url: npm.pkg.github.com
+            config:
+              vars:
+                - name: SCOPE
+                  value: prefapp
+              secrets:
+                - name: NPM_AUTH
+                  value: secrets.NPM_AUTH_TOKEN
+          dependencies:
+        allowed_component_types:
+          - library
+          - service
+        default_version: '16-npm'
+        versions:
+          - name: '18'
+            default_images:
+              build: 'node:18-slim'   
+              run: 'node:18-alpine'
+          
+          - name: '16-npm'
+            allowed_component_types:
+              - service
+            default_images:
+              build: 'node:16-npm'   
+              run: 'node:alpine-16-npm'
+              
+          - name: '16-yarn'
+            allowed_component_types:
+              - service
+            default_images:
+              build: 'node:16-yarn'   
+              run: 'node:alpine-16-yarn'
+              
+      - name: python
+        allowed_component_types:
+          - service
+        versions:
+          - name: '3.11.1-poetry'
+            # build_tool: [npm, yarn]
+            allowed_component_types:
+              - service
+            artifact_repositories:
+              releases: npm.pkg.github.com
+              snapshots: npm.pkg.org
+            default_images:
+              build: 'python:3.11.1-slim'   
+              run: 'python:3.11.1-alpine'

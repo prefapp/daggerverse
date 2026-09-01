@@ -1,0 +1,31 @@
+image: node:18
+version: firestartr.dev/ci/v1
+setup:
+  technology: node
+  version: 18
+
+tasks:
+
+  - name: install
+    run: npm install
+
+  - name: compile
+    needs: [install]
+    run: npm run build
+
+  - name: lint
+    needs: [compile]
+    # working_dir: packages/backend
+    run: npm run lint
+  
+    
+  - name: unit-test
+    needs: [install, lint]
+    run: |
+       npm run test
+ 
+  - name: publish
+    needs: install
+    run: |
+       npm build
+       npm publish
