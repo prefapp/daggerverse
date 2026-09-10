@@ -63,6 +63,7 @@ func (m *UpdateClaimsFeatures) New(
 	// If not provided, the GitHub CLI will be downloaded automatically.
 	// +optional
 	localGhCliPath *dagger.File,
+	// +optional
 	externalRepoGhToken *dagger.Secret,
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
