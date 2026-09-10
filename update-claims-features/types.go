@@ -6,7 +6,7 @@ type UpdateClaimsFeatures struct {
 	Repo                string
 	Org                 string
 	GhToken             *dagger.Secret
-	ExternalRepoGhToken *dagger.Secret
+	CustomFeaturesRepoGhToken *dagger.Secret
 	PrefappGhToken      *dagger.Secret
 	GhCliVersion        string
 	ClaimsDirPath       string

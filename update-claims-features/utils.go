@@ -282,10 +282,10 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 
 							var token *dagger.Secret
 							if repoStr != "prefapp/features" {
-								if m.ExternalRepoGhToken == nil {
-									return "", fmt.Errorf("external repo %q present but ExternalRepoGhToken is not provided", repoStr)
+								if m.CustomFeaturesRepoGhToken == nil {
+									return "", fmt.Errorf("external repo %q present but CustomFeaturesRepoGhToken is not provided", repoStr)
 								}
-								token = m.ExternalRepoGhToken
+								token = m.CustomFeaturesRepoGhToken
 							} else {
 								token = m.PrefappGhToken
 							}

@@ -64,7 +64,7 @@ func (m *UpdateClaimsFeatures) New(
 	// +optional
 	localGhCliPath *dagger.File,
 	// +optional
-	externalRepoGhToken *dagger.Secret,
+	customFeaturesRepoGhToken *dagger.Secret,
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
 	var featuresToUpdateList []string = nil
@@ -81,20 +81,20 @@ func (m *UpdateClaimsFeatures) New(
 	}
 
 	return &UpdateClaimsFeatures{
-		Repo:                repo,
-		Org:                 strings.Split(repo, "/")[0],
-		GhToken:             ghToken,
-		PrefappGhToken:      prefappGhToken,
-		GhCliVersion:        ghCliVersion,
-		ClaimsDir:           claimsDir,
-		ClaimsDirPath:       claimsDirPath,
-		DefaultBranch:       defaultBranch,
-		ClaimsToUpdate:      claimsToUpdateList,
-		FeaturesToUpdate:    featuresToUpdateList,
-		VersionConstraint:   versionConstraint,
-		Automerge:           automerge,
-		LocalGhCliPath:      localGhCliPath,
-		ExternalRepoGhToken: externalRepoGhToken,
+		Repo:                      repo,
+		Org:                       strings.Split(repo, "/")[0],
+		GhToken:                   ghToken,
+		PrefappGhToken:            prefappGhToken,
+		GhCliVersion:              ghCliVersion,
+		ClaimsDir:                 claimsDir,
+		ClaimsDirPath:             claimsDirPath,
+		DefaultBranch:             defaultBranch,
+		ClaimsToUpdate:            claimsToUpdateList,
+		FeaturesToUpdate:          featuresToUpdateList,
+		VersionConstraint:         versionConstraint,
+		Automerge:                 automerge,
+		LocalGhCliPath:            localGhCliPath,
+		CustomFeaturesRepoGhToken: customFeaturesRepoGhToken,
 	}, nil
 }
 
@@ -167,7 +167,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 	// Build a map of repo -> features to fetch, based on features declared in
 	// claims. If a feature declares a "repo" field (owner/repo) it will be
-	// fetched from there using ExternalRepoGhToken; otherwise it defaults to
+	// fetched from there using CustomFeaturesRepoGhToken; otherwise it defaults to
 	// prefapp/features.
 	repoToFeatures := map[string]map[string]struct{}{}
 	for _, claim := range claimsMap {
@@ -201,10 +201,10 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		// select token
 		var token *dagger.Secret
 		if repoStr != "prefapp/features" {
-			if m.ExternalRepoGhToken == nil {
-				return nil, fmt.Errorf("external repo %q present but ExternalRepoGhToken is not provided", repoStr)
+			if m.CustomFeaturesRepoGhToken == nil {
+				return nil, fmt.Errorf("external repo %q present but CustomFeaturesRepoGhToken is not provided", repoStr)
 			}
-			token = m.ExternalRepoGhToken
+			token = m.CustomFeaturesRepoGhToken
 		} else {
 			token = m.PrefappGhToken
 		}
