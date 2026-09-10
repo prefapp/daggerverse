@@ -63,6 +63,7 @@ func (m *UpdateClaimsFeatures) New(
 	// If not provided, the GitHub CLI will be downloaded automatically.
 	// +optional
 	localGhCliPath *dagger.File,
+	externalRepoGhToken *dagger.Secret,
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
 	var featuresToUpdateList []string = nil
@@ -79,19 +80,20 @@ func (m *UpdateClaimsFeatures) New(
 	}
 
 	return &UpdateClaimsFeatures{
-		Repo:              repo,
-		Org:               strings.Split(repo, "/")[0],
-		GhToken:           ghToken,
-		PrefappGhToken:    prefappGhToken,
-		GhCliVersion:      ghCliVersion,
-		ClaimsDir:         claimsDir,
-		ClaimsDirPath:     claimsDirPath,
-		DefaultBranch:     defaultBranch,
-		ClaimsToUpdate:    claimsToUpdateList,
-		FeaturesToUpdate:  featuresToUpdateList,
-		VersionConstraint: versionConstraint,
-		Automerge:         automerge,
-		LocalGhCliPath:    localGhCliPath,
+		Repo:                repo,
+		Org:                 strings.Split(repo, "/")[0],
+		GhToken:             ghToken,
+		PrefappGhToken:      prefappGhToken,
+		GhCliVersion:        ghCliVersion,
+		ClaimsDir:           claimsDir,
+		ClaimsDirPath:       claimsDirPath,
+		DefaultBranch:       defaultBranch,
+		ClaimsToUpdate:      claimsToUpdateList,
+		FeaturesToUpdate:    featuresToUpdateList,
+		VersionConstraint:   versionConstraint,
+		Automerge:           automerge,
+		LocalGhCliPath:      localGhCliPath,
+		ExternalRepoGhToken: externalRepoGhToken,
 	}, nil
 }
 
@@ -281,7 +283,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			releaseBody, err := m.getPrBodyForFeatureUpdate(
 				ctx,
 				updatedFeaturesList,
-				allFeaturesMap,
+				claimAllFeatures,
 				currentFeatureVersionsMap,
 			)
 			if err != nil {
