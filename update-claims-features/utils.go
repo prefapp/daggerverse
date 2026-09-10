@@ -228,7 +228,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 			updatedFeatureVersionSemver, err := semver.NewVersion(updatedFeatureVersion)
 
 			if err != nil {
-				return "", err
+				return "", fmt.Errorf("invalid semantic version %q for feature %s: %w", updatedFeatureVersion, updatedFeatureName, err)
 			}
 
 			if originalVersionMap[updatedFeatureName] != "" && updatedFeatureVersion != "" {
@@ -258,7 +258,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 					for _, featureVersion := range allFeaturesMap[updatedFeatureName] {
 						featureVersionSemver, err := semver.NewVersion(featureVersion)
 						if err != nil {
-							return "", err
+							return "", fmt.Errorf("invalid semantic version %q for feature %s: %w", featureVersion, updatedFeatureName, err)
 						}
 
 						// allFeaturesMap contains every release for every feature, so

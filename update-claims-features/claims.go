@@ -98,7 +98,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 							featuresMap[featureName],
 						)
 						if err != nil {
-							return []map[string]any{}, false, false, err
+							return []map[string]any{}, false, false, fmt.Errorf("invalid semantic version %q for feature %s: %w", featuresMap[featureName], featureName, err)
 						}
 
 						versionIsDifferent, err := semver.NewConstraint(
