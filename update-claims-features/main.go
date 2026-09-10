@@ -162,24 +162,108 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		)
 	}
 
-	ghReleaseListResult, err := m.getReleases(ctx)
-	if err != nil {
-		return nil, err
+	// Build a map of repo -> features to fetch, based on features declared in
+	// claims. If a feature declares a "repo" field (owner/repo) it will be
+	// fetched from there using ExternalRepoGhToken; otherwise it defaults to
+	// prefapp/features.
+	repoToFeatures := map[string]map[string]struct{}{}
+	for _, claim := range claimsMap {
+		featuresProperty, hasFeatures := claim["providers"].(map[string]any)["github"].(map[string]any)["features"]
+		if !hasFeatures {
+			continue
+		}
+
+		claimFeatures := featuresProperty.([]any)
+		for _, feature := range claimFeatures {
+			fm := feature.(map[string]any)
+			featureName := fm["name"].(string)
+			repoStr := "prefapp/features"
+			if r, ok := fm["repo"]; ok {
+				if rs, ok2 := r.(string); ok2 && strings.TrimSpace(rs) != "" {
+					repoStr = rs
+				}
+			}
+
+			if repoToFeatures[repoStr] == nil {
+				repoToFeatures[repoStr] = map[string]struct{}{}
+			}
+			repoToFeatures[repoStr][featureName] = struct{}{}
+		}
 	}
 
-	latestFeaturesMap, allFeaturesMap, err := m.getFeaturesMapData(
-		ghReleaseListResult,
-	)
-	if err != nil {
-		return nil, err
+	// For each repo, fetch releases and build maps
+	repoLatestMap := map[string]map[string]string{}
+	repoAllMap := map[string]map[string][]string{}
+	for repoStr, featuresSet := range repoToFeatures {
+		// select token
+		var token *dagger.Secret
+		if repoStr != "prefapp/features" {
+			if m.ExternalRepoGhToken == nil {
+				return nil, fmt.Errorf("external repo %q present but ExternalRepoGhToken is not provided", repoStr)
+			}
+			token = m.ExternalRepoGhToken
+		} else {
+			token = m.PrefappGhToken
+		}
+
+		// convert set to slice
+		featuresSlice := []string{}
+		for f := range featuresSet {
+			featuresSlice = append(featuresSlice, f)
+		}
+
+		ghReleaseListResult, err := m.getReleasesForRepo(ctx, repoStr, featuresSlice, token)
+		if err != nil {
+			return nil, err
+		}
+
+		latest, all, err := m.getFeaturesMapData(ghReleaseListResult)
+		if err != nil {
+			return nil, err
+		}
+
+		repoLatestMap[repoStr] = latest
+		repoAllMap[repoStr] = all
 	}
 
+	// Iterate claims and resolve per-feature repo to construct claim-specific
+	// latest/all maps that updateClaimFeatures expects (featureName -> latest)
 	for entry, claim := range claimsMap {
 		claimName := claim["name"].(string)
 		claimKind := claim["kind"].(string)
+		// Build claim-specific latest/all features maps by resolving per-feature repo
+		claimLatestMap := map[string]string{}
+		claimAllFeatures := map[string][]string{}
+		featuresProperty, hasFeatures := claim["providers"].(map[string]any)["github"].(map[string]any)["features"]
+		if hasFeatures {
+			claimFeatures := featuresProperty.([]any)
+			for _, feature := range claimFeatures {
+				fm := feature.(map[string]any)
+				name := fm["name"].(string)
+				repoStr := "prefapp/features"
+				if r, ok := fm["repo"]; ok {
+					if rs, ok2 := r.(string); ok2 && strings.TrimSpace(rs) != "" {
+						repoStr = rs
+					}
+				}
+
+				repoLatest, ok := repoLatestMap[repoStr]
+				if !ok {
+					return nil, fmt.Errorf("no release data found for repo %q required by feature %s", repoStr, name)
+				}
+				claimLatestMap[name] = repoLatest[name]
+
+				if repoAllMap[repoStr] != nil {
+					claimAllFeatures[name] = repoAllMap[repoStr][name]
+				} else {
+					claimAllFeatures[name] = []string{}
+				}
+			}
+		}
+
 		updatedFeaturesList, createPR, hydrateClaim, err := m.updateClaimFeatures(
 			claim,
-			latestFeaturesMap,
+			claimLatestMap,
 		)
 		if err != nil {
 			summary.addUpdateSummaryRow(

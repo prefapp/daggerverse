@@ -271,7 +271,26 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 							fullFeatureTag := fmt.Sprintf(
 								"%s-v%s", updatedFeatureName, featureVersion,
 							)
-							changelog, err := m.getReleaseChangelog(ctx, fullFeatureTag)
+
+							// Resolve per-feature repo and select token
+							repoStr := "prefapp/features"
+							if rf, ok := updatedFeature["repo"]; ok {
+								if rfs, ok2 := rf.(string); ok2 && strings.TrimSpace(rfs) != "" {
+									repoStr = rfs
+								}
+							}
+
+							var token *dagger.Secret
+							if repoStr != "prefapp/features" {
+								if m.ExternalRepoGhToken == nil {
+									return "", fmt.Errorf("external repo %q present but ExternalRepoGhToken is not provided", repoStr)
+								}
+								token = m.ExternalRepoGhToken
+							} else {
+								token = m.PrefappGhToken
+							}
+
+							changelog, err := m.getReleaseChangelog(ctx, fullFeatureTag, repoStr, token)
 
 							if err != nil {
 								fmt.Printf(

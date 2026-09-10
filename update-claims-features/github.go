@@ -145,6 +145,92 @@ func (m *UpdateClaimsFeatures) getReleases(ctx context.Context) (string, error) 
 	return ghReleaseListResult, err
 }
 
+// getReleasesForRepo fetches releases for the given repo (owner/repo) using the
+// provided token. features slice should contain feature name prefixes to query
+// for (can be empty only if calling code expects all releases).
+func (m *UpdateClaimsFeatures) getReleasesForRepo(ctx context.Context, repo string, features []string, token *dagger.Secret) (string, error) {
+	ghReleaseListResult := ""
+	var err error
+	// validate repo format
+	parts := strings.SplitN(strings.TrimSpace(repo), "/", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", fmt.Errorf("invalid repo %q, expected owner/repo", repo)
+	}
+	owner := parts[0]
+	name := parts[1]
+
+	cmd := []string{
+		"gh",
+		"api",
+		"graphql",
+		"-F",
+		fmt.Sprintf("owner=%s", owner),
+		"-F",
+		fmt.Sprintf("name=%s", name),
+	}
+
+	queryNameTemplate := "feature_query_%d"
+	queryVarTemplate := "feature_var_%d"
+	queryVarList := "$owner: String!, $name: String!"
+	currentQueryIndex := 0
+
+	if len(features) > 0 {
+		query := `query GetReleases(%s) {
+  repository(owner: $owner, name: $name) {
+    %s
+  }
+}`
+		featureQuery := ""
+
+		for _, feature := range features {
+			if feature == "" {
+				continue
+			}
+
+			varName := fmt.Sprintf(queryVarTemplate, currentQueryIndex)
+
+			featureQuery = fmt.Sprintf(`%s
+%s: refs(refPrefix: "refs/tags/", last: 100, query: $%s) {
+  nodes {
+    name
+  }
+}`, featureQuery, fmt.Sprintf(queryNameTemplate, currentQueryIndex), varName)
+
+			queryVarList = fmt.Sprintf("%s, $%s: String!", queryVarList, varName)
+			cmd = append(cmd, "-F", fmt.Sprintf("%s=%s-", varName, feature))
+
+			currentQueryIndex++
+		}
+
+		if featureQuery == "" {
+			return "", fmt.Errorf("no valid features to update specified for repo %s", repo)
+		}
+
+		query = fmt.Sprintf(query, queryVarList, featureQuery)
+		cmd = append(
+			cmd,
+			"-f",
+			fmt.Sprintf("query=%s", query),
+			"--jq",
+			".data.repository.[].nodes[].name",
+		)
+
+		ghOpts := dagger.GhOpts{Version: m.GhCliVersion}
+		ctrOpts := dagger.GhContainerOpts{Token: token, Repo: repo}
+
+		ghReleaseListResult, err = dag.Gh(ghOpts).Container(ctrOpts).
+			WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
+			WithWorkdir(m.ClaimsDirPath).
+			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+			WithExec(cmd).
+			Stdout(ctx)
+	} else {
+		return "", fmt.Errorf("no features to update specified for repo %s", repo)
+	}
+
+	return ghReleaseListResult, err
+}
+
 func (m *UpdateClaimsFeatures) workflowRun(
 	ctx context.Context,
 	claimName string,
@@ -294,41 +380,53 @@ func (m *UpdateClaimsFeatures) getComponentValidationSchema(
 
 var releasesChangelog = make(map[string]string)
 
+// getReleaseChangelog fetches the changelog for a release tag in the given
+// repo using the provided token. Caches results keyed by "repo|tag".
 func (m *UpdateClaimsFeatures) getReleaseChangelog(
 	ctx context.Context,
 	releaseTag string,
+	repo string,
+	token *dagger.Secret,
 ) (string, error) {
-	changelog := ""
-	var err error
-
-	if releasesChangelog[releaseTag] == "" {
-		fmt.Printf(
-			"☢️ No cached changelog for tag %s found, getting it from GitHub\n",
-			releaseTag,
-		)
-		changelog, err = dag.Gh(dagger.GhOpts{
-			Version: m.GhCliVersion,
-		}).Container(dagger.GhContainerOpts{
-			Token: m.PrefappGhToken,
-			Repo:  "prefapp/features",
-		}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
-			WithWorkdir(m.ClaimsDirPath).
-			WithEnvVariable("CACHE_BUSTER", time.Now().String()).
-			WithExec([]string{
-				"gh",
-				"release",
-				"view",
-				releaseTag,
-				"--json",
-				"body",
-			}).
-			Stdout(ctx)
-		releasesChangelog[releaseTag] = changelog
-	} else {
-		fmt.Printf("☢️ Using cached changelog for tag %s\n", releaseTag)
-		changelog = releasesChangelog[releaseTag]
-		err = nil
+	cacheKey := fmt.Sprintf("%s|%s", repo, releaseTag)
+	if releasesChangelog[cacheKey] != "" {
+		fmt.Printf("☢️ Using cached changelog for %s\n", cacheKey)
+		return releasesChangelog[cacheKey], nil
 	}
 
-	return changelog, err
+	// validate repo
+	parts := strings.SplitN(strings.TrimSpace(repo), "/", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", fmt.Errorf("invalid repo %q, expected owner/repo", repo)
+	}
+
+	if token == nil {
+		return "", fmt.Errorf("no token provided for repo %q", repo)
+	}
+
+	fmt.Printf("☢️ No cached changelog for %s found, getting it from GitHub\n", cacheKey)
+	changelog, err := dag.Gh(dagger.GhOpts{
+		Version: m.GhCliVersion,
+	}).Container(dagger.GhContainerOpts{
+		Token: token,
+		Repo:  repo,
+	}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
+		WithWorkdir(m.ClaimsDirPath).
+		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
+		WithExec([]string{
+			"gh",
+			"release",
+			"view",
+			releaseTag,
+			"--json",
+			"body",
+		}).
+		Stdout(ctx)
+
+	if err != nil {
+		return "", err
+	}
+
+	releasesChangelog[cacheKey] = changelog
+	return changelog, nil
 }
