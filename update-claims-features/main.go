@@ -63,6 +63,9 @@ func (m *UpdateClaimsFeatures) New(
 	// If not provided, the GitHub CLI will be downloaded automatically.
 	// +optional
 	localGhCliPath *dagger.File,
+	// GitHub token for authenticating access to feature repositories
+	// specified by a claim's repo field. Required when any claim uses a
+	// custom features repository.
 	// +optional
 	customFeaturesRepoGhToken *dagger.Secret,
 ) (*UpdateClaimsFeatures, error) {
@@ -180,6 +183,9 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		for _, feature := range claimFeatures {
 			fm := feature.(map[string]any)
 			featureName := fm["name"].(string)
+			if !slices.Contains(m.FeaturesToUpdate, featureName) {
+				continue
+			}
 			repoStr := "prefapp/features"
 			if r, ok := fm["repo"]; ok {
 				if rs, ok2 := r.(string); ok2 && strings.TrimSpace(rs) != "" {
