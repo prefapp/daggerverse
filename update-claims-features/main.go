@@ -249,6 +249,9 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			for _, feature := range claimFeatures {
 				fm := feature.(map[string]any)
 				name := fm["name"].(string)
+				if !slices.Contains(m.FeaturesToUpdate, name) {
+					continue
+				}
 				repoStr := "prefapp/features"
 				if r, ok := fm["repo"]; ok {
 					if rs, ok2 := r.(string); ok2 && strings.TrimSpace(rs) != "" {
