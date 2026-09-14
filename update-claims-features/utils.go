@@ -109,11 +109,16 @@ func repoFeatureKey(repo, name string) string {
 }
 
 // featureRepo returns the repository a feature is pinned to, defaulting to
-// defaultFeaturesRepo when it does not declare a "repo" field.
+// defaultFeaturesRepo when it does not declare a "repo" field. The returned
+// value is trimmed to avoid passing whitespace-padded identifiers to the
+// GitHub CLI (via GH_REPO).
 func featureRepo(feature map[string]any) string {
 	if r, ok := feature["repo"]; ok {
-		if rs, ok2 := r.(string); ok2 && strings.TrimSpace(rs) != "" {
-			return rs
+		if rs, ok2 := r.(string); ok2 {
+			trimmed := strings.TrimSpace(rs)
+			if trimmed != "" {
+				return trimmed
+			}
 		}
 	}
 	return defaultFeaturesRepo

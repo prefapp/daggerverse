@@ -231,7 +231,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	}
 
 	// Iterate claims and resolve per-feature repo to construct claim-specific
-	// latest/all maps that updateClaimFeatures expects (featureName -> latest)
+	// latest/all maps that updateClaimFeatures expects (repo|featureName -> latest)
 	for entry, claim := range claimsMap {
 		claimName := claim["name"].(string)
 		claimKind := claim["kind"].(string)
