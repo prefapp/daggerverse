@@ -70,14 +70,14 @@ func (m *UpdateClaimsFeatures) MergePullRequest(ctx context.Context, prLink stri
 }
 
 // getReleasesForRepo fetches releases for the given repo (owner/repo) using the
-// provided token. features slice should contain feature name prefixes to query
-// for (can be empty only if calling code expects all releases).
+// provided token. features must contain a non-empty list of feature name
+// prefixes to query for; an empty list is an error.
 func (m *UpdateClaimsFeatures) getReleasesForRepo(ctx context.Context, repo string, features []string, token *dagger.Secret) (string, error) {
 	ghReleaseListResult := ""
 	var err error
 	// validate repo format
 	parts := strings.SplitN(strings.TrimSpace(repo), "/", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" || strings.Contains(parts[1], "/") {
 		return "", fmt.Errorf("invalid repo %q, expected owner/repo", repo)
 	}
 	owner := parts[0]
@@ -245,7 +245,6 @@ func (m *UpdateClaimsFeatures) getAllValidationSchemas(
 		Version: m.GhCliVersion,
 	}).Container(dagger.GhContainerOpts{
 		Token: m.PrefappGhToken,
-		Repo:  "prefapp/features",
 	}).WithMountedDirectory(m.ClaimsDirPath, m.ClaimsDir).
 		WithWorkdir(m.ClaimsDirPath).
 		WithEnvVariable("CACHE_BUSTER", time.Now().String()).
@@ -320,7 +319,7 @@ func (m *UpdateClaimsFeatures) getReleaseChangelog(
 
 	// validate repo
 	parts := strings.SplitN(strings.TrimSpace(repo), "/", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" || strings.Contains(parts[1], "/") {
 		return "", fmt.Errorf("invalid repo %q, expected owner/repo", repo)
 	}
 

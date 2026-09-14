@@ -186,12 +186,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			if !slices.Contains(m.FeaturesToUpdate, featureName) {
 				continue
 			}
-			repoStr := "prefapp/features"
-			if r, ok := fm["repo"]; ok {
-				if rs, ok2 := r.(string); ok2 && strings.TrimSpace(rs) != "" {
-					repoStr = rs
-				}
-			}
+			repoStr := featureRepo(fm)
 
 			if repoToFeatures[repoStr] == nil {
 				repoToFeatures[repoStr] = map[string]struct{}{}
@@ -206,7 +201,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	for repoStr, featuresSet := range repoToFeatures {
 		// select token
 		var token *dagger.Secret
-		if repoStr != "prefapp/features" {
+		if repoStr != defaultFeaturesRepo {
 			if m.CustomFeaturesRepoGhToken == nil {
 				return nil, fmt.Errorf("external repo %q present but CustomFeaturesRepoGhToken is not provided", repoStr)
 			}
@@ -252,23 +247,18 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 				if !slices.Contains(m.FeaturesToUpdate, name) {
 					continue
 				}
-				repoStr := "prefapp/features"
-				if r, ok := fm["repo"]; ok {
-					if rs, ok2 := r.(string); ok2 && strings.TrimSpace(rs) != "" {
-						repoStr = rs
-					}
-				}
+				repoStr := featureRepo(fm)
 
 				repoLatest, ok := repoLatestMap[repoStr]
 				if !ok {
 					return nil, fmt.Errorf("no release data found for repo %q required by feature %s", repoStr, name)
 				}
-				claimLatestMap[name] = repoLatest[name]
+				claimLatestMap[repoFeatureKey(repoStr, name)] = repoLatest[name]
 
 				if repoAllMap[repoStr] != nil {
-					claimAllFeatures[name] = repoAllMap[repoStr][name]
+					claimAllFeatures[repoFeatureKey(repoStr, name)] = repoAllMap[repoStr][name]
 				} else {
-					claimAllFeatures[name] = []string{}
+					claimAllFeatures[repoFeatureKey(repoStr, name)] = []string{}
 				}
 			}
 		}
