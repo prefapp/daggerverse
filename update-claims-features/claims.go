@@ -84,10 +84,12 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 		featuresList := featuresListProperty.([]any)
 
 		for _, feature := range featuresList {
-			featureDataCopy := cloneMap(feature.(map[string]any))
-			featureName := feature.(map[string]any)["name"].(string)
-			featureVersionProperty, hasVersion := feature.(map[string]any)["version"]
-			refProperty, hasRef := feature.(map[string]any)["ref"]
+			featureData := feature.(map[string]any)
+			featureDataCopy := cloneMap(featureData)
+			featureName := featureData["name"].(string)
+			featureVersionProperty, hasVersion := featureData["version"]
+			refProperty, hasRef := featureData["ref"]
+			featureLatestKey := repoFeatureKey(featureRepo(featureData), featureName)
 
 			if m.FeaturesToUpdate == nil || slices.Contains(m.FeaturesToUpdate, featureName) {
 				if hasVersion {
@@ -95,7 +97,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 
 					if featureVersion != "" {
 						featureVersionSemver, err := semver.NewVersion(
-							featuresMap[featureName],
+							featuresMap[featureLatestKey],
 						)
 						if err != nil {
 							return []map[string]any{}, false, false, err
@@ -113,7 +115,7 @@ func (m *UpdateClaimsFeatures) updateClaimFeatures(
 						if versionIsDifferent.Check(featureVersionSemver) {
 							createPR = true
 
-							featureDataCopy["version"] = featuresMap[featureName]
+							featureDataCopy["version"] = featuresMap[featureLatestKey]
 						}
 					} else {
 						return []map[string]any{}, false, false, fmt.Errorf(
