@@ -32,17 +32,22 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	ctx context.Context,
 	claimPath string,
 	schemaLoader *gojsonschema.Schema,
-) (map[string]any, error) {
+) (*yaml.Node, map[string]any, error) {
 	file := m.ClaimsDir.File(claimPath)
 	contents, err := file.Contents(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	var claim map[string]any
-	err = yaml.Unmarshal([]byte(contents), &claim)
+	var claimNode yaml.Node
+	err = yaml.Unmarshal([]byte(contents), &claimNode)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
+	}
+
+	claim, err := nodeToMap(&claimNode)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	claimKindProperty, hasKind := claim["kind"]
@@ -50,7 +55,7 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 	if hasKind && claimKindProperty.(string) == "ComponentClaim" {
 		schemaErrs, err := validateClaimMap(claim, schemaLoader)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		if schemaErrs == "" {
@@ -60,15 +65,15 @@ func (m *UpdateClaimsFeatures) getClaimIfKindComponent(
 				slices.Contains(m.ClaimsToUpdate, claimName) ||
 				slices.Contains(m.ClaimsToUpdate, claimProviderName) {
 
-				return claim, nil
+				return &claimNode, claim, nil
 
 			}
 		} else {
-			return nil, fmt.Errorf("Claim %s did not pass validation:\n%s\nSkipping\n", claimPath, schemaErrs)
+			return nil, nil, fmt.Errorf("Claim %s did not pass validation:\n%s\nSkipping\n", claimPath, schemaErrs)
 		}
 	}
 
-	return nil, nil
+	return nil, nil, nil
 }
 
 func (m *UpdateClaimsFeatures) updateClaimFeatures(
