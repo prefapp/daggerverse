@@ -3,19 +3,20 @@ package main
 import "dagger/update-claims-features/internal/dagger"
 
 type UpdateClaimsFeatures struct {
-	Repo              string
-	Org               string
-	GhToken           *dagger.Secret
-	PrefappGhToken    *dagger.Secret
-	GhCliVersion      string
-	ClaimsDirPath     string
-	ClaimsDir         *dagger.Directory
-	DefaultBranch     string
-	ClaimsToUpdate    []string
-	FeaturesToUpdate  []string
-	VersionConstraint string
-	Automerge         bool
-	LocalGhCliPath    *dagger.File
+	Repo                string
+	Org                 string
+	GhToken             *dagger.Secret
+	CustomFeaturesRepoGhToken *dagger.Secret
+	PrefappGhToken      *dagger.Secret
+	GhCliVersion        string
+	ClaimsDirPath       string
+	ClaimsDir           *dagger.Directory
+	DefaultBranch       string
+	ClaimsToUpdate      []string
+	FeaturesToUpdate    []string
+	VersionConstraint   string
+	Automerge           bool
+	LocalGhCliPath      *dagger.File
 }
 
 type Pr struct {

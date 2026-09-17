@@ -63,6 +63,11 @@ func (m *UpdateClaimsFeatures) New(
 	// If not provided, the GitHub CLI will be downloaded automatically.
 	// +optional
 	localGhCliPath *dagger.File,
+	// GitHub token for authenticating access to feature repositories
+	// specified by a claim's repo field. Required when any claim uses a
+	// custom features repository.
+	// +optional
+	customFeaturesRepoGhToken *dagger.Secret,
 ) (*UpdateClaimsFeatures, error) {
 	var claimsToUpdateList []string = nil
 	var featuresToUpdateList []string = nil
@@ -79,19 +84,20 @@ func (m *UpdateClaimsFeatures) New(
 	}
 
 	return &UpdateClaimsFeatures{
-		Repo:              repo,
-		Org:               strings.Split(repo, "/")[0],
-		GhToken:           ghToken,
-		PrefappGhToken:    prefappGhToken,
-		GhCliVersion:      ghCliVersion,
-		ClaimsDir:         claimsDir,
-		ClaimsDirPath:     claimsDirPath,
-		DefaultBranch:     defaultBranch,
-		ClaimsToUpdate:    claimsToUpdateList,
-		FeaturesToUpdate:  featuresToUpdateList,
-		VersionConstraint: versionConstraint,
-		Automerge:         automerge,
-		LocalGhCliPath:    localGhCliPath,
+		Repo:                      repo,
+		Org:                       strings.Split(repo, "/")[0],
+		GhToken:                   ghToken,
+		PrefappGhToken:            prefappGhToken,
+		GhCliVersion:              ghCliVersion,
+		ClaimsDir:                 claimsDir,
+		ClaimsDirPath:             claimsDirPath,
+		DefaultBranch:             defaultBranch,
+		ClaimsToUpdate:            claimsToUpdateList,
+		FeaturesToUpdate:          featuresToUpdateList,
+		VersionConstraint:         versionConstraint,
+		Automerge:                 automerge,
+		LocalGhCliPath:            localGhCliPath,
+		CustomFeaturesRepoGhToken: customFeaturesRepoGhToken,
 	}, nil
 }
 
@@ -162,24 +168,104 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		)
 	}
 
-	ghReleaseListResult, err := m.getReleases(ctx)
-	if err != nil {
-		return nil, err
+	// Build a map of repo -> features to fetch, based on features declared in
+	// claims. If a feature declares a "repo" field (owner/repo) it will be
+	// fetched from there using CustomFeaturesRepoGhToken; otherwise it defaults to
+	// prefapp/features.
+	repoToFeatures := map[string]map[string]struct{}{}
+	for _, claim := range claimsMap {
+		featuresProperty, hasFeatures := claim["providers"].(map[string]any)["github"].(map[string]any)["features"]
+		if !hasFeatures {
+			continue
+		}
+
+		claimFeatures := featuresProperty.([]any)
+		for _, feature := range claimFeatures {
+			fm := feature.(map[string]any)
+			featureName := fm["name"].(string)
+			if !slices.Contains(m.FeaturesToUpdate, featureName) {
+				continue
+			}
+			repoStr := featureRepo(fm)
+
+			if repoToFeatures[repoStr] == nil {
+				repoToFeatures[repoStr] = map[string]struct{}{}
+			}
+			repoToFeatures[repoStr][featureName] = struct{}{}
+		}
 	}
 
-	latestFeaturesMap, allFeaturesMap, err := m.getFeaturesMapData(
-		ghReleaseListResult,
-	)
-	if err != nil {
-		return nil, err
+	// For each repo, fetch releases and build maps
+	repoLatestMap := map[string]map[string]string{}
+	repoAllMap := map[string]map[string][]string{}
+	for repoStr, featuresSet := range repoToFeatures {
+		// select token
+		var token *dagger.Secret
+		if repoStr != defaultFeaturesRepo {
+			if m.CustomFeaturesRepoGhToken == nil {
+				return nil, fmt.Errorf("external repo %q present but CustomFeaturesRepoGhToken is not provided", repoStr)
+			}
+			token = m.CustomFeaturesRepoGhToken
+		} else {
+			token = m.PrefappGhToken
+		}
+
+		// convert set to slice
+		featuresSlice := []string{}
+		for f := range featuresSet {
+			featuresSlice = append(featuresSlice, f)
+		}
+
+		ghReleaseListResult, err := m.getReleasesForRepo(ctx, repoStr, featuresSlice, token)
+		if err != nil {
+			return nil, err
+		}
+
+		latest, all, err := m.getFeaturesMapData(ghReleaseListResult)
+		if err != nil {
+			return nil, err
+		}
+
+		repoLatestMap[repoStr] = latest
+		repoAllMap[repoStr] = all
 	}
 
+	// Iterate claims and resolve per-feature repo to construct claim-specific
+	// latest/all maps that updateClaimFeatures expects (repo|featureName -> latest)
 	for entry, claim := range claimsMap {
 		claimName := claim["name"].(string)
 		claimKind := claim["kind"].(string)
+		// Build claim-specific latest/all features maps by resolving per-feature repo
+		claimLatestMap := map[string]string{}
+		claimAllFeatures := map[string][]string{}
+		featuresProperty, hasFeatures := claim["providers"].(map[string]any)["github"].(map[string]any)["features"]
+		if hasFeatures {
+			claimFeatures := featuresProperty.([]any)
+			for _, feature := range claimFeatures {
+				fm := feature.(map[string]any)
+				name := fm["name"].(string)
+				if !slices.Contains(m.FeaturesToUpdate, name) {
+					continue
+				}
+				repoStr := featureRepo(fm)
+
+				repoLatest, ok := repoLatestMap[repoStr]
+				if !ok {
+					return nil, fmt.Errorf("no release data found for repo %q required by feature %s", repoStr, name)
+				}
+				claimLatestMap[repoFeatureKey(repoStr, name)] = repoLatest[name]
+
+				if repoAllMap[repoStr] != nil {
+					claimAllFeatures[repoFeatureKey(repoStr, name)] = repoAllMap[repoStr][name]
+				} else {
+					claimAllFeatures[repoFeatureKey(repoStr, name)] = []string{}
+				}
+			}
+		}
+
 		updatedFeaturesList, createPR, hydrateClaim, err := m.updateClaimFeatures(
 			claim,
-			latestFeaturesMap,
+			claimLatestMap,
 		)
 		if err != nil {
 			summary.addUpdateSummaryRow(
@@ -197,7 +283,7 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			releaseBody, err := m.getPrBodyForFeatureUpdate(
 				ctx,
 				updatedFeaturesList,
-				allFeaturesMap,
+				claimAllFeatures,
 				currentFeatureVersionsMap,
 			)
 			if err != nil {
