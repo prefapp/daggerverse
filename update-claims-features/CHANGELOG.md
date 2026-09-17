@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.2.1...update-claims-features-v1.2.2) (2026-09-17)
+
+
+### Bug Fixes
+
+* Hardcoded `prefapp/features` references ([#495](https://github.com/prefapp/daggerverse/issues/495)) ([f2bf99f](https://github.com/prefapp/daggerverse/commit/f2bf99fc138708664c9dc166b40731dcc8c60296))
+
 ## [1.2.1](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.2.0...update-claims-features-v1.2.1) (2026-05-13)
 
 
