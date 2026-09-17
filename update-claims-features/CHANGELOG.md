@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.2.2...update-claims-features-v1.2.3) (2026-09-17)
+
+
+### Bug Fixes
+
+* **`update-claims-features`:** keep field order ([#497](https://github.com/prefapp/daggerverse/issues/497)) ([dfed9ed](https://github.com/prefapp/daggerverse/commit/dfed9eda996f2b186448c521a6e4c3d63ac3bf55))
+
 ## [1.2.2](https://github.com/prefapp/daggerverse/compare/update-claims-features-v1.2.1...update-claims-features-v1.2.2) (2026-09-17)
 
 
