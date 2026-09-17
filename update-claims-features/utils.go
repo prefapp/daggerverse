@@ -19,6 +19,10 @@ var fullSemverRegex = regexp.MustCompile(
 	`^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$`,
 )
 
+// defaultFeaturesRepo is the feature repository used for features that do not
+// declare a "repo" field.
+const defaultFeaturesRepo = "prefapp/features"
+
 func extractErrorMessage(err error) string {
 	switch e := err.(type) {
 	case *dagger.ExecError:
@@ -95,6 +99,29 @@ func cloneMap(originalMap map[string]interface{}) map[string]interface{} {
 		clonedMap[key] = value
 	}
 	return clonedMap
+}
+
+// repoFeatureKey returns the composite key identifying a feature by its
+// repository and name, so features with the same name from different repos are
+// not collapsed into a single entry.
+func repoFeatureKey(repo, name string) string {
+	return fmt.Sprintf("%s|%s", repo, name)
+}
+
+// featureRepo returns the repository a feature is pinned to, defaulting to
+// defaultFeaturesRepo when it does not declare a "repo" field. The returned
+// value is trimmed to avoid passing whitespace-padded identifiers to the
+// GitHub CLI (via GH_REPO).
+func featureRepo(feature map[string]any) string {
+	if r, ok := feature["repo"]; ok {
+		if rs, ok2 := r.(string); ok2 {
+			trimmed := strings.TrimSpace(rs)
+			if trimmed != "" {
+				return trimmed
+			}
+		}
+	}
+	return defaultFeaturesRepo
 }
 
 func (m *UpdateClaimsFeatures) getFeaturesMapData(
@@ -231,9 +258,12 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 				return "", err
 			}
 
-			if originalVersionMap[updatedFeatureName] != "" && updatedFeatureVersion != "" {
+			repoStr := featureRepo(updatedFeature)
+			featureKey := repoFeatureKey(repoStr, updatedFeatureName)
+
+			if originalVersionMap[featureKey] != "" && updatedFeatureVersion != "" {
 				versionIsDifferentThanOriginal, err := semver.NewConstraint(
-					fmt.Sprintf("!=%s", originalVersionMap[updatedFeatureName]),
+					fmt.Sprintf("!=%s", originalVersionMap[featureKey]),
 				)
 				if err != nil {
 					return "", err
@@ -246,7 +276,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 					addChangeLog, err := semver.NewConstraint(
 						fmt.Sprintf(
 							"> %s, <= %s || =%s",
-							originalVersionMap[updatedFeatureName],
+							originalVersionMap[featureKey],
 							updatedFeatureVersion,
 							updatedFeatureVersion,
 						),
@@ -255,7 +285,7 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 						return "", err
 					}
 
-					for _, featureVersion := range allFeaturesMap[updatedFeatureName] {
+					for _, featureVersion := range allFeaturesMap[featureKey] {
 						featureVersionSemver, err := semver.NewVersion(featureVersion)
 						if err != nil {
 							return "", err
@@ -271,7 +301,19 @@ func (m *UpdateClaimsFeatures) getPrBodyForFeatureUpdate(
 							fullFeatureTag := fmt.Sprintf(
 								"%s-v%s", updatedFeatureName, featureVersion,
 							)
-							changelog, err := m.getReleaseChangelog(ctx, fullFeatureTag)
+
+							// Select token for the feature's repo
+							var token *dagger.Secret
+							if repoStr != defaultFeaturesRepo {
+								if m.CustomFeaturesRepoGhToken == nil {
+									return "", fmt.Errorf("external repo %q present but CustomFeaturesRepoGhToken is not provided", repoStr)
+								}
+								token = m.CustomFeaturesRepoGhToken
+							} else {
+								token = m.PrefappGhToken
+							}
+
+							changelog, err := m.getReleaseChangelog(ctx, fullFeatureTag, repoStr, token)
 
 							if err != nil {
 								fmt.Printf(
@@ -314,14 +356,15 @@ func (m *UpdateClaimsFeatures) extractCurrentFeatureVersionsFromClaim(
 	featuresList := claim["providers"].(map[string]any)["github"].(map[string]any)["features"].([]any)
 
 	for _, featureData := range featuresList {
-		featureName := featureData.(map[string]any)["name"].(string)
-		versionProperty, hasVersion := featureData.(map[string]any)["version"]
+		feature := featureData.(map[string]any)
+		featureName := feature["name"].(string)
+		versionProperty, hasVersion := feature["version"]
 		if !hasVersion {
 			continue
 		}
 
 		featureVersion := versionProperty.(string)
-		currentFeaturesVersion[featureName] = featureVersion
+		currentFeaturesVersion[repoFeatureKey(featureRepo(feature), featureName)] = featureVersion
 	}
 
 	return currentFeaturesVersion
