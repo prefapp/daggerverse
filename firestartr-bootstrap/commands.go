@@ -132,6 +132,65 @@ The environment, configuration, and state are considered valid.
 	return m.ShowSummaryReport(ctx), nil
 }
 
+func (m *FirestartrBootstrap) CmdApplySysServices(
+	ctx context.Context,
+	// Docker socket for accessing the Kind cluster container.
+	dockerSocket *dagger.Socket,
+	// Running Kind cluster service.
+	kindSvc *dagger.Service,
+	// Name of the Kind cluster (e.g. "kind-firestartr").
+	kindClusterName string,
+	// Dedicated external-dns Managed Identity client ID supplied by the host.
+	externalDnsClientId string,
+) (string, error) {
+	if !m.isDedicatedDeployment() {
+		return "", PrepareAndPrintError(
+			ctx,
+			"CmdApplySysServices",
+			"CmdApplySysServices is only applicable for dedicated deployments",
+			fmt.Errorf("deploymentMode is not 'dedicated'"),
+		)
+	}
+
+	if externalDnsClientId == "" {
+		return "", PrepareAndPrintError(
+			ctx,
+			"CmdApplySysServices",
+			"No Managed Identity client ID was provided for sys-services",
+			fmt.Errorf("external-dns Managed Identity client ID is required"),
+		)
+	}
+
+	_, err := m.ApplySysServicesWithValues(ctx, externalDnsClientId)
+	if err != nil {
+		return "", PrepareAndPrintError(
+			ctx,
+			"CmdApplySysServices",
+			"An error occurred while applying sys-services with values",
+			err,
+		)
+	}
+
+	successMessage := `
+=====================================================
+       🚀 SYS-SERVICES APPLIED WITH VALUES 🚀
+=====================================================
+All dedicated cluster services have been installed
+with the correct Azure-specific values:
+  - External Secrets Operator
+  - nginx ingress controller
+  - cert-manager
+  - external-dns  (Azure DNS / Workload Identity)
+  - ArgoCD
+  - argo-events
+  - argo-workflows
+
+The cluster state now matches the state-sys-services
+release descriptors. ArgoCD will manage drift going forward.
+`
+	return m.UpdateSummaryAndRun(ctx, successMessage), nil
+}
+
 func (m *FirestartrBootstrap) CmdInitSecretsMachinery(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
@@ -150,12 +209,12 @@ func (m *FirestartrBootstrap) CmdInitSecretsMachinery(
 		return "", errorMessage
 	}
 
-	kindContainer, err = m.InstallHelmAndExternalSecrets(ctx, kindContainer)
+	kindContainer, err = m.InstallClusterServices(ctx, kindContainer)
 	if err != nil {
 		errorMessage := PrepareAndPrintError(
 			ctx,
 			"CmdInitSecretsMachinery",
-			"An error occurred while installing Helm and External Secrets",
+			"An error occurred while installing cluster services",
 			err,
 		)
 
@@ -519,6 +578,27 @@ func (m *FirestartrBootstrap) CmdPushResources(
 func (m *FirestartrBootstrap) CmdPushDeployment(
 	ctx context.Context,
 ) (string, error) {
+
+	if m.isDedicatedDeployment() {
+		_, err := m.CreateDeploymentAzure(ctx)
+		if err != nil {
+			errorMessage := PrepareAndPrintError(
+				ctx,
+				"CmdPushDeployment",
+				"An error occurred while pushing the dedicated deployment to state-sys-services",
+				err,
+			)
+			return "", errorMessage
+		}
+
+		summary := m.UpdateSummaryAndRunForPushDeploymentStep(
+			ctx,
+			fmt.Sprintf("https://github.com/%s/state-sys-services", m.Bootstrap.Org),
+			fmt.Sprintf("%s  /  %s  /  dedicated", m.Bootstrap.Org, m.Bootstrap.Customer),
+		)
+		return summary, nil
+	}
+
 	_, err := m.CreateDeployment(ctx)
 	if err != nil {
 		errorMessage := PrepareAndPrintError(
@@ -681,20 +761,22 @@ func (m *FirestartrBootstrap) CmdPushArgo(
 		}
 	}
 
+	var argoStateArgocdURL, argoStateSysSvcURL, argoSysSvcLabel string
+	if m.isDedicatedDeployment() {
+		argoStateArgocdURL = fmt.Sprintf("https://github.com/%s/state-argocd", m.Bootstrap.Org)
+		argoStateSysSvcURL = fmt.Sprintf("https://github.com/%s/state-sys-services", m.Bootstrap.Org)
+		argoSysSvcLabel = fmt.Sprintf("%s  /  argo-configuration-secrets", m.Bootstrap.Org)
+	} else {
+		argoStateArgocdURL = fmt.Sprintf("https://github.com/firestartr-%s/state-argocd", m.Bootstrap.Env)
+		argoStateSysSvcURL = fmt.Sprintf("https://github.com/firestartr-%s/state-sys-services", m.Bootstrap.Env)
+		argoSysSvcLabel = fmt.Sprintf("firestartr-%s  /  argo-configuration-secrets  ", m.Bootstrap.Env)
+	}
+
 	summary := m.UpdateSummaryAndRunForPushArgoCDStep(
 		ctx,
-		fmt.Sprintf(
-			"https://github.com/firestartr-%s/state-argocd",
-			m.Bootstrap.Env,
-		),
-		fmt.Sprintf(
-			"https://github.com/firestartr-%s/state-sys-services",
-			m.Bootstrap.Env,
-		),
-		fmt.Sprintf(
-			"firestartr-%s  /  argo-configuration-secrets  ",
-			m.Bootstrap.Env,
-		),
+		argoStateArgocdURL,
+		argoStateSysSvcURL,
+		argoSysSvcLabel,
 		missingPRs,
 	)
 

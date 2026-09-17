@@ -31,45 +31,85 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 	ctx context.Context,
 	kindContainer *dagger.Container,
 ) (*dagger.Container, error) {
-	secretsTmpl, err := dag.CurrentModule().
-		Source().
-		File("templates/secret.tmpl").
-		Contents(ctx)
+	var secretsCr, bootstrapSecretsCr, operatorSecretsCr string
 
-	secretsCr, err := renderTmpl(secretsTmpl, m.Creds)
-	if err != nil {
-		return nil, err
+	if m.isDedicatedDeployment() {
+		// Azure path: render azure_secret.tmpl to create the azure-creds Kubernetes Secret
+		azureSecretTmpl, err := dag.CurrentModule().
+			Source().
+			File("external_secrets/azure_secret.tmpl").
+			Contents(ctx)
+		if err != nil {
+			return nil, err
+		}
+		secretsCr, err = renderTmpl(azureSecretTmpl, m.Creds)
+		if err != nil {
+			return nil, err
+		}
+
+		// Azure bootstrap secrets (uses KV flat names)
+		azureBootstrapSecretsTmpl, err := dag.CurrentModule().
+			Source().
+			File("external_secrets/azure_bootstrap_secrets.tmpl").
+			Contents(ctx)
+		if err != nil {
+			return nil, err
+		}
+		bootstrapSecretsCr, err = renderTmpl(azureBootstrapSecretsTmpl, m)
+		if err != nil {
+			return nil, err
+		}
+
+		// Azure operator secrets (uses KV flat names)
+		azureOperatorSecretsTmpl, err := dag.CurrentModule().
+			Source().
+			File("external_secrets/azure_operator_secrets.tmpl").
+			Contents(ctx)
+		if err != nil {
+			return nil, err
+		}
+		operatorSecretsCr, err = renderTmpl(azureOperatorSecretsTmpl, m)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// AWS path (original implementation)
+		secretsTmpl, err := dag.CurrentModule().
+			Source().
+			File("templates/secret.tmpl").
+			Contents(ctx)
+
+		secretsCr, err = renderTmpl(secretsTmpl, m.Creds)
+		if err != nil {
+			return nil, err
+		}
+
+		bootstrapSecretsTmpl, err := dag.CurrentModule().
+			Source().
+			File("external_secrets/bootstrap_secrets.tmpl").
+			Contents(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		bootstrapSecretsCr, err = renderTmpl(bootstrapSecretsTmpl, m)
+		if err != nil {
+			return nil, err
+		}
+
+		operatorSecretsTmpl, err := dag.CurrentModule().
+			Source().
+			File("external_secrets/operator_secrets.tmpl").
+			Contents(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		operatorSecretsCr, err = renderTmpl(operatorSecretsTmpl, m)
+		if err != nil {
+			return nil, err
+		}
 	}
-
-	bootstrapSecretsTmpl, err := dag.CurrentModule().
-		Source().
-		File("external_secrets/bootstrap_secrets.tmpl").
-		Contents(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	bootstrapSecretsCr, err := renderTmpl(bootstrapSecretsTmpl, m)
-	if err != nil {
-		return nil, err
-	}
-
-	operatorSecretsTmpl, err := dag.CurrentModule().
-		Source().
-		File("external_secrets/operator_secrets.tmpl").
-		Contents(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	operatorSecretsCr, err := renderTmpl(operatorSecretsTmpl, m)
-	if err != nil {
-		return nil, err
-	}
-
-	awsSecretStoreFile := dag.CurrentModule().
-		Source().
-		File("external_secrets/aws_secretstore.yaml")
 
 	firestartrPodName, err := kindContainer.
 		WithExec([]string{
@@ -89,7 +129,8 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 		return nil, err
 	}
 
-	kindContainer, err = kindContainer.
+	// Apply the cloud-provider-specific SecretStore
+	ctr := kindContainer.
 		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithDirectory("/push-secrets", pushSecretsDirectory).
 		WithNewFile(SECRETS_FILE_PATH, secretsCr).
@@ -104,11 +145,39 @@ func (m *FirestartrBootstrap) CreateKubernetesSecrets(
 			strings.Trim(firestartrPodName, "\n"),
 			"--timeout=10h",
 			"-n", "external-secrets",
-		}).
-		WithFile("/secret_store/aws_secretstore.yaml", awsSecretStoreFile).
-		WithExec([]string{
-			"kubectl", "apply", "-f", "/secret_store/aws_secretstore.yaml",
-		}).
+		})
+
+	if m.isDedicatedDeployment() {
+		// Render and apply the Azure SecretStore
+		azureSecretStoreTmpl, err := dag.CurrentModule().
+			Source().
+			File("external_secrets/azure_secretstore.tmpl").
+			Contents(ctx)
+		if err != nil {
+			return nil, err
+		}
+		azureSecretStoreCr, err := renderTmpl(azureSecretStoreTmpl, m.Creds)
+		if err != nil {
+			return nil, err
+		}
+		ctr = ctr.
+			WithNewFile("/secret_store/azure_secretstore.yaml", azureSecretStoreCr).
+			WithExec([]string{
+				"kubectl", "apply", "-f", "/secret_store/azure_secretstore.yaml",
+			})
+	} else {
+		// Apply the AWS SecretStore
+		awsSecretStoreFile := dag.CurrentModule().
+			Source().
+			File("external_secrets/aws_secretstore.yaml")
+		ctr = ctr.
+			WithFile("/secret_store/aws_secretstore.yaml", awsSecretStoreFile).
+			WithExec([]string{
+				"kubectl", "apply", "-f", "/secret_store/aws_secretstore.yaml",
+			})
+	}
+
+	kindContainer, err = ctr.
 		WithExec([]string{
 			"kubectl", "apply", "-f", BOOTSTRAP_SECRETS_FILE_PATH,
 		}).

@@ -53,9 +53,17 @@ func (m *FirestartrBootstrap) PushDirToRepo(
 		return err
 	}
 
+	ghCtr = ghCtr.WithWorkdir("/repo").WithExec([]string{"git", "add", "."})
+	status, err := ghCtr.WithExec([]string{"git", "status", "--porcelain"}).Stdout(ctx)
+	if err != nil {
+		errMsg := extractErrorMessage(err, "Failed to inspect repository changes")
+		return errors.New(errMsg)
+	}
+	if strings.TrimSpace(status) == "" {
+		return nil
+	}
+
 	_, err = ghCtr.
-		WithWorkdir("/repo").
-		WithExec([]string{"git", "add", "."}).
 		WithExec([]string{"git", "commit", "-m", "ci: automated commit from firestartr-bootstrap"}).
 		WithExec([]string{"git", "push"}).
 		Sync(ctx)
