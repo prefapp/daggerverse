@@ -235,6 +235,7 @@ func (m *FirestartrBootstrap) applyCrAndWaitForProvisioned(
 		WithExec([]string{
 			"kubectl",
 			"apply",
+			"--server-side",
 			"-f", entry,
 		})
 
