@@ -23,9 +23,18 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 		m.Creds.GithubApp.OperatorPat,
 	)
 
+	// For dedicated deployments, target the customer's own org; for SaaS,
+	// target the shared firestartr-<env> org.
+	var argoOrg string
+	if m.isDedicatedDeployment() {
+		argoOrg = m.Bootstrap.Org
+	} else {
+		argoOrg = fmt.Sprintf("firestartr-%s", m.Bootstrap.Env)
+	}
+
 	argoCDRepo, err := m.CloneRepo(
 		ctx,
-		fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
+		argoOrg,
 		"state-argocd",
 		tokenSecret,
 	)
@@ -34,27 +43,30 @@ func (m *FirestartrBootstrap) CreateArgCDApplications(
 		return nil, fmt.Errorf("cloning ArgoCD repo: %w", err)
 	}
 
-	projectDir, err := addProjectDestination(
-		ctx,
-		argoCDRepo.Directory("/repo"),
-		"apps/firestartr/argo-firestartr.Project.yaml",
-		fmt.Sprintf("%s-firestartr-%s", m.Bootstrap.Customer, m.Bootstrap.Env),
-		"https://kubernetes.default.svc",
-	)
+	if !m.isDedicatedDeployment() {
+		// SaaS path: patch the ArgoCD project to add the new namespace as a destination
+		projectDir, err := addProjectDestination(
+			ctx,
+			argoCDRepo.Directory("/repo"),
+			"apps/firestartr/argo-firestartr.Project.yaml",
+			fmt.Sprintf("%s-firestartr-%s", m.Bootstrap.Customer, m.Bootstrap.Env),
+			"https://kubernetes.default.svc",
+		)
 
-	if err != nil {
-		return nil, fmt.Errorf("adding project destination to ArgoCD: %w", err)
+		if err != nil {
+			return nil, fmt.Errorf("adding project destination to ArgoCD: %w", err)
+		}
+
+		argoCDRenderedDir = argoCDRenderedDir.WithFile(
+			"apps/firestartr/argo-firestartr.Project.yaml",
+			projectDir.File("apps/firestartr/argo-firestartr.Project.yaml"),
+		)
 	}
-
-	argoCDRenderedDir = argoCDRenderedDir.WithFile(
-		"apps/firestartr/argo-firestartr.Project.yaml",
-		projectDir.File("apps/firestartr/argo-firestartr.Project.yaml"),
-	)
 
 	err = m.CreatePR(
 		ctx,
 		"state-argocd",
-		fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
+		argoOrg,
 		argoCDRenderedDir,
 		fmt.Sprintf("automated-create-applications-%s", m.Bootstrap.Org),
 		fmt.Sprintf("ci: add applications for %s [automated]", m.Bootstrap.Org),
@@ -73,6 +85,15 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 	ctx context.Context,
 ) (*dagger.Directory, error) {
 
+	// For dedicated deployments ArgoCD runs in the "argocd" namespace;
+	// for SaaS it uses a customer+env-scoped namespace.
+	var namespace string
+	if m.isDedicatedDeployment() {
+		namespace = "argocd"
+	} else {
+		namespace = fmt.Sprintf("%s-firestartr-%s", m.Bootstrap.Customer, m.Bootstrap.Env)
+	}
+
 	argoCDData := ArgoCDConfig{
 
 		Name: fmt.Sprintf(
@@ -89,10 +110,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 			m.Bootstrap.Org,
 		),
 
-		Namespace: fmt.Sprintf("%s-firestartr-%s",
-			m.Bootstrap.Customer,
-			m.Bootstrap.Env,
-		),
+		Namespace: namespace,
 	}
 
 	argoCDDataInfra := ArgoCDConfig{
@@ -109,10 +127,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 			m.Bootstrap.Org,
 		),
 
-		Namespace: fmt.Sprintf("%s-firestartr-%s",
-			m.Bootstrap.Customer,
-			m.Bootstrap.Env,
-		),
+		Namespace: namespace,
 	}
 
 	argoCDDataSecrets := ArgoCDConfig{
@@ -129,10 +144,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 			m.Bootstrap.Org,
 		),
 
-		Namespace: fmt.Sprintf("%s-firestartr-%s",
-			m.Bootstrap.Customer,
-			m.Bootstrap.Env,
-		),
+		Namespace: namespace,
 	}
 
 	applicationStateGithub, errGithub := renderArgoCDApplication(
