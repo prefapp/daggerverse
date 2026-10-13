@@ -89,7 +89,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 	// for SaaS it uses a customer+env-scoped namespace.
 	var namespace string
 	if m.isDedicatedDeployment() {
-		namespace = "argocd"
+namespace = "firestartr"
 	} else {
 		namespace = fmt.Sprintf("%s-firestartr-%s", m.Bootstrap.Customer, m.Bootstrap.Env)
 	}
