@@ -151,6 +151,16 @@ prompt_or_auto() {
     fi
 }
 
+prompt_external_dns_client_id() {
+    local CLIENT_ID
+    read -r -p "external-dns Managed Identity client ID: " CLIENT_ID
+    if [ -z "$CLIENT_ID" ]; then
+        echo "❌ external-dns Managed Identity client ID is required" >&2
+        exit 1
+    fi
+    echo "$CLIENT_ID"
+}
+
 execute_step() {
     local ACTION="$1"
     shift
@@ -306,6 +316,25 @@ execute_step "$ACTION" dagger \
     --kind-svc="tcp://localhost:${PORT}" \
     --kind-cluster-name="${CLUSTER_NAME}" \
     --cache-volume="${VOLUME_ID}"
+
+
+# Apply sys-services on dedicated deployments only
+if grep -q '^deploymentMode: *dedicated' "${BOOTSTRAP_FILE}"; then
+    EXTERNAL_DNS_CLIENT_ID=$(prompt_external_dns_client_id)
+    ACTION=$(prompt_or_auto "Apply sys-services with values to the AKS cluster?" "Applying sys-services with values")
+    execute_step "$ACTION" dagger \
+        --bootstrap-file="${BOOTSTRAP_FILE}" \
+        --credentials-secret="file:${CREDENTIALS_FILE}" \
+        call cmd-apply-sys-services \
+        --docker-socket=/var/run/docker.sock \
+        --kind-svc="tcp://localhost:${PORT}" \
+        --kind-cluster-name="${CLUSTER_NAME}" \
+        --external-dns-client-id="${EXTERNAL_DNS_CLIENT_ID}"
+
+    if [ "$ACTION" = "continue" ]; then
+        wait_for_user
+    fi
+fi
 
 
 # Push state secrets

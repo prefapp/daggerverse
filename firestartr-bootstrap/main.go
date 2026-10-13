@@ -94,25 +94,32 @@ func New(
 	// Autocalculate values
 	// We need to calculate the webhook params
 	// ----------------------------------------------------
-	if bootstrap.Env == "pro" {
-		bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.firestartr.dev", bootstrap.Customer)
+	if bootstrap.isDedicatedDeployment() {
+		// Dedicated mode: use the domain field directly; no env concept
+		bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.%s", bootstrap.Customer, bootstrap.Domain)
+		bootstrap.WebhookSecretRef = "github-webhook-secret"
+		bootstrap.PrefappBotPatSecretRef = "prefapp-bot-pat"
+		bootstrap.FirestartrCliVersionSecretRef = "firestartr-cli-version"
 	} else {
-		bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.%s.firestartr.dev", bootstrap.Customer, bootstrap.Env)
+		if bootstrap.Env == "pro" {
+			bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.firestartr.dev", bootstrap.Customer)
+		} else {
+			bootstrap.WebhookUrl = fmt.Sprintf("https://%s.events.%s.firestartr.dev", bootstrap.Customer, bootstrap.Env)
+		}
+		bootstrap.WebhookSecretRef = fmt.Sprintf("/firestartr/%s/github-webhook/secret", bootstrap.Customer)
+		bootstrap.PrefappBotPatSecretRef = fmt.Sprintf("/firestartr/%s/prefapp-bot-pat", bootstrap.Customer)
+		bootstrap.FirestartrCliVersionSecretRef = fmt.Sprintf("/firestartr/%s/firestartr-cli-version", bootstrap.Customer)
 	}
-	bootstrap.WebhookSecretRef = fmt.Sprintf("/firestartr/%s/github-webhook/secret", bootstrap.Customer)
-
-	// We need to calculate the bucket (if necessary)
-	if creds.CloudProvider.Config.Bucket == nil {
-		calculatedBucket := fmt.Sprintf("tfstate-%s", bootstrap.Customer)
-		creds.CloudProvider.Config.Bucket = &calculatedBucket
-	}
-
-	bootstrap.PrefappBotPatSecretRef = fmt.Sprintf("/firestartr/%s/prefapp-bot-pat", bootstrap.Customer)
-	bootstrap.FirestartrCliVersionSecretRef = fmt.Sprintf("/firestartr/%s/firestartr-cli-version", bootstrap.Customer)
 
 	claimsDotConfigDir, err := getClaimsDotConfigDir(ctx, bootstrap)
 	if err != nil {
 		return nil, err
+	}
+
+	// We need to calculate the bucket for AWS (if not explicitly provided)
+	if !bootstrap.isDedicatedDeployment() && creds.CloudProvider.Config.Bucket == nil {
+		calculatedBucket := fmt.Sprintf("tfstate-%s", bootstrap.Customer)
+		creds.CloudProvider.Config.Bucket = &calculatedBucket
 	}
 
 	// calculate providers
@@ -129,7 +136,14 @@ func New(
 	creds.GithubApp.Owner = bootstrap.Org
 
 	// calculate store name
-	bootstrap.FinalSecretStoreName = fmt.Sprintf("%s-firestartr-secret-store", bootstrap.Customer)
+	// For dedicated (Azure) deployments the deployed AKS cluster exposes a
+	// SecretStore named "firestartr-kv". For SaaS (AWS) deployments the store
+	// follows the <customer>-aws-parameter-store convention.
+	if bootstrap.isDedicatedDeployment() {
+		bootstrap.FinalSecretStoreName = "firestartr-kv"
+	} else {
+		bootstrap.FinalSecretStoreName = fmt.Sprintf("%s-aws-parameter-store", bootstrap.Customer)
+	}
 
 	crsDotConfigDir, err := getCrsDotConfigDir(ctx, bootstrap, defaultsInterface)
 	if err != nil {
@@ -155,6 +169,11 @@ func New(
 	}
 
 	ghOrgLowerCase := strings.ToLower(bootstrap.Org)
+
+	// Auto-inject required repos for dedicated deployments
+	if bootstrap.isDedicatedDeployment() {
+		bootstrap.Components = injectDedicatedComponents(bootstrap)
+	}
 
 	return &FirestartrBootstrap{
 		Bootstrap:             bootstrap,
@@ -191,6 +210,73 @@ func calculateParameters(customer string, githuborg string) []string {
 	return results
 }
 
+// isDedicatedDeployment returns true when the bootstrap is configured for a
+// dedicated (non-SaaS, currently Azure) deployment.
+func (m *FirestartrBootstrap) isDedicatedDeployment() bool {
+	return m.Bootstrap.isDedicatedDeployment()
+}
+
+// injectDedicatedComponents ensures that state-sys-services and state-argocd
+// are present in the component list for dedicated deployments. These repos must
+// exist in the customer GitHub org before deployment PRs can be created.
+func injectDedicatedComponents(bootstrap *Bootstrap) []Component {
+	components := bootstrap.Components
+
+	hasSysSvc := false
+	hasArgoCD := false
+
+	for _, c := range components {
+		if c.Name == "state-sys-services" {
+			hasSysSvc = true
+		}
+		if c.Name == "state-argocd" {
+			hasArgoCD = true
+		}
+	}
+
+	for i := range components {
+		if components[i].Name == "state-sys-services" {
+			hasFeature := false
+			for _, feature := range components[i].Features {
+				if feature.Name == "state_repo_sys_services" && feature.Version == "2.4.0" {
+					hasFeature = true
+					break
+				}
+			}
+			if !hasFeature {
+				components[i].Features = append(components[i].Features, Feature{
+					Name:    "state_repo_sys_services",
+					Version: "2.4.0",
+				})
+			}
+			break
+		}
+	}
+
+	if !hasSysSvc {
+		components = append(components, Component{
+			Name:          "state-sys-services",
+			Description:   "Firestartr dedicated deployment system services repository",
+			DefaultBranch: bootstrap.DefaultBranch,
+			Features: []Feature{{
+				Name:    "state_repo_sys_services",
+				Version: "2.4.0",
+			}},
+		})
+	}
+
+	if !hasArgoCD {
+		components = append(components, Component{
+			Name:          "state-argocd",
+			Description:   "Firestartr dedicated deployment ArgoCD configuration repository",
+			DefaultBranch: bootstrap.DefaultBranch,
+			Features:      []Feature{},
+		})
+	}
+
+	return components
+}
+
 func (m *FirestartrBootstrap) ValidateBootstrap(
 	ctx context.Context,
 	kubeconfig *dagger.Directory,
@@ -221,19 +307,31 @@ func (m *FirestartrBootstrap) ValidateBootstrap(
 		errorMsgs = append(errorMsgs, err.Error())
 	}
 
-	_, err = m.ValidateSTSCredentials(ctx)
-	if err != nil {
-		errorMsgs = append(errorMsgs, err.Error())
-	}
+	if !m.isDedicatedDeployment() {
+		_, err = m.ValidateSTSCredentials(ctx)
+		if err != nil {
+			errorMsgs = append(errorMsgs, err.Error())
+		}
 
-	err = m.ValidateBucket(ctx)
-	if err != nil {
-		errorMsgs = append(errorMsgs, err.Error())
-	}
+		err = m.ValidateBucket(ctx)
+		if err != nil {
+			errorMsgs = append(errorMsgs, err.Error())
+		}
 
-	err = m.ValidateParameters(ctx, fmt.Sprintf("/firestartr/%s", m.Bootstrap.Customer))
-	if err != nil {
-		errorMsgs = append(errorMsgs, err.Error())
+		err = m.ValidateParameters(ctx, fmt.Sprintf("/firestartr/%s", m.Bootstrap.Customer))
+		if err != nil {
+			errorMsgs = append(errorMsgs, err.Error())
+		}
+	} else {
+		err = m.ValidateAzureSPCredentials(ctx)
+		if err != nil {
+			errorMsgs = append(errorMsgs, err.Error())
+		}
+
+		err = m.ValidateAzureKeyVaultSecrets(ctx)
+		if err != nil {
+			errorMsgs = append(errorMsgs, err.Error())
+		}
 	}
 
 	err = m.ValidatePrefappBotPat(ctx)

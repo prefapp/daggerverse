@@ -9,13 +9,20 @@ func (m *FirestartrBootstrap) GeneratePushSecrets(
 	ctx context.Context,
 ) (*dagger.Directory, error) {
 
+	// The secret store name matches the ESO SecretStore created during bootstrap:
+	// "aws" for SaaS (AWS), "firestartr-kv" for dedicated (Azure).
+	secretStoreName := "aws"
+	if m.isDedicatedDeployment() {
+		secretStoreName = "firestartr-kv"
+	}
+
 	webHookPushSecret := PushSecretElement{
 		Name:                "webhook-pushsecret",
 		KubernetesSecret:    "webhook-secret",
 		KubernetesSecretKey: "webhook-secret-key",
 		ParameterName:       m.Bootstrap.WebhookSecretRef,
 		Value:               "my-secret-secret",
-		SecretStore:         "aws",
+		SecretStore:         secretStoreName,
 	}
 
 	prefappBotPatSecret := PushSecretElement{
@@ -24,7 +31,7 @@ func (m *FirestartrBootstrap) GeneratePushSecrets(
 		KubernetesSecretKey: "botpat-secret-key",
 		ParameterName:       m.Bootstrap.PrefappBotPatSecretRef,
 		Value:               m.Creds.GithubApp.PrefappBotPat,
-		SecretStore:         "aws",
+		SecretStore:         secretStoreName,
 	}
 
 	prefappCliVersion := PushSecretElement{
@@ -33,7 +40,7 @@ func (m *FirestartrBootstrap) GeneratePushSecrets(
 		KubernetesSecretKey: "cli-version-key",
 		ParameterName:       m.Bootstrap.FirestartrCliVersionSecretRef,
 		Value:               m.Bootstrap.Firestartr.CliVersion,
-		SecretStore:         "aws",
+		SecretStore:         secretStoreName,
 	}
 
 	rendered, err := renderPushSecret(ctx, &webHookPushSecret, "external_secrets/push_secret.tmpl")

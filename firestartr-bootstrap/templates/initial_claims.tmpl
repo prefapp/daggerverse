@@ -56,7 +56,7 @@ providers:
     name: firestartr-secrets
     secretStore:
       kind: SecretStore
-      name: aws  # This will be swapped with {{ $.FinalSecretStoreName }} before uploading
+      name: {{ $.FinalSecretStoreName }}
     externalSecrets:
       refreshInterval: 24h
       secrets:
@@ -65,7 +65,21 @@ providers:
       - secretName: "prefapp-bot-pat"
         remoteRef: "{{ $.PrefappBotPatSecretRef }}"
       - secretName: "firestartr-cli-version"
-        remoteRef: "/firestartr/{{ $.Customer }}/firestartr-cli-version"
+        remoteRef: "{{ $.FirestartrCliVersionSecretRef }}"
+      {{- if eq $.DeploymentMode "dedicated" }}
+      - secretName: "fs-state-pem"
+        remoteRef: "fs-state-pem"
+      - secretName: "fs-checks-pem"
+        remoteRef: "fs-checks-pem"
+      - secretName: "fs-import-pem"
+        remoteRef: "fs-import-pem"
+      - secretName: "fs-state-appid"
+        remoteRef: "fs-state-app-id"
+      - secretName: "fs-checks-appid"
+        remoteRef: "fs-checks-app-id"
+      - secretName: "fs-import-appid"
+        remoteRef: "fs-import-app-id"
+      {{- else }}
       - secretName: "fs-state-pem"
         remoteRef: "/firestartr/{{ $.Customer }}/fs-{{ $.Customer }}-state/pem"
       - secretName: "fs-checks-pem"
@@ -78,6 +92,7 @@ providers:
         remoteRef: "/firestartr/{{ $.Customer }}/fs-{{ $.Customer }}-checks/app-id"
       - secretName: "fs-import-appid"
         remoteRef: "/firestartr/{{ $.Customer }}/fs-{{ $.Customer }}-import/app-id"
+      {{- end }}
 ---
 kind: OrgWebhookClaim
 version: "1.0"

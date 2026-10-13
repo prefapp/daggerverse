@@ -38,7 +38,7 @@ kind: FirestartrProviderConfig
 metadata:
   name: {{ .CloudProvider.ProviderConfigName }}
 spec:
-  config: '{{ .CloudProvider.Config | toJson }}'
+  config: '{{ .CloudProvider.Config.ToConfigJSON }}'
   source: '{{ .CloudProvider.Source }}'
   type: '{{ .CloudProvider.Type }}'
   version: '{{ .CloudProvider.Version }}'
@@ -74,3 +74,66 @@ spec:
       - key: id
       - key: nodeId
       - key: slug
+{{- if eq .DeploymentMode "dedicated" }}
+---
+# Provider-only FirestartrProviderConfig for dedicated mode.
+# Named <customer>-<type> (e.g. azprefapp-azurerm) to signal it is the
+# azurerm *provider* identity, not the Terraform backend storage config.
+# The full config (backend storage fields included) remains in the
+# {{ .CloudProvider.ProviderConfigName }} FirestartrProviderConfig above.
+# Backend-only fields (storage_account_name, container_name,
+# resource_group_name) are intentionally excluded here to avoid the
+# "Extraneous JSON object property" error from Terraform.
+apiVersion: firestartr.dev/v1
+kind: FirestartrProviderConfig
+metadata:
+  name: {{ .Customer }}-{{ .CloudProvider.Type }}
+spec:
+  config: '{{ .CloudProvider.Config.ToAzureProviderConfigJSON }}'
+  source: '{{ .CloudProvider.Source }}'
+  type: '{{ .CloudProvider.Type }}'
+  version: '{{ .CloudProvider.Version }}'
+---
+# Dedicated-mode: provision a dedicated Managed Identity for external-dns.
+# This gives external-dns least-privilege access (DNS Zone Contributor) and
+# its own Workload Identity federation on the AKS cluster, keeping it
+# isolated from the main firestartr-mi identity.
+#
+# After bootstrap, CmdApplySysServices reads the MI resource ID from the
+# "external-dns-mi-outputs" K8s secret (written below), calls the Azure ARM
+# API to resolve the client_id, and supplies it to the external-dns Helm chart.
+apiVersion: firestartr.dev/v1
+kind: FirestartrTerraformWorkspace
+metadata:
+  annotations:
+    firestartr.dev/claim-ref: TFWorkspaceClaim/external-dns-mi
+    firestartr.dev/external-name: external-dns-mi
+    firestartr.dev/policy: apply
+    firestartr.dev/sync-enabled: "true"
+    firestartr.dev/sync-period: 24h
+    firestartr.dev/sync-policy: observe
+    firestartr.dev/bootstrapped: "true"
+  labels:
+    claim-ref: external-dns-mi
+  name: external-dns-mi-b7e3f1a2-c4d5-4e6f-8a9b-0c1d2e3f4a5b
+spec:
+  context:
+    backend:
+      ref:
+        kind: FirestartrProviderConfig
+        name: {{ .CloudProvider.ProviderConfigName }}
+    providers:
+      - ref:
+          kind: FirestartrProviderConfig
+          name: {{ .Customer }}-{{ .CloudProvider.Type }}
+  firestartr:
+    tfStateKey: b7e3f1a2-c4d5-4e6f-8a9b-0c1d2e3f4a5b
+  module: git::https://github.com/prefapp/tfm.git//modules/azure-mi
+  source: Remote
+  values: '{"name":"external-dns-mi","resource_group":"{{ .CloudProvider.Config.ResourceGroupName }}","location":"{{ .CloudProvider.Config.Location }}","rbac":[{"name":"external-dns-dns-contributor","scope":"/subscriptions/{{ .CloudProvider.Config.SubscriptionId }}","roles":["DNS Zone Contributor"]}],"federated_credentials":[{"name":"external-dns-aks","type":"other","issuer":"{{ .CloudProvider.Config.AksOidcIssuerUrl }}","subject":"system:serviceaccount:external-dns:external-dns"}]}'
+  references: []
+  writeConnectionSecretToRef:
+    name: external-dns-mi-outputs
+    outputs:
+      - key: id
+{{- end }}
