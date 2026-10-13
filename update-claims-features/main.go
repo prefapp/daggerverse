@@ -120,18 +120,18 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 		return nil, err
 	}
 
-	claimsMap := make(map[string]map[string]any)
+	claimsMap := make(map[string]loadedClaim)
 	for _, entry := range claims {
 		fmt.Printf("Reading claim %s\n", entry)
 
-		claim, err := m.getClaimIfKindComponent(ctx, entry, compiledSchema)
+		claimNode, claim, err := m.getClaimIfKindComponent(ctx, entry, compiledSchema)
 		if err != nil {
 			summary.addUpdateSummaryRow(entry, err.Error())
 			continue
 		}
 
 		if claim != nil {
-			claimsMap[entry] = claim
+			claimsMap[entry] = loadedClaim{node: claimNode, data: claim}
 		}
 	}
 
@@ -143,7 +143,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	}
 
 	if len(m.FeaturesToUpdate) == 0 {
-		for _, claim := range claimsMap {
+		for _, loaded := range claimsMap {
+			claim := loaded.data
 			featuresProperty, hasFeatures := claim["providers"].(map[string]any)["github"].(map[string]any)["features"]
 			if !hasFeatures {
 				continue
@@ -173,7 +174,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 	// fetched from there using CustomFeaturesRepoGhToken; otherwise it defaults to
 	// prefapp/features.
 	repoToFeatures := map[string]map[string]struct{}{}
-	for _, claim := range claimsMap {
+	for _, loaded := range claimsMap {
+		claim := loaded.data
 		featuresProperty, hasFeatures := claim["providers"].(map[string]any)["github"].(map[string]any)["features"]
 		if !hasFeatures {
 			continue
@@ -232,7 +234,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 
 	// Iterate claims and resolve per-feature repo to construct claim-specific
 	// latest/all maps that updateClaimFeatures expects (repo|featureName -> latest)
-	for entry, claim := range claimsMap {
+	for entry, loaded := range claimsMap {
+		claim := loaded.data
 		claimName := claim["name"].(string)
 		claimKind := claim["kind"].(string)
 		// Build claim-specific latest/all features maps by resolving per-feature repo
@@ -278,8 +281,8 @@ func (m *UpdateClaimsFeatures) UpdateAllClaimFeatures(
 			currentFeatureVersionsMap := m.extractCurrentFeatureVersionsFromClaim(
 				claim,
 			)
-			claim["providers"].(map[string]any)["github"].(map[string]any)["features"] = updatedFeaturesList
-			updatedDir := m.updateDirWithClaim(claim, entry)
+			patchClaimFeatureVersions(loaded.node, updatedFeaturesList)
+			updatedDir := m.updateDirWithClaim(loaded.node, entry)
 			releaseBody, err := m.getPrBodyForFeatureUpdate(
 				ctx,
 				updatedFeaturesList,

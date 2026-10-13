@@ -101,6 +101,108 @@ func cloneMap(originalMap map[string]interface{}) map[string]interface{} {
 	return clonedMap
 }
 
+// nodeFindByPath walks a yaml.Node tree following mapping keys (e.g.
+// "providers", "github", "features", "version") and returns the matching
+// node, or nil when the path cannot be resolved.
+func nodeFindByPath(node *yaml.Node, path ...string) *yaml.Node {
+	if node == nil {
+		return nil
+	}
+
+	current := node
+	if current.Kind == yaml.DocumentNode {
+		if len(current.Content) == 0 {
+			return nil
+		}
+		current = current.Content[0]
+	}
+
+	for _, key := range path {
+		if current.Kind != yaml.MappingNode {
+			return nil
+		}
+
+		matched := false
+		for i := 0; i < len(current.Content); i += 2 {
+			keyNode := current.Content[i]
+			if keyNode.Value == key {
+				current = current.Content[i+1]
+				matched = true
+				break
+			}
+		}
+
+		if !matched {
+			return nil
+		}
+	}
+
+	return current
+}
+
+// nodeSetValue replaces the value of a scalar yaml.Node in place, keeping the
+// surrounding document structure (and therefore the original field order) and
+// the original scalar style (quoting/flow) when possible.
+func nodeSetValue(node *yaml.Node, value string) {
+	node.Value = value
+	node.Tag = "!!str"
+}
+
+// nodeToMap converts a yaml.Node document into a map[string]any so the claim
+// can be inspected and modified with the existing processing logic. The node
+// tree itself is left untouched so it can be re-serialized preserving order.
+func nodeToMap(node *yaml.Node) (map[string]any, error) {
+	var claim map[string]any
+	encoded, err := yaml.Marshal(node)
+	if err != nil {
+		return nil, err
+	}
+
+	err = yaml.Unmarshal(encoded, &claim)
+	if err != nil {
+		return nil, err
+	}
+
+	return claim, nil
+}
+
+// patchClaimFeatureVersions updates the "version" value of each feature in
+// the yaml.Node tree to match its entry in updatedFeaturesList. Features are
+// matched positionally because updateClaimFeatures preserves the order of the
+// original features list.
+func patchClaimFeatureVersions(
+	claimNode *yaml.Node,
+	updatedFeaturesList []map[string]any,
+) {
+	featuresNode := nodeFindByPath(claimNode, "providers", "github", "features")
+	if featuresNode == nil || featuresNode.Kind != yaml.SequenceNode {
+		return
+	}
+
+	for i, feature := range updatedFeaturesList {
+		if i >= len(featuresNode.Content) {
+			break
+		}
+
+		versionProperty, hasVersion := feature["version"]
+		if !hasVersion {
+			continue
+		}
+
+		versionNode := nodeFindByPath(featuresNode.Content[i], "version")
+		if versionNode == nil {
+			continue
+		}
+
+		versionValue := versionProperty.(string)
+		if versionNode.Value == versionValue {
+			continue
+		}
+
+		nodeSetValue(versionNode, versionValue)
+	}
+}
+
 // repoFeatureKey returns the composite key identifying a feature by its
 // repository and name, so features with the same name from different repos are
 // not collapsed into a single entry.
@@ -221,13 +323,13 @@ func (m *UpdateClaimsFeatures) getFeaturesMapData(
 }
 
 func (m *UpdateClaimsFeatures) updateDirWithClaim(
-	claim map[string]interface{},
+	claimNode *yaml.Node,
 	claimPath string,
 ) *dagger.Directory {
 	var buffer bytes.Buffer
 	yamlEncoder := yaml.NewEncoder(&buffer)
 	yamlEncoder.SetIndent(2)
-	yamlEncoder.Encode(&claim)
+	yamlEncoder.Encode(claimNode)
 
 	updatedDir := m.ClaimsDir.WithNewFile(claimPath, buffer.String())
 
