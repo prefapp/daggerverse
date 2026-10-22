@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/xeipuuv/gojsonschema"
 	"sigs.k8s.io/yaml"
@@ -136,7 +137,7 @@ func (m *FirestartrBootstrap) ValidateExistenceOfNeededImages(
 ) error {
 
 	slimImage := fmt.Sprintf(
-		"ghcr.io/prefapp/gitops-k8s:%s_slim",
+		"ghcr.io/firestartr-pro/firestartr:%s_slim",
 		m.Bootstrap.Firestartr.OperatorVersion,
 	)
 
@@ -145,7 +146,7 @@ func (m *FirestartrBootstrap) ValidateExistenceOfNeededImages(
 		return err
 	}
 
-	fullImage := fmt.Sprintf("ghcr.io/prefapp/gitops-k8s:%s", fmt.Sprintf(
+	fullImage := fmt.Sprintf("ghcr.io/firestartr-pro/firestartr:%s", fmt.Sprintf(
 
 		"%s_full-%s",
 		m.Bootstrap.Firestartr.OperatorVersion,
@@ -177,6 +178,7 @@ func validateExistenceOfImage(
 	}
 
 	_, err := craneContainer.
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec(craneArgs).
 		Stdout(ctx)
 

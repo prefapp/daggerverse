@@ -594,7 +594,7 @@ func (m *FirestartrBootstrap) CmdPushDeployment(
 		summary := m.UpdateSummaryAndRunForPushDeploymentStep(
 			ctx,
 			fmt.Sprintf("https://github.com/%s/state-sys-services", m.Bootstrap.Org),
-			fmt.Sprintf("%s  /  %s  /  dedicated", m.Bootstrap.Org, m.Bootstrap.Customer),
+			fmt.Sprintf("%s  /  %s  /  *", m.Bootstrap.Org, DeploymentPlatformAKS),
 		)
 		return summary, nil
 	}

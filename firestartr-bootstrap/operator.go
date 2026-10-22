@@ -425,7 +425,7 @@ func (m *FirestartrBootstrap) ApplySysServicesWithValues(
 		},
 		CloudProvider: m.Creds.CloudProvider,
 		Controller: DeploymentController{
-			Image: fmt.Sprintf("ghcr.io/prefapp/gitops-k8s:%s_full-%s",
+			Image: fmt.Sprintf("ghcr.io/firestartr-pro/firestartr:%s_full-%s",
 				m.Bootstrap.Firestartr.OperatorVersion,
 				m.Creds.CloudProvider.ImageFlavorSuffix(),
 			),

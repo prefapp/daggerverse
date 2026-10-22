@@ -155,6 +155,23 @@
             "defaultBranch": {
               "type": "string"
             },
+            "additionalBranches": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "orphan": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            },
             "features": {
               "type": "array",
               "items": {

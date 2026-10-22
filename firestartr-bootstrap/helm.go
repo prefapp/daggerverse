@@ -32,7 +32,7 @@ func (m *FirestartrBootstrap) BuildHelmValues(
 		Deploy: Deploy{
 			Replicas: 1,
 			Image: Image{
-				Name: "ghcr.io/prefapp/gitops-k8s",
+				Name: "ghcr.io/firestartr-pro/firestartr",
 				Tag: fmt.Sprintf(
 					"%s_full-%s",
 					m.Bootstrap.Firestartr.OperatorVersion,

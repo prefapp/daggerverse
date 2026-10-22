@@ -78,7 +78,7 @@ func (m *FirestartrBootstrap) RenderDeployment(
 
 		Controller: DeploymentController{
 
-			Image: fmt.Sprintf("ghcr.io/prefapp/gitops-k8s:%s", fmt.Sprintf(
+			Image: fmt.Sprintf("ghcr.io/firestartr-pro/firestartr:%s", fmt.Sprintf(
 
 				"%s_full-%s",
 				m.Bootstrap.Firestartr.OperatorVersion,
@@ -196,6 +196,14 @@ func (m *FirestartrBootstrap) CreateDeploymentAzure(
 	ctx context.Context,
 ) (*dagger.Directory, error) {
 
+	missing, err := m.missingSysServiceHelmRepositories(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("checking .firestartr Helm repositories: %w", err)
+	}
+	if len(missing) != 0 {
+		return nil, fmt.Errorf("sys-service Helm repositories are missing from %s/.firestartr; run cmd-push-helm-repositories and merge its PR before publishing the deployment", m.Bootstrap.Org)
+	}
+
 	deploymentRenderedDir, err := m.RenderDeploymentAzure(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("rendering Azure deployment data: %w", err)
@@ -234,10 +242,10 @@ func (m *FirestartrBootstrap) RenderDeploymentAzure(
 	webhookUri := re.ReplaceAllString(m.Bootstrap.WebhookUrl, "")
 
 	azureData := AzureDeploymentConfig{
-		Customer:     m.Bootstrap.Customer,
-		Org:          m.Bootstrap.Org,
-		OrgLowerCase: m.GhOrgLowerCase,
-		Domain:       m.Bootstrap.Domain,
+		Customer:           m.Bootstrap.Customer,
+		Org:                m.Bootstrap.Org,
+		OrgLowerCase:       m.GhOrgLowerCase,
+		Domain:             m.Bootstrap.Domain,
 		DeploymentPlatform: DeploymentPlatformAKS,
 		// ExternalDnsClientId defaults to the main MI here since RenderDeploymentAzure
 		// runs at PR-creation time (CmdPushDeployment) when the kind cluster may not
@@ -250,7 +258,7 @@ func (m *FirestartrBootstrap) RenderDeploymentAzure(
 		},
 		CloudProvider: m.Creds.CloudProvider,
 		Controller: DeploymentController{
-			Image: fmt.Sprintf("ghcr.io/prefapp/gitops-k8s:%s_full-%s",
+			Image: fmt.Sprintf("ghcr.io/firestartr-pro/firestartr:%s_full-%s",
 				m.Bootstrap.Firestartr.OperatorVersion,
 				m.Creds.CloudProvider.ImageFlavorSuffix(),
 			),

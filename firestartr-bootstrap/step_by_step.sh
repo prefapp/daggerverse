@@ -349,6 +349,19 @@ execute_step "$ACTION" dagger \
     --cache-volume="${VOLUME_ID}"
 
 
+if grep -q '^deploymentMode: *dedicated' "${BOOTSTRAP_FILE}"; then
+    ACTION=$(prompt_or_auto "Create sys-service Helm repositories PR in .firestartr?" "Creating sys-service Helm repositories PR")
+    execute_step "$ACTION" dagger \
+        --bootstrap-file="${BOOTSTRAP_FILE}" \
+        --credentials-secret="file:${CREDENTIALS_FILE}" \
+        call cmd-push-helm-repositories
+
+    if [[ "$ACTION" = "continue" ]]; then
+        echo "Merge the .firestartr Helm repositories PR, if one was created, before continuing."
+        wait_for_user
+    fi
+fi
+
 # Push argocd - deployment
 ACTION=$(prompt_or_auto "Push argocd - deployment to the system's repos?" "Pushing argocd - deployment")
 execute_step "$ACTION" dagger \

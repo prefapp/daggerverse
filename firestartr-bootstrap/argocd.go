@@ -9,6 +9,111 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func renderDedicatedArgoCDHierarchy(org string) (map[string]string, error) {
+	files := make(map[string]string)
+	writeManifest := func(file string, manifest interface{}) error {
+		content, err := yaml.Marshal(manifest)
+		if err != nil {
+			return fmt.Errorf("rendering %s: %w", file, err)
+		}
+		files[file] = string(content)
+		return nil
+	}
+	server := "https://kubernetes.default.svc"
+	argoRepo := fmt.Sprintf("https://github.com/%s/state-argocd", org)
+	servicesRepo := fmt.Sprintf("https://github.com/%s/state-sys-services.git", org)
+	syncPolicy := map[string]interface{}{
+		"automated":   map[string]interface{}{"prune": true},
+		"syncOptions": []string{"PruneLast=true", "CreateNamespace=true", "ServerSideApply=true"},
+	}
+	for _, name := range []string{"apps", "sys-services"} {
+		manifest := map[string]interface{}{
+			"apiVersion": "argoproj.io/v1alpha1",
+			"kind":       "Application",
+			"metadata":   map[string]interface{}{"name": name, "namespace": "argocd"},
+			"spec": map[string]interface{}{
+				"project": "default",
+				"source": map[string]interface{}{
+					"repoURL": argoRepo, "path": "./" + name, "targetRevision": "HEAD",
+					"directory": map[string]interface{}{"recurse": true, "exclude": ".gitkeep"},
+				},
+				"destination": Destination{Namespace: "argocd", Server: server},
+				"syncPolicy":  syncPolicy,
+			},
+		}
+		if err := writeManifest(fmt.Sprintf("Application.%s.yaml", name), manifest); err != nil {
+			return nil, err
+		}
+	}
+	services := []struct {
+		Directory string
+		Name      string
+		Namespace string
+	}{
+		{"firestartr", "firestartr", "firestartr"},
+		{"nginx", "ingress-nginx", "ingress-nginx"},
+		{"cert-manager", "cert-manager", "cert-manager"},
+		{"external-dns", "external-dns", "external-dns"},
+		{"argocd", "argocd", "argocd"},
+		{"argo-configuration-secrets", "argocd-configuration-secrets", "argocd"},
+		{"argo-events", "argo-events", "argo-events"},
+		{"argo-workflows", "argo-workflows", "argo-workflows"},
+	}
+	for _, service := range services {
+		sourcePath := fmt.Sprintf("kubernetes-sys-services/%s/%s", DeploymentPlatformAKS, service.Directory)
+		metadata := map[string]interface{}{"name": service.Name, "namespace": "argocd"}
+		project := AppProject{
+			APIVersion: "argoproj.io/v1alpha1",
+			Kind:       "AppProject",
+			Metadata:   metadata,
+			Spec: AppProjectSpec{
+				Description:  "Project for " + service.Name,
+				SourceRepos:  []string{servicesRepo},
+				Destinations: []Destination{{Namespace: service.Namespace, Server: server}},
+				ClusterResourceWhitelist: []interface{}{
+					map[string]string{"group": "rbac.authorization.k8s.io", "kind": "ClusterRole"},
+					map[string]string{"group": "rbac.authorization.k8s.io", "kind": "ClusterRoleBinding"},
+					map[string]string{"group": "", "kind": "Namespace"},
+					map[string]string{"group": "apiextensions.k8s.io", "kind": "CustomResourceDefinition"},
+				},
+			},
+		}
+		if service.Name == "ingress-nginx" || service.Name == "cert-manager" || service.Name == "argocd" {
+			project.Spec.ClusterResourceWhitelist = append(project.Spec.ClusterResourceWhitelist,
+				map[string]string{"group": "admissionregistration.k8s.io", "kind": "ValidatingWebhookConfiguration"},
+				map[string]string{"group": "admissionregistration.k8s.io", "kind": "MutatingWebhookConfiguration"},
+			)
+		}
+		if err := writeManifest(fmt.Sprintf("sys-services/%s/AppProject.%s.yaml", service.Directory, service.Name), project); err != nil {
+			return nil, err
+		}
+		applicationSet := map[string]interface{}{
+			"apiVersion": "argoproj.io/v1alpha1",
+			"kind":       "ApplicationSet",
+			"metadata":   metadata,
+			"spec": map[string]interface{}{
+				"generators": []interface{}{map[string]interface{}{"git": map[string]interface{}{
+					"repoURL": servicesRepo, "revision": "deployment",
+					"directories": []interface{}{map[string]string{"path": sourcePath}},
+				}}},
+				"template": map[string]interface{}{
+					"metadata": map[string]string{"name": DeploymentPlatformAKS + "-" + service.Name},
+					"spec": map[string]interface{}{
+						"project":     service.Name,
+						"source":      map[string]string{"repoURL": servicesRepo, "path": sourcePath, "targetRevision": "deployment"},
+						"destination": Destination{Namespace: service.Namespace, Server: server},
+						"syncPolicy":  syncPolicy,
+					},
+				},
+			},
+		}
+		if err := writeManifest(fmt.Sprintf("sys-services/%s/ApplicationSet.%s.yaml", service.Directory, service.Name), applicationSet); err != nil {
+			return nil, err
+		}
+	}
+	return files, nil
+}
+
 func (m *FirestartrBootstrap) CreateArgCDApplications(
 	ctx context.Context,
 ) (*dagger.Directory, error) {
@@ -89,7 +194,7 @@ func (m *FirestartrBootstrap) RenderArgoCDApplications(
 	// for SaaS it uses a customer+env-scoped namespace.
 	var namespace string
 	if m.isDedicatedDeployment() {
-namespace = "firestartr"
+		namespace = "firestartr"
 	} else {
 		namespace = fmt.Sprintf("%s-firestartr-%s", m.Bootstrap.Customer, m.Bootstrap.Env)
 	}
@@ -192,10 +297,20 @@ namespace = "firestartr"
 		m.Bootstrap.Org,
 	)
 
-	return dag.Directory().
+	applications := dag.Directory().
 		WithNewFile(pathAppStateGithub, applicationStateGithub).
 		WithNewFile(pathAppStateInfra, applicationStateInfra).
-		WithNewFile(pathAppStateSecrets, applicationStateSecrets), nil
+		WithNewFile(pathAppStateSecrets, applicationStateSecrets)
+	if m.isDedicatedDeployment() {
+		hierarchy, err := renderDedicatedArgoCDHierarchy(m.Bootstrap.Org)
+		if err != nil {
+			return nil, err
+		}
+		for file, content := range hierarchy {
+			applications = applications.WithNewFile(file, content)
+		}
+	}
+	return applications, nil
 }
 
 func renderArgoCDApplication(

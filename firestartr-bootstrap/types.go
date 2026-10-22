@@ -78,15 +78,16 @@ func (c ConfigProvider) ToAzureProviderConfigJSON() string {
 }
 
 type Component struct {
-	Name          string `yaml:"name"`
-	RepoName      string `yaml:"repoName"`
-	Description   string `yaml:"description"`
-	DefaultBranch string `yaml:"defaultBranch"`
-	Features      []Feature
-	Variables     []Variable `yaml:"variables"`
-	Secrets       []Variable `yaml:"secrets"` // Secrets have the same structure as Variables
-	Labels        []string   `yaml:"labels"`
-	Skipped       bool       `yaml:"skip"`
+	Name               string `yaml:"name"`
+	RepoName           string `yaml:"repoName"`
+	Description        string `yaml:"description"`
+	DefaultBranch      string `yaml:"defaultBranch"`
+	Features           []Feature
+	AdditionalBranches []AdditionalBranch `yaml:"additionalBranches"`
+	Variables          []Variable         `yaml:"variables"`
+	Secrets            []Variable         `yaml:"secrets"` // Secrets have the same structure as Variables
+	Labels             []string           `yaml:"labels"`
+	Skipped            bool               `yaml:"skip"`
 }
 
 type Variable struct {
@@ -97,6 +98,11 @@ type Variable struct {
 type Feature struct {
 	Name    string `yaml:"name"`
 	Version string `yaml:"version"`
+}
+
+type AdditionalBranch struct {
+	Name   string `yaml:"name"`
+	Orphan bool   `yaml:"orphan"`
 }
 
 // DeploymentModeSaaS and DeploymentModeDedicated are the two supported deployment modes.

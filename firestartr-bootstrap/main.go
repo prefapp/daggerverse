@@ -236,6 +236,21 @@ func injectDedicatedComponents(bootstrap *Bootstrap) []Component {
 
 	for i := range components {
 		if components[i].Name == "state-sys-services" {
+			deploymentBranchFound := false
+			for branchIndex := range components[i].AdditionalBranches {
+				if components[i].AdditionalBranches[branchIndex].Name == "deployment" {
+					components[i].AdditionalBranches[branchIndex].Orphan = true
+					deploymentBranchFound = true
+					break
+				}
+			}
+			if !deploymentBranchFound {
+				components[i].AdditionalBranches = append(components[i].AdditionalBranches, AdditionalBranch{
+					Name:   "deployment",
+					Orphan: true,
+				})
+			}
+
 			hasFeature := false
 			for _, feature := range components[i].Features {
 				if feature.Name == "state_repo_sys_services" && feature.Version == "2.4.0" {
@@ -258,6 +273,10 @@ func injectDedicatedComponents(bootstrap *Bootstrap) []Component {
 			Name:          "state-sys-services",
 			Description:   "Firestartr dedicated deployment system services repository",
 			DefaultBranch: bootstrap.DefaultBranch,
+			AdditionalBranches: []AdditionalBranch{{
+				Name:   "deployment",
+				Orphan: true,
+			}},
 			Features: []Feature{{
 				Name:    "state_repo_sys_services",
 				Version: "2.4.0",
