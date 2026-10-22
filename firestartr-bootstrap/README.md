@@ -49,13 +49,24 @@ The following AWS Parameter Store parameters are required:
 
 ### 2. Bootstrap File
 
+There are two deployment modes, selected via `deploymentMode`:
+
+| Field | SaaS (default) | Dedicated (Azure) |
+|---|---|---|
+| `deploymentMode` | `saas` (or omit) | `dedicated` |
+| `env` | **required** — `"pre"` or `"pro"` | **omit** — no environment concept |
+| `domain` | not used | **required** — base domain (e.g. `"azure-pre.firestartr.dev"`) |
+
+#### 2.1 SaaS Bootstrap File (AWS)
+
 ```yaml
-# BootstrapFile.yaml
+# BootstrapFile.yaml (SaaS / AWS)
 ---
+deploymentMode: saas  # optional — saas is the default
 org: <github org name> # github org name
-customer: <customer name> # customer name used for Firestartr internally, for example to find secrets within the parameter store
-env: <environment> # set either "pre" for firestartr-pre or "pro" for firestartr-pro
-defaultOrgPermissions: <none | view | contribute> # default permissions for the <org>-all group, can be none, view or contribute
+customer: <customer name> # customer name used for Firestartr internally
+env: <environment> # required for SaaS: "pre" (firestartr-pre) or "pro" (firestartr-pro)
+defaultOrgPermissions: <none | view | contribute> # default permissions for the <org>-all group, can be none, view or contribute
 defaultBranch: main
 defaultBranchStrategy: none
 defaultDomainName: <default domain name> # ask customer for a default domain name to be used in the claims, for example "myproduct"
@@ -64,9 +75,9 @@ defaultGroup: <default group> # ask customer for the owner of the default system
 defaultFirestartrGroup: firestartr # default group for firestartr users and related components (claims, state-github, state-infra...)
 
 firestartr:
-  # Check latest available release at github.com/prefapp/gitops-k8s
-  operator: <operator_version> # Ex. v1.56.1
-  cli: <cli_version> # Ex. v1.56.1
+  # Check latest available release at github.com/firestartr-pro/firestartr
+  operator: <operator_version> # Ex. v1.56.1
+  cli: <cli_version> # Ex. v1.56.1
 
 pushFiles:
   claims:
@@ -147,10 +158,55 @@ components:
         version: latest  # Check available versions at github.com/prefapp/features
 ```
 
+#### 2.2 Dedicated Bootstrap File (Azure)
+
+For dedicated (non-SaaS) deployments, replace `env` with `deploymentMode: dedicated` and `domain`:
+
+```yaml
+# BootstrapFile.yaml (dedicated / Azure)
+---
+deploymentMode: dedicated
+domain: "azure-pre.firestartr.dev"  # fully-qualified base domain; no env suffix needed
+org: <github org name>
+customer: <customer name>
+# NOTE: 'env' is absent — dedicated deployments have no environment concept
+defaultOrgPermissions: <none | view | contribute>
+defaultBranch: main
+defaultBranchStrategy: none
+defaultDomainName: <default domain name>
+defaultSystemName: <default system name>
+defaultGroup: <default group>
+defaultFirestartrGroup: firestartr
+
+firestartr:
+  operator: <operator_version>
+  cli: <cli_version>
+
+pushFiles:
+  claims:
+    push: true
+    repo: "claims"
+  dotFirestartr:
+    push: true
+    repo: ".firestartr"
+  crs:
+    providers:
+      github:
+        push: true
+        repo: "state-github"
+
+components:
+  # state-sys-services and state-argocd are auto-injected; no need to declare them here
+  - name: "dot-firestartr"
+    ...
+```
+
 All the parameters must be filled. When copy pasting this file, `<placeholders>` must be replaced, but any other values can be treated as defaults and changed if needed:
 
 - `org`: name of the GitHub organization where Firestartr will be installed.
-- `env`: environment where the deployment and ArgoCD application will be created. Can be either `pre` or `pro`, and will result in commits being created to the necessary repositories in the `firestartr-<env>` organization.
+- `deploymentMode`: deployment topology. `saas` (default, can be omitted) targets the shared `firestartr-<env>` org on AWS. `dedicated` targets the customer's own GitHub org on Azure.
+- `env`: **SaaS only.** Environment where the deployment and ArgoCD application will be created. Can be either `pre` or `pro`, resulting in commits to the `firestartr-<env>` organization. **Omit for dedicated deployments.**
+- `domain`: **Dedicated only.** Fully-qualified base domain for the deployment (e.g. `azure-pre.firestartr.dev`). The webhook URL will be `https://<customer>.events.<domain>`. **Omit for SaaS deployments.**
 - `customer`: name used for the org internally, to compose the parameter store paths (e.g. `/firestartr/fs-<customer>-admin/app-id`). Must be set even if it matches the org name.
 - `defaultBranch`: default branch name to set in the `defaults` config file, `claims_defaults.yaml`. Usually `main` or `master`.
 - `defaultSystemName`: the name of the system that will be created by the bootstrapping process and set in the `claims_defaults.yaml` configuration file. Though any name can be used, it's recommended the bootstrap operator asks the client which system name they want to use as default.
@@ -159,13 +215,13 @@ All the parameters must be filled. When copy pasting this file, `<placeholders>`
 - `defaultBranchStrategy`: default branch strategy for the organization repositories. These are defined in the `branch_strategies.yaml` and `expander_branch_strategies.yaml` files. Currently, the bootstrap creates only a definition for `gitflow`, though more can be added after bootstrapping if needed. Allowed values: `none`, `gitflow` or `custom`.
 - `defaultFirestartrGroup`: name of the group that will be used by Firestartr by default. It can be an already existing group, which will be imported and used in the bootstrapping process, or a new group that will be created by it.
 - `defaultGroup`: slug of the group that will be used by Firestartr by default. It can be an already existing group, which will be imported and used as the owner of the system and domain created by the bootstrap process.
-- `firestartr.operator`: Firestartr version to be used by the operator. Must be the name of an image tag, without the flavor (i.e., `v1.53.0` instead of `v1.53.0_full-aws` or `v1.53.0_slim`). You can check the latest available image version [here](https://github.com/prefapp/gitops-k8s/pkgs/container/gitops-k8s).
-- `firestartr.cli`: Firestartr CLI version to be used in the importation process. You can check the latest available CLI version [here](https://github.com/prefapp/gitops-k8s/blob/main/.release-please-manifest.json#L2). Note that this CLI version **won't** be the version set as the `FIRESTARTR_CLI_VERSION` organization variable, which is set from the parameter store instead (`/firestartr/<customer-name>/firestartr-cli-version`).
+- `firestartr.operator`: Firestartr version to be used by the operator. Must be the name of an image tag, without the flavor (i.e., `v1.53.0` instead of `v1.53.0_full-aws` or `v1.53.0_slim`). You can check the latest available image version [here](https://github.com/firestartr-pro/firestartr/pkgs/container/gitops-k8s).
+- `firestartr.cli`: Firestartr CLI version to be used in the importation process. You can check the latest available CLI version [here](https://github.com/firestartr-pro/firestartr/blob/main/.release-please-manifest.json#L2). Note that this CLI version **won't** be the version set as the `FIRESTARTR_CLI_VERSION` organization variable, which is set from the parameter store instead (`/firestartr/<customer-name>/firestartr-cli-version`).
 - `pushFiles`: whether or not to push the files create to their respective repositories once the bootstrap process finishes. Each section has two parameters: `push`, which if `true` will push those files to `repo`, whose value should be the name of the repository where those files will be pushed to.
-- `components`: list of repositories to create during the bootstrap process. The values of each component will be explained in section 2.1. For a default bootstrap installation, it's recommended to leave them as is and update only the `<feature-version>` placeholders. This section should only be updated on special cases (e.g., the client already has a `claims` repository created).
+- `components`: list of repositories to create during the bootstrap process. The values of each component will be explained in section 2.3. For a default bootstrap installation, it's recommended to leave them as is and update only the `<feature-version>` placeholders. This section should only be updated on special cases (e.g., the client already has a `claims` repository created). **For dedicated deployments, `state-sys-services` and `state-argocd` are auto-injected and do not need to be listed here.**
 
 
-#### 2.1 Components
+#### 2.3 Components
 
 Each component represents a repository that will be created in the organization. All fields are mandatory. The parameters are:
 
@@ -212,27 +268,82 @@ The rest of the parameters of the `cloudProvider` section are the AWS S3 bucket 
 - `github.prefappBotPat`: Personal Access Token for the Prefapp Bot user, used to download the features from the features repository.
 - `github.operatorPat`: Personal Access Token for the Operator user, used to commit the deployment and ArgoCD application PRs to the `firestartr-<env>` organization.
 
-#### 3.2 Azure terraform backend provider configuration (currently not supported)
+#### 3.2 Azure dedicated deployment configuration
+
+For dedicated (non-SaaS) deployments on Azure, set `deploymentMode: dedicated` in your `Bootstrapfile.yaml` and use the following `Credentialsfile.yaml` format:
 
 ```yaml
 # Credentialsfile.yaml
 ---
 cloudProvider:
-  providerConfigName: backend-provider-config-name
-  name: azurerm
+  name: azure
   config:
-    use_azuread_auth: true
-    tenant_id: "00000000-0000-0000-0000-000000000000"
-    client_id: "00000000-0000-0000-0000-000000000000"
-    client_secret: "************************************"
-    storage_account_name: "abcd1234"
+    tenant_id: "<azure-tenant-id>"
+    subscription_id: "<azure-subscription-id>"
+    # Runtime identity: firestartr-mi User-Assigned Managed Identity.
+    # Used in the deployed AKS cluster via Workload Identity (no client secret).
+    client_id: "<firestartr-mi-client-id>"
+    # Bootstrap identity: dedicated App Registration (Service Principal).
+    # Used only during bootstrap in the local kind cluster by ESO and Terraform.
+    # Delete the entire App Registration after bootstrap completes.
+    bootstrap_client_id: "<bootstrap-sp-application-id>"
+    bootstrap_client_secret: "<bootstrap-sp-client-secret>"
+    storage_account_name: "tfstate<customer>"   # Azure Storage Account name for Terraform state
     container_name: "tfstate"
-  source: hashicorp/aws
-  type: aws
-  version: ~> 4.0
+    resource_group_name: "rg-firestartr"        # Also used for DNS zone resource group
+    key_vault_name: "firestartr-kv"             # Azure Key Vault name (no slashes in secret names)
+    aks_cluster_name: "<aks-cluster-name>"      # Name of the target AKS cluster
+    location: "<azure-region>"                  # Azure region, e.g. "westeurope" — must match resource group
+  source: hashicorp/azurerm
+  type: azurerm
+  version: "~> 3.0"
 github:
-  providerConfigName: github-app-provider-config-name
+  prefappBotPat: "<prefapp-bot-pat>"
+  operatorPat: "<operator-pat>"
 ```
+
+And your `Bootstrapfile.yaml` must include `deploymentMode` and `domain`:
+
+```yaml
+# Bootstrapfile.yaml (dedicated Azure example)
+---
+deploymentMode: dedicated
+domain: "azure-pre.firestartr.dev"   # Fully-qualified base domain; encodes env if needed
+org: "<your-github-org>"
+customer: "<customer-name>"
+# (no 'env' field for dedicated deployments)
+...
+```
+
+**Pre-flight requirements for dedicated Azure deployments:**
+
+1. A `firestartr-mi` User-Assigned Managed Identity with OIDC federation configured on the AKS cluster.
+2. A bootstrap App Registration (Service Principal) in Entra ID with:
+   - `Key Vault Secrets Officer` on the Azure Key Vault
+   - `Storage Blob Data Contributor` on the Terraform state storage account
+   - A client secret (populate `bootstrap_client_id` and `bootstrap_client_secret` in the credentials file)
+   - **Delete the entire App Registration after bootstrap completes.**
+3. Azure Key Vault populated with all required secrets using the `[a-zA-Z0-9-]` naming convention:
+   - `fs-pem`, `fs-app-id`, `fs-<org>-installation-id`
+   - `fs-admin-pem`, `fs-admin-app-id`, `fs-admin-<org>-installation-id`
+   - `fs-argocd-pem`, `fs-argocd-app-id`, `fs-argocd-<org>-installation-id`
+   - `fs-state-pem`, `fs-state-app-id`, `fs-state-<org>-installation-id`
+   - `fs-checks-pem`, `fs-checks-app-id`, `fs-checks-<org>-installation-id`
+   - `fs-import-pem`, `fs-import-app-id`, `fs-import-<org>-installation-id`
+   - `github-webhook-secret`, `prefapp-bot-pat`, `firestartr-cli-version`
+4. Delegated DNS zone matching `domain` in the Azure resource group.
+
+**What the dedicated bootstrap does differently from SaaS:**
+
+| Concern | SaaS (AWS) | Dedicated (Azure) |
+|---|---|---|
+| Repo targeting | `firestartr-<env>/<repo>` | `<bootstrap.Org>/<repo>` |
+| Cluster services | ESO only (pre-provisioned) | Installs ESO + nginx + cert-manager + external-dns + ArgoCD |
+| Webhook URL | `<customer>.events[.<env>].firestartr.dev` | `<customer>.events.<domain>` |
+| Secret refs | AWS Parameter Store paths | Azure Key Vault dash-delimited names |
+| Deployment values | `values.tmpl` (AWS/ALB/IAM) | `azure_values.tmpl` (Azure/nginx/MI) |
+
+> **Important:** The `bootstrap_client_id` and `bootstrap_client_secret` belong to a dedicated App Registration created solely for this bootstrap run. The deployed state uses `firestartr-mi` via Workload Identity and never needs a client secret. **Delete the entire App Registration after bootstrap completes** — not just the secret.
 
 ### 4. How to launch the bootstrap
 
@@ -398,6 +509,20 @@ dagger --bootstrap-file="./Bootstrapfile.yaml" \
 
 Push the created claims and crs files stored in `--cache-volume` to their respective repositories.
 
+For dedicated/BYOC deployments, configure the sys-service Helm repositories first:
+
+```shell
+dagger --bootstrap-file="./Bootstrapfile.yaml" \
+  --credentials-secret="file:./Credentialsfile.yaml" \
+  call cmd-push-helm-repositories
+```
+
+This opens a separate PR in `<org>/.firestartr`, adding only missing HTTP sources
+under `helm_repositories/`. Existing entries are preserved. The current BYOC charts
+use no OCI sources, so `docker_registries/` is unchanged. If all sources are already
+configured, no PR is created. Merge this PR before publishing the deployment.
+The step-by-step script pauses for this merge, including in automatic mode.
+
 Create deployment PR:
 
 ```shell
@@ -406,8 +531,28 @@ dagger --bootstrap-file="./Bootstrapfile.yaml" \
        call cmd-push-deployment
 ```
 
-Creates a deployment PR in `firestartr-<env>/app-firestartr`.
+- **SaaS:** Creates a deployment PR in `firestartr-<env>/app-firestartr`.
+- **Dedicated:** Creates a deployment PR in `<org>/state-sys-services` with all sys-service release descriptors and values.
 
+Dedicated deployment publishing checks the `.firestartr` default branch and stops
+if any required Helm sources are still missing, including when invoked directly.
+
+Apply sys-services with values (**dedicated only**):
+
+```shell
+dagger --bootstrap-file="./Bootstrapfile.yaml" \
+       --credentials-secret="file:./Credentialsfile.yaml" \
+       call cmd-apply-sys-services \
+       --docker-socket=/var/run/docker.sock \
+       --kind-svc=tcp://localhost:<your-kind-port> \
+       --kind-cluster-name=<your-kind-cluster-name>
+```
+
+This step is **only needed for dedicated deployments**. It renders the Azure-specific Helm values and applies them directly to the AKS cluster via `helm upgrade --install --values`, ensuring all cluster services (nginx, cert-manager, external-dns, ArgoCD, argo-events, argo-workflows) are correctly configured from the start.
+
+The AKS cluster name is read from `aks_cluster_name` in the credentials file. If the external-dns Managed Identity client ID cannot be resolved automatically, the command prompts for the client ID on the terminal.
+
+> Merge the `state-sys-services` PR **before** running this step so the desired state is recorded in git first.
 
 Create ArgoCD application PR:
 
@@ -417,7 +562,17 @@ dagger --bootstrap-file="./Bootstrapfile.yaml" \
        call cmd-push-argo
 ```
 
-Creates an application PR in `firestartr-<env>/state-argocd`.
+- **SaaS:** Creates an application PR in `firestartr-<env>/state-argocd`.
+- **Dedicated:** Creates an application PR in `<org>/state-argocd` and patches `<org>/state-sys-services` with the ArgoCD secrets entry.
+
+The dedicated `state-argocd` PR includes the three Firestartr state applications,
+root `Application.apps.yaml` and `Application.sys-services.yaml` manifests, and an
+ApplicationSet/AppProject pair under `sys-services/` for each bootstrapped service:
+Firestartr, nginx, cert-manager, external-dns, ArgoCD, ArgoCD configuration secrets,
+Argo Events, and Argo Workflows. These ApplicationSets watch the `deployment` branch
+of `<org>/state-sys-services` under `kubernetes-sys-services/firestartr-aks/`.
+Each project allows the matching repository, destination namespace, and required
+cluster resources. All ArgoCD control manifests are placed in the `argocd` namespace.
 
 ## 7. Troubleshooting
 
@@ -458,7 +613,7 @@ components:
 - Give fs-<org>-argocd and fs-<org>-state access to the newly created state-secrets
 - The ExternalSecrets.firestartr-secrets.yaml file stored in state-infra must be manually deleted. Since a new one already exists in state-secrets and these files have no tfStateKey nothing should happen
 
-[More info](https://github.com/prefapp/gitops-k8s/issues/1999#issuecomment-4519670990)
+[More info](https://github.com/firestartr-pro/firestartr/issues/1999#issuecomment-4519670990)
 
 ## 9. Flow chart
 ![BootstrapDiagram drawio](https://github.com/user-attachments/assets/1c824119-b147-47bb-b8f8-8cc17db29c6a)

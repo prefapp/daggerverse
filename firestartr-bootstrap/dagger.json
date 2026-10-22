@@ -1,6 +1,6 @@
 {
   "name": "firestartr-bootstrap",
-  "engineVersion": "v0.19.7",
+  "engineVersion": "v0.21.9",
   "sdk": {
     "source": "go"
   },

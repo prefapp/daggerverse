@@ -120,7 +120,57 @@ func (m *FirestartrBootstrap) RenderInitialCrs(ctx context.Context, templ *dagge
 	if err != nil {
 		return "", err
 	}
-	return renderTmpl(templateContent, m.Creds)
+
+	creds := m.Creds
+
+	if m.isDedicatedDeployment() {
+		// For the kind cluster FirestartrProviderConfig, the Terraform azurerm provider
+		// needs SP credentials (client_id + client_secret) to authenticate to Azure RM
+		// for state backend operations. The runtime firestartr-mi Managed Identity cannot
+		// be used here because MIs have no client_secret and the kind cluster has no
+		// Workload Identity support. We therefore substitute the bootstrap SP credentials
+		// into the standard client_id / client_secret fields before serialisation so
+		// that toJson emits the correct keys for the Terraform azurerm provider.
+		credsCopy := *creds
+		cloudProviderCopy := credsCopy.CloudProvider
+		configCopy := cloudProviderCopy.Config
+		configCopy.ClientId = configCopy.BootstrapClientId
+		configCopy.ClientSecret = configCopy.BootstrapClientSecret
+		configCopy.BootstrapClientId = ""
+		configCopy.BootstrapClientSecret = ""
+		// KeyVaultName is a bootstrap-only field used by ESO and credential validation;
+		// it is not a valid azurerm Terraform backend argument and must be omitted from
+		// the FirestartrProviderConfig config JSON.
+		configCopy.KeyVaultName = ""
+
+		// Auto-fetch the AKS OIDC issuer URL from the ARM API when not provided
+		// in the credentials file, so the user doesn't have to look it up manually.
+		if configCopy.AksOidcIssuerUrl == "" {
+			issuerUrl, err := fetchAksOidcIssuerUrl(ctx, m.Creds)
+			if err != nil {
+				return "", fmt.Errorf("RenderInitialCrs: %w", err)
+			}
+			configCopy.AksOidcIssuerUrl = issuerUrl
+		}
+
+		cloudProviderCopy.Config = configCopy
+		credsCopy.CloudProvider = cloudProviderCopy
+		creds = &credsCopy
+	}
+
+	// Build the combined data struct so templates can access both credential
+	// fields and Bootstrap fields (e.g. for dedicated-mode TFWorkspace CRs).
+	data := InitialCrsData{
+		CloudProvider:     creds.CloudProvider,
+		GithubApp:         creds.GithubApp,
+		GithubAppOperator: creds.GithubAppOperator,
+		Customer:          m.Bootstrap.Customer,
+		Org:               m.Bootstrap.Org,
+		DeploymentMode:    m.Bootstrap.DeploymentMode,
+		Domain:            m.Bootstrap.Domain,
+	}
+
+	return renderTmpl(templateContent, data)
 }
 
 func (m *FirestartrBootstrap) RenderBootstrapFile(ctx context.Context, templ *dagger.File) (string, error) {
