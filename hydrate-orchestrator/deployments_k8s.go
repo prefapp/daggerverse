@@ -245,7 +245,6 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 			ImagesMatrix:     string(jsonBytes),
 			ServiceNames:     combinedServices,
 			RepositoryCaller: g.caller,
-			Image:            g.images[0].Image,
 		}
 
 		result.addDeployment(kdep)

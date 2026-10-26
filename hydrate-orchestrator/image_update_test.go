@@ -111,8 +111,7 @@ func TestProcessImagesMatrixGroups(t *testing.T) {
 				}
 				first := images[0]
 				if deployment.Cluster != first.Platform || deployment.Tenant != first.Tenant ||
-					deployment.Environment != first.Env || deployment.RepositoryCaller != first.RepositoryCaller ||
-					deployment.Image != first.Image {
+					deployment.Environment != first.Env || deployment.RepositoryCaller != first.RepositoryCaller {
 					t.Errorf("deployment metadata does not match first image: %+v", deployment)
 				}
 			}
