@@ -206,7 +206,6 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 				services map[string]bool
 				caller   string
 			}{images: []ImageData{}, services: make(map[string]bool), caller: image.RepositoryCaller}
-			groups[deploymentPath] = g
 		}
 		g.images = append(g.images, image)
 		for _, s := range image.ServiceNameList {
@@ -215,6 +214,7 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 		if g.caller == "" {
 			g.caller = image.RepositoryCaller
 		}
+		groups[deploymentPath] = g
 	}
 
 	result := &Deployments{
