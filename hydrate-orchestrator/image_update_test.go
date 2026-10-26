@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"reflect"
+	"slices"
 	"testing"
 )
 
@@ -52,6 +54,69 @@ func TestProcessImagesMatrix(t *testing.T) {
 		t.Fatalf("expected %v, got %v", expectedDpl, deployments.KubernetesDeployments[0])
 	}
 
+}
+
+func TestProcessImagesMatrixGroups(t *testing.T) {
+	for _, secondEnv := range []string{"dev", "prod"} {
+		t.Run(secondEnv, func(t *testing.T) {
+			matrix := ImageMatrix{Images: []ImageData{
+				{
+					Tenant: "test-tenant", App: "sample-app", Env: "dev",
+					Platform: "cluster-name", ServiceNameList: []string{"micro-a"},
+					Image: "registry/image:tag", RepositoryCaller: "caller",
+				},
+				{
+					Tenant: "test-tenant", App: "sample-app", Env: secondEnv,
+					Platform: "cluster-name", ServiceNameList: []string{"micro-b"},
+					Image: "registry/image:tag", RepositoryCaller: "caller",
+				},
+			}}
+			input, err := json.Marshal(matrix)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			expected := map[string][]ImageData{
+				"kubernetes/cluster-name/test-tenant/dev": {matrix.Images[0]},
+			}
+			secondPath := "kubernetes/cluster-name/test-tenant/" + secondEnv
+			expected[secondPath] = append(expected[secondPath], matrix.Images[1])
+
+			m := &HydrateOrchestrator{}
+			deployments := m.processImagesMatrix(string(input)).KubernetesDeployments
+			if len(deployments) != len(expected) {
+				t.Fatalf("expected %d deployments, got %d", len(expected), len(deployments))
+			}
+			for _, deployment := range deployments {
+				images, ok := expected[deployment.DeploymentPath]
+				if !ok {
+					t.Fatalf("unexpected deployment path: %s", deployment.DeploymentPath)
+				}
+				delete(expected, deployment.DeploymentPath)
+				var combined ImageMatrix
+				if err := json.Unmarshal([]byte(deployment.ImagesMatrix), &combined); err != nil {
+					t.Fatal(err)
+				}
+				if !reflect.DeepEqual(combined.Images, images) {
+					t.Errorf("expected images %v, got %v", images, combined.Images)
+				}
+				var services []string
+				for _, image := range images {
+					services = append(services, image.ServiceNameList...)
+				}
+				slices.Sort(services)
+				slices.Sort(deployment.ServiceNames)
+				if !slices.Equal(deployment.ServiceNames, services) {
+					t.Errorf("expected services %v, got %v", services, deployment.ServiceNames)
+				}
+				first := images[0]
+				if deployment.Cluster != first.Platform || deployment.Tenant != first.Tenant ||
+					deployment.Environment != first.Env || deployment.RepositoryCaller != first.RepositoryCaller {
+					t.Errorf("deployment metadata does not match first image: %+v", deployment)
+				}
+			}
+		})
+	}
 }
 
 func TestGetRepositoryCaller(t *testing.T) {

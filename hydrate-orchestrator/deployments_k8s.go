@@ -183,10 +183,6 @@ func kubernetesSysServiceDeploymentLabels(cluster_name string, sys_service_name 
 func (m *HydrateOrchestrator) processImagesMatrix(
 	updatedDeployments string,
 ) *Deployments {
-	result := &Deployments{
-		KubernetesDeployments: []KubernetesAppDeployment{},
-	}
-
 	var imagesMatrix ImageMatrix
 	err := json.Unmarshal([]byte(updatedDeployments), &imagesMatrix)
 
@@ -194,46 +190,64 @@ func (m *HydrateOrchestrator) processImagesMatrix(
 		panic(err)
 	}
 
+	// Group images by deployment path (kubernetes/<platform>/<tenant>/<env>)
+	groups := make(map[string]struct {
+		images   []ImageData
+		services map[string]bool
+		caller   string
+	})
+
 	for _, image := range imagesMatrix.Images {
+		deploymentPath := filepath.Join("kubernetes", image.Platform, image.Tenant, image.Env)
+		g, ok := groups[deploymentPath]
+		if !ok {
+			g = struct {
+				images   []ImageData
+				services map[string]bool
+				caller   string
+			}{images: []ImageData{}, services: make(map[string]bool), caller: image.RepositoryCaller}
+		}
+		g.images = append(g.images, image)
+		for _, s := range image.ServiceNameList {
+			g.services[s] = true
+		}
+		if g.caller == "" {
+			g.caller = image.RepositoryCaller
+		}
+		groups[deploymentPath] = g
+	}
 
-		// At the moment the dispatch does not send the cluster so we extract it from the base folder
+	result := &Deployments{
+		KubernetesDeployments: []KubernetesAppDeployment{},
+	}
 
-		deploymentPath := filepath.Join(
-			"kubernetes",
-			image.Platform,
-			image.Tenant,
-			image.Env,
-		)
-
-		uniqueImage := []ImageData{image}
-
-		uniqueImageMatrix := ImageMatrix{
-			Images: uniqueImage,
+	for path, g := range groups {
+		// Build combined ServiceNames (dedup)
+		combinedServices := make([]string, 0, len(g.services))
+		for s := range g.services {
+			combinedServices = append(combinedServices, s)
 		}
 
-		jsonUniqueImage, err := json.Marshal(uniqueImageMatrix)
-
+		// Build combined ImagesMatrix JSON
+		combinedMatrix := ImageMatrix{Images: g.images}
+		jsonBytes, err := json.Marshal(combinedMatrix)
 		if err != nil {
-
 			panic(err)
-
 		}
 
 		kdep := &KubernetesAppDeployment{
 			Deployment: Deployment{
-				DeploymentPath: deploymentPath,
+				DeploymentPath: path,
 			},
-			Cluster:          image.Platform,
-			Tenant:           image.Tenant,
-			Environment:      image.Env,
-			ImagesMatrix:     string(jsonUniqueImage),
-			ServiceNames:     image.ServiceNameList,
-			RepositoryCaller: image.RepositoryCaller,
-			Image:            image.Image,
+			Cluster:          g.images[0].Platform,
+			Tenant:           g.images[0].Tenant,
+			Environment:      g.images[0].Env,
+			ImagesMatrix:     string(jsonBytes),
+			ServiceNames:     combinedServices,
+			RepositoryCaller: g.caller,
 		}
 
 		result.addDeployment(kdep)
-
 	}
 
 	return result
