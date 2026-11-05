@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.4.4](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.4.3...hydrate-orchestrator-v6.4.4) (2026-10-26)
+
+
+### Bug Fixes
+
+* **`hydrate-orchestrator`:** simultaneous dispatches not working properly ([#503](https://github.com/prefapp/daggerverse/issues/503)) ([c756d23](https://github.com/prefapp/daggerverse/commit/c756d23973f59681f2efa60270944a92fa037531))
+
 ## [6.4.3](https://github.com/prefapp/daggerverse/compare/hydrate-orchestrator-v6.4.2...hydrate-orchestrator-v6.4.3) (2026-07-09)
 
 

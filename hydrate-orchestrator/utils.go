@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/hydrate-orchestrator/internal/dagger"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -144,7 +145,6 @@ type KubernetesAppDeployment struct {
 	ImagesMatrix     string
 	ServiceNames     []string
 	RepositoryCaller string
-	Image            string
 }
 
 /*
@@ -216,7 +216,6 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 	// Extract the necessary fields
 	serviceNames := kd.ServiceNames
 	repo := kd.RepositoryCaller
-	image := kd.Image
 
 	// Build the repository link if a URL is provided
 	repoLink := repo
@@ -235,6 +234,7 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 			// Use the first service_name or concatenate if multiple
 			serviceName := serviceNames[0]
 			if len(serviceNames) > 1 {
+				serviceNames = append([]string(nil), serviceNames...)
 				for i, name := range serviceNames {
 					serviceNames[i] = fmt.Sprintf("`%s`", name)
 				}
@@ -247,22 +247,30 @@ func (kd *KubernetesAppDeployment) String(summary bool, repoURL ...string) strin
 			)
 		}
 	} else {
-		// If no service names are provided, just return the deployment coordinates
-		if len(serviceNames) == 0 {
+		var matrix ImageMatrix
+		if kd.ImagesMatrix != "" {
+			if err := json.Unmarshal([]byte(kd.ImagesMatrix), &matrix); err != nil {
+				panic(err)
+			}
+		}
+		if len(matrix.Images) == 0 {
 			return "\n### Deployment coordinates:" +
 				fmt.Sprintf("\n  * Cluster: `%s`", kd.Cluster) +
 				fmt.Sprintf("\n  * Tenant: `%s`", kd.Tenant) +
 				fmt.Sprintf("\n  * Environment: `%s`", kd.Environment)
 		} else {
-			// If service names are provided, format them into a list
-			servicesList := ""
-			for _, svc := range serviceNames {
-				servicesList += fmt.Sprintf("      - `%s`\n", svc)
+			updates := ""
+			for _, image := range matrix.Images {
+				for _, service := range image.ServiceNameList {
+					updates += fmt.Sprintf("      - Service `%s`: `%s`\n", service, image.Image)
+				}
+				for _, key := range image.ImageKeys {
+					updates += fmt.Sprintf("      - Image key `%s`: `%s`\n", key, image.Image)
+				}
 			}
 			return "\n### :rocket: Deployment updated from new image dispatch" +
 				fmt.Sprintf("\n  * Repository: %s", repoLink) +
-				fmt.Sprintf("\n  * Services updated:\n %s", servicesList) +
-				fmt.Sprintf("\n  * New image: `%s`", image) +
+				fmt.Sprintf("\n  * Image updates:\n %s", updates) +
 				"\n### Deployment coordinates:" +
 				fmt.Sprintf("\n  * Cluster: `%s`", kd.Cluster) +
 				fmt.Sprintf("\n  * Tenant: `%s`", kd.Tenant) +
