@@ -568,7 +568,7 @@ func clonePrefappRepo(
 	patValue string,
 ) (*dagger.Container, error) {
 
-	authURL := fmt.Sprintf("https://%s@github.com/%s/%s.git", patValue, "prefapp", repoName)
+	authURL := fmt.Sprintf("https://x-access-token:%s@github.com/%s/%s.git", patValue, "prefapp", repoName)
 
 	gitArgs := []string{
 		"git",
