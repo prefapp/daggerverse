@@ -1,0 +1,27 @@
+provider: azure
+azure:
+  resourceGroup: "{{ .CloudProvider.Config.ResourceGroupName }}"
+  tenantId: "{{ .CloudProvider.Config.TenantId }}"
+  subscriptionId: "{{ .CloudProvider.Config.SubscriptionId }}"
+  useWorkloadIdentityExtension: true
+serviceAccount:
+  annotations:
+    azure.workload.identity/client-id: "{{ .ExternalDnsClientId }}"
+podLabels:
+  azure.workload.identity/use: "true"
+secretConfiguration:
+  enabled: true
+  mountPath: /etc/kubernetes
+  data:
+    azure.json: |
+      {
+        "tenantId": "{{ .CloudProvider.Config.TenantId }}",
+        "subscriptionId": "{{ .CloudProvider.Config.SubscriptionId }}",
+        "resourceGroup": "{{ .CloudProvider.Config.ResourceGroupName }}",
+        "useWorkloadIdentityExtension": true
+      }
+txtOwnerId: "{{ .DeploymentPlatform }}"
+sources:
+  - ingress
+domainFilters:
+  - "{{ .Domain }}"

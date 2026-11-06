@@ -1,0 +1,55 @@
+global:
+  domain: "argocd.{{ .Domain }}"
+
+configs:
+  cm:
+    admin.enabled: "true"
+    # Backstage account — used for catalog token generation
+    accounts.backstage: apiKey, login
+    accounts.backstage.enabled: "true"
+    # Argo Workflows account — for workflow automation
+    accounts.argo-workflows: apiKey, login
+    accounts.argo-workflows.enabled: "true"
+    create: true
+    url: "https://argocd.{{ .Domain }}"
+  rbac:
+    create: true
+    policy.default: role:readonly
+    policy.csv: |
+      p, argo-workflows, projects, update, *, allow
+    scopes: "[groups, email]"
+  params:
+    server.insecure: "true"
+    controller.diff.server.side: "true"
+
+# ArgoCD Server — Workload Identity annotations so ArgoCD can read Azure
+# Key Vault secrets via ESO and authenticate to Azure AD for OIDC.
+server:
+  serviceAccount:
+    annotations:
+      azure.workload.identity/client-id: "{{ .CloudProvider.Config.ClientId }}"
+      azure.workload.identity/tenant-id: "{{ .CloudProvider.Config.TenantId }}"
+  podLabels:
+    azure.workload.identity/use: "true"
+
+# ArgoCD Application Controller
+controller:
+  serviceAccount:
+    annotations:
+      azure.workload.identity/client-id: "{{ .CloudProvider.Config.ClientId }}"
+      azure.workload.identity/tenant-id: "{{ .CloudProvider.Config.TenantId }}"
+  podLabels:
+    azure.workload.identity/use: "true"
+
+# ArgoCD ApplicationSet Controller
+applicationSet:
+  serviceAccount:
+    annotations:
+      azure.workload.identity/client-id: "{{ .CloudProvider.Config.ClientId }}"
+      azure.workload.identity/tenant-id: "{{ .CloudProvider.Config.TenantId }}"
+  podLabels:
+    azure.workload.identity/use: "true"
+
+crds:
+  install: true
+  keep: true

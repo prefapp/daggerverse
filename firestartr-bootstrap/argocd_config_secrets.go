@@ -18,9 +18,42 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 		m.Creds.GithubApp.OperatorPat,
 	)
 
+	// For dedicated deployments, target the customer's own state-sys-services repo.
+	var sysSvcsOrg, argoSecretsFilePath string
+	var appIdSecretRef, installationIdSecretRef, pemSecretRef string
+
+	if m.isDedicatedDeployment() {
+		sysSvcsOrg = m.Bootstrap.Org
+		argoSecretsFilePath = fmt.Sprintf("kubernetes-sys-services/%s/argo-configuration-secrets/values.yaml", DeploymentPlatformAKS)
+		// Azure Key Vault dash-delimited names
+		appIdSecretRef = "fs-argocd-app-id"
+		installationIdSecretRef = fmt.Sprintf("fs-argocd-%s-installation-id", m.GhOrgLowerCase)
+		pemSecretRef = "fs-argocd-pem"
+	} else {
+		sysSvcsOrg = fmt.Sprintf("firestartr-%s", m.Bootstrap.Env)
+		argoSecretsFilePath = fmt.Sprintf("kubernetes-sys-services/firestartr-%s/argo-configuration-secrets/values.yaml", m.Bootstrap.Env)
+		// AWS Parameter Store hierarchical paths
+		appIdSecretRef = fmt.Sprintf(
+			"/firestartr/%s/fs-%s-argocd/app-id",
+			m.Bootstrap.Customer,
+			m.Bootstrap.Customer,
+		)
+		installationIdSecretRef = fmt.Sprintf(
+			"/firestartr/%s/fs-%s-argocd/%s/app-installation-id",
+			m.Bootstrap.Customer,
+			m.Bootstrap.Customer,
+			m.Bootstrap.Org,
+		)
+		pemSecretRef = fmt.Sprintf(
+			"/firestartr/%s/fs-%s-argocd/pem",
+			m.Bootstrap.Customer,
+			m.Bootstrap.Customer,
+		)
+	}
+
 	argoCDRepo, err := m.CloneRepo(
 		ctx,
-		fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
+		sysSvcsOrg,
 		"state-sys-services",
 		tokenSecret,
 	)
@@ -29,23 +62,6 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 
 		return nil, fmt.Errorf("cloning state-sys-services repo: %w", err)
 	}
-
-	appIdSecretRef := fmt.Sprintf(
-		"/firestartr/%s/fs-%s-argocd/app-id",
-		m.Bootstrap.Customer,
-		m.Bootstrap.Customer,
-	)
-	installationIdSecretRef := fmt.Sprintf(
-		"/firestartr/%s/fs-%s-argocd/%s/app-installation-id",
-		m.Bootstrap.Customer,
-		m.Bootstrap.Customer,
-		m.Bootstrap.Org,
-	)
-	pemSecretRef := fmt.Sprintf(
-		"/firestartr/%s/fs-%s-argocd/pem",
-		m.Bootstrap.Customer,
-		m.Bootstrap.Customer,
-	)
 
 	clientAccess := ClientAccess{
 		GithubAppId: PrivateKeyReference{
@@ -62,7 +78,7 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 	patchedDir, err := safelyPatchYamlConfig(
 		ctx,
 		argoCDRepo.Directory("/repo"),
-		fmt.Sprintf("kubernetes-sys-services/firestartr-%s/argo-configuration-secrets/values.yaml", m.Bootstrap.Env),
+		argoSecretsFilePath,
 		m.GhOrgLowerCase,
 		clientAccess,
 	)
@@ -75,7 +91,7 @@ func (m *FirestartrBootstrap) AddArgoCDSecrets(
 	err = m.CreatePR(
 		ctx,
 		"state-sys-services",
-		fmt.Sprintf("firestartr-%s", m.Bootstrap.Env),
+		sysSvcsOrg,
 		patchedDir,
 		fmt.Sprintf("automated-add-argocd-secrets-for-%s", m.Bootstrap.Org),
 		fmt.Sprintf("ci: add argocd secrets for %s [automated]", m.Bootstrap.Org),
