@@ -56,7 +56,11 @@ providers:
     name: firestartr-secrets
     secretStore:
       kind: SecretStore
-      name: {{ $.FinalSecretStoreName }}
+      {{- if eq $.DeploymentMode "dedicated" }}
+      name: firestartr-kv
+      {{- else }}
+      name: aws  # Rewritten to the final store before uploading.
+      {{- end }}
     externalSecrets:
       refreshInterval: 24h
       secrets:

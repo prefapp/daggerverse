@@ -161,6 +161,7 @@ func (m *FirestartrBootstrap) CreateLabelsInRepo(
 				"label",
 				"create",
 				label,
+				"--force",
 			}).
 			Sync(ctx)
 
