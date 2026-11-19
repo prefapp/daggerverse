@@ -318,7 +318,7 @@ This subsection documents every field specific to Azure BYOC (dedicated) deploym
 - `key_vault_name`: Azure Key Vault name (no slashes allowed in secret names) that ESO reads bootstrap/operator secrets from.
 - `aks_cluster_name`: Name of the target AKS cluster. Used in `az aks get-credentials` during the sys-services bootstrap install (`cmd-apply-sys-services`).
 - `location`: Azure region (e.g. `"westeurope"`) used when provisioning dedicated Managed Identities via TFWorkspace. Must match `resource_group_name`'s region.
-- `aks_oidc_issuer_url`: *(optional)* OIDC issuer URL of the target AKS cluster, used to federate the external-dns Managed Identity's credential. If omitted, it is auto-fetched from the ARM API at bootstrap time (requires the bootstrap SP to have read access to the AKS cluster resource — see pre-flight requirements below). Set this explicitly only to override the auto-detected value or if the bootstrap SP cannot read the AKS resource directly.
+- `aks_oidc_issuer_url`: *(optional)* OIDC issuer URL of the target AKS cluster, used to federate the external-dns Managed Identity's credential. If omitted, it is auto-fetched from the ARM API at bootstrap time (requires the bootstrap SP to have `Azure Kubernetes Service RBAC Cluster Admin` on the AKS cluster — see pre-flight requirements below). Set this explicitly only to override the auto-detected value or if the bootstrap SP cannot read the AKS resource directly.
 
 And your `Bootstrapfile.yaml` must include `deploymentMode` and `domain`:
 
@@ -337,11 +337,16 @@ customer: "<customer-name>"
 
 1. A `firestartr-mi` User-Assigned Managed Identity with OIDC federation configured on the AKS cluster.
 2. A bootstrap App Registration (Service Principal) in Entra ID with:
-   - `Key Vault Secrets Officer` on the Azure Key Vault
+   - `Key Vault Administrator` on the Azure Key Vault
    - `Storage Blob Data Contributor` on the Terraform state storage account
-   - Read access to the AKS cluster resource (e.g. `Azure Kubernetes Service Cluster User Role` or `Reader` on the cluster/resource group), required to auto-fetch `aks_oidc_issuer_url` when omitted (see §3.2.1)
+   - `Azure Kubernetes Service RBAC Cluster Admin` on the AKS cluster (needed for `az aks get-credentials --admin` during `cmd-apply-sys-services`, and also covers reading the cluster resource to auto-fetch `aks_oidc_issuer_url` — see §3.2.1)
+   - `User Access Administrator` and `Contributor` at the resource group or subscription scope (needed because the bootstrap provisions a dedicated Managed Identity, a federated credential, and an RBAC role assignment for external-dns via Terraform)
    - A client secret (populate `bootstrap_client_id` and `bootstrap_client_secret` in the credentials file)
    - **Delete the entire App Registration after bootstrap completes.**
+
+   > **Why the bootstrap SP needs actual Key Vault *data* access, not just management access:** this same Service Principal's credentials are copied into the kind cluster as the `azure-creds` Kubernetes Secret and used directly by External Secrets Operator's `SecretStore` to read real secret *values* from Key Vault (not just list secret names). A role that only grants control-plane/management access without data-plane secret read/write (e.g. a plain `Reader`) will pass ARM checks but fail when ESO tries to actually fetch the secrets. `Key Vault Administrator` covers both.
+   >
+   > The roles above are broader than strictly necessary (e.g. `Contributor` and `User Access Administrator` are granted at subscription scope in the current reference environment, not scoped down to the specific resource group or resources). Tightening this to least privilege is tracked as follow-up work, not a prerequisite for bootstrapping today.
 3. Azure Key Vault populated with all required secrets using the `[a-zA-Z0-9-]` naming convention:
    - `fs-pem`, `fs-app-id`, `fs-<org>-installation-id`
    - `fs-admin-pem`, `fs-admin-app-id`, `fs-admin-<org>-installation-id`

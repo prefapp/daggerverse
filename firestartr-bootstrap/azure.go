@@ -155,7 +155,7 @@ func listKVSecretNames(ctx context.Context, vaultURL, token string) ([]string, e
 			resp.Body.Close()
 			return nil, fmt.Errorf(
 				"bootstrap SP lacks Key Vault list permission (HTTP %d). "+
-					"Ensure the App Registration has 'Key Vault Secrets User' on vault %q",
+					"Ensure the App Registration has 'Key Vault Administrator' on vault %q",
 				resp.StatusCode, vaultURL,
 			)
 		}
