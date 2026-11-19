@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -320,10 +322,9 @@ func TestApplySysServicesUsesNamespaceBootstrapAndServerSideApply(t *testing.T) 
 		"kubectl create namespace",
 		"external-secrets",
 		"firestartr",
-		"CustomResourceDefinitions.yaml",
+		"core/crds/v2.6.4/index.yaml",
 		"argo-configuration-secrets",
 		"firestartr-values.yaml",
-		"kubernetes-sys-services/firestartr-aks",
 		"kubectl apply -n firestartr --server-side --force-conflicts --field-manager=firestartr-bootstrap -f -",
 	} {
 		if !strings.Contains(cmd, want) {
@@ -336,7 +337,65 @@ func TestApplySysServicesUsesNamespaceBootstrapAndServerSideApply(t *testing.T) 
 }
 
 func TestExternalDnsFederatedCredentialUsesExplicitSubject(t *testing.T) {
-	if !strings.Contains("system:serviceaccount:external-dns:external-dns", "system:serviceaccount:external-dns:external-dns") {
-		t.Fatal("expected explicit external-dns workload identity subject")
+	content, err := os.ReadFile("templates/initial_crs.tmpl")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data := InitialCrsData{
+		GithubApp:      GithubApp{ProviderConfigName: "github", Owner: "example-org"},
+		CloudProvider:  CloudProvider{ProviderConfigName: "azurerm", Type: "azurerm"},
+		Customer:       "azprefapp",
+		DeploymentMode: "dedicated",
+	}
+
+	rendered, err := renderTmpl(string(content), data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	decoder := yaml.NewDecoder(strings.NewReader(rendered))
+	found := false
+	for {
+		var workspace struct {
+			Kind string `yaml:"kind"`
+			Spec struct {
+				Values string `yaml:"values"`
+			} `yaml:"spec"`
+		}
+		err := decoder.Decode(&workspace)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		if workspace.Kind == "FirestartrTerraformWorkspace" {
+			found = true
+			assertExternalDnsSubject(t, workspace.Spec.Values)
+			break
+		}
+	}
+	if !found {
+		t.Fatal("expected a rendered FirestartrTerraformWorkspace for external-dns-mi")
+	}
+}
+
+func assertExternalDnsSubject(t *testing.T, rawValues string) {
+	t.Helper()
+	var values struct {
+		FederatedCredentials []struct {
+			Subject string `json:"subject"`
+		} `json:"federated_credentials"`
+	}
+	if err := json.Unmarshal([]byte(rawValues), &values); err != nil {
+		t.Fatal(err)
+	}
+	if len(values.FederatedCredentials) != 1 {
+		t.Fatalf("expected exactly one federated credential, got %+v", values.FederatedCredentials)
+	}
+	if values.FederatedCredentials[0].Subject != "system:serviceaccount:external-dns:external-dns" {
+		t.Fatalf("external-dns federated credential subject = %q, want %q",
+			values.FederatedCredentials[0].Subject, "system:serviceaccount:external-dns:external-dns")
 	}
 }

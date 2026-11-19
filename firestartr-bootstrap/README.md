@@ -229,6 +229,7 @@ Each component represents a repository that will be created in the organization.
 - `description`: description of the repository.
 - `repoName`: name of the repository. If not specified, it will be the same as `name`.
 - `defaultBranch`: default branch name for the repository (usually `main` or `master`).
+- `additionalBranches`: (optional) list of extra branches to create in the repository, in addition to `defaultBranch`. Each entry must have a `name` and, optionally, `orphan` (boolean, defaults to `false`). Set `orphan: true` to create the branch with no shared history with `defaultBranch` (e.g. a `deployment` branch holding only rendered manifests). This applies to any component, in any deployment mode. **Dedicated (Azure) deployments auto-inject an orphan `deployment` branch on `state-sys-services`; you only need to set this manually for other components or custom cases.**
 - `features`: list of features that will be installed in the repository. Each feature must have a `name` and, optionally, a `version`. If `version` is omitted or equals `latest`, the latest avaliable version for the feature will be used. The complete list of available features can be found in the [here](https://github.com/prefapp/features/blob/0e4e2ddac1b9afa83dc207a23d4abe8123e19ade/.release-please-manifest.json) (when setting a feature name from that list, omit the `packages/` prefix, i.e. `name: tech_docs` instead of `name: packages/tech_docs`).
 - `secrets`: (optional) list of secrets that will be created in the repository. Each secret must have a `name` and a `value`. `name` will be the name of the secret in the repository, and `value` should be a reference to a secret in the [`SecretsClaim`](https://github.com/prefapp/daggerverse/blob/main/firestartr-bootstrap/templates/initial_claims.tmpl#L60-L77) (the link provided goes to the `main` branch version of the template file. Please select the appropriate version if needed). The format for referencing a secret from that file is: `ref:secretsclaim:firestartr-secrets:<secretName>`
 - `variables`: (optional) list of variables that will be created in the repository. Each variable must have a `name` and a `value`. `name` will be the name of the variable in the repository, and `value` should be a reference to a secret in the [`SecretsClaim`](https://github.com/prefapp/daggerverse/blob/main/firestartr-bootstrap/templates/initial_claims.tmpl#L60-L77) (the link provided goes to the `main` branch version of the template file. Please select the appropriate version if needed). The format for referencing a secret from that file is: `ref:secretsclaim:firestartr-secrets:<secretName>`
@@ -294,6 +295,7 @@ cloudProvider:
     key_vault_name: "firestartr-kv"             # Azure Key Vault name (no slashes in secret names)
     aks_cluster_name: "<aks-cluster-name>"      # Name of the target AKS cluster
     location: "<azure-region>"                  # Azure region, e.g. "westeurope" — must match resource group
+    # aks_oidc_issuer_url: "<aks-oidc-issuer-url>"  # Optional — see field reference below
   source: hashicorp/azurerm
   type: azurerm
   version: "~> 3.0"
@@ -301,6 +303,22 @@ github:
   prefappBotPat: "<prefapp-bot-pat>"
   operatorPat: "<operator-pat>"
 ```
+
+##### 3.2.1 Azure `cloudProvider.config` field reference
+
+This subsection documents every field specific to Azure BYOC (dedicated) deployments in `cloudProvider.config`. Fields not listed here (`source`, `type`, `version`) follow the same convention as the AWS provider (§3.1).
+
+- `tenant_id`: Entra ID (Azure AD) tenant ID that owns the subscription and the bootstrap App Registration.
+- `subscription_id`: Azure subscription ID where the AKS cluster, storage account, and Key Vault live.
+- `client_id`: Client ID of the `firestartr-mi` User-Assigned Managed Identity. Used by the **deployed** AKS state via Workload Identity — never needs a client secret.
+- `bootstrap_client_id` / `bootstrap_client_secret`: Application (client) ID and secret of the **bootstrap** App Registration (Service Principal). Used only in the local kind cluster during bootstrap by ESO and Terraform. **Delete the entire App Registration after bootstrap completes**, not just the secret.
+- `storage_account_name`: Azure Storage Account name used as the Terraform state backend for the dedicated `state-infra` repository.
+- `container_name`: Blob container name inside `storage_account_name` where the Terraform state is stored.
+- `resource_group_name`: Resource group containing the storage account; also used as the DNS zone resource group.
+- `key_vault_name`: Azure Key Vault name (no slashes allowed in secret names) that ESO reads bootstrap/operator secrets from.
+- `aks_cluster_name`: Name of the target AKS cluster. Used in `az aks get-credentials` during the sys-services bootstrap install (`cmd-apply-sys-services`).
+- `location`: Azure region (e.g. `"westeurope"`) used when provisioning dedicated Managed Identities via TFWorkspace. Must match `resource_group_name`'s region.
+- `aks_oidc_issuer_url`: *(optional)* OIDC issuer URL of the target AKS cluster, used to federate the external-dns Managed Identity's credential. If omitted, it is auto-fetched from the ARM API at bootstrap time (requires the bootstrap SP to have read access to the AKS cluster resource — see pre-flight requirements below). Set this explicitly only to override the auto-detected value or if the bootstrap SP cannot read the AKS resource directly.
 
 And your `Bootstrapfile.yaml` must include `deploymentMode` and `domain`:
 
@@ -321,6 +339,7 @@ customer: "<customer-name>"
 2. A bootstrap App Registration (Service Principal) in Entra ID with:
    - `Key Vault Secrets Officer` on the Azure Key Vault
    - `Storage Blob Data Contributor` on the Terraform state storage account
+   - Read access to the AKS cluster resource (e.g. `Azure Kubernetes Service Cluster User Role` or `Reader` on the cluster/resource group), required to auto-fetch `aks_oidc_issuer_url` when omitted (see §3.2.1)
    - A client secret (populate `bootstrap_client_id` and `bootstrap_client_secret` in the credentials file)
    - **Delete the entire App Registration after bootstrap completes.**
 3. Azure Key Vault populated with all required secrets using the `[a-zA-Z0-9-]` naming convention:

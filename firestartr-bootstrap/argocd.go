@@ -84,6 +84,13 @@ func renderDedicatedArgoCDHierarchy(org string) (map[string]string, error) {
 				map[string]string{"group": "admissionregistration.k8s.io", "kind": "MutatingWebhookConfiguration"},
 			)
 		}
+		if service.Name == "ingress-nginx" {
+			// The ingress-nginx chart creates a cluster-scoped IngressClass by
+			// default; without this the AppProject rejects it during sync.
+			project.Spec.ClusterResourceWhitelist = append(project.Spec.ClusterResourceWhitelist,
+				map[string]string{"group": "networking.k8s.io", "kind": "IngressClass"},
+			)
+		}
 		if err := writeManifest(fmt.Sprintf("sys-services/%s/AppProject.%s.yaml", service.Directory, service.Name), project); err != nil {
 			return nil, err
 		}

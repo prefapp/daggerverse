@@ -252,9 +252,15 @@ func injectDedicatedComponents(bootstrap *Bootstrap) []Component {
 			}
 
 			hasFeature := false
-			for _, feature := range components[i].Features {
-				if feature.Name == "state_repo_sys_services" && feature.Version == "2.4.0" {
+			for i2, feature := range components[i].Features {
+				if feature.Name == "state_repo_sys_services" {
 					hasFeature = true
+					// Preserve an existing version for this feature; only
+					// backfill the default when it isn't already set, so we
+					// never append a conflicting duplicate entry.
+					if components[i].Features[i2].Version == "" {
+						components[i].Features[i2].Version = "2.4.0"
+					}
 					break
 				}
 			}

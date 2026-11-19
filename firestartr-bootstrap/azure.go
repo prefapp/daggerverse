@@ -118,6 +118,18 @@ func (m *FirestartrBootstrap) expectedAzureKVSecrets() []string {
 		"fs-pem",
 		"fs-app-id",
 		fmt.Sprintf("fs-%s-installation-id", org),
+		// Required by the dedicated ArgoCD config-secrets values and the
+		// claims rendered for fs-state/fs-checks/fs-import service accounts
+		// (see templates/initial_claims.tmpl and argocd_config_secrets.go).
+		"fs-state-pem",
+		"fs-state-app-id",
+		"fs-checks-pem",
+		"fs-checks-app-id",
+		"fs-import-pem",
+		"fs-import-app-id",
+		"fs-argocd-pem",
+		"fs-argocd-app-id",
+		fmt.Sprintf("fs-argocd-%s-installation-id", org),
 	}
 }
 
