@@ -1,0 +1,10 @@
+releaseName: argocd
+registry: https://argoproj.github.io/argo-helm
+version: 7.6.8
+chart: argo/argo-cd
+hooks: []
+extraPatches: []
+remoteArtifacts:
+  - filename: CustomResourceDefinitions.yaml
+    url: https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/crds/v2.6.4/index.yaml
+execs: []

@@ -22,7 +22,7 @@ func (m *FirestartrBootstrap) RenderWithFirestartrContainer(
 
 	fsCtr, err := dag.Container().From(
 		fmt.Sprintf(
-			"ghcr.io/prefapp/gitops-k8s:%s_slim",
+			"ghcr.io/firestartr-pro/firestartr:%s_slim",
 			m.Bootstrap.Firestartr.OperatorVersion,
 		),
 	).
