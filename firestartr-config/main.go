@@ -1,17 +1,3 @@
-// A generated module for FirestartrConfig functions
-//
-// This module has been generated via dagger init and serves as a reference to
-// basic module structure as you get started with Dagger.
-//
-// Two functions have been pre-created. You can modify, delete, or add to them,
-// as needed. They demonstrate usage of arguments and return types using simple
-// echo and grep commands. The functions can be called from the dagger CLI or
-// from one of the SDKs.
-//
-// The first line in this comment block is a short description line and the
-// rest is a long description with more detail on the module's purpose or usage,
-// if appropriate. All modules should have a short description.
-
 package main
 
 import (
@@ -28,57 +14,55 @@ type FirestartrConfig struct {
 }
 
 func New(
-
 	ctx context.Context,
 
-	// The path to the values directory, where the helm values are stored
+	// The path to the .firestartr directory
 	dotFirestartr *dagger.Directory,
 
+	// Schema release/version to validate against. Accepts npm semver versions
+	// (e.g. "v3.2.0" or "3.2.0") or dist-tags (e.g. "latest").
+	// +optional
+	// +default="v3.2.0"
+	schemaVersion string,
+
+	// Schema source: empty/"npm" resolves from the npm registry (default package
+	// @firestartr/firestartr-claims_schemas), an HTTP(S) URL is treated as an npm
+	// registry base, or a local path containing <version>/<contract>.schema.json
+	// files for offline/testing.
+	// +optional
+	schemaBaseURL string,
+
 ) (*FirestartrConfig, error) {
-
-
-	registries, err := loadRegistries(ctx, dotFirestartr)
-
+	schemas, err := newSchemaProvider(schemaVersion, schemaBaseURL)
 	if err != nil {
-
 		return nil, err
-
 	}
 
-	repositories, err := loadRepositories(ctx, dotFirestartr)
-
+	registries, err := loadRegistries(ctx, dotFirestartr, schemas)
 	if err != nil {
-
 		return nil, err
-
 	}
 
-	apps, appsErr := loadApps(ctx, dotFirestartr)
+	repositories, err := loadRepositories(ctx, dotFirestartr, schemas)
+	if err != nil {
+		return nil, err
+	}
 
+	apps, appsErr := loadApps(ctx, dotFirestartr, schemas)
 	if appsErr != nil {
-
 		return nil, appsErr
-
 	}
 
-	platforms, platformsErr := loadPlatforms(ctx, dotFirestartr)
-
+	platforms, platformsErr := loadPlatforms(ctx, dotFirestartr, schemas)
 	if platformsErr != nil {
-
 		return nil, platformsErr
-
 	}
 
 	return &FirestartrConfig{
-
 		DotFirestartrDir: dotFirestartr,
-
-		Registries: registries,
-
-		Repositories: repositories,
-
-		Apps: apps,
-
-		Platforms: platforms,
+		Registries:       registries,
+		Repositories:     repositories,
+		Apps:             apps,
+		Platforms:        platforms,
 	}, nil
 }

@@ -1,0 +1,7 @@
+name: sample-app
+state_repo: "org/state-app-sample"
+platforms: [cluster-name]
+services:
+  - repo: org/build-and-dispatch
+    platforms: [cluster-name]
+    service_names: [micro-a, micro-b]

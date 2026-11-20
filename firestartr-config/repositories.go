@@ -3,55 +3,36 @@ package main
 import (
 	"context"
 	"dagger/firestartr-config/internal/dagger"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
 
-type Repository struct {
-	Name string `yaml:"name"`
-	Url  string `yaml:"url"`
-}
-
-func loadRepositories(ctx context.Context, firestartrDir *dagger.Directory) ([]Repository, error) {
-
+func loadRepositories(ctx context.Context, firestartrDir *dagger.Directory, schemas *schemaProvider) ([]Repository, error) {
 	repositories := []Repository{}
 
-	for _, ext := range []string{".yaml", ".yml"} {
+	filePaths, err := listConfigFiles(ctx, firestartrDir, "helm_repositories")
+	if err != nil {
+		return nil, err
+	}
 
-		filePaths, err := firestartrDir.Glob(ctx, "helm_repositories/*"+ext)
-
+	for _, filePath := range filePaths {
+		fileContent, err := firestartrDir.File(filePath).Contents(ctx)
 		if err != nil {
+			return nil, fmt.Errorf("failed to read %s: %w", filePath, err)
+		}
 
+		if _, err := schemas.validateDocument(ctx, "helm_repositories", filePath, fileContent); err != nil {
 			return nil, err
-
 		}
 
-		for _, filePath := range filePaths {
-
-			fileContent, err := firestartrDir.File(filePath).Contents(ctx)
-
-			if err != nil {
-
-				return nil, err
-
-			}
-
-			reg := Repository{}
-
-			err = yaml.Unmarshal([]byte(fileContent), &reg)
-
-			if err != nil {
-
-				return nil, err
-
-			}
-
-			repositories = append(repositories, reg)
-
+		repo := Repository{}
+		if err := yaml.Unmarshal([]byte(fileContent), &repo); err != nil {
+			return nil, fmt.Errorf("failed to decode %s: %w", filePath, err)
 		}
 
+		repositories = append(repositories, repo)
 	}
 
 	return repositories, nil
-
 }

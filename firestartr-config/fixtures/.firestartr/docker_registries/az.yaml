@@ -1,6 +1,7 @@
-name: azure
-url: xxxxxxxxxx.azurecr.io
+name: az
+registry: acrtest.azurecr.io
 image_types: [snapshots, releases]
+default: false
 auth_strategy: azure_oidc
 base_paths:
   services: "service"
