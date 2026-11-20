@@ -25,6 +25,13 @@ providers:
     branchStrategy:
       name: none
       defaultBranch: {{ $claim.DefaultBranch }}
+    {{- if $claim.AdditionalBranches }}
+    additionalBranches:
+      {{- range $branch := $claim.AdditionalBranches }}
+      - name: {{ $branch.Name }}
+        orphan: {{ $branch.Orphan }}
+      {{- end }}
+    {{- end }}
     {{- if $claim.Features}}
     features:
       {{- range $index, $feature := $claim.Features }}
