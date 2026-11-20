@@ -84,6 +84,26 @@ func TestSchemaVersionSelection(t *testing.T) {
 			t.Fatalf("expected guidance to use schemaDirectory, got: %s", err)
 		}
 	})
+
+	t.Run("Default remote source is docs raw base", func(t *testing.T) {
+		p, err := newSchemaProvider("", "", nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if p.kind != schemaSourceRawHTTP {
+			t.Fatalf("expected raw http source, got %s", p.kind)
+		}
+		if p.rawBase != DefaultSchemaBaseURL {
+			t.Fatalf("expected default docs base %q, got %q", DefaultSchemaBaseURL, p.rawBase)
+		}
+		if p.version != DefaultSchemaVersion {
+			t.Fatalf("expected default version %s, got %s", DefaultSchemaVersion, p.version)
+		}
+		want := DefaultSchemaBaseURL + "/" + DefaultSchemaVersion + "/apps.schema.json"
+		if got := p.schemaSource("apps"); got != want {
+			t.Fatalf("expected %q, got %q", want, got)
+		}
+	})
 }
 
 func buildSchemasTarball(t *testing.T, contracts map[string][]byte) []byte {
@@ -192,6 +212,139 @@ func sha1Hex(data []byte) string {
 	return hex.EncodeToString(sum[:])
 }
 
+type rawHTTPTestServer struct {
+	server *httptest.Server
+	hits   map[string]*int32
+}
+
+func newRawHTTPTestServer(t *testing.T, version string, schemas map[string][]byte, statusOverride map[string]int) *rawHTTPTestServer {
+	t.Helper()
+	s := &rawHTTPTestServer{hits: map[string]*int32{}}
+	mux := http.NewServeMux()
+	for _, c := range contractNames {
+		contract := c
+		content, ok := schemas[contract]
+		if !ok {
+			continue
+		}
+		var counter int32
+		s.hits[contract] = &counter
+		path := "/" + version + "/" + contract + ".schema.json"
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			atomic.AddInt32(s.hits[contract], 1)
+			if status, ok := statusOverride[contract]; ok {
+				http.Error(w, "boom", status)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write(content)
+		})
+	}
+	s.server = httptest.NewServer(mux)
+	return s
+}
+
+func TestSchemaRawHTTPResolution(t *testing.T) {
+	schemas := loadTestSchemas(t)
+
+	t.Run("Resolves and loads all contracts from raw docs base", func(t *testing.T) {
+		s := newRawHTTPTestServer(t, "v3.2.0", schemas, nil)
+		defer s.server.Close()
+
+		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, contract := range contractNames {
+			if _, err := p.loadSchema(context.Background(), contract); err != nil {
+				t.Fatalf("failed to load schema for %s: %s", contract, err)
+			}
+		}
+	})
+
+	t.Run("Uses requested version path segment for raw HTTP", func(t *testing.T) {
+		s := newRawHTTPTestServer(t, "latest", map[string][]byte{"apps": schemas["apps"]}, nil)
+		defer s.server.Close()
+
+		p, err := newSchemaProvider("latest", s.server.URL, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := s.server.URL + "/latest/apps.schema.json"
+		if got := p.schemaSource("apps"); got != want {
+			t.Fatalf("expected %q, got %q", want, got)
+		}
+		if _, err := p.loadSchema(context.Background(), "apps"); err != nil {
+			t.Fatalf("failed to load schema for latest: %s", err)
+		}
+	})
+
+	t.Run("Caches raw HTTP contract fetches per provider load", func(t *testing.T) {
+		s := newRawHTTPTestServer(t, "v3.2.0", schemas, nil)
+		defer s.server.Close()
+
+		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i := 0; i < 3; i++ {
+			if _, err := p.loadSchema(context.Background(), "apps"); err != nil {
+				t.Fatalf("load failed: %s", err)
+			}
+			if _, err := p.loadSchema(context.Background(), "platforms"); err != nil {
+				t.Fatalf("load failed: %s", err)
+			}
+		}
+		if got := atomic.LoadInt32(s.hits["apps"]); got != 1 {
+			t.Fatalf("expected 1 apps fetch, got %d", got)
+		}
+		if got := atomic.LoadInt32(s.hits["platforms"]); got != 1 {
+			t.Fatalf("expected 1 platforms fetch, got %d", got)
+		}
+	})
+
+	t.Run("Reports actionable diagnostics on raw HTTP fetch failure", func(t *testing.T) {
+		s := newRawHTTPTestServer(t, "v3.2.0", schemas, map[string]int{"apps": 404})
+		defer s.server.Close()
+
+		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = p.loadSchema(context.Background(), "apps")
+		if err == nil {
+			t.Fatal("expected fetch error")
+		}
+		msg := err.Error()
+		wantURL := s.server.URL + "/v3.2.0/apps.schema.json"
+		for _, want := range []string{"apps", "v3.2.0", wantURL, "404", "raw HTTP"} {
+			if !strings.Contains(msg, want) {
+				t.Errorf("expected %q in error, got: %s", want, msg)
+			}
+		}
+	})
+
+	t.Run("Reports actionable diagnostics on unreachable raw HTTP base", func(t *testing.T) {
+		s := newRawHTTPTestServer(t, "v3.2.0", schemas, nil)
+		base := s.server.URL
+		s.server.Close()
+
+		p, err := newSchemaProvider("v3.2.0", base, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = p.loadSchema(context.Background(), "apps")
+		if err == nil {
+			t.Fatal("expected fetch error")
+		}
+		msg := err.Error()
+		wantURL := base + "/v3.2.0/apps.schema.json"
+		if !strings.Contains(msg, "apps") || !strings.Contains(msg, wantURL) {
+			t.Errorf("expected actionable diagnostics, got: %s", msg)
+		}
+	})
+}
+
 func TestSchemaNPMResolution(t *testing.T) {
 	schemas := loadTestSchemas(t)
 	tarball := buildSchemasTarball(t, schemas)
@@ -200,7 +353,7 @@ func TestSchemaNPMResolution(t *testing.T) {
 		s := newNPMTestServer(t, "3.2.0", "3.2.0", tarball, sriSHA512(tarball), "", nil, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
+		p, err := newSchemaProvider("v3.2.0", "npm+"+s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -215,7 +368,7 @@ func TestSchemaNPMResolution(t *testing.T) {
 		s := newNPMTestServer(t, "latest", "3.2.0", tarball, sriSHA512(tarball), "", nil, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("latest", s.server.URL, nil)
+		p, err := newSchemaProvider("latest", "npm+"+s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -231,7 +384,7 @@ func TestSchemaNPMResolution(t *testing.T) {
 		s := newNPMTestServer(t, "3.2.0", "3.2.0", tarball, "", sha1Hex(tarball), nil, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
+		p, err := newSchemaProvider("v3.2.0", "npm+"+s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -244,7 +397,7 @@ func TestSchemaNPMResolution(t *testing.T) {
 		s := newNPMTestServer(t, "3.2.0", "3.2.0", tarball, sriSHA512([]byte("tampered")), "", nil, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
+		p, err := newSchemaProvider("v3.2.0", "npm+"+s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -270,7 +423,7 @@ func TestSchemaNPMResolution(t *testing.T) {
 		s := newNPMTestServer(t, "3.2.0", "3.2.0", badTar, sriSHA512(badTar), "", nil, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
+		p, err := newSchemaProvider("v3.2.0", "npm+"+s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -290,7 +443,7 @@ func TestSchemaNPMResolution(t *testing.T) {
 		})
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
+		p, err := newSchemaProvider("v3.2.0", "npm+"+s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -308,7 +461,7 @@ func TestSchemaFetchFailures(t *testing.T) {
 		s := newNPMTestServer(t, "3.2.0", "3.2.0", tarball, sriSHA512(tarball), "", map[string]int{"metadata": 404}, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
+		p, err := newSchemaProvider("v3.2.0", "npm+"+s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -329,7 +482,7 @@ func TestSchemaFetchFailures(t *testing.T) {
 		base := s.server.URL
 		s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", base, nil)
+		p, err := newSchemaProvider("v3.2.0", "npm+"+base, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -357,8 +510,8 @@ func TestSchemaDirectorySource(t *testing.T) {
 		}
 	})
 
-	t.Run("Directory takes precedence over schema base", func(t *testing.T) {
-		p, err := newSchemaProvider("v3.2.0", "https://registry.invalid.example", testSchemaDirectory())
+	t.Run("Directory takes precedence over raw schema base", func(t *testing.T) {
+		p, err := newSchemaProvider("v3.2.0", "https://docs.invalid.example/base", testSchemaDirectory())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -405,7 +558,7 @@ func TestSchemaOfflineAndCaching(t *testing.T) {
 		s := newNPMTestServer(t, "3.2.0", "3.2.0", tarball, sriSHA512(tarball), "", nil, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
+		p, err := newSchemaProvider("v3.2.0", "npm+"+s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

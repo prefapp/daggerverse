@@ -19,17 +19,19 @@ func New(
 	// The path to the .firestartr directory
 	dotFirestartr *dagger.Directory,
 
-	// Schema release/version to validate against. Accepts npm semver versions
-	// (e.g. "v3.2.0" or "3.2.0") or dist-tags (e.g. "latest").
+	// Schema release/version to validate against (e.g. "v3.2.0" or "latest").
+	// Used as the <schemaVersion> path segment for docs/raw and directory
+	// sources; for npm sources semver versions are normalized as needed.
 	// +optional
 	// +default="v3.2.0"
 	schemaVersion string,
 
-	// Schema source selector when schemaDirectory is not provided: empty/"npm"
-	// resolves from the npm registry (default package
-	// @firestartr/firestartr-claims_schemas), an HTTP(S) URL is treated as an
-	// npm registry/mirror base. For offline/pre-fetched schemas, pass
-	// schemaDirectory instead.
+	// Schema source selector when schemaDirectory is not provided:
+	// empty uses the docs raw schema base (#506), an HTTP(S) URL is a raw
+	// schema file base serving <schemaVersion>/<contract>.schema.json, "npm"
+	// resolves from the npm registry, and "npm+http(s)://..." resolves the
+	// npm package from a registry/mirror. For offline/pre-fetched schemas,
+	// pass schemaDirectory instead.
 	// +optional
 	schemaBaseURL string,
 

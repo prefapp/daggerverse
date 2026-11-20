@@ -29,6 +29,10 @@ import (
 const (
 	DefaultSchemaVersion = "v3.2.0"
 
+	// DefaultSchemaBaseURL is the #506-specified docs-repository raw schema base.
+	// Schemas are resolved as <base>/<schemaVersion>/<contract>.schema.json.
+	DefaultSchemaBaseURL = "https://raw.githubusercontent.com/firestartr-pro/docs/refs/heads/main/site/raw/core/dot-firestartr"
+
 	// DefaultSchemaPackage is the npm package that publishes dot-firestartr schemas.
 	DefaultSchemaPackage = "@firestartr/firestartr-claims_schemas"
 	// DefaultSchemaRegistry is the default npm registry base URL.
@@ -42,6 +46,7 @@ type schemaSourceKind string
 const (
 	schemaSourceNPM       schemaSourceKind = "npm"
 	schemaSourceDirectory schemaSourceKind = "directory"
+	schemaSourceRawHTTP   schemaSourceKind = "raw-http"
 )
 
 type schemaProvider struct {
@@ -51,11 +56,12 @@ type schemaProvider struct {
 	requested string
 	// npmVersion is the version/tag sent to the npm registry (e.g. v3.2.0 -> 3.2.0).
 	npmVersion string
-	// version is the display/request key (requested).
+	// version is the display/request key used in schema paths (requested).
 	version string
 
 	registry string
 	pkg      string
+	rawBase  string
 
 	dir *dagger.Directory
 
@@ -102,19 +108,24 @@ func newSchemaProvider(version, base string, dir *dagger.Directory) (*schemaProv
 
 	base = strings.TrimSpace(base)
 	switch {
-	case base == "" || base == "npm" || base == "npm:":
+	case base == "":
+		p.kind = schemaSourceRawHTTP
+		p.rawBase = DefaultSchemaBaseURL
+	case base == "npm" || base == "npm:":
 		p.kind = schemaSourceNPM
 		p.registry = DefaultSchemaRegistry
 		p.pkg = DefaultSchemaPackage
 		p.npmVersion = normalizeNPMVersion(version)
-	case strings.HasPrefix(base, "http://") || strings.HasPrefix(base, "https://"):
-		// Treat HTTP(S) base as an npm registry base (or mirror).
+	case strings.HasPrefix(base, "npm+http://") || strings.HasPrefix(base, "npm+https://"):
 		p.kind = schemaSourceNPM
-		p.registry = strings.TrimRight(base, "/")
+		p.registry = strings.TrimRight(strings.TrimPrefix(base, "npm+"), "/")
 		p.pkg = DefaultSchemaPackage
 		p.npmVersion = normalizeNPMVersion(version)
+	case strings.HasPrefix(base, "http://") || strings.HasPrefix(base, "https://"):
+		p.kind = schemaSourceRawHTTP
+		p.rawBase = strings.TrimRight(base, "/")
 	default:
-		return nil, fmt.Errorf("unsupported schema base %q: pass pre-fetched schemas as schemaDirectory (Dagger Directory) for offline use, or use an npm registry source (empty/\"npm\" or an http(s) registry URL)", base)
+		return nil, fmt.Errorf("unsupported schema base %q: use empty or an http(s) URL for docs raw schemas, \"npm\" or \"npm+http(s)://...\" for the npm package artifact, or pass schemaDirectory for offline pre-fetched schemas", base)
 	}
 
 	return p, nil
@@ -139,6 +150,8 @@ func (p *schemaProvider) schemaSource(contract string) string {
 	switch p.kind {
 	case schemaSourceDirectory:
 		return path.Join(p.version, contract+".schema.json")
+	case schemaSourceRawHTTP:
+		return fmt.Sprintf("%s/%s/%s.schema.json", p.rawBase, p.version, contract)
 	case schemaSourceNPM:
 		p.mu.Lock()
 		resolved := p.resolved
@@ -162,6 +175,8 @@ func (p *schemaProvider) sourceDescription() string {
 	switch p.kind {
 	case schemaSourceDirectory:
 		return fmt.Sprintf("schema directory (Dagger Directory, version %s)", p.version)
+	case schemaSourceRawHTTP:
+		return fmt.Sprintf("raw HTTP schema base %s (requested version %s)", p.rawBase, p.requested)
 	case schemaSourceNPM:
 		p.mu.Lock()
 		resolved := p.resolved
@@ -218,6 +233,13 @@ func (p *schemaProvider) contractBytes(ctx context.Context, contract string) ([]
 			return nil, fmt.Errorf("failed to read schema file %s from schema directory (version %s): %w", filePath, p.version, err)
 		}
 		return []byte(content), nil
+	case schemaSourceRawHTTP:
+		url := p.schemaSource(contract)
+		data, err := p.fetchHTTP(ctx, url)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch schema from %s (version %s): %w", url, p.version, err)
+		}
+		return data, nil
 	case schemaSourceNPM:
 		if err := p.ensureNPMLoaded(ctx); err != nil {
 			return nil, err
