@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/xeipuuv/gojsonschema"
 	"sigs.k8s.io/yaml"
@@ -136,7 +137,7 @@ func (m *FirestartrBootstrap) ValidateExistenceOfNeededImages(
 ) error {
 
 	slimImage := fmt.Sprintf(
-		"ghcr.io/prefapp/gitops-k8s:%s_slim",
+		"ghcr.io/firestartr-pro/firestartr:%s_slim",
 		m.Bootstrap.Firestartr.OperatorVersion,
 	)
 
@@ -145,11 +146,11 @@ func (m *FirestartrBootstrap) ValidateExistenceOfNeededImages(
 		return err
 	}
 
-	fullImage := fmt.Sprintf("ghcr.io/prefapp/gitops-k8s:%s", fmt.Sprintf(
+	fullImage := fmt.Sprintf("ghcr.io/firestartr-pro/firestartr:%s", fmt.Sprintf(
 
 		"%s_full-%s",
 		m.Bootstrap.Firestartr.OperatorVersion,
-		m.Creds.CloudProvider.Name,
+		m.Creds.CloudProvider.ImageFlavorSuffix(),
 	))
 
 	err = validateExistenceOfImage(ctx, fullImage)
@@ -177,6 +178,7 @@ func validateExistenceOfImage(
 	}
 
 	_, err := craneContainer.
+		WithEnvVariable("BUST_CACHE", time.Now().String()).
 		WithExec(craneArgs).
 		Stdout(ctx)
 
@@ -218,8 +220,6 @@ func (m *FirestartrBootstrap) ValidateCliExistence(
 func (m *FirestartrBootstrap) ValidateOperatorPat(
 	ctx context.Context,
 ) error {
-	owner := fmt.Sprintf("firestartr-%s", m.Bootstrap.Env)
-	repo := "app-firestartr"
 	tokenSecret := dag.SetSecret(
 		"token",
 		m.Creds.GithubApp.OperatorPat,
@@ -249,7 +249,15 @@ func (m *FirestartrBootstrap) ValidateOperatorPat(
 		)
 	}
 
-	// --- Step 2: Check the repository permission for that user ---
+	// For dedicated deployments the target repos (state-sys-services, state-argocd)
+	// do not exist yet at validation time, so we only verify the token is valid.
+	if m.isDedicatedDeployment() {
+		return nil
+	}
+
+	// SaaS path: verify write access to the shared app-firestartr repo.
+	owner := fmt.Sprintf("firestartr-%s", m.Bootstrap.Env)
+	repo := "app-firestartr"
 
 	// API Endpoint: GET /repos/:owner/:repo/collaborators/:username/permission
 	permissionURL := fmt.Sprintf(

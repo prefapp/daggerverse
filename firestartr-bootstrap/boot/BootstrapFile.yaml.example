@@ -10,7 +10,7 @@ defaultGroup: <default group> # ask customer for the owner of the default system
 defaultFirestartrGroup: firestartr # default group for firestartr users and related components (claims, state-github, state-infra...)
 
 firestartr:
-  # Check latest available release at github.com/prefapp/gitops-k8s
+  # Check latest available release at github.com/firestartr-pro/firestartr
   operator: <operator_version> # Ex. v1.56.1 or "latest"
   cli: <cli_version> # Ex. v1.56.1 or "latest"
 
