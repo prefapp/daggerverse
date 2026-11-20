@@ -8,13 +8,14 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
+	"dagger/firestartr-config/internal/dagger"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -39,8 +40,8 @@ var contractNames = []string{"apps", "platforms", "docker_registries", "helm_rep
 type schemaSourceKind string
 
 const (
-	schemaSourceNPM   schemaSourceKind = "npm"
-	schemaSourceLocal schemaSourceKind = "local"
+	schemaSourceNPM       schemaSourceKind = "npm"
+	schemaSourceDirectory schemaSourceKind = "directory"
 )
 
 type schemaProvider struct {
@@ -53,9 +54,10 @@ type schemaProvider struct {
 	// version is the display/request key (requested).
 	version string
 
-	registry  string
-	pkg       string
-	localBase string
+	registry string
+	pkg      string
+
+	dir *dagger.Directory
 
 	client *http.Client
 
@@ -70,7 +72,7 @@ type schemaProvider struct {
 	cache map[string]*gojsonschema.Schema
 }
 
-func newSchemaProvider(version, base string) (*schemaProvider, error) {
+func newSchemaProvider(version, base string, dir *dagger.Directory) (*schemaProvider, error) {
 	if version == "" {
 		version = DefaultSchemaVersion
 	}
@@ -85,11 +87,17 @@ func newSchemaProvider(version, base string) (*schemaProvider, error) {
 	p := &schemaProvider{
 		requested: version,
 		version:   version,
+		dir:       dir,
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
 		cache: make(map[string]*gojsonschema.Schema),
 		raw:   make(map[string][]byte),
+	}
+
+	if dir != nil {
+		p.kind = schemaSourceDirectory
+		return p, nil
 	}
 
 	base = strings.TrimSpace(base)
@@ -99,41 +107,17 @@ func newSchemaProvider(version, base string) (*schemaProvider, error) {
 		p.registry = DefaultSchemaRegistry
 		p.pkg = DefaultSchemaPackage
 		p.npmVersion = normalizeNPMVersion(version)
-	case isLocalSchemaBase(base):
-		p.kind = schemaSourceLocal
-		p.localBase = strings.TrimPrefix(base, "file://")
-		if strings.TrimSpace(p.localBase) == "" {
-			return nil, fmt.Errorf("schema base path must not be empty")
-		}
 	case strings.HasPrefix(base, "http://") || strings.HasPrefix(base, "https://"):
-		// Treat HTTP(S) base as an npm registry base. Docs raw URLs are no longer
-		// the authoritative/published source of truth.
+		// Treat HTTP(S) base as an npm registry base (or mirror).
 		p.kind = schemaSourceNPM
 		p.registry = strings.TrimRight(base, "/")
 		p.pkg = DefaultSchemaPackage
 		p.npmVersion = normalizeNPMVersion(version)
 	default:
-		return nil, fmt.Errorf("unsupported schema base %q: use an npm registry URL (or empty for default npm), or a local path", base)
+		return nil, fmt.Errorf("unsupported schema base %q: pass pre-fetched schemas as schemaDirectory (Dagger Directory) for offline use, or use an npm registry source (empty/\"npm\" or an http(s) registry URL)", base)
 	}
 
 	return p, nil
-}
-
-func isLocalSchemaBase(base string) bool {
-	if strings.HasPrefix(base, "file://") {
-		return true
-	}
-	if strings.HasPrefix(base, "/") || strings.HasPrefix(base, "./") || strings.HasPrefix(base, "../") {
-		return true
-	}
-	if strings.Contains(base, `\`) {
-		return true
-	}
-	// If it doesn't look like a URL scheme, treat as local path for offline overrides.
-	if !strings.Contains(base, "://") {
-		return true
-	}
-	return false
 }
 
 func normalizeNPMVersion(v string) string {
@@ -153,8 +137,8 @@ func encodeNPMPackage(name string) string {
 
 func (p *schemaProvider) schemaSource(contract string) string {
 	switch p.kind {
-	case schemaSourceLocal:
-		return filepath.Join(p.localBase, p.version, contract+".schema.json")
+	case schemaSourceDirectory:
+		return path.Join(p.version, contract+".schema.json")
 	case schemaSourceNPM:
 		p.mu.Lock()
 		resolved := p.resolved
@@ -176,8 +160,8 @@ func (p *schemaProvider) schemaSource(contract string) string {
 
 func (p *schemaProvider) sourceDescription() string {
 	switch p.kind {
-	case schemaSourceLocal:
-		return fmt.Sprintf("local base %s (version %s)", p.localBase, p.version)
+	case schemaSourceDirectory:
+		return fmt.Sprintf("schema directory (Dagger Directory, version %s)", p.version)
 	case schemaSourceNPM:
 		p.mu.Lock()
 		resolved := p.resolved
@@ -227,13 +211,13 @@ func (p *schemaProvider) loadSchema(ctx context.Context, contract string) (*gojs
 
 func (p *schemaProvider) contractBytes(ctx context.Context, contract string) ([]byte, error) {
 	switch p.kind {
-	case schemaSourceLocal:
-		source := filepath.Join(p.localBase, p.version, contract+".schema.json")
-		data, err := os.ReadFile(source)
+	case schemaSourceDirectory:
+		filePath := path.Join(p.version, contract+".schema.json")
+		content, err := p.dir.File(filePath).Contents(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read schema for contract %q (version %s, source %s): %w", contract, p.version, source, err)
+			return nil, fmt.Errorf("failed to read schema file %s from schema directory (version %s): %w", filePath, p.version, err)
 		}
-		return data, nil
+		return []byte(content), nil
 	case schemaSourceNPM:
 		if err := p.ensureNPMLoaded(ctx); err != nil {
 			return nil, err

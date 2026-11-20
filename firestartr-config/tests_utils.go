@@ -45,8 +45,12 @@ func testFixturesDir() *dagger.Directory {
 	return getDir("./fixtures/.firestartr")
 }
 
+func testSchemaDirectory() *dagger.Directory {
+	return getDir("./testdata/dot-firestartr")
+}
+
 func testSchemaProvider() *schemaProvider {
-	p, err := newSchemaProvider(DefaultSchemaVersion, "./testdata/dot-firestartr")
+	p, err := newSchemaProvider(DefaultSchemaVersion, "", testSchemaDirectory())
 	if err != nil {
 		panic(err)
 	}

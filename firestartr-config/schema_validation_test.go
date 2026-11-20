@@ -26,8 +26,8 @@ func TestSchemaVersionSelection(t *testing.T) {
 		}
 	})
 
-	t.Run("Accepts explicit pinned version (local base)", func(t *testing.T) {
-		p, err := newSchemaProvider("v3.2.0", "./testdata/dot-firestartr")
+	t.Run("Accepts explicit pinned version from schema directory", func(t *testing.T) {
+		p, err := newSchemaProvider("v3.2.0", "", testSchemaDirectory())
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}
@@ -35,13 +35,13 @@ func TestSchemaVersionSelection(t *testing.T) {
 			t.Fatalf("expected v3.2.0, got %s", p.version)
 		}
 		source := p.schemaSource("apps")
-		if !strings.HasSuffix(filepath.ToSlash(source), "v3.2.0/apps.schema.json") {
+		if source != "v3.2.0/apps.schema.json" {
 			t.Fatalf("unexpected source: %s", source)
 		}
 	})
 
 	t.Run("Normalizes npm semver version with leading v", func(t *testing.T) {
-		p, err := newSchemaProvider("v3.2.0", "npm")
+		p, err := newSchemaProvider("v3.2.0", "npm", nil)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}
@@ -50,36 +50,38 @@ func TestSchemaVersionSelection(t *testing.T) {
 		}
 	})
 
-	t.Run("Accepts explicit latest (local base)", func(t *testing.T) {
-		tmp := t.TempDir()
-		latestDir := filepath.Join(tmp, "latest")
-		if err := os.MkdirAll(latestDir, 0o755); err != nil {
-			t.Fatal(err)
-		}
+	t.Run("Accepts explicit latest from schema directory", func(t *testing.T) {
 		data, err := os.ReadFile("./testdata/dot-firestartr/v3.2.0/apps.schema.json")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(latestDir, "apps.schema.json"), data, 0o644); err != nil {
-			t.Fatal(err)
-		}
-		p, err := newSchemaProvider("latest", tmp)
+		dir := dag.Directory().WithNewFile("latest/apps.schema.json", string(data))
+		p, err := newSchemaProvider("latest", "", dir)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}
 		if p.version != "latest" {
 			t.Fatalf("expected latest, got %s", p.version)
 		}
-		_, err = p.loadSchema(context.Background(), "apps")
-		if err != nil {
+		if _, err := p.loadSchema(context.Background(), "apps"); err != nil {
 			t.Fatalf("expected to load schema for latest, got: %s", err)
 		}
 	})
 
 	t.Run("Rejects invalid version", func(t *testing.T) {
-		_, err := newSchemaProvider("v3.2.0/../../x", "./testdata/dot-firestartr")
+		_, err := newSchemaProvider("v3.2.0/../../x", "", testSchemaDirectory())
 		if err == nil {
 			t.Fatal("expected error for invalid version")
+		}
+	})
+
+	t.Run("Rejects caller-host path as schema base without directory", func(t *testing.T) {
+		_, err := newSchemaProvider("v3.2.0", "./testdata/dot-firestartr", nil)
+		if err == nil {
+			t.Fatal("expected error for unsupported host path base")
+		}
+		if !strings.Contains(err.Error(), "schemaDirectory") {
+			t.Fatalf("expected guidance to use schemaDirectory, got: %s", err)
 		}
 	})
 }
@@ -198,7 +200,7 @@ func TestSchemaNPMResolution(t *testing.T) {
 		s := newNPMTestServer(t, "3.2.0", "3.2.0", tarball, sriSHA512(tarball), "", nil, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL)
+		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -213,7 +215,7 @@ func TestSchemaNPMResolution(t *testing.T) {
 		s := newNPMTestServer(t, "latest", "3.2.0", tarball, sriSHA512(tarball), "", nil, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("latest", s.server.URL)
+		p, err := newSchemaProvider("latest", s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -229,7 +231,7 @@ func TestSchemaNPMResolution(t *testing.T) {
 		s := newNPMTestServer(t, "3.2.0", "3.2.0", tarball, "", sha1Hex(tarball), nil, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL)
+		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -242,7 +244,7 @@ func TestSchemaNPMResolution(t *testing.T) {
 		s := newNPMTestServer(t, "3.2.0", "3.2.0", tarball, sriSHA512([]byte("tampered")), "", nil, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL)
+		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -268,7 +270,7 @@ func TestSchemaNPMResolution(t *testing.T) {
 		s := newNPMTestServer(t, "3.2.0", "3.2.0", badTar, sriSHA512(badTar), "", nil, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL)
+		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -288,7 +290,7 @@ func TestSchemaNPMResolution(t *testing.T) {
 		})
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL)
+		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -306,7 +308,7 @@ func TestSchemaFetchFailures(t *testing.T) {
 		s := newNPMTestServer(t, "3.2.0", "3.2.0", tarball, sriSHA512(tarball), "", map[string]int{"metadata": 404}, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL)
+		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -327,7 +329,7 @@ func TestSchemaFetchFailures(t *testing.T) {
 		base := s.server.URL
 		s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", base)
+		p, err := newSchemaProvider("v3.2.0", base, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -342,15 +344,57 @@ func TestSchemaFetchFailures(t *testing.T) {
 	})
 }
 
-func TestSchemaOfflineAndCaching(t *testing.T) {
-	t.Run("Loads from local base without network", func(t *testing.T) {
-		p, err := newSchemaProvider("v3.2.0", "./testdata/dot-firestartr")
+func TestSchemaDirectorySource(t *testing.T) {
+	t.Run("Loads from provided schema directory via Dagger API", func(t *testing.T) {
+		p, err := newSchemaProvider("v3.2.0", "", testSchemaDirectory())
 		if err != nil {
 			t.Fatal(err)
 		}
 		for _, contract := range contractNames {
 			if _, err := p.loadSchema(context.Background(), contract); err != nil {
-				t.Fatalf("failed to load local schema for %s: %s", contract, err)
+				t.Fatalf("failed to load directory schema for %s: %s", contract, err)
+			}
+		}
+	})
+
+	t.Run("Directory takes precedence over schema base", func(t *testing.T) {
+		p, err := newSchemaProvider("v3.2.0", "https://registry.invalid.example", testSchemaDirectory())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := p.loadSchema(context.Background(), "apps"); err != nil {
+			t.Fatalf("expected directory source to be used, got: %s", err)
+		}
+	})
+
+	t.Run("Reports actionable diagnostics when schema missing in directory", func(t *testing.T) {
+		dir := dag.Directory().WithNewFile("v3.2.0/platforms.schema.json", "{}")
+		p, err := newSchemaProvider("v3.2.0", "", dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = p.loadSchema(context.Background(), "apps")
+		if err == nil {
+			t.Fatal("expected missing schema error")
+		}
+		msg := err.Error()
+		for _, want := range []string{"apps", "v3.2.0", "schema directory", "apps.schema.json"} {
+			if !strings.Contains(msg, want) {
+				t.Errorf("expected %q in error, got: %s", want, msg)
+			}
+		}
+	})
+}
+
+func TestSchemaOfflineAndCaching(t *testing.T) {
+	t.Run("Loads from schema directory without network", func(t *testing.T) {
+		p, err := newSchemaProvider("v3.2.0", "", testSchemaDirectory())
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, contract := range contractNames {
+			if _, err := p.loadSchema(context.Background(), contract); err != nil {
+				t.Fatalf("failed to load schema for %s: %s", contract, err)
 			}
 		}
 	})
@@ -361,7 +405,7 @@ func TestSchemaOfflineAndCaching(t *testing.T) {
 		s := newNPMTestServer(t, "3.2.0", "3.2.0", tarball, sriSHA512(tarball), "", nil, nil)
 		defer s.server.Close()
 
-		p, err := newSchemaProvider("v3.2.0", s.server.URL)
+		p, err := newSchemaProvider("v3.2.0", s.server.URL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -383,7 +427,7 @@ func TestSchemaOfflineAndCaching(t *testing.T) {
 }
 
 func TestSchemaValidationDiagnostics(t *testing.T) {
-	p, err := newSchemaProvider("v3.2.0", "./testdata/dot-firestartr")
+	p, err := newSchemaProvider("v3.2.0", "", testSchemaDirectory())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -401,7 +445,7 @@ func TestSchemaValidationDiagnostics(t *testing.T) {
 			t.Fatal("expected validation error")
 		}
 		msg := err.Error()
-		for _, want := range []string{"docker_registries/bad.yaml", "docker_registries", "v3.2.0"} {
+		for _, want := range []string{"docker_registries/bad.yaml", "docker_registries", "v3.2.0", "schema directory"} {
 			if !strings.Contains(msg, want) {
 				t.Errorf("expected %q in error, got: %s", want, msg)
 			}

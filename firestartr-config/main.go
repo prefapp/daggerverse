@@ -25,15 +25,22 @@ func New(
 	// +default="v3.2.0"
 	schemaVersion string,
 
-	// Schema source: empty/"npm" resolves from the npm registry (default package
-	// @firestartr/firestartr-claims_schemas), an HTTP(S) URL is treated as an npm
-	// registry base, or a local path containing <version>/<contract>.schema.json
-	// files for offline/testing.
+	// Schema source selector when schemaDirectory is not provided: empty/"npm"
+	// resolves from the npm registry (default package
+	// @firestartr/firestartr-claims_schemas), an HTTP(S) URL is treated as an
+	// npm registry/mirror base. For offline/pre-fetched schemas, pass
+	// schemaDirectory instead.
 	// +optional
 	schemaBaseURL string,
 
+	// Optional directory containing pre-fetched schemas at
+	// <schemaVersion>/<contract>.schema.json, read via the Dagger API. When
+	// provided, it takes precedence over schemaBaseURL (portable offline fallback).
+	// +optional
+	schemaDirectory *dagger.Directory,
+
 ) (*FirestartrConfig, error) {
-	schemas, err := newSchemaProvider(schemaVersion, schemaBaseURL)
+	schemas, err := newSchemaProvider(schemaVersion, schemaBaseURL, schemaDirectory)
 	if err != nil {
 		return nil, err
 	}

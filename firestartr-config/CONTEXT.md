@@ -18,17 +18,18 @@ which is the authoritative upstream distribution for these contracts.
 ### Source selection, versioning and pinning policy
 
 - `schemaVersion` (default: `v3.2.0`) selects the schema release. Pass an explicit npm semver version (e.g. `v3.2.0` or `3.2.0`, normalized for npm) to pin deterministically, or pass a dist-tag such as `latest` to deliberately opt into the latest published schemas (non-deterministic).
-- `schemaBaseURL` (optional) selects the schema source:
+- `schemaDirectory` (optional, `*dagger.Directory`): **portable offline/pre-fetched schema source**. When provided, schemas are read via the Dagger API from `<schemaVersion>/<contract>.schema.json` inside the directory and it takes precedence over `schemaBaseURL`. This is the supported way to use schemas available on the caller's machine (pass them in as a directory), since the module runtime cannot read caller-host filesystem paths.
+- `schemaBaseURL` (optional) selects the remote schema source when `schemaDirectory` is not provided:
   - empty or `"npm"` (default): resolve schemas from the npm registry tarball for `@firestartr/firestartr-claims_schemas`.
   - an `http(s)` URL: treated as an npm registry base (for mirrors/testing), resolving the same package from that registry.
-  - a local path (or `file://` path): load schemas offline from `<path>/<version>/<contract>.schema.json`.
-- The module pins `v3.2.0` by default. If the pinned npm package/version is not available from the selected registry, resolution fails fast with an actionable error; use a local `schemaBaseURL` to validate against pre-fetched schemas.
+- The module pins `v3.2.0` by default. If the pinned npm package/version is not available from the selected registry, resolution fails fast with an actionable error; provide `schemaDirectory` with pre-fetched schemas to validate offline.
 
 ### Resolution, caching and failure behavior
 
 - npm source: package metadata and the version tarball are resolved over HTTP(S), tarball integrity is verified (`dist.integrity`, with `dist.shasum` fallback), and `package/dot-firestartr/*.schema.json` contracts are extracted in-memory (pure Go, no Node/npm runtime dependency).
-- Each provider load resolves/fetches the npm tarball (or reads local schemas) and compiles contract schemas once per `New` invocation and caches them in-memory for that load (no per-file/per-contract refetch).
-- Fetch/read/resolve/parse/compile/verification failures and validation failures are surfaced as actionable diagnostics including the file (when applicable), contract, requested/resolved version and schema source (package/registry/metadata/tarball or local path), and cause/reason. Invalid configuration (including registries) fails loading; invalid entries are never silently dropped.
+- directory source: contract schemas are read from `schemaDirectory` via the Dagger API at `<schemaVersion>/<contract>.schema.json`.
+- Each provider load resolves/fetches the npm tarball (or reads directory schemas) and compiles contract schemas once per `New` invocation and caches them in-memory for that load (no per-file/per-contract refetch).
+- Fetch/read/resolve/parse/compile/verification failures and validation failures are surfaced as actionable diagnostics including the file (when applicable), contract, requested/resolved version and schema source (package/registry/metadata/tarball or schema directory and path), and cause/reason. Invalid configuration (including registries) fails loading; invalid entries are never silently dropped.
 - Runtime validation uses the selected `schemaVersion`/source, then decodes into the generated pinned contract types. If a selected schema (e.g. `latest` or a different version) diverges incompatibly from the pinned/generated shape, validation/decoding may fail with an actionable diagnostic rather than silently dropping required data.
 
 ## Schema-derived types
@@ -73,8 +74,8 @@ _Avoid_: config dir, values dir
 
 ## Compatibility impact
 
-- Constructor is schema-aware: `New(dotFirestartr, schemaVersion?, schemaBaseURL?)` with default pinned `schemaVersion` `v3.2.0`.
-- Runtime schema source now defaults to the npm package `@firestartr/firestartr-claims_schemas` resolved via registry tarball (pure Go, integrity-verified), replacing the previous docs raw URL default. `schemaBaseURL` selects the source (empty/`npm` = npm registry, `http(s)` = npm registry/mirror base, local path = offline `<path>/<version>/<contract>.schema.json`). Legacy docs raw URL file-base loading is no longer supported as a schema source.
+- Constructor is schema-aware: `New(dotFirestartr, schemaVersion?, schemaBaseURL?, schemaDirectory?)` with default pinned `schemaVersion` `v3.2.0`.
+- Runtime schema source defaults to the npm package `@firestartr/firestartr-claims_schemas` resolved via registry tarball (pure Go, integrity-verified). `schemaBaseURL` selects the remote source (empty/`"npm"` = npm registry, `http(s)` = npm registry/mirror base). For offline/pre-fetched schemas, pass `schemaDirectory` (`*dagger.Directory`) containing `<schemaVersion>/<contract>.schema.json` (read via the Dagger API); it takes precedence over `schemaBaseURL`. Caller-host filesystem paths in `schemaBaseURL` are not a supported offline fallback (the module runtime cannot read them). Legacy docs raw URL file-base loading is not supported.
 - Apps: service definitions use `services` (no longer `image_types`); valid service lists deserialize as `[{repo, service_names, platforms?}]`.
 - Docker registries: required `name`, `registry` (host only, no scheme/port), `image_types`, `default`, `auth_strategy` (`aws_oidc|azure_oidc|generic|ghcr|dockerhub|none`), and `base_paths` with required `services` (optional `charts`). Invalid registries now fail validation instead of being silently dropped.
 - Helm repositories: require non-empty `name` and `url` beginning with `http://`, `https://`, or `oci://`.
