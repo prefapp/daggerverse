@@ -1,0 +1,10 @@
+type: kubernetes
+name: cluster-name
+tenants: [test-tenant]
+envs: [dev, pre]
+allowedClaims:
+  - resourceTypes:
+      - example
+    providers:
+      - provider-aws-workspaces
+    backend: firestartr-terraform-state
